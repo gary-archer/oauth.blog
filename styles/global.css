@@ -3,7 +3,6 @@ body {
   padding: 0;
   margin: 0;
   font-family:
-    Inter,
     -apple-system,
     BlinkMacSystemFont,
     Segoe UI,
@@ -15,18 +14,24 @@ body {
     Droid Sans,
     Helvetica Neue,
     sans-serif;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
+  line-height: 1.6;
+  font-size: 18px;
 }
 
 * {
   box-sizing: border-box;
 }
 
+a {
+  color: #0070f3;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
 img {
   max-width: 100%;
-  height: auto;
+  display: block;
 }

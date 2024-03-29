@@ -5,19 +5,19 @@
     "keywords": [],
     "author": "Gary Archer",
     "license": "MIT",
-    "type": "module",
     "engines": {
-      "node": ">=20"
+        "node": ">=20"
     },
     "scripts": {
-      "lint": "next lint",
-      "start": "next start",
-      "dev": "next dev",
-      "build": "next build"
+        "lint": "next lint",
+        "start": "next start",
+        "dev": "next dev",
+        "build": "next build"
     },
     "dependencies": {
-      "next": "^14.1.0",
-      "react": "^18.2.0",
-      "react-dom": "^18.2.0"
+        "gray-matter": "^4.0.3",
+        "next": "^14.1.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
     }
-  }
+}
