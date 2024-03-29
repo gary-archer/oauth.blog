@@ -1,2 +1,3 @@
-# apisandclients.io
-Content for my blog at https://apisandclients.io
+# APIs and Clients
+
+Web static content for my blog at https://apisandclients.io.
