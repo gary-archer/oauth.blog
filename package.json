@@ -15,6 +15,7 @@
         "build": "next build"
     },
     "dependencies": {
+        "date-fns": "^3.6.0",
         "gray-matter": "^4.0.3",
         "next": "^14.1.0",
         "react": "^18.2.0",
