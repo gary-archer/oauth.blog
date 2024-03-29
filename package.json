@@ -1,7 +1,7 @@
 {
   "name": "apisandclients",
   "version": "1.0.0",
-  "description": "Web static content for my blog at https://apisandclients.io",
+  "description": "The content for my blog at https://apisandclients.io",
   "keywords": [],
   "author": "Gary Archer",
   "license": "MIT",
@@ -9,22 +9,15 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "next dev",
-    "lint": "next lint",
-    "build": "next build",
-    "start": "next start"
+    "start": "next dev",
+    "build": "next build"
   },
   "dependencies": {
-    "date-fns": "^3.6.0",
     "gray-matter": "^4.0.3",
     "next": "^14.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "remark": "^15.0.1",
     "remark-html": "^16.0.1"
-  },
-  "devDependencies": {
-    "eslint": "8.57.0",
-    "eslint-config-next": "14.1.4"
   }
 }

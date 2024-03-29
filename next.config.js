@@ -4,7 +4,7 @@
 const nextConfig = {
   reactStrictMode: true,
   
-  // Image optimization needs to be disabled for exporting to static content to work
+  // Exporting static content HTML files requires image optimization to be disabled
   output: 'export',
   distDir: 'dist',
   images: {

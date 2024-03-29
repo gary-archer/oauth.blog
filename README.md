@@ -4,35 +4,23 @@ Web static content for my blog at https://apisandclients.io.
 
 ## Blog Architecture
 
-The blog is based on the [Next.js Tutorials](https://nextjs.org/learn-pages-router/basics/data-fetching/blog-data).
+The blog is mostly informational markdown and images.\
+The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-pages-router/basics/data-fetching/blog-data).\
 
-## Strategy
+## Running the Blog
 
+| Command | Description |
+| ------- | ----------- |
+| npm install | First install dependencies |
+| ./start.sh | run in development mode |
+| ./deploy-local.sh | run in deployed mode locally |
+| ./deploy-aws.sh | deploy to the AWS Cloudfront content delivery network |
+
+## Monday Tasks
+
+- Get Express deployment working to a basic level
+- Replace blog post 1
+- Replace blog post 2 and see how long it takes
+- Finalize deployment including response headers and ensure performance is good
 - Tidy up existing code but stick to JavaScript, since I will not write much more
-- Use Express deployment and set response headers, avoiding inline CSS if I can
-- Migrate blog post 1
-- Migrate blog post 2 and see how long it takes
 - Do [rewrites for old paths](https://nextjs.org/docs/pages/api-reference/next-config-js/rewrites)
-
-## NOTES
-
-- [TypeScript seems not worthwhile](https://nextjs.org/docs/pages/building-your-application/configuring/typescript#minimum-typescript-version)
-- [Modules seem not worthwhile](https://stackoverflow.com/questions/77729967/nextjs-image-error-react-jsx-type-is-invalid#:~:text=Warning%3A%20React.,up%20default%20and%20named%20imports.)
-
-## next.config.js
-
-Rewrites:
-
-```javascript
-const nextConfig = {
-    async rewrites() {
-       return [
-         {
-             source: '/new-rewrite-path',
-             destination: '/old-rewrite-path',
-          },
-       ]
-  },
-}
-module.exports = nextConfig
-```
