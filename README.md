@@ -13,7 +13,7 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 | ------- | ----------- |
 | npm install | First install dependencies |
 | ./start.sh | Run in development mode |
-| ./deploy-local.sh | Run in deployed mode locally |
+| ./deploy-local.sh | Run in deployed mode locally using https://apisandclients-local.io |
 | ./deploy-aws.sh | I use this to deploy static content to AWS Cloudfront |
 
 ## Monday Tasks
