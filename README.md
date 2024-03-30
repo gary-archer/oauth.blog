@@ -12,8 +12,8 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 | Command | Description |
 | ------- | ----------- |
 | npm install | First install dependencies |
-| ./start.sh | Run in development mode |
-| ./deploy-local.sh | Run in deployed mode locally using https://apisandclients-local.io |
+| npm start | Run in development mode with a browser at http://localhost:3000 |
+| ./deploy-local.sh | Run in deployed mode locally using http://localhost:3001 |
 | ./deploy-aws.sh | I use this to deploy static content to AWS Cloudfront |
 
 ## Monday Tasks

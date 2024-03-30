@@ -10,7 +10,7 @@
   },
   "scripts": {
     "start": "next dev",
-    "build": "next build"
+    "buildRelease": "next build"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
