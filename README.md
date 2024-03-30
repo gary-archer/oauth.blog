@@ -16,11 +16,19 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 | ./deploy-local.sh | Run in deployed mode locally using http://localhost:3001 |
 | ./deploy-aws.sh | I use this to deploy static content to AWS Cloudfront |
 
-## Monday Tasks
+## Next Tasks
 
-- Get Express deployment working to a basic level
-- Replace blog post 1
-- Replace blog post 2 and see how long it takes
-- Finalize deployment including response headers and ensure performance is good
+First 2 blog posts:
+
+- Get [tables working](https://unifiedjs.com/learn/recipe/remark-table/)
+- Get images working with a folder structure and use JPG instead of PNG
+- Get formatting working
+- Test on mobile layouts
+
+## Future Tasks
+
+- Finalize deployment headers and view them in browser tools
 - Tidy up existing code but stick to JavaScript, since I will not write much more
 - Do [rewrites for old paths](https://nextjs.org/docs/pages/api-reference/next-config-js/rewrites)
+- Look more into blog themes and layouts
+- Use frontmatter metadata tags to supporting categorizing and sorting posts in various ways
