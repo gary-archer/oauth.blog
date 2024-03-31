@@ -32,3 +32,4 @@ First 2 blog posts:
 - Do [rewrites for old paths](https://nextjs.org/docs/pages/api-reference/next-config-js/rewrites)
 - Look more into blog themes and layouts
 - Use frontmatter metadata tags to supporting categorizing and sorting posts in various ways
+- Updates to MDX, modules and TypeScript
