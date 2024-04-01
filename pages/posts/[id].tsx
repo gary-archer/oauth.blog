@@ -35,7 +35,7 @@ export default function Post({postData}: any): JSX.Element {
   
     return (
         <Layout>
-            <article>
+            <article className={utilStyles.article}>
                 <h1 className={utilStyles.headingXl}>{postData.title}</h1>
                 <div dangerouslySetInnerHTML={{ __html: postData.contentHtml }} />
             </article>

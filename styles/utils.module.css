@@ -4,6 +4,10 @@
     margin: 3rem auto 6rem;
 }
 
+.article {
+    max-width: 80%;
+}
+
 .headingXl {
     font-size: 2.0625rem;
     line-height: 1.3;
@@ -30,4 +34,11 @@
 
 .lightText {
     color: #666;
+}
+
+@media all and (max-width: 768px)
+{
+    .article {
+        max-width: 100%;
+    }
 }
