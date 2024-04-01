@@ -18,15 +18,8 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 
 ## Content
 
-- Get home page rendering and then write it
-- Get index page rendering and write the initial part of it
-- Get quick start rendering and then write it
-
-## Presentation
-
-- Add more space
 - Look more into blog themes and layouts
-- Image width to control
+- Control image widths with a minimum of 400
 - Improve text formatting to match current blog
 
 ## Code Consolidation
@@ -38,9 +31,9 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 
 - Add [rewrites for old paths](https://nextjs.org/docs/pages/api-reference/next-config-js/rewrites)
 - Add security headers
-- Deploy to S3
 
 ## Wishlist
 
-- PRISM Toolbar and Copy to Clipboard
-- Lightbox effect for images will require an update to MDX
+- Navbar needed with links to Main Index / Quick Start / About Me
+- PRISM Toolbar with Copy to Clipboard
+- Lightbox effect for images, which may require an update to MDX
