@@ -6,7 +6,7 @@ import Link from 'next/link';
 /*
  * The main site layout is a fixed header that is swapped out during navigation
  */
-export default function Layout({ children }) {
+export default function Layout({children}: any): JSX.Element {
   
   const siteTitle = 'APIs and Clients End-to-End';
   return (
