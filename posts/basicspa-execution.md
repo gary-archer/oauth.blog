@@ -3,15 +3,13 @@ title: 'Basic SPA – How to Run the Sample'
 number: 30
 ---
 
-## Background
-
 The Overview Page summarised the behaviour of the initial [SPA and API code sample](/posts/basicspa-overview). Next we will get it running on a Developer PC, then visually describe the important OAuth related behaviour.
 
-## Prerequisites
+### Prerequisites
 
 This blog’s code examples run in any Linux based terminal, and are tested on Ubuntu, Windows and macOS. On Windows it is expected that a Git Bash shell is used. Also ensure that an up to date version of Node.js is installed for your operating system.
 
-## Step 1: Download Code from GitHub
+### Step 1: Download Code from GitHub
 
 The project is available here, consisting of a UI and API component. It can be downloaded / cloned to your local PC with this command:
 
@@ -21,7 +19,7 @@ git clone https://github.com/gary-archer/oauth.websample1
 
 ![Repo](/images/20/repo.jpg)
 
-## Step 2: View Code in an IDE
+### Step 2: View Code in an IDE
 
 I use Visual Studio Code on macOS and Windows, but any editor can be used. Select ‘Open Folder‘ then browse to oauth.websample1:
 
@@ -29,7 +27,7 @@ I use Visual Studio Code on macOS and Windows, but any editor can be used. Selec
 
 The project demonstrates a code setup to aim for. Firstly, JavaScript code runs in the browser and is focused on a great user experience. Secondly, API code serves data to frontends. All code is business focused, with less plumbing than older ‘web back end‘ solutions.
 
-## Step 3: View Configuration
+### Step 3: View Configuration
 
 Both the SPA and API use configuration files that highlight important OAuth settings. The SPA acts as an ‘OAuth Client‘ and uses these fields:
 
@@ -69,7 +67,7 @@ The API acts as an ‘OAuth Resource Server‘ and uses these fields. We will ex
 }
 ```
 
-## Step 4: Authorization Server Setup
+### Step 4: Authorization Server Setup
 
 Both the SPA and API use endpoints from my personal AWS Cognito account, which is a low cost cloud solution. Jump ahead to these future posts for further details:
 
@@ -88,14 +86,14 @@ For the first code sample we will use HTTP URLs, and Cognito requires us to regi
 
 This blog’s code samples are standards based, so you can change configurations to point to your own Authorization Server instead. You will then be able to use your own preferred URLs and ports for the SPA and API.
 
-## Step 5: User Setup
+### Step 5: User Setup
 
 This blog will use the following main Cognito test account for signing in to the SPA. This is not a real user and no personal data is used by this blog’s code samples:
 
 - User = `guestuser@mycompany.com`
 - Password = GuestPassword1
 
-## Step 6: Domain Setup
+### Step 6: Domain Setup
 
 This blog’s code samples will run on the local computer using DNS based URLs that represent a deployed architecture, and localhost based URLs will be avoided where possible. The initial code sample runs on these URLs:
 
@@ -110,7 +108,7 @@ To enable this on a development computer, add these entries to your hosts file, 
 127.0.0.1 localhost web.mycompany.com api.mycompany.com
 ```
 
-## Step 7: Run the SPA and API
+### Step 7: Run the SPA and API
 
 In the root folder, run the following script to spin up the system. This essentially just runs ‘npm install‘ and ‘npm start‘ for the SPA and API components:
 
@@ -149,7 +147,7 @@ The second terminal is for the API, which listens on port 80, and requires admin
 
 To keep the developer setup simple, the API also serves the SPA’s bundle files to the browser. Later in this blog we will update to a development web host, and deploy the final SPA to a Content Delivery Network.
 
-## Step 8: Login to the SPA
+### Step 8: Login to the SPA
 
 The script then invokes a browser at http://web.mycompany.com/spa, and the SPA triggers an OpenID Connect redirect when it loads, to get an OAuth access token, so that it can call the API:
 
@@ -163,7 +161,7 @@ The first API call is to http://api.mycompany.com/api/companies, and if you brow
 
 ![API browser access](/images/30/api-browser-access.jpg)
 
-## Step 9: Run Navigation Actions
+### Step 9: Run Navigation Actions
 
 You can navigate to the SPA’s second view by clicking one of the View Transactions links. The following type of URL can also be typed in the browser:
 
@@ -175,7 +173,7 @@ SPA URLs can be bookmarked, and this can be done by opening a new browser tab or
 
 ![Multi tab navigation](/images/30/multi-tab-navigation.jpg)
 
-## Step 10: Run a User Session
+### Step 10: Run a User Session
 
 The SPA’s session management is incomplete in the initial sample. Every time the access token expires the user has to login again. This can be simulated by clicking Expire Token followed by Reload Data.
 
@@ -183,13 +181,13 @@ The SPA’s session management is incomplete in the initial sample. Every time t
 
 The code samples stores access tokens in session storage, so that page reloads do not redirect the browser. However, opening a new browser tab or window does a Single Sign On operation, to get a new access token.
 
-## Step 11: View Browser Traffic
+### Step 11: View Browser Traffic
 
 Developers need to understand OAuth messages, which are sent using an HTTP language, with input and output parameter names defined in OAuth specifications. An OAuth authorization request begins the login process, and includes a number of query string parameters:
 
 ![HTTP debugging](/images/30/http-debugging.jpg)
 
-## Step 12: View Security Library Logs
+### Step 12: View Security Library Logs
 
 The SPA can show debug details from the oidc-client-ts library, to provide visualisation of the OAuth SPA logic. You can activate this by adding a #log=debug query parameter to the SPA, then viewing the browser console.
 
@@ -197,11 +195,11 @@ In the following screenshot, Google Chrome DevTools is used. Note that the Verbo
 
 ![OAuth debugging](/images/30/oauth-debugging.jpg)
 
-## Where Are We?
+### Where Are We?
 
 The initial code sample is focused on how an SPA, API and Authorization Server work together. Next we will drill into OAuth message details that developers should ensure they can visualize, both to understand and  be able to troubleshoot the security.
 
-## Next Steps
+### Next Steps
 
 - Next we will look at some [SPA and API OAuth Messages](/posts/basicspa-oauthworkflow)
-- For a list of all blog posts see the [Index Page](/pages/index)
+- For a list of all blog posts see the [Index Page](/posts/index)

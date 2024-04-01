@@ -2,20 +2,23 @@ html,
 body {
   padding: 0;
   margin: 0;
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    Segoe UI,
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    Fira Sans,
-    Droid Sans,
-    Helvetica Neue,
-    sans-serif;
-  line-height: 1.6;
-  font-size: 18px;
+  font-family: Merriweather, Georgia, serif;
+  line-height: 1.75;
+  font-size: 1rem;
+}
+h1 {
+  font-family: Montserrat, "Helvetica Neue", sans-serif;
+}
+h2 {
+  font-family: Montserrat, "Helvetica Neue", sans-serif;
+}
+h3 {
+  font-family: Montserrat, "Helvetica Neue", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-top: 2em;
+  margin-bottom: 1em;
 }
 
 * {
