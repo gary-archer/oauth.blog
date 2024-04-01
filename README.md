@@ -18,19 +18,16 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 
 ## Code Consolidation
 
-- Upgrade to [TypeScript and modules](https://nextjs.org/docs/pages/building-your-application/configuring/typescript)
+- Complete TypeScript update
+- Use modules
+- Avoid dangerouslySetInnerHTML
 
 ## Content
 
 - Look more into blog themes and layouts
-- Control image widths with a minimum of 400
 - Improve text formatting to match current blog
 
-## Deployment
-
-- Add [rewrites for old paths](https://nextjs.org/docs/pages/api-reference/next-config-js/rewrites)
-
-## Wishlist
+## Tasks
 
 - Navbar with links to Main Index / Quick Start / About Me
   In mobile layouts, the `layout.js` file should render these links last
@@ -38,5 +35,4 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 - PRISM Toolbar with Copy to Clipboard
   Feels like I need to implement some tricky code to do this
 
-- Lightbox effect for images
-  Yet this may require an update to MDX so could be done later
+- Add [rewrites for old paths](https://nextjs.org/docs/pages/api-reference/next-config-js/rewrites)
