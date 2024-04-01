@@ -1,15 +1,17 @@
 ---
 title: 'Web Architecture Goals'
-date: '2020-01-01'
+number: 10
 ---
 
 ## Background
 
-The Home Page described OAuth in terms of overall goals for a software platform. In this post we will describe what we are looking for in an Optimal Web Architecture, which is not just about security. This post briefly summarizes some goals and concerns for web apps.
+The [Home Page](/) described OAuth in terms of overall goals for a software platform. In this post we will describe what we are looking for in an Optimal Web Architecture, which is not just about security. This post briefly summarizes some goals and concerns for web apps.
 
 ## Goal: Best User Experience
 
 Client-side web apps separate HTML and data concerns to deliver a fast experience for end users. A Single Page Application (SPA) visits the server less often, and modern technologies such as React provide an ecosystem with many tools and techniques for building modern apps.
+
+![React SPA framework](/images/10/react.jpg)
 
 ## Goal: Productive Front End Development
 
@@ -20,6 +22,8 @@ OAuth also enables web apps to externalize their security to the authorization s
 ## Goal: Good Global Performance
 
 Most companies want good global performance for their Internet web applications. A Content Delivery Network (CDN) is the simplest solution for managing latency. It is harder to enable for web back ends that execute code such as cookie issuing, leading to restricted hosting options.
+
+![Content delivery network](/images/10/cdn.jpg)
 
 ## Goal: Best Security Capabilities
 
@@ -83,5 +87,5 @@ We have highlighted some desired behavior, and next we will start our first obje
 
 ## Next Steps
 
-- Next we will provide an Initial SPA Code Sample Overview
-- For a list of all blog posts see the Index Page
+- Next we will provide an [Initial SPA Code Sample Overview](/posts/basicspa-overview)
+- For a list of all blog posts see the [Index Page](/pages/index)

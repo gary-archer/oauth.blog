@@ -18,12 +18,19 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 
 ## Next Tasks
 
-First 2 blog posts:
+### Basics
 
-- Get [tables working](https://unifiedjs.com/learn/recipe/remark-table/)
-- Get images working with a folder structure and use JPG instead of PNG
-- Get formatting working
-- Test on mobile layouts
+- Remove naff image
+- Update home page
+- PRISM for code formatting
+- Add links
+- Ass lightbox effect for images
+- Add simple bold or italic formatting
+- Add colors
+
+### Local Deployment
+
+- Headers and CSP
 
 ## Future Tasks
 
