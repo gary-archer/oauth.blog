@@ -9,7 +9,7 @@
       "node": ">=20"
     },
     "scripts": {
-      "start": "node src/index.mjs"
+      "start": "node src/index.js"
     },
     "dependencies": {
       "express": "^4.19.2"
