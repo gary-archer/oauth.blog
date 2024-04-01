@@ -16,21 +16,20 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 | ./deploy-local.sh | Run in deployed mode locally using http://localhost:3001 |
 | ./deploy-aws.sh | I use this to deploy static content to AWS Cloudfront |
 
+## Code Consolidation
+
+- Code tidy up with comments
+- Upgrade to [TypeScript and modules](https://nextjs.org/docs/pages/building-your-application/configuring/typescript)
+
 ## Content
 
 - Look more into blog themes and layouts
 - Control image widths with a minimum of 400
 - Improve text formatting to match current blog
 
-## Code Consolidation
-
-- Code tidy up with comments
-- Upgrade to [TypeScript and modules](https://nextjs.org/docs/pages/building-your-application/configuring/typescript)
-
 ## Deployment
 
 - Add [rewrites for old paths](https://nextjs.org/docs/pages/api-reference/next-config-js/rewrites)
-- Add security headers
 
 ## Wishlist
 
