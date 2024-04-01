@@ -40,11 +40,6 @@ img {
   display: block;
 }
 
-pre {
-  min-width: 40%;
-  max-width: 70%;
-}
-
 table {
   border-spacing:0;
   max-width: 70%;
@@ -54,4 +49,22 @@ th, td {
   border: 1px solid #555;
   padding: 10px;
   text-align:left;
+}
+
+pre {
+  min-width: 40%;
+  max-width: 70%;
+}
+
+@media all and (max-width: 768px)
+{
+  img {
+    max-width: 100%;
+  }
+  table {
+    max-width: 100%;
+  }
+  pre {
+    max-width: 100%;
+  }
 }
