@@ -16,21 +16,13 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 | ./deploy-local.sh | Run in deployed mode locally using http://localhost:3001 |
 | ./deploy-aws.sh | I use this to deploy static content to AWS Cloudfront |
 
-## Code Consolidation
-
-- Complete TypeScript update
-- Use modules
-- Avoid dangerouslySetInnerHTML
-
-## Content
-
-- Look more into blog themes and layouts
-- Improve text formatting to match current blog
-
 ## Tasks
 
+- Improve text formatting to match existing blog content
+
 - Navbar with links to Main Index / Quick Start / About Me
-  In mobile layouts, the `layout.js` file should render these links last
+  In large layouts this should be fixed on the right hand side
+  In mobile layouts, the `layout.js` file should be after other content
 
 - PRISM Toolbar with Copy to Clipboard
   Feels like I need to implement some tricky code to do this

@@ -1,7 +1,7 @@
 /**
  * @type {import('next').NextConfig}
  */
-const nextConfig = {
+export default {
   reactStrictMode: true,
 
   // Exporting static content HTML files requires image optimization to be disabled
@@ -11,5 +11,3 @@ const nextConfig = {
     unoptimized: true,
   },
 }
-
-module.exports = nextConfig

@@ -6,7 +6,7 @@ import Post from './posts/[id]';
  */
 export async function getStaticProps(): Promise<any> {
   
-    const homePageData = await getPostData('home')
+    const homePageData = await getPostData('home');
     return {
         props: {
             postData: homePageData,
@@ -15,7 +15,7 @@ export async function getStaticProps(): Promise<any> {
 }
 
 /*
- * Render the home component by rendering the home post
+ * Render the home post
  */
 export default function Home(props: any): JSX.Element {
 

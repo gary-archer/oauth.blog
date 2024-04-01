@@ -1,4 +1,3 @@
-import Head from 'next/head';
 import Layout from '../../components/layout';
 import {getAllPostIds, getPostData} from '../../lib/posts';
 import utilStyles from '../../styles/utils.module.css';
@@ -30,14 +29,12 @@ export async function getStaticPaths(): Promise<any> {
 
 /*
  * Render a post given its data
+ * The use of dangerouslySetInnerHTML is done during a static content build
  */
 export default function Post({postData}: any): JSX.Element {
   
     return (
         <Layout>
-            <Head>
-                <title>{postData.title}</title>
-            </Head>
             <article>
                 <h1 className={utilStyles.headingXl}>{postData.title}</h1>
                 <div dangerouslySetInnerHTML={{ __html: postData.contentHtml }} />
