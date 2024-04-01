@@ -20,11 +20,9 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 
 ### Basics
 
-- Remove naff image
-- Update home page
 - PRISM for code formatting
-- Add links
-- Ass lightbox effect for images
+- Image width to control
+- Add lightbox effect for images
 - Add simple bold or italic formatting
 - Add colors
 
@@ -37,6 +35,7 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 - Finalize deployment headers and view them in browser tools
 - Tidy up existing code but stick to JavaScript, since I will not write much more
 - Do [rewrites for old paths](https://nextjs.org/docs/pages/api-reference/next-config-js/rewrites)
+- Consider [a TypeScript update](https://nextjs.org/docs/pages/building-your-application/configuring/typescript)
 - Look more into blog themes and layouts
 - Use frontmatter metadata tags to supporting categorizing and sorting posts in various ways
 - Updates to MDX, modules and TypeScript
