@@ -3,20 +3,23 @@ import styles from './layout.module.css';
 import utilStyles from '../styles/utils.module.css';
 import Link from 'next/link';
 
-const siteTitle = 'APIs and Clients End-to-End';
-export default function Layout({ children, home }) {
+/*
+ * The main site layout is a fixed header that is swapped out during navigation
+ */
+export default function Layout({ children }) {
+  
+  const siteTitle = 'APIs and Clients End-to-End';
   return (
     <div className={styles.container}>
       <Head>
         <link rel="icon" href="/favicon.ico" />
         <meta name="description" content={siteTitle} />
-        <meta name="og:title" content={siteTitle} />
         <title>{siteTitle}</title>
       </Head>
-      <header className={styles.header}>
+      <header>
         <>
           <h2 className={utilStyles.headingLg}>
-            <Link href="/" className={utilStyles.colorInherit}>
+            <Link href="/">
               {siteTitle}
             </Link>
           </h2>

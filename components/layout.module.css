@@ -1,9 +1,5 @@
 .container {
-  max-width: 56rem;
+  max-width: 75rem;
   padding: 0 1rem;
   margin: 3rem auto 6rem;
-}
-
-.header {
-  align-items: left;
 }

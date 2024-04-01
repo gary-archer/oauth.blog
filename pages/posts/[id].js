@@ -1,9 +1,13 @@
 import Head from 'next/head';
 import Layout from '../../components/layout';
-import { getAllPostIds, getPostData } from '../../lib/posts';
+import {getAllPostIds, getPostData} from '../../lib/posts';
 import utilStyles from '../../styles/utils.module.css';
 
+/*
+ * Return props for the runtime page ID
+ */
 export async function getStaticProps({ params }) {
+
   const postData = await getPostData(params.id);
   return {
     props: {
@@ -12,7 +16,11 @@ export async function getStaticProps({ params }) {
   };
 }
 
+/*
+ * Control pages generated during the build
+ */
 export async function getStaticPaths() {
+
   const paths = getAllPostIds();
   return {
     paths,
@@ -20,6 +28,9 @@ export async function getStaticPaths() {
   };
 }
 
+/*
+ * Render a post given its data
+ */
 export default function Post( { postData } ) {
   
   return (

@@ -18,7 +18,6 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 
 ## Code Consolidation
 
-- Code tidy up with comments
 - Upgrade to [TypeScript and modules](https://nextjs.org/docs/pages/building-your-application/configuring/typescript)
 
 ## Content
@@ -33,6 +32,11 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 
 ## Wishlist
 
-- Navbar needed with links to Main Index / Quick Start / About Me
+- Navbar with links to Main Index / Quick Start / About Me
+  In mobile layouts, the `layout.js` file should render these links last
+
 - PRISM Toolbar with Copy to Clipboard
-- Lightbox effect for images, which may require an update to MDX
+  Feels like I need to implement some tricky code to do this
+
+- Lightbox effect for images
+  Yet this may require an update to MDX so could be done later
