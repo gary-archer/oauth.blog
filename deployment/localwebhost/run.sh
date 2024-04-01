@@ -9,6 +9,7 @@ if [ ! -d 'node_modules' ]; then
   
   npm install
   if [ $? -ne 0 ]; then
+    read -n 1
     exit 1
   fi
 fi
@@ -17,3 +18,4 @@ fi
 # Run the web host
 #
 npm start
+read -n 1

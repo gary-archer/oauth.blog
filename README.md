@@ -18,13 +18,10 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 
 ## Next Tasks
 
-### Basics
-
-- PRISM for code formatting
+- Add lightbox effect for images will require MDX
+- PRISM 
 - Image width to control
-- Add lightbox effect for images
-- Add simple bold or italic formatting
-- Add colors
+- Improve text in line with current blog
 
 ### Local Deployment
 
