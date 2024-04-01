@@ -3,7 +3,7 @@ import matter from 'gray-matter';
 import path from 'path';
 import {remark} from 'remark';
 import remarkGfm from 'remark-gfm'
-import html from 'remark-html';
+import remarkHtml from 'remark-html';
 import remarkPrism from 'remark-prism'
 
 const postsDirectory = path.join(process.cwd(), 'posts');
@@ -39,7 +39,7 @@ export async function getPostData(id: string): Promise<any> {
     const matterResult = matter(fileContents);
 
     const processedContent = await remark()
-        .use(html, { sanitize: false })
+        .use(remarkHtml, { sanitize: false })
         .use(remarkGfm)
         .use(remarkPrism)
         .process(matterResult.content);

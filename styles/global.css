@@ -1,70 +1,70 @@
 html,
 body {
-  padding: 0;
-  margin: 0;
-  font-family: Merriweather, Georgia, serif;
-  line-height: 1.75;
-  font-size: 1rem;
+    padding: 0;
+    margin: 0;
+    font-family: Merriweather, Georgia, serif;
+    line-height: 1.5;
+    font-size: 1.1rem;
 }
 h1 {
-  font-family: Montserrat, "Helvetica Neue", sans-serif;
+    font-family: Montserrat, "Helvetica Neue", sans-serif;
 }
 h2 {
-  font-family: Montserrat, "Helvetica Neue", sans-serif;
+    font-family: Montserrat, "Helvetica Neue", sans-serif;
 }
 h3 {
-  font-family: Montserrat, "Helvetica Neue", sans-serif;
-  font-size: 1.5rem;
-  font-weight: 700;
-  line-height: 1.1;
-  margin-top: 2em;
-  margin-bottom: 1em;
+    font-family: Montserrat, "Helvetica Neue", sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-top: 2em;
+    margin-bottom: 1em;
 }
 
 * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 a {
-  color: #0070f3;
-  text-decoration: none;
+    color: #0070f3;
+    text-decoration: none;
 }
 
 a:hover {
-  text-decoration: underline;
+    text-decoration: underline;
 }
 
 img {
-  min-width: 40%;
-  max-width: 70%;
-  display: block;
+    min-width: 40%;
+    max-width: 70%;
+    display: block;
 }
 
 table {
-  border-spacing:0;
-  max-width: 70%;
+    border-spacing:0;
+    max-width: 70%;
 }
 
 th, td {
-  border: 1px solid #555;
-  padding: 10px;
-  text-align:left;
+    border: 1px solid #555;
+    padding: 10px;
+    text-align:left;
 }
 
 pre {
-  min-width: 40%;
-  max-width: 70%;
+    min-width: 40%;
+    max-width: 70%;
 }
 
 @media all and (max-width: 768px)
 {
-  img {
-    max-width: 100%;
-  }
-  table {
-    max-width: 100%;
-  }
-  pre {
-    max-width: 100%;
-  }
+    img {
+        max-width: 100%;
+    }
+    table {
+        max-width: 100%;
+    }
+    pre {
+        max-width: 100%;
+    }
 }

@@ -1,6 +1,5 @@
 import Head from 'next/head';
 import utilStyles from '../styles/utils.module.css';
-import Link from 'next/link';
 
 /*
  * The main site layout is a fixed header that is swapped out during navigation

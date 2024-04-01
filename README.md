@@ -18,13 +18,13 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 
 ## Tasks
 
-- Improve text formatting to match existing blog content
-
 - Navbar with links to Main Index / Quick Start / About Me
   In large layouts this should be fixed on the right hand side
   In mobile layouts, the `layout.js` file should be after other content
 
 - PRISM Toolbar with Copy to Clipboard
   Feels like I need to implement some tricky code to do this
+
+- Improve text formatting to match existing blog content
 
 - Add [rewrites for old paths](https://nextjs.org/docs/pages/api-reference/next-config-js/rewrites)
