@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Navbar from './navbar';
 import utilStyles from '../styles/utils.module.css';
 
 /*
@@ -17,14 +18,13 @@ export default function Layout({children}: any): JSX.Element {
             <header>
                 <>
                     <h2 className={utilStyles.headingLg}>
-                        <a href="/">
-                            {siteTitle}
-                        </a>
+                        <a href='/'>{siteTitle}</a>
                     </h2>
                     <p className={utilStyles.lightText}>Designs and Code Samples</p>
                 </>
             </header>
             <main>{children}</main>
+            <Navbar />
         </div>
     );
 }

@@ -18,18 +18,16 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 
 ## TODO
 
-- Navbar with links to Main Index / Quick Start / About Me
-  In large layouts this should be fixed on the [top right hand side](https://www.shecodes.io/athena/5956-moving-a-menu-to-fixed-positioning-at-the-top-right)
-  In mobile layouts use a layout where the menu is after all other content, with logic from my SPA
-
 - Add [rewrites for old paths](https://nextjs.org/docs/pages/api-reference/next-config-js/rewrites)
+  Deploy to S3 and test over HTTP
+  Write the initial deploy to AWS script
 
 - Gradually migrate all remaining posts
-  Also polish existing posts with formatting and more migration
-
-- Deploy to S3
-  Buy an AWS domain and create certs
-  Create a Cloudfront domain and do a fixed redirect without any code
+  Gradually spend some time on formatting on links to finalize each post
 
 - PRISM Toolbar with Copy to Clipboard
   This feels like the one remaining difficult job
+
+- Buy an AWS domain and create certs
+  Create a Cloudfront domain and do a fixed redirect without any code
+
