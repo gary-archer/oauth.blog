@@ -35,14 +35,13 @@ a:hover {
 }
 
 img {
-    min-width: 40%;
-    max-width: 70%;
+    min-width: 50%;
+    max-width: 100%;
     display: block;
 }
 
 table {
     border-spacing:0;
-    max-width: 70%;
 }
 
 th, td {
@@ -53,7 +52,6 @@ th, td {
 
 pre {
     min-width: 40%;
-    max-width: 70%;
 }
 
 @media all and (max-width: 768px)
