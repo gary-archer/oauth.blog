@@ -11,7 +11,7 @@ I wrote this blog’s main content from 2017-2019, with a focus on non-functiona
 
 ### Blog Technology
 
-The content is built as a basic Next.js blog and is available in the following GitHub repository. I deploy it as static content to AWS Cloudfront so that it performs well globally:
+The content is built as a basic Next.js blog and is available in the following GitHub repository. I deploy it as static content to AWS Cloudfront so that it performs well globally. You could use a similar approach to produce your own blog, by replacing the contents of the `/posts` folder.
 
 - https://github.com/gary-archer/apisandclients.io
 
