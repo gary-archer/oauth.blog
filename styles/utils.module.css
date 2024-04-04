@@ -42,12 +42,14 @@
     margin-bottom: -5px;
 }
 
-.padding1px {
-    padding-top: 1px;
+.infoText {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 50px;
 }
 
-.lightText {
-    color: #666;
+.padding1px {
+    padding-top: 1px;
 }
 
 @media all and (max-width: 768px)

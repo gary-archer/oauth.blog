@@ -20,7 +20,8 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 
 - Gradually migrate all remaining posts
   Gradually spend some time on formatting on links to finalize each post
-  Make 'Designs and Code Samples' text smaller
+
+- Understand web performance and navigation better
 
 - PRISM Toolbar with Copy to Clipboard
   This feels like the one remaining difficult job

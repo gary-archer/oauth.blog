@@ -20,7 +20,7 @@ export default function Layout({children}: any): JSX.Element {
                     <h2 className={utilStyles.headingLg}>
                         <a href='/'>{siteTitle}</a>
                     </h2>
-                    <p className={utilStyles.lightText}>Designs and Code Samples</p>
+                    <p className={utilStyles.infoText}>Designs and Code Samples</p>
                 </>
             </header>
             <main>{children}</main>
