@@ -18,10 +18,6 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 
 ## TODO
 
-- Add [rewrites for old paths](https://nextjs.org/docs/pages/api-reference/next-config-js/rewrites)
-  Write the initial deploy to AWS script
-  Deploy to S3 and test over HTTP - email a link to my mobile device for mobile testing
-
 - Gradually migrate all remaining posts
   Gradually spend some time on formatting on links to finalize each post
 
@@ -29,5 +25,5 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
   This feels like the one remaining difficult job
 
 - Buy an AWS domain and create certs
-  Create a Cloudfront domain and do a fixed redirect without any code
-
+  Create a Cloudfront domain
+  Do rewrites for old paths
