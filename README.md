@@ -16,6 +16,12 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 | ./deploy-local.sh | Run in deployed mode locally using http://localhost:3001 |
 | ./deploy-aws.sh | I use this to deploy static content to AWS Cloudfront |
 
+## Online URL
+
+The blog is hosted at the following online URL in AWS Cloudfront:
+
+- http://apisandclients.io.s3-website.eu-west-2.amazonaws.com/
+
 ## TODO
 
 - Gradually migrate all remaining posts
