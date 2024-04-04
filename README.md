@@ -20,12 +20,16 @@ The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-p
 
 - Gradually migrate all remaining posts
   Gradually spend some time on formatting on links to finalize each post
+  Gradually refine CSS
 
-- Understand web performance and navigation better
+- Understand web requests properly in both development and release modes
+  This will help me to understand Link v anchor behavior
 
 - PRISM Toolbar with Copy to Clipboard
   This feels like the one remaining difficult job
 
-- Buy an AWS domain and create certs
-  Create a Cloudfront domain
-  Do rewrites for old paths
+- Get Cloudfront deployment working in the simplest way
+  Buy an AWS domain, create certs then create a Cloudfront domain
+
+- Transfer the old domain
+  Configure a redirect and put the rewrites there
