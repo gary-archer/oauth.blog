@@ -90,7 +90,7 @@ This blog’s code samples are standards based, so you can change configurations
 
 This blog will use the following main Cognito test account for signing in to the SPA. This is not a real user and no personal data is used by this blog’s code samples:
 
-```text
+```markdown
 - User = guestuser@mycompany.com
 - Password = GuestPassword1
 ```
@@ -99,14 +99,14 @@ This blog will use the following main Cognito test account for signing in to the
 
 This blog’s code samples will run on the local computer using DNS based URLs that represent a deployed architecture, and localhost based URLs will be avoided where possible. The initial code sample runs on these URLs:
 
-```text
+```markdown
 API: http://api.mycompany.com/api
 SPA: http://web.mycompany.com/spa
 ```
 
 To enable this on a development computer, add these entries to your hosts file, and see the OAuth Infrastructure Setup for further details.
 
-```text
+```markdown
 127.0.0.1 localhost web.mycompany.com api.mycompany.com
 ```
 
@@ -167,7 +167,7 @@ The first API call is to http://api.mycompany.com/api/companies, and if you brow
 
 You can navigate to the SPA’s second view by clicking one of the View Transactions links. The following type of URL can also be typed in the browser:
 
-```text
+```markdown
 - http://web.mycompany.com/spa/#company=1
 ```
 

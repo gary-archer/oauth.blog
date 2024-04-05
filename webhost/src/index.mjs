@@ -3,7 +3,7 @@ import express from 'express';
 // Create the express app
 const expressApp = express();
 const port = 3001;
-const physicalRoot = '../../dist';
+const physicalRoot = '../dist';
 
 // Add security headers
 expressApp.use('/*', (request, response, next) => {
