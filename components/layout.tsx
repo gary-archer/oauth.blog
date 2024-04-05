@@ -33,7 +33,7 @@ export default function Layout({children}: any): JSX.Element {
 
     useEffect(() => {
 
-        const allPres = rootRef.current.querySelectorAll("pre");
+        const allPres = rootRef.current.querySelectorAll("pre") as any;
         const cleanup: (() => void)[] = [];
 
         for (const pre of allPres) {

@@ -50,16 +50,16 @@ fi
 #
 if [ "$PLATFORM" == 'MACOS' ]; then
 
-  open -a Terminal ./deployment/localwebhost/run.sh
+  open -a Terminal ./webhost/run.sh
 
 elif [ "$PLATFORM" == 'WINDOWS' ]; then
   
   GIT_BASH="C:\Program Files\Git\git-bash.exe"
-  "$GIT_BASH" -c ./deployment/localwebhost/run.sh &
+  "$GIT_BASH" -c ./webhost/run.sh &
 
 elif [ "$PLATFORM" == 'LINUX' ]; then
 
-  gnome-terminal -- ./deployment/localwebhost/run.sh
+  gnome-terminal -- ./webhost/run.sh
 fi
 
 #
