@@ -14,7 +14,7 @@ The overall structure is from [Next.js Tutorials](https://nextjs.org/learn-pages
 | npm install | First install dependencies |
 | npm start | Run in development mode with a browser at http://localhost:3000 |
 | ./deploy-local.sh | Run in deployed mode locally using http://localhost:3001 |
-| ./deploy-aws.sh | I use this to deploy static content to AWS Cloudfront |
+| ./deploy-aws.sh | I use this script to deploy static content to AWS Cloudfront |
 
 ## Online URL
 
