@@ -1,7 +1,7 @@
 {
     "name": "localwebhost",
     "version": "1.0.0",
-    "description": "A development web host for testing the blog's built static content",
+    "description": "A local web host for testing deployed static content",
     "author": "Gary Archer",
     "license": "MIT",
     "type": "module",

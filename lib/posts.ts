@@ -39,9 +39,9 @@ export async function getPostData(id: string): Promise<any> {
     const matterResult = matter(fileContents);
 
     const processedContent = await remark()
-        .use(remarkHtml, { sanitize: false })
-        .use(remarkGfm)
         .use(remarkPrism)
+        .use(remarkGfm)
+        .use(remarkHtml, { sanitize: false })
         .process(matterResult.content);
     const contentHtml = processedContent.toString();
 

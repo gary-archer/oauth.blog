@@ -31,7 +31,7 @@ The project demonstrates a code setup to aim for. Firstly, JavaScript code runs 
 
 Both the SPA and API use configuration files that highlight important OAuth settings. The SPA acts as an ‘OAuth Client‘ and uses these fields:
 
-```json[class="line-numbers"]
+```json
 {
     "app": {
         "webOrigin":        "http://web.mycompany.com",

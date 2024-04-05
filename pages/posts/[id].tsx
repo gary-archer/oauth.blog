@@ -29,7 +29,7 @@ export async function getStaticPaths(): Promise<any> {
 
 /*
  * Render a post given its data
- * The use of dangerouslySetInnerHTML is done during a static content build
+ * The use of dangerouslySetInnerHTML is only done at development time and not in the deployed system
  */
 export default function Post({postData}: any): JSX.Element {
   
