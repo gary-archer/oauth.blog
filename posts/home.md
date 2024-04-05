@@ -3,7 +3,7 @@ title: 'Overview'
 number: 1
 ---
 
-This blog is a deep dive into getting integrated with OAuth security in APIs, browser based apps and mobile apps. This results in a distributed architecture, where care is needed to ensure productive developer setups and solid end-to-end reliability. First though, let’s set the scene in terms of related business goals and requirements.
+This blog is a deep dive into getting started with OAuth security in APIs, browser based apps and mobile apps. The focus is primarily about taming the distributed architecture. This includes getting integrated and ensuring productive developer setups and solid end-to-end reliability. First though, let’s set the scene in terms of related business goals and requirements.
 
 ### Company Software Platforms
 
@@ -32,18 +32,16 @@ To enable future-proof security, this blog will use OAuth 2.0 to secure APIs and
 
 OAuth has become the modern security solution for normal apps and APIs, with best capabilities. It is also the standard solution for protecting high worth data, via stricter OAuth security profiles. Once OAuth is coded, the security behaviour in apps can usually be extended with zero code changes.
 
-Yet I have often seen people struggle to implement OAuth and realise its benefits, since it is a distributed architecture  with more moving parts than earlier solutions. You now need to manage an intricate new component called the Authorization Server. You also need to make design choices that require insight, at both an architecture level and a code level.
+Yet I have often seen people struggle to implement OAuth and realise its benefits, since it is a distributed architecture with many moving parts. You now need to manage an intricate new component called the Authorization Server. You also need to make design choices that require insight, at both an architecture level and a code level.
 
 ### Blog Goals
 
-This blog first shows developers how to get secure end-to-end API and client flows working. It then dives deeper to explain some lessons I’ve learned related to resilient API and client journeys:
+This blog first shows developers how to get secure end-to-end API and client flows working. This blog’s security covers only the mainstream options of consuming JWT access tokens in APIs and externalizing user authentication from clients by running an OpenID Connect code flow. It then dives deeper to explain some lessons I’ve learned related to resilient API and client journeys:
 
 - Designing for manageability to avoid pain points
 - Coding with portability to keep future options open
 - Ensuring reliability by rehearsing failure scenarios
 - Enabling productivity by also considering developer setups
-
-Although this blog uses an OAuth context, its main focus is Non-Functional Requirements rather than security.  This blog’s security covers only the mainstream options of consuming JWT access tokens in APIs and externalizing user authentication from clients by running an OpenID Connect code flow.
 
 ### Code Samples
 
