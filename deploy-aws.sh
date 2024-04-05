@@ -87,14 +87,6 @@ done
 cd ../..
 
 #
-# Wait for the blog static content to become available
-#
-echo 'Waiting for Web Host to become available ...'
-while [ "$(curl -k -s -o /dev/null -w ''%{http_code}'' "$WEB_ORIGIN/index.html")" != '200' ]; do
-  sleep 2
-done
-
-#
 # Open the system browser
 #
 if [ "$PLATFORM" == 'MACOS' ]; then
