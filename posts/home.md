@@ -59,7 +59,7 @@ Any reader can run the code samples as working solutions and borrow ideas from t
 
 We have summarized blog goals and the first objective will be to deliver an initial SPA and API code sample. Both of these components will interact with an authorization server.
 
-### Next Steps
+### Next
 
 - Before getting started coding we will summarize some [Web Architecture Goals](/posts/web-architecture-goals)
 - For a list of all blog posts see the [Index Page](/posts/index)

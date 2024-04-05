@@ -7,7 +7,7 @@ export default function Navbar(): JSX.Element {
   
     return (
         <div className={utilStyles.navbar}> 
-            <h3 className={utilStyles.navbarHeader}>Resources</h3>
+            <h3 className={utilStyles.navbarHeader}>Links</h3>
             <ul>
                 <div>
                     <li><a href='/posts/index'>Main Index</a></li>
@@ -16,7 +16,7 @@ export default function Navbar(): JSX.Element {
                     <li><a href='/posts/quick-start'>Code Samples Quick Start</a></li>
                 </div>
                 <div>
-                    <li><a href='/posts/about'>About Me</a></li>
+                    <li><a href='/posts/about'>About</a></li>
                 </div>
             </ul>
         </div>

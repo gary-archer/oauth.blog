@@ -83,7 +83,7 @@ We will aim to achieve all of the goals in this page, but it will be a tricky jo
 
 We have highlighted some desired behavior, and next we will start our first objective, by running an initial OAuth secured SPA and API code sample on a developer PC.
 
-### Next Steps
+### Next
 
 - Next we will provide an [Initial SPA Code Sample Overview](/posts/basicspa-overview)
 - For a list of all blog posts see the [Index Page](/posts/index)

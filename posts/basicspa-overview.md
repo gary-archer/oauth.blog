@@ -74,14 +74,16 @@ The actual data shown is just made up and does not represent anything real. The 
 
 This view primarily exists to demonstrate navigation and Deep Linking. Users can Bookmark URLs to Secured Resources, and UIs may need to renew a token or log the user in before presenting the view:
 
-- `http://web.mycompany.com/spa#company=1`
-- `http://web.mycompany.com/spa#company=2`
+```text
+- http://web.mycompany.com/spa#company=1
+- http://web.mycompany.com/spa#company=2
+```
 
 ### Where Are We?
 
 We have an initial objective and we will build it in a solid manner, with clean code and a good separation of concerns between the SPA, an API and the authorization server.
 
-### Next Steps
+### Next
 
 - Next we will provide simple steps on [How to Run the Code Sample](/posts/basicspa-execution)
 - For a list of all blog posts see the [Index Page](/posts/index)

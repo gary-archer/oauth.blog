@@ -58,7 +58,7 @@ The frontend code samples are supported by backend APIs. The following blog post
 - API Journey – Client Side
 - API Journey – Server Side
 
-### Links
+### Next
 
 - Return to the [Home Page](/)
 - For a list of all blog posts see the [Index Page](/posts/index)

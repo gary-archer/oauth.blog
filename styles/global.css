@@ -36,7 +36,7 @@ a:hover {
 
 img {
     min-width: 50%;
-    max-width: 100%;
+    max-width: 70%;
     display: block;
 }
 
@@ -51,7 +51,7 @@ th, td {
 }
 
 pre {
-    min-width: 40%;
+    min-width: 50%;
 }
 
 @media all and (max-width: 768px)

@@ -90,17 +90,19 @@ This blog’s code samples are standards based, so you can change configurations
 
 This blog will use the following main Cognito test account for signing in to the SPA. This is not a real user and no personal data is used by this blog’s code samples:
 
-- User = `guestuser@mycompany.com`
+```text
+- User = guestuser@mycompany.com
 - Password = GuestPassword1
+```
 
 ### Step 6: Domain Setup
 
 This blog’s code samples will run on the local computer using DNS based URLs that represent a deployed architecture, and localhost based URLs will be avoided where possible. The initial code sample runs on these URLs:
 
-| Component | URL |
-| --------- | --- |
-| Secured API | `http://api.mycompany.com/api` |
-| Secured SPA | `http://web.mycompany.com/spa` |
+```text
+API: http://api.mycompany.com/api
+SPA: http://web.mycompany.com/spa
+```
 
 To enable this on a development computer, add these entries to your hosts file, and see the OAuth Infrastructure Setup for further details.
 
@@ -165,7 +167,9 @@ The first API call is to http://api.mycompany.com/api/companies, and if you brow
 
 You can navigate to the SPA’s second view by clicking one of the View Transactions links. The following type of URL can also be typed in the browser:
 
-- `http://web.mycompany.com/spa/#company=1`
+```text
+- http://web.mycompany.com/spa/#company=1
+```
 
 ![Company 1](/images/30/company1.jpg)
 
@@ -199,7 +203,7 @@ In the following screenshot, Google Chrome DevTools is used. Note that the Verbo
 
 The initial code sample is focused on how an SPA, API and Authorization Server work together. Next we will drill into OAuth message details that developers should ensure they can visualize, both to understand and  be able to troubleshoot the security.
 
-### Next Steps
+### Next
 
 - Next we will look at some [SPA and API OAuth Messages](/posts/basicspa-oauthworkflow)
 - For a list of all blog posts see the [Index Page](/posts/index)
