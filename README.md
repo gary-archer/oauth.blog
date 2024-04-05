@@ -24,21 +24,23 @@ The blog is hosted at the following online URL in AWS Cloudfront:
 
 ## TODO
 
-- PRISM Toolbar with Copy to Clipboard
-  Tidy up layour file, create a code module and add a link to this nice article
-  Fix duplicated copy button and debug useEffect to understand it - is strict mode used?
+- PRISM to tidy up layout file, create a code module and add a link to the article
   Add some comments to classes on how they fit into the React lifecycle
-  https://css-tricks.com/syntax-highlighting-prism-on-a-next-js-site/
 
 - Gradually migrate all remaining posts
   Gradually spend some time on formatting on links to finalize each post
   Gradually refine CSS
 
-- Understand web requests properly in both development and release modes
+- Understand web requests and navigation properly in both development and release modes
   This will help me to understand Link v anchor behavior
 
 - Buy the Cloudfront domain and create its certs
-  Get on top of the upgrade process, perhaps based on last changed date, with a sync all option also
+  Test the upgrade process for post and images
+  Perhaps I need to base it on last changed date, with a sync all option also
+  Add a deployment link to the README
 
 - Transfer the old domain
   Configure a redirect and put all of the ugly rewrites there for resources with no extension
+
+- Post on the react-prism repo the details from here and my simplified implementation:
+  https://css-tricks.com/syntax-highlighting-prism-on-a-next-js-site/
