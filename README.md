@@ -4,8 +4,8 @@ Web static content for my blog at https://apisandclients.io.
 
 ## Blog Architecture
 
-The blog is primarily written using GitHub markdown and images.\
-The JavaScript and layout is from [Next.js Tutorials](https://nextjs.org/learn-pages-router/basics/data-fetching/blog-data).
+The blog is primarily written using markdown and has very little JavaScript code.\
+The overall structure is from [Next.js Tutorials](https://nextjs.org/learn-pages-router/basics/data-fetching/blog-data).
 
 ## Running the Blog
 
