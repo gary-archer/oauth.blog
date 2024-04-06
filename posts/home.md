@@ -3,7 +3,7 @@ title: 'Overview'
 number: 1
 ---
 
-This blog is a deep dive into getting started with OAuth security in APIs, browser based apps and mobile apps. The focus is primarily about taming the distributed architecture. This includes getting integrated and ensuring productive developer setups and solid end-to-end reliability. First though, let’s set the scene in terms of related business goals and requirements.
+This blog is a deep dive into getting started with OAuth security in APIs, browser based apps and mobile apps. The focus is primarily about taming the distributed architecture. This includes getting integrated, ensuring productive developer setups and solid end-to-end reliability. First though, let’s set the scene in terms of related business goals and requirements.
 
 ### Company Software Platforms
 

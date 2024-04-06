@@ -24,23 +24,21 @@ The blog is hosted at the following online URL in AWS Cloudfront:
 
 ## TODO
 
-- Fix word wrap for basicspa-execution on mobile:
-  The http://api.mycompany.com/api/companies, 
+- Get all post content migrated as the priority
 
-- Gradually migrate all remaining posts before moving domain
-  Gradually spend some time on formatting on links to finalize each post
-
-- Understand web requests and navigation properly in both development and release modes
-  This will help me to understand Link v anchor behavior
-
-- Buy the Cloudfront domain and create its certs
-  Test the upgrade process for post and images
-  Perhaps I need to base it on last changed date, with a sync all option also
+- Buy the Cloudfront domain, create its certs and get deployment working
   Add a deployment link to the README to my post on web deployment
-
-- Transfer the old domain
-  Configure a redirect and put all of the ugly rewrites there for resources with no extension
 
 - Make repo public
   Post on the react-prism repo the details from here and my simplified implementation:
   https://github.com/sergioramos/remark-prism/issues/454
+
+- Test Cloudfront upgrades
+  Perhaps I need to base it on last changed date, with a sync all option also
+
+- Understand web requests and navigation properly in both development and release modes
+  This will help me to understand Link v anchor behavior
+
+- Transfer the authguidance.com domain to AWS
+  Configure a redirect and put all of the ugly rewrites there for resources with no extension
+  It is OK if this is a little slow
