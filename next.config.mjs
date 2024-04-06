@@ -2,7 +2,7 @@
  * @type {import('next').NextConfig}
  */
 export default {
-  reactStrictMode: false,
+  reactStrictMode: true,
   output: 'export',
   distDir: 'dist',
   images: {

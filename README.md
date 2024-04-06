@@ -24,12 +24,11 @@ The blog is hosted at the following online URL in AWS Cloudfront:
 
 ## TODO
 
-- PRISM to tidy up layout file, create a code module and add a link to the article
-  Add some comments to classes on how they fit into the React lifecycle
+- Fix word wrap for basicspa-execution on mobile
+  The http://api.mycompany.com/api/companies, 
 
-- Gradually migrate all remaining posts
+- Gradually migrate all remaining posts before moving domain
   Gradually spend some time on formatting on links to finalize each post
-  Gradually refine CSS
 
 - Understand web requests and navigation properly in both development and release modes
   This will help me to understand Link v anchor behavior
@@ -37,10 +36,11 @@ The blog is hosted at the following online URL in AWS Cloudfront:
 - Buy the Cloudfront domain and create its certs
   Test the upgrade process for post and images
   Perhaps I need to base it on last changed date, with a sync all option also
-  Add a deployment link to the README
+  Add a deployment link to the README to my post on web deployment
 
 - Transfer the old domain
   Configure a redirect and put all of the ugly rewrites there for resources with no extension
 
-- Post on the react-prism repo the details from here and my simplified implementation:
-  https://css-tricks.com/syntax-highlighting-prism-on-a-next-js-site/
+- Make repo public
+  Post on the react-prism repo the details from here and my simplified implementation:
+  https://github.com/sergioramos/remark-prism/issues/454
