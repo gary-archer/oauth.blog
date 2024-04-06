@@ -24,7 +24,7 @@ The blog is hosted at the following online URL in AWS Cloudfront:
 
 ## TODO
 
-- Fix word wrap for basicspa-execution on mobile
+- Fix word wrap for basicspa-execution on mobile:
   The http://api.mycompany.com/api/companies, 
 
 - Gradually migrate all remaining posts before moving domain
