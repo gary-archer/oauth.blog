@@ -5,6 +5,8 @@ body {
     font-family: Merriweather, Georgia, serif;
     line-height: 1.5;
     font-size: 1.1rem;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 h1 {
     font-family: Montserrat, "Helvetica Neue", sans-serif;
