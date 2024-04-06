@@ -3,19 +3,19 @@ title: 'Basic SPA – Overview'
 number: 20
 ---
 
-In the [Web Architecture Goals](/posts/web-architecture-goals) post we explained that our first code sample's objective would be to get an Integrated Setup running on a developer PC, so that access tokens are sent between a UI, API and Authorization Server.
+In the [Web Architecture Goals](/posts/web-architecture-goals) post we explained that our first code sample's objective would be to get an integrated setup running on a developer PC, so that access tokens are sent between a UI, API and authorization server.
 
-### Features
+### Behaviours
 
 The behaviour provided in our initial sample is summarised below:
 
-| Feature | Description |
-| ------- | ----------- |
-| Authorization Server | Developers can connect to a Cloud Authorization Server from code running on their PC |
-| SPA Security | Our SPA uses Authorization Code Flow (PKCE) for logins and uses Access Tokens to call the API |
-| API Security | The Web API validates JWT access tokens, then works with claims to implement authorization |
-| Reliable | Both the SPA and API handle expiry and other failure conditions in a solid manner |
-| Real World URLs | The SPA makes cross domain calls to the API on the local PC, and OAuth messages are viewable |
+| Behaviour | Description |
+| --------- | ----------- |
+| <span style='color:green'>**Authorization Server**</span> | Developers can connect to a Cloud Authorization Server from code running on their PC |
+| <span style='color:green'>**SPA Security**</span> | Our SPA uses Authorization Code Flow (PKCE) for logins and uses Access Tokens to call the API |
+| <span style='color:green'>**API Security**</span> | The Web API validates JWT access tokens, then works with claims to implement authorization |
+| <span style='color:green'>**Reliable**</span> | Both the SPA and API handle expiry and other failure conditions in a solid manner |
+| <span style='color:green'>**Real World URLs**</span> | The SPA makes cross domain calls to the API on the local PC, and OAuth messages are viewable |
 
 ### Components
 
@@ -25,13 +25,13 @@ The Basic SPA Code Sample will get the below components and endpoints talking to
 
 ### SPAs in 2021
 
-This sample uses the traditional SPA solution, with OpenID Connect implemented solely in Javascript. This is no longer recommended, and your production apps should instead use a Back End for Front End approach.
+<span style='color:red'>This sample uses the traditional SPA solution, with OpenID Connect implemented solely in Javascript. This is no longer recommended, and your production apps should instead use a [Backend for Frontend](/posts/spa-back-end-for-front-end) approach.</span>
 
-The traditional SPA flow remains useful for representing a pure SPA architecture, and learning about OAuth endpoints and messages. This blog's Final SPA provides a BFF based solution, but requires a more complex flow.
+The traditional SPA flow remains useful for representing a pure SPA architecture, and learning about OAuth endpoints and messages. This blog's [Final SPA](https://authguidance.com/final-spa-overview/) provides a BFF based solution, but requires a more complex flow.
 
 ### Code Download
 
-The code for our SPA and API can be downloaded from here, and we will cover full details of how to run it, and the interactions involved, in the next post:
+The code for our SPA and API can be downloaded from [here](https://github.com/gary-archer/oauth.websample1), and we will cover full details of how to run it, and the interactions involved, in the next post:
 
 ![Repo](/images/20/repo.jpg)
 
@@ -41,8 +41,8 @@ In our SPA and API we will use the following respected open source libraries, wh
 
 | Component | Library | Features |
 | --------- | ------- | -------- |
-| SPA | oidc-client-ts | Implements OpenID Connect lifecycle events for a browser based client, including logins, logouts and token renewal |
-| API | jose | Validates JWT access tokens, returns claims and manages looking up and caching of token signing public keys |
+| <span style='color:green'>**SPA**</span> | [oidc-client-ts](https://github.com/authts/oidc-client-ts) | Implements OpenID Connect lifecycle events for a browser based client, including logins, logouts and token renewal |
+| <span style='color:green'>**API**</span> | [jose](https://github.com/panva/jose) | Validates JWT access tokens, returns claims and manages looking up and caching of token signing public keys |
 
 ### Programming Languages
 
@@ -50,8 +50,8 @@ This blog will use multiple technologies, and they will all be modern and cross 
 
 | Component | Language | Platforms |
 | --------- | -------- | --------- |
-| SPA | TypeScript | Chrome / Edge / Firefox / Safari / Mobile |
-| API | Node.js + TypeScript | Windows / macOS / Linux |
+| <span style='color:green'>**SPA**</span> | TypeScript | Chrome / Edge / Firefox / Safari / Mobile |
+| <span style='color:green'>**API**</span> | Node.js + TypeScript | Windows / macOS / Linux |
 
 ### Simple Web Technology for Early Samples
 
@@ -59,8 +59,8 @@ We will use modern web technology, but will avoid web frameworks to start with, 
 
 | Step | Details |
 | ---- | ------- |
-| SPA OAuth Coding Model | First show how to integrate standards based OAuth support into a Simple SPA so that we can focus on OAuth requirements |
-| Modern SPA Framework | Avoid getting sidetracked by too much web technology initially, though our Final SPA will use React |
+| <span style='color:green'>**SPA OAuth Coding Model**</span> | First show how to integrate standards based OAuth support into a Simple SPA so that we can focus on OAuth requirements |
+| <span style='color:green'>**Modern SPA Framework**</span> | Avoid getting sidetracked by too much web technology initially, though later our Final SPA will use React |
 
 ### Our Code Sample Theme
 
@@ -72,12 +72,10 @@ The actual data shown is just made up and does not represent anything real. The 
 
 ![Details View](/images/20/details-view.jpg)
 
-This view primarily exists to demonstrate navigation and Deep Linking. Users can Bookmark URLs to Secured Resources, and UIs may need to renew a token or log the user in before presenting the view:
+This view primarily exists to demonstrate navigation and Deep Linking. Users can bookmark URLs to secured resources, and UIs may need to renew a token or log the user in before presenting the view:
 
-```markdown title="whatevar"
-- http://web.mycompany.com/spa#company=1
-- http://web.mycompany.com/spa#company=2
-```
+- `http://web.mycompany.com/spa#company=1`
+- `http://web.mycompany.com/spa#company=2`
 
 ### Where Are We?
 

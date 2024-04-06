@@ -21,14 +21,14 @@ Before most APIs and clients can be run in production, they need foundations. An
 
 | Quality | Description |
 | ------- | ----------- | 
-| Secure | Dealing with user authentication and API message credentials, to secure access to data |
-| Reliable | Ensuring that the moving parts of the overall implementation provide a reliable solution |
-| Productive | The setup should be understood by engineering teams and should not have adverse effects on how they run their components |
-| Scalable | It must be possible to extend the architecture to many components, without a major increase in complexity |
+| <span style='color:green'>**Secure**</span> | Dealing with user authentication and API message credentials, to secure access to data |
+| <span style='color:green'>**Reliable**</span> | Ensuring that the moving parts of the overall implementation provide a reliable solution |
+| <span style='color:green'>**Productive**</span> | The setup should be understood by engineering teams and should not have adverse effects on how they run their components |
+| <span style='color:green'>**Scalable**</span> | It must be possible to extend the architecture to many components, without a major increase in complexity |
 
 ### The OAuth 2.0 Authorization Framework
 
-To enable future-proof security, this blog will use OAuth 2.0 to secure APIs and clients. OAuth is a family of specifications for  protecting data. Solutions are JSON based and work well in all web, mobile and API technologies. OAuth scales well across many components in a software platform.
+To enable future-proof security, this blog will use OAuth 2.0 to secure APIs and clients. OAuth is a [family of specifications](https://datatracker.ietf.org/doc/html/rfc6749) for protecting data. Solutions are JSON based and work well in all web, mobile and API technologies. OAuth scales well across many components in a software platform.
 
 OAuth has become the modern security solution for normal apps and APIs, with best capabilities. It is also the standard solution for protecting high worth data, via stricter OAuth security profiles. Once OAuth is coded, the security behaviour in apps can usually be extended with zero code changes.
 
@@ -38,14 +38,14 @@ Yet I have often seen people struggle to implement OAuth and realise its benefit
 
 This blog first shows developers how to get secure end-to-end API and client flows working. This blog’s security covers only the mainstream options of consuming JWT access tokens in APIs and externalizing user authentication from clients by running an OpenID Connect code flow. It then dives deeper to explain some lessons I’ve learned related to resilient API and client journeys:
 
-- Designing for manageability to avoid pain points
-- Coding with portability to keep future options open
-- Ensuring reliability by rehearsing failure scenarios
-- Enabling productivity by also considering developer setups
+- Designing for <span style='color:green'>**manageability**</span> to avoid pain points
+- Coding with <span style='color:green'>**portability**</span> to keep future options open
+- Ensuring <span style='color:green'>**reliability**</span> by rehearsing failure scenarios
+- Enabling <span style='color:green'>**productivity**</span> by also considering developer setups
 
 ### Code Samples
 
-This blog is code-centric with a focus on simple code, where security and other plumbing is separated from business logic. There are a number of Standards Based Code Samples which I use to stay up to date with mainstream technology stacks.
+This blog is code-centric with a focus on simple code, where security and other plumbing is separated from business logic. There are a number of [Standards Based Code Samples](https://github.com/gary-archer) which I use to stay up to date with mainstream technology stacks.
 
 ![repos](/images/1/repos.jpg)
 

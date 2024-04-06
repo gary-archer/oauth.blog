@@ -7,7 +7,7 @@ The Overview Page summarised the behaviour of the initial [SPA and API code samp
 
 ### Prerequisites
 
-This blog’s code examples run in any Linux based terminal, and are tested on Ubuntu, Windows and macOS. On Windows it is expected that a Git Bash shell is used. Also ensure that an up to date version of Node.js is installed for your operating system.
+This blog’s code examples run in any Linux based terminal, and are tested on Ubuntu, Windows and macOS. On Windows it is expected that a [Git Bash](https://gitforwindows.org/) shell is used. Also ensure that an up to date version of [Node.js](https://nodejs.org/en/download/) is installed for your operating system.
 
 ### Step 1: Download Code from GitHub
 
@@ -21,15 +21,15 @@ git clone https://github.com/gary-archer/oauth.websample1
 
 ### Step 2: View Code in an IDE
 
-I use Visual Studio Code on macOS and Windows, but any editor can be used. Select ‘Open Folder‘ then browse to oauth.websample1:
+I use [Visual Studio Code](https://code.visualstudio.com/) on macOS and Windows, but any editor can be used. Select **Open Folder** then browse to oauth.websample1:
 
 ![Code layout](/images/30/code-layout.jpg)
 
-The project demonstrates a code setup to aim for. Firstly, JavaScript code runs in the browser and is focused on a great user experience. Secondly, API code serves data to frontends. All code is business focused, with less plumbing than older ‘web back end‘ solutions.
+The project demonstrates a code setup to aim for. Firstly, JavaScript code runs in the browser and is focused on a great user experience. Secondly, API code serves data to frontends. Frontend code is business focused, with less plumbing than older web back end solutions.
 
 ### Step 3: View Configuration
 
-Both the SPA and API use configuration files that highlight important OAuth settings. The SPA acts as an ‘OAuth Client‘ and uses these fields:
+Both the SPA and API use configuration files that highlight important OAuth settings. The SPA acts as an **OAuth Client** and uses these configuration values:
 
 ```json
 {
@@ -46,7 +46,7 @@ Both the SPA and API use configuration files that highlight important OAuth sett
 }
 ```
 
-The API acts as an ‘OAuth Resource Server‘ and uses these fields. We will explain these settings as we progress.
+The API acts as an **OAuth Resource Server** and uses these configuration values. We will explain these settings as we progress.
 
 ```json
 {
@@ -71,18 +71,18 @@ The API acts as an ‘OAuth Resource Server‘ and uses these fields. We will ex
 
 Both the SPA and API use endpoints from my personal AWS Cognito account, which is a low cost cloud solution. Jump ahead to these future posts for further details:
 
-- Authorization Server Setup
-- AWS Cognito Cloud Setup
+- [Authorization Server Setup](https://authguidance.com/oauth-infrastructure-setup/)
+- [AWS Cognito Cloud Setup](https://authguidance.com/managed-authorization-server-setup/)
 
-OAuth clients must be registered at the Authorization Server, and our SPA includes an online entry as follows:
+OAuth clients must be registered at the authorization server, and our SPA includes an online entry as follows:
 
 ![Client settings 1](/images/30/client-settings1.jpg)
 
-The registered OAuth settings for Client ID, Redirect URI and Scope allow these values to be used by applications. The same values must be used in the SPA’s own configuration.
+The registered OAuth settings for **Client ID**, **Redirect URI** and **Scope** allow these values to be used by applications. The same values must be used in the SPA’s own configuration.
 
 ![Client settings 2](/images/30/client-settings2.jpg)
 
-For the first code sample we will use HTTP URLs, and Cognito requires us to register a host name of localhost in this case. For future samples we will register HTTPS URLs instead.
+For the first code sample we will use HTTP URLs, and Cognito requires us to register a host name of `http://localhost` in this case. For future samples we will register HTTPS URLs instead.
 
 This blog’s code samples are standards based, so you can change configurations to point to your own Authorization Server instead. You will then be able to use your own preferred URLs and ports for the SPA and API.
 
@@ -90,21 +90,17 @@ This blog’s code samples are standards based, so you can change configurations
 
 This blog will use the following main Cognito test account for signing in to the SPA. This is not a real user and no personal data is used by this blog’s code samples:
 
-```markdown
-- User = guestuser@mycompany.com
-- Password = GuestPassword1
-```
+- User: `guestuser@mycompany.com`
+- Password: `GuestPassword1`
 
 ### Step 6: Domain Setup
 
 This blog’s code samples will run on the local computer using DNS based URLs that represent a deployed architecture, and localhost based URLs will be avoided where possible. The initial code sample runs on these URLs:
 
-```markdown
-API: http://api.mycompany.com/api
-SPA: http://web.mycompany.com/spa
-```
+- API: `http://api.mycompany.com/api`
+- SPA: `http://web.mycompany.com/spa`
 
-To enable this on a development computer, add these entries to your hosts file, and see the OAuth Infrastructure Setup for further details.
+To enable this on a development computer, add these entries to your hosts file. The [OAuth Infrastructure Setup](https://authguidance.com/2019/09/15/developer-domain-setup/) post says more about the use of domnain-based URLs.
 
 ```markdown
 127.0.0.1 localhost web.mycompany.com api.mycompany.com
@@ -151,15 +147,15 @@ To keep the developer setup simple, the API also serves the SPA’s bundle files
 
 ### Step 8: Login to the SPA
 
-The script then invokes a browser at http://web.mycompany.com/spa, and the SPA triggers an OpenID Connect redirect when it loads, to get an OAuth access token, so that it can call the API:
+The script then invokes a browser at `http://web.mycompany.com/spa`, and the SPA triggers an OpenID Connect redirect when it loads, to get an OAuth access token, so that it can call the API:
 
 ![Login](/images/30/login.jpg)
 
-After signing in, the SPA is rendered, which just shows hard coded fictional data returned from the API. This data is secured using OAuth access tokens, and the SPA and API code uses CORS, to support cross origin deployments.
+After signing in, the SPA is rendered, which just shows hard coded fictional data returned from the API. This data is secured using OAuth access tokens, and the SPA and API code use [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), to enable cross-origin requets.
 
 ![List view](/images/20/list-view.jpg)
 
-The first API call is to http://api.mycompany.com/api/companies, and if you browse there directly you will get a 401 response, since direct browsing to APIs does not send an OAuth access token:
+The first API call is to `http://api.mycompany.com/api/companies`, and if you browse there directly you will get a 401 response, since direct browsing to APIs does not send an OAuth access token:
 
 ![API browser access](/images/30/api-browser-access.jpg)
 
@@ -167,9 +163,7 @@ The first API call is to http://api.mycompany.com/api/companies, and if you brow
 
 You can navigate to the SPA’s second view by clicking one of the View Transactions links. The following type of URL can also be typed in the browser:
 
-```markdown
-- http://web.mycompany.com/spa/#company=1
-```
+- `http://web.mycompany.com/spa/#company=1`
 
 ![Company 1](/images/30/company1.jpg)
 

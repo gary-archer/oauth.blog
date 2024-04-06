@@ -3,7 +3,7 @@ title: 'Web Architecture Goals'
 number: 10
 ---
 
-The [Home Page](/) described OAuth in terms of overall goals for a software platform. In this post we will describe what we are looking for in an Optimal Web Architecture, which is not just about security. This post briefly summarizes some goals and concerns for web apps.
+The [Home Page](/) described OAuth in terms of overall goals for a software platform. In this post we will describe what we are looking for in an optimal web architecture, which is not just about security. This post briefly summarizes some goals and concerns for web apps.
 
 ### Goal: Best User Experience
 
@@ -27,24 +27,24 @@ Most companies want good global performance for their Internet web applications.
 
 Single page applications must be able to interact with APIs, so need an API message credential. APIs must return only correct and allowed data for each user, so the user must be authenticated first.
 
-OAuth and OpenID Connect provide powerful options for issuing access tokens as API message credentials, and authenticating the user in many possible ways. OAuth for Browser Based Apps provides some best practice recommendations.
+OAuth and OpenID Connect provide powerful options for issuing access tokens as API message credentials, and authenticating the user in many possible ways. [OAuth for Browser Based Apps](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps) provides some best practice recommendations.
 
-### Goal: Pass Web Security Reviews
+### Goal: Prevent Browser Threats
 
-By following web security best practices, vetted by experts, companies will avoid most vulnerabilities and perform better in PEN tests. For web apps, Cross Site Scripting (XSS) is a particular concern that must be addressed, separately to the OAuth implementation.
+By following web security best practices, vetted by experts, companies will avoid most vulnerabilities and perform better in PEN tests. For web apps, [Cross Site Scripting (XSS)](https://owasp.org/www-community/attacks/xss/a) is a particular concern that must be addressed, separately to the OAuth implementation.
 
 If an app has XSS vulnerabilities, then an attacker may be able to access secured data in exactly the same way as the real web app. Therefore, reducing the impact of XSS exploits is now a major consideration when designing web solutions.
 
 ### Goal: Best Login Usability
 
-OpenID Connect can provide multiple ways for users to sign in to an SPA, and this can include options that are both user friendly and secure. In addition, an SPA should be in full control of its navigation behavior:
+OpenID Connect can provide multiple ways for users to sign in to an SPA, and this can include options that are both user friendly and secure. In addition, an SPA should be in full control of its usability behavior:
 
-- Login Redirects: the UI should be able to save application location and state before a redirect, then restore it afterwards
-- Multi Tab Browsing: the end user should be able to use multiple browser tabs and navigate across multiple applications without issues
+- <span style='color:green'>**Session Behavior**</span>: the UI should be in control of redirects and expiry events and be able to write any code before and after
+- <span style='color:green'>**Multi Tab Browsing**</span>: the end user should be able to use multiple browser tabs and navigate across multiple applications without issues
 
 ### Goal: Good Search Results
 
-For unsecured web apps, it is common to want to achieve good Search Engine Optimization results and Server Side Rendering is often used. For secured web apps, such as those used in this blog, views cannot be reached by search bots, and a different web architecture can be used.
+For unsecured web apps, it is common to want to achieve good Search Engine Optimization (SEO) results by pre-rendering data. For secured web apps that get data from APIs, such as those used in this blog, it is not usually secure to pre-render data, and protected views cannot be reached by search bots. Therefore different web architectures should be used for unsecured and secured views.
 
 ### Goal: Partner Web Integrations
 
@@ -64,8 +64,8 @@ Portability is often overlooked, but it is common to want to keep your options o
 
 | Aspect | Description |
 | ------ | ----------- |
-| Portable Apps	| Implement OpenID Connect in the SPA in a standard way rather than being locked into one authorization server |
-| Portable Hosting | SPAs should be deployable by simply uploading static content, so avoid designs that prevent this |
+| <span style='color:green'>**Portable Apps**</span> | Implement OpenID Connect in the SPA in a standard way rather than being locked into one authorization server |
+| <span style='color:green'>**Portable Hosting**</span> | SPAs should be deployable by simply uploading static content, so avoid designs that prevent this |
 
 ### This Blog's SPA Code Samples
 
@@ -73,9 +73,9 @@ This blog's posts and the accompanying code samples will explain OAuth features 
 
 | Stage | Description |
 | ----- | ----------- |
-| Basics | Getting an SPA, API and authorization server working together, with a developer friendly setup |
-| Updated | SPA session management for a complete user experience, and flexible API authorization in the API, to protect data |
-| Final | A security hardened SPA that runs from a content delivery network and interacts with cloud deployed APIs |
+| [Basics](/posts/basicspa-overview) | Getting an SPA, API and authorization server working together, with a developer friendly setup |
+| [Updated](/posts/improved-spa-code-sample-overview) | SPA session management for a complete user experience, and flexible API authorization in the API, to protect data |
+| [Final](/posts/final-spa-overview) | A security hardened SPA that runs from a content delivery network and interacts with cloud deployed APIs |
 
 We will aim to achieve all of the goals in this page, but it will be a tricky journey. Once complete though, the architecture will be in a great place.
 
