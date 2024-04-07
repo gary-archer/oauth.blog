@@ -16,4 +16,4 @@ The content for my blog at https://apisandclients.com.
 The blog is primarily written using markdown and has minimal JavaScript logic:
 
 - The folder layout and processing of markdown is explained in [Next.js Tutorials](https://nextjs.org/learn-pages-router/basics/data-fetching/blog-data).
-- I then updated to use [MDX Remote](https://github.com/vercel/next.js/tree/canary/examples/with-mdx-remote) to enable client side routing between markdown pages
+- I then updated to use [MDX Remote](https://github.com/vercel/next.js/tree/canary/examples/with-mdx-remote) for more complete features.
