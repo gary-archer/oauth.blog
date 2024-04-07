@@ -1,7 +1,10 @@
 # APIs and Clients
 
-Web static content for my blog at https://apisandclients.io.\
-The temporary online URL is http://apisandclients.io.s3-website.eu-west-2.amazonaws.com/
+Web static content for my blog at https://apisandclients.com.
+
+## Temporary Online URL
+
+- http://apisandclients.com.s3-website.eu-west-2.amazonaws.com
 
 ## Running the Blog
 

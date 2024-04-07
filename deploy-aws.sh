@@ -6,8 +6,8 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-WEB_ORIGIN='http://apisandclients.io.s3-website.eu-west-2.amazonaws.com'
-BUCKET_NAME='apisandclients.io'
+WEB_ORIGIN='http://apisandclients.com.s3-website.eu-west-2.amazonaws.com'
+BUCKET_NAME='apisandclients.com'
 
 #
 # Get the platform
@@ -79,7 +79,7 @@ for file in *.html; do
     FILENAME="${file%%.html}"
     mv -- "$file" "$FILENAME"
     aws s3api put-object         \
-      --bucket apisandclients.io \
+      --bucket apisandclients.com \
       --key posts/$FILENAME      \
       --body $FILENAME           \
       --content-type text/html
