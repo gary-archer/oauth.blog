@@ -7,7 +7,7 @@ This blog is a deep dive into getting started with OAuth security in APIs, brows
 
 ### Company Software Platforms
 
-Software companies often want to build interactive web and API solutions, to enable a modern and dynamic user experience. It is common to therefore want to build Single Page Applications (SPA), with a technical focus on front end development:
+Software companies often want to build interactive web and API solutions, to enable a modern and dynamic user experience. It is common to therefore want to build **Secured Single Page Applications (SPA)**, with a technical focus on front end development:
 
 ![spa-and-apis](/images/1/spa-and-apis.jpg)
 

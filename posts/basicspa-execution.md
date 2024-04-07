@@ -21,7 +21,7 @@ git clone https://github.com/gary-archer/oauth.websample1
 
 ### Step 2: View Code in an IDE
 
-I use [Visual Studio Code](https://code.visualstudio.com/) on macOS and Windows, but any editor can be used. Select **Open Folder** then browse to oauth.websample1:
+I use [Visual Studio Code](https://code.visualstudio.com/) on macOS and Windows, but any editor can be used:
 
 ![Code layout](/images/30/code-layout.jpg)
 
@@ -38,7 +38,7 @@ Both the SPA and API use configuration files that highlight important OAuth sett
         "apiBaseUrl":       "http://api.mycompany.com/api"
     },
     "oauth": {
-        "authority":        "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_qqJgVeuTn",
+        "authority":        "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
         "clientId":         "6tg0qglddpvqh74k3jbf1mmj64",
         "redirectUri":      "http://localhost/spa",
         "scope":            "openid profile"
@@ -59,7 +59,7 @@ The API acts as an **OAuth Resource Server** and uses these configuration values
         "proxyUrl": "http://127.0.0.1:8888"
     },
     "oauth": {
-        "jwksEndpoint": "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_qqJgVeuTn/.well-known/jwks.json",
+        "jwksEndpoint": "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json",
         "algorithm": "RS256",
         "issuer": "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_qqJgVeuTn",
         "audience": ""
@@ -82,7 +82,7 @@ The registered OAuth settings for **Client ID**, **Redirect URI** and **Scope** 
 
 ![Client settings 2](/images/30/client-settings2.jpg)
 
-For the first code sample we will use HTTP URLs, and Cognito requires us to register a host name of `http://localhost` in this case. For future samples we will register HTTPS URLs instead.
+For the first code sample we will use HTTP URLs, and Cognito requires us to register a host name of http`:`//localhost in this case. For future samples we will register HTTPS URLs instead.
 
 This blog’s code samples are standards based, so you can change configurations to point to your own Authorization Server instead. You will then be able to use your own preferred URLs and ports for the SPA and API.
 
@@ -90,15 +90,15 @@ This blog’s code samples are standards based, so you can change configurations
 
 This blog will use the following main Cognito test account for signing in to the SPA. This is not a real user and no personal data is used by this blog’s code samples:
 
-- User: `guestuser@mycompany.com`
-- Password: `GuestPassword1`
+- User: guestuser`@`mycompany.com
+- Password: GuestPassword1
 
 ### Step 6: Domain Setup
 
 This blog’s code samples will run on the local computer using DNS based URLs that represent a deployed architecture, and localhost based URLs will be avoided where possible. The initial code sample runs on these URLs:
 
-- API: `http://api.mycompany.com/api`
-- SPA: `http://web.mycompany.com/spa`
+- API: http`:`//api.mycompany.com/api
+- SPA: http`:`//web.mycompany.com/spa
 
 To enable this on a development computer, add these entries to your hosts file. The [OAuth Infrastructure Setup](https://authguidance.com/2019/09/15/developer-domain-setup/) post says more about the use of domnain-based URLs.
 
@@ -108,7 +108,7 @@ To enable this on a development computer, add these entries to your hosts file. 
 
 ### Step 7: Run the SPA and API
 
-In the root folder, run the following script to spin up the system. This essentially just runs ‘npm install‘ and ‘npm start‘ for the SPA and API components:
+In the root folder, run the following script to spin up the system. This essentially just runs **npm install** and **npm start** for the SPA and API components:
 
 ```bash
 ./start.sh
@@ -147,7 +147,7 @@ To keep the developer setup simple, the API also serves the SPA’s bundle files
 
 ### Step 8: Login to the SPA
 
-The script then invokes a browser at `http://web.mycompany.com/spa`, and the SPA triggers an OpenID Connect redirect when it loads, to get an OAuth access token, so that it can call the API:
+The script then invokes a browser at http`:`//web.mycompany.com/spa, and the SPA triggers an OpenID Connect redirect when it loads, to get an OAuth access token, so that it can call the API:
 
 ![Login](/images/30/login.jpg)
 
@@ -155,7 +155,7 @@ After signing in, the SPA is rendered, which just shows hard coded fictional dat
 
 ![List view](/images/20/list-view.jpg)
 
-The first API call is to `http://api.mycompany.com/api/companies`, and if you browse there directly you will get a 401 response, since direct browsing to APIs does not send an OAuth access token:
+The first API call is to http`:`//api.mycompany.com/api/companies, and if you browse there directly you will get a 401 response, since direct browsing to APIs does not send an OAuth access token:
 
 ![API browser access](/images/30/api-browser-access.jpg)
 
@@ -163,7 +163,7 @@ The first API call is to `http://api.mycompany.com/api/companies`, and if you br
 
 You can navigate to the SPA’s second view by clicking one of the View Transactions links. The following type of URL can also be typed in the browser:
 
-- `http://web.mycompany.com/spa/#company=1`
+- http`:`//web.mycompany.com/spa/#company=1
 
 ![Company 1](/images/30/company1.jpg)
 
@@ -173,11 +173,11 @@ SPA URLs can be bookmarked, and this can be done by opening a new browser tab or
 
 ### Step 10: Run a User Session
 
-The SPA’s session management is incomplete in the initial sample. Every time the access token expires the user has to login again. This can be simulated by clicking Expire Token followed by Reload Data.
+The SPA’s session management is incomplete in the initial sample. Every time the access token expires the user has to login again. This can be simulated by clicking **Expire Token** followed by **Reload Data**.
 
 ![Session testing](/images/30/session-testing.jpg)
 
-The code samples stores access tokens in session storage, so that page reloads do not redirect the browser. However, opening a new browser tab or window does a Single Sign On operation, to get a new access token.
+The code samples stores access tokens in session storage, so that page reloads do not redirect the browser. However, opening a new browser tab or window does a single sign-on operation, to get a new access token.
 
 ### Step 11: View Browser Traffic
 
@@ -187,9 +187,9 @@ Developers need to understand OAuth messages, which are sent using an HTTP langu
 
 ### Step 12: View Security Library Logs
 
-The SPA can show debug details from the oidc-client-ts library, to provide visualisation of the OAuth SPA logic. You can activate this by adding a #log=debug query parameter to the SPA, then viewing the browser console.
+The SPA can show debug details from the oidc-client-ts library, to provide visualisation of the OAuth SPA logic. You can activate this by adding a **#log=debug** query parameter to the SPA, then viewing the browser console.
 
-In the following screenshot, Google Chrome DevTools is used. Note that the Verbose level is selected in order to show debug messages, and Preserve Log is used, to maintain messages before and after login redirects.
+In the following screenshot, Google Chrome DevTools is used. Note that the Verbose level is selected in order to show debug messages, and **Preserve Log** is used, to maintain messages before and after login redirects.
 
 ![OAuth debugging](/images/30/oauth-debugging.jpg)
 

@@ -7,7 +7,7 @@ The [Home Page](/) described OAuth in terms of overall goals for a software pla
 
 ### Goal: Best User Experience
 
-Client-side web apps separate HTML and data concerns to deliver a fast experience for end users. A Single Page Application (SPA) visits the server less often, and modern technologies such as React provide an ecosystem with many tools and techniques for building modern apps.
+Client-side web apps separate HTML and data concerns to deliver a fast experience for end users. A **Single Page Application (SPA)** visits the server less often, and modern technologies such as React provide an ecosystem with many tools and techniques for building modern apps.
 
 ![React SPA framework](/images/10/react.jpg)
 
@@ -19,7 +19,7 @@ OAuth also enables web apps to externalize their security to the authorization s
 
 ### Goal: Good Global Performance
 
-Most companies want good global performance for their Internet web applications. A Content Delivery Network (CDN) is the simplest solution for managing latency. It is harder to enable for web back ends that execute code such as cookie issuing, leading to restricted hosting options.
+Most companies want good global performance for their Internet web applications. A **Content Delivery Network (CDN)** is the simplest solution for managing latency. It is harder to enable for web back ends that execute code such as cookie issuing, leading to restricted hosting options.
 
 ![Content delivery network](/images/10/cdn.jpg)
 
@@ -27,7 +27,7 @@ Most companies want good global performance for their Internet web applications.
 
 Single page applications must be able to interact with APIs, so need an API message credential. APIs must return only correct and allowed data for each user, so the user must be authenticated first.
 
-OAuth and OpenID Connect provide powerful options for issuing access tokens as API message credentials, and authenticating the user in many possible ways. [OAuth for Browser Based Apps](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps) provides some best practice recommendations.
+**OAuth 2.0** and **OpenID Connect** are the standards that provide the most powerful options for issuing access tokens as API message credentials, and authenticating the user in many possible ways. [OAuth for Browser Based Apps](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps) provides some best practice recommendations.
 
 ### Goal: Prevent Browser Threats
 
@@ -44,7 +44,7 @@ OpenID Connect can provide multiple ways for users to sign in to an SPA, and thi
 
 ### Goal: Good Search Results
 
-For unsecured web apps, it is common to want to achieve good Search Engine Optimization (SEO) results by pre-rendering data. For secured web apps that get data from APIs, such as those used in this blog, it is not usually secure to pre-render data, and protected views cannot be reached by search bots. Therefore different web architectures should be used for unsecured and secured views.
+For unsecured web apps, it is common to want to achieve good **Search Engine Optimization (SEO)** results by pre-rendering data. For secured web apps that get data from APIs, such as those used in this blog, it is not usually secure to pre-render data, and protected views cannot be reached by search bots. Therefore different web architectures should be used for unsecured and secured views.
 
 ### Goal: Partner Web Integrations
 

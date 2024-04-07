@@ -74,8 +74,8 @@ The actual data shown is just made up and does not represent anything real. The 
 
 This view primarily exists to demonstrate navigation and Deep Linking. Users can bookmark URLs to secured resources, and UIs may need to renew a token or log the user in before presenting the view:
 
-- `http://web.mycompany.com/spa#company=1`
-- `http://web.mycompany.com/spa#company=2`
+- http`:`//web.mycompany.com/spa#company=1
+- http`:`//web.mycompany.com/spa#company=2
 
 ### Where Are We?
 

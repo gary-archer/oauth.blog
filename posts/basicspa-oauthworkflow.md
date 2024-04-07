@@ -17,9 +17,9 @@ This blog recommends an [OAuth Development Setup](/posts/oauth-infrastructure-se
 
 | Component	| Base URL |
 | --------- | -------- |
-| <span style='color:green'>**SPA**</span> | http://web.mycompany.com |
-| <span style='color:green'>**API**</span> | http://api.mycompany.com |
-| <span style='color:green'>**Authorization Server**</span> | http://login.mycompany.com |
+| <span style='color:green'>**SPA**</span> | http`:`//web.mycompany.com |
+| <span style='color:green'>**API**</span> | http`:`//api.mycompany.com |
+| <span style='color:green'>**Authorization Server**</span> | http`:`//login.mycompany.com |
 
 When using an HTTP value for the SPA’s redirect URI, Cognito has a restriction on the using a localhost based value for the redirect URI. The code example manages this by redirecting back to the correct domain name when it receives a login response.
 
@@ -43,7 +43,7 @@ As part of loading views, the SPA looks for an existing access token. It does no
 
 The first thing the security library does is make a cross origin HTTP request to get OpenID Connect metadata at the below URL. In some systems you will need to enable CORS permissions for. this to work:
 
-- https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_qqJgVeuTn/.well-known/openid-configuration
+- https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/openid-configuration
 
 The metadata response includes details about the authorization server capabilities and its OpenID Connect endpoints:
 
