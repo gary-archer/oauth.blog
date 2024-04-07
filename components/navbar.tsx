@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import utilStyles from '../styles/utils.module.css';
 
 /*
@@ -10,13 +11,13 @@ export default function Navbar(): JSX.Element {
             <h3 className={utilStyles.navbarHeader}>Links</h3>
             <ul>
                 <div>
-                    <li><a href='/posts/index'>Main Index</a></li>
+                    <li><Link href='/posts/index'>Main Index</Link></li>
                 </div>
                 <div>
-                    <li><a href='/posts/quick-start'>Code Samples</a></li>
+                    <li><Link href='/posts/quick-start'>Code Samples</Link></li>
                 </div>
                 <div>
-                    <li><a href='/posts/about'>About</a></li>
+                    <li><Link href='/posts/about'>About</Link></li>
                 </div>
             </ul>
         </div>
