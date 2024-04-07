@@ -1,23 +1,22 @@
 ---
 title: 'Code Samples Quick Start'
-number: 3
 ---
 
 This page briefly summarises the blog’s final code samples. These all use only fictional data and user accounts. They include frontends that call Cloud Hosted APIs and a Cloud Authorization Server. For each app, one of the following credentials can be used to sign in:
 
-- Demo User with Low Privileges: `guestuser@mycompany.com`
-- Demo User with High Privileges: `guestadmin@mycompany.com`
-- Password: GuestPassword1
+- Demo User with Low Privileges: **guestuser`@`mycompany.com**
+- Demo User with High Privileges: **guestadmin`@`mycompany.com**
+- Password: **GuestPassword1**
 
 ### Secured Single Page Application
 
-This is a React SPA that implements OpenID Connect via the Token Handler Pattern. It uses only the latest and strongest secure cookies in the browser, while also enabling pure SPA development and deployment.
+This is a React SPA that implements OpenID Connect via the **Token Handler Pattern**. It uses only the latest and strongest secure cookies in the browser, while also enabling pure SPA development and deployment.
 
 ![SPA view](/images/3/spa-view.jpg)
 
 The SPA is deployed to many global locations using AWS Cloudfront. Anyone can run the app via the below link. To run the app locally you can follow the [Final SPA Instructions](/posts/how-to-run-the-react-js-spa).
 
-- `https://web.authsamples.com`
+- https`:`//web.authsamples.com
 
 ![SPA login](/images/3/spa-login.jpg)
 

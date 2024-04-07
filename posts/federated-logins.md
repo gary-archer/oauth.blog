@@ -1,0 +1,5 @@
+---
+title: 'User Authentication Behaviour'
+---
+
+Being migrated from https://authguidance.com/federated-logins.

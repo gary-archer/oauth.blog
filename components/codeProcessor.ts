@@ -17,7 +17,7 @@ export function addCopyToClipboardButtons(rootRef: MutableRefObject<HTMLDivEleme
 }
 
 /*
- * Create a single copy button element and define its click behavior
+ * Create a single copy button element and define its click behaviour
  */
 function createCopyButton(codeElement: Element): HTMLButtonElement {
 

@@ -1,6 +1,5 @@
 ---
 title: 'About'
-number: 4
 ---
 
 I’m a long time [Software Engineer](https://www.linkedin.com/in/gary-archer-6b3613153/) with an interest in the art of separation. The deeper problems in software usually caused by suboptimal designs. OAuth done right is a great example of solid design choices providing high business value.
@@ -11,7 +10,7 @@ I wrote this blog’s main content from 2017-2019, with a focus on non-functiona
 
 ### Blog Technology
 
-The content is built as a basic Next.js blog and is available in the following GitHub repository. I deploy it as static content to AWS Cloudfront so that it performs well globally. You might use the content as a starting point for your own blog, by replacing the contents of the `/posts` folder.
+The content is built as a basic Next.js blog and is available in the following GitHub repository. I deploy it as static content to AWS Cloudfront so that it performs well globally. You might use the content as a starting point for your own blog, by replacing the contents of the **/posts** folder.
 
 - https://github.com/gary-archer/apisandclients.com
 

@@ -1,0 +1,5 @@
+---
+title: 'Elasticsearch Log Aggregation Setup'
+---
+
+Being migrated from https://authguidance.com/log-aggregation-setup.

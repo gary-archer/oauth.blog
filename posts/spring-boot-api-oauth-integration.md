@@ -1,0 +1,5 @@
+---
+title: 'Java API – OAuth Integration'
+---
+
+Being migrated from https://authguidance.com/spring-boot-api-oauth-integration.

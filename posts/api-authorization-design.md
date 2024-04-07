@@ -1,0 +1,5 @@
+---
+title: 'API Authorization Behaviour'
+---
+
+Being migrated from https://authguidance.com/api-authorization-design.

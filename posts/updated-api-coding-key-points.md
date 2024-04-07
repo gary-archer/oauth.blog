@@ -1,0 +1,5 @@
+---
+title: 'Updated API – Coding Key Points'
+---
+
+Being migrated from https://authguidance.com/updated-api-coding-key-points.

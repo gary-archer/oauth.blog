@@ -1,0 +1,5 @@
+---
+title: 'Logout'
+---
+
+Being migrated from https://authguidance.com/logout.

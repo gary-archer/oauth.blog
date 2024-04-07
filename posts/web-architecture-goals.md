@@ -1,6 +1,5 @@
 ---
 title: 'Web Architecture Goals'
-number: 10
 ---
 
 The [Home Page](/) described OAuth in terms of overall goals for a software platform. In this post we will describe what we are looking for in an optimal web architecture, which is not just about security. This post briefly summarizes some goals and concerns for web apps.
@@ -37,9 +36,9 @@ If an app has XSS vulnerabilities, then an attacker may be able to access secure
 
 ### Goal: Best Login Usability
 
-OpenID Connect can provide multiple ways for users to sign in to an SPA, and this can include options that are both user friendly and secure. In addition, an SPA should be in full control of its usability behavior:
+OpenID Connect can provide multiple ways for users to sign in to an SPA, and this can include options that are both user friendly and secure. In addition, an SPA should be in full control of its usability behaviour:
 
-- <span style='color:green'>**Session Behavior**</span>: the UI should be in control of redirects and expiry events and be able to write any code before and after
+- <span style='color:green'>**Session Behaviour**</span>: the UI should be in control of redirects and expiry events and be able to write any code before and after
 - <span style='color:green'>**Multi Tab Browsing**</span>: the end user should be able to use multiple browser tabs and navigate across multiple applications without issues
 
 ### Goal: Good Search Results
@@ -81,7 +80,7 @@ We will aim to achieve all of the goals in this page, but it will be a tricky jo
 
 ### Where Are We?
 
-We have highlighted some desired behavior, and next we will start our first objective, by running an initial OAuth secured SPA and API code sample on a developer PC.
+We have highlighted some desired behaviour, and next we will start our first objective, by running an initial OAuth secured SPA and API code sample on a developer PC.
 
 ### Next
 

@@ -1,6 +1,5 @@
 ---
 title: 'SPA and API - OAuth Messages'
-number: 40
 ---
 
 In our last post we described [How to Run the Basic SPA Sample](/posts/basicspa-execution). Next we will take a closer look at HTTP messages used by our UI and API, to understand OAuth request and response payloads.

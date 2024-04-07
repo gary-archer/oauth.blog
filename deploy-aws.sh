@@ -6,7 +6,7 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-WEB_ORIGIN='http://apisandclients.com.s3-website.eu-west-2.amazonaws.com'
+WEB_ORIGIN='http://apisandclients.com'
 BUCKET_NAME='apisandclients.com'
 
 #
@@ -48,13 +48,13 @@ if [ $? -ne 0 ]; then
 fi
 
 #
-# Move the HTML folder out of the way
+# Move the folder with HTML files out of the way
 #
 rm -rf tmp 2>/dev/null
 mv dist/posts tmp
 
 #
-# Upload all files except post HTML files
+# Upload all files except HTML files
 #
 aws s3 cp dist "s3://$BUCKET_NAME" --recursive
 if [ $? -ne 0 ]; then
@@ -62,7 +62,7 @@ if [ $? -ne 0 ]; then
 fi
 
 #
-# Delete any existing post HTML files
+# Delete any existing HTML files
 #
 aws s3 rm "s3://$BUCKET_NAME/posts" --recursive
 if [ $? -ne 0 ]; then
@@ -70,6 +70,7 @@ if [ $? -ne 0 ]; then
 fi
 
 #
+# Special logic to get HTML files to be served correctly by S3
 # Rename each post HTML file without a .html suffix and upload it with a content type
 #
 mv tmp dist/posts
@@ -85,6 +86,12 @@ for file in *.html; do
       --content-type text/html
 done
 cd ../..
+
+#
+# TODO: Ensure that I invalidate Cloudfront files in an efficient way without incurring undue costs
+#
+DISTRIBUTION_ID='E1YM2UP28R4CHP'
+# aws cloudfront create-invalidation --distribution-id=E1P4XPOL1PNE6Z --paths '/*'
 
 #
 # Open the system browser

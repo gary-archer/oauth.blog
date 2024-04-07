@@ -1,0 +1,5 @@
+---
+title: 'API Platform Behaviour'
+---
+
+Being migrated from https://authguidance.com/api-platform-design.

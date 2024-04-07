@@ -1,6 +1,5 @@
 ---
 title: 'Basic SPA – How to Run the Sample'
-number: 30
 ---
 
 The Overview Page summarised the behaviour of the initial [SPA and API code sample](/posts/basicspa-overview). Next we will get it running on a Developer PC, then visually describe the important OAuth related behaviour.

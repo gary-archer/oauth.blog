@@ -1,0 +1,5 @@
+---
+title: 'Android Code Sample – Coding Key Points'
+---
+
+Being migrated from https://authguidance.com/android-coding-key-points.

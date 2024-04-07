@@ -1,6 +1,5 @@
 ---
 title: 'Main Index'
-number: 2
 ---
 
 - [Home Page and Business Goals](/)
@@ -45,7 +44,7 @@ Our first theme is focused on foundations and core concepts. It provides integra
 **Variation – Microsoft Entra ID**
 
 - [Entra ID SPA and API Setup](/posts/azure-active-directory-setup)
-- [Entra ID SPA and API OAuth Flow](/posts/azure-ad-spa-code-sample)
+- [Entra ID SPA and API OAuth Flow](/posts/azure-ad-troubleshooting)
 
 **Final SPA Code Sample**
 
@@ -67,20 +66,20 @@ In the next theme we focus more deeply on the API architecture. This includes co
 **Supportability**
 
 - [Effective API Logging](/posts/effective-api-logging)
-- [Error Handling in APIs and Clients](/posts/error-handling-and-supportability)
+- [Error Handling and Supportability](/posts/error-handling-and-supportability)
 
-**Final Node.js API**
+**Node.js API**
 
 - [Overview](/posts/api-architecture-node)
 - [Coding Model](/posts/final-nodeapi-coding-key-points)
 
-**Final .NET API**
+**.NET API**
 
 - [Overview](/posts/net-core-code-sample-overview)
 - [OAuth Integration](/posts/net-core-api-oauth-integration)
 - [Coding Model](/posts/net-core-api-coding-model)
 
-**Final Java Spring Boot API**
+**Java Spring Boot API**
 
 - [Overview](/posts/java-spring-boot-api-overview)
 - [OAuth Integration](/posts/spring-boot-api-oauth-integration)

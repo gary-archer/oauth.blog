@@ -1,0 +1,5 @@
+---
+title: 'SPA Backend for Frontend'
+---
+
+Being migrated from https://authguidance.com/spa-back-end-for-front-end.

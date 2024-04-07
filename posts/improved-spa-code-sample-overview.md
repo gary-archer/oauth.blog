@@ -1,0 +1,5 @@
+---
+title: 'Updated SPA and API – Overview'
+---
+
+Being migrated from https://authguidance.com/improved-spa-code-sample-overview.

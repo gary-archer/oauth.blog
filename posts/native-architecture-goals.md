@@ -1,0 +1,5 @@
+---
+title: 'Native Architecture Goals'
+---
+
+Being migrated from https://authguidance.com/native-architecture-goals.

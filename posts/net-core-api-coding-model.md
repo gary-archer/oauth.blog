@@ -1,0 +1,5 @@
+---
+title: '.NET API – Coding Model'
+---
+
+Being migrated from https://authguidance.com/net-core-api-coding-model.

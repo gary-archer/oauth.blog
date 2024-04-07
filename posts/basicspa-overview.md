@@ -1,6 +1,5 @@
 ---
 title: 'Basic SPA – Overview'
-number: 20
 ---
 
 In the [Web Architecture Goals](/posts/web-architecture-goals) post we explained that our first code sample's objective would be to get an integrated setup running on a developer PC, so that access tokens are sent between a UI, API and authorization server.

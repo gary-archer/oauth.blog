@@ -1,0 +1,5 @@
+---
+title: 'HTTP Proxy Setup'
+---
+
+Being migrated from https://authguidance.com/http-debugging-setup.

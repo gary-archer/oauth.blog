@@ -1,4 +1,5 @@
 ---
 title: 'JWT Access Token Validation'
-number: 70
 ---
+
+Being migrated from https://authguidance.com/jwt-access-token-validation.

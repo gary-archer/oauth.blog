@@ -1,6 +1,5 @@
 ---
 title: 'Basic SPA – Coding Key Points'
-number: 50
 ---
 
 The [SPA and API OAuth Messages](/posts/basicspa-oauthworkflow) post explained the HTTP/S messages used by our code sample. In this post we’ll drill into some important identity related code in the SPA.
