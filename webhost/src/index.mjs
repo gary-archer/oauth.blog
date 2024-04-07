@@ -9,11 +9,11 @@ const physicalRoot = '../dist';
 expressApp.use('/*', (request, response, next) => {
 
     let policy = "default-src 'none';";
-    policy += " script-src 'self';";
+    policy += " script-src 'unsafe-eval' 'self';";
     policy += " connect-src 'self';";
     policy += " child-src 'self';";
     policy += " img-src 'self';";
-    policy += " style-src 'self';";
+    policy += " style-src 'unsafe-inline' 'self';";
     policy += " object-src 'none';";
     policy += " frame-ancestors 'none';";
     policy += " base-uri 'self';";
@@ -26,7 +26,6 @@ expressApp.use('/*', (request, response, next) => {
     response.setHeader('x-content-type-options', 'nosniff');
     response.setHeader('referrer-policy', 'same-origin');
     next();
-
 });
 
 // Serve static content

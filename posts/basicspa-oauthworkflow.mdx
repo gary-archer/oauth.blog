@@ -16,9 +16,9 @@ This blog recommends an [OAuth Development Setup](/posts/oauth-infrastructure-se
 
 | Component	| Base URL |
 | --------- | -------- |
-| <span style='color:green'>**SPA**</span> | http`:`//web.mycompany.com |
-| <span style='color:green'>**API**</span> | http`:`//api.mycompany.com |
-| <span style='color:green'>**Authorization Server**</span> | http`:`//login.mycompany.com |
+| <span style={{color:'green'}}>**SPA**</span> | http`:`//web.mycompany.com |
+| <span style={{color:'green'}}>**API**</span> | http`:`//api.mycompany.com |
+| <span style={{color:'green'}}>**Authorization Server**</span> | http`:`//login.mycompany.com |
 
 When using an HTTP value for the SPA’s redirect URI, Cognito has a restriction on the using a localhost based value for the redirect URI. The code example manages this by redirecting back to the correct domain name when it receives a login response.
 
@@ -60,8 +60,8 @@ The **Authorization Code Flow with PKCE** is recognised by the presence of the *
 
 | Scope | Meaning |
 | ----- | ------- |
-| <span style='color:green'>**openid**</span> | OpenID Connect is being used as the sign in protocol |
-| <span style='color:green'>**profile**</span> | Needed later to get the User’s Name from the UserInfo endpoint |
+| <span style={{color:'green'}}>**openid**</span> | OpenID Connect is being used as the sign in protocol |
+| <span style={{color:'green'}}>**profile**</span> | Needed later to get the User’s Name from the UserInfo endpoint |
 
 ### Step 5. User Authenticates
 
@@ -189,10 +189,10 @@ When the API receives the token it is the API’s job to validate it, which typi
 
 | Property | Expectation |
 | -------- | ----------- |
-| <span style='color:green'>**Issuer**</span> | The token is from our authorization server |
-| <span style='color:green'>**Audience**</span> | The token was issued for our API |
-| <span style='color:green'>**Digital Signature**</span> | The token has not been tampered with since issued |
-| <span style='color:green'>**Active**</span> | The token is valid at the current time and not expired |
+| <span style={{color:'green'}}>**Issuer**</span> | The token is from our authorization server |
+| <span style={{color:'green'}}>**Audience**</span> | The token was issued for our API |
+| <span style={{color:'green'}}>**Digital Signature**</span> | The token has not been tampered with since issued |
+| <span style={{color:'green'}}>**Active**</span> | The token is valid at the current time and not expired |
 
 To verify the access token’s digital signature, the API must download token signing public keys from AWS Cognito. This is done when the JOSE security library calls the JWKS endpoint:
 

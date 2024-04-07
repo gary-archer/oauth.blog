@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import {useEffect, useRef} from 'react';
 import {addCopyToClipboardButtons} from './codeProcessor';
 import Navbar from './navbar';
@@ -8,7 +9,7 @@ import utilStyles from '../styles/utils.module.css';
  * The main site layout is a fixed header that is swapped out during navigation
  */
 let isLoaded = false;
-export default function Layout({children}: any): JSX.Element {
+export default function Layout( {children}: {children: React.ReactNode} ): JSX.Element {
 
     const rootRef = useRef<HTMLDivElement>(null);
 
@@ -31,7 +32,7 @@ export default function Layout({children}: any): JSX.Element {
             <header>
                 <>
                     <h2 className={utilStyles.headingLg}>
-                        <a href='/'>{siteTitle}</a>
+                        <Link href='/'>{siteTitle}</Link>
                     </h2>
                     <p className={utilStyles.infoText}>Designs and Code Samples</p>
                 </>
