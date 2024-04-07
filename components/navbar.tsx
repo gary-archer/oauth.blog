@@ -13,7 +13,7 @@ export default function Navbar(): JSX.Element {
                     <li><a href='/posts/index'>Main Index</a></li>
                 </div>
                 <div>
-                    <li><a href='/posts/quick-start'>Code Samples Quick Start</a></li>
+                    <li><a href='/posts/quick-start'>Code Samples</a></li>
                 </div>
                 <div>
                     <li><a href='/posts/about'>About</a></li>
