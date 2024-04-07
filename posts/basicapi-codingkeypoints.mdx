@@ -305,6 +305,26 @@ export class LogEntry {
 By default this leads to lightweight output as follows:
 
 ```json
+[
+    {
+        "utcTime": "2024-04-07T19:18:11.133Z",
+        "path": "/api/companies",
+        "method": "GET",
+        "statusCode": 200
+    }
+    {
+        "utcTime": "2024-04-07T19:18:11.268Z",
+        "path": "/api/companies",
+        "method": "GET",
+        "statusCode": 200
+    }
+    {
+        "utcTime": "2024-04-07T19:18:12.757Z",
+        "path": "/api/companies/1/transactions",
+        "method": "GET",
+        "statusCode": 200
+    }
+]
 ```
 
 ### API Error Handling
@@ -345,6 +365,41 @@ public static handleError(exception: any, response: Response): ClientError {
 Errors are included in logs and any technical problems, such as when contacting OAuth endpoints, are output with a 500 status and include extra details to help with fast problem resolution:
 
 ```json
+{
+  "utcTime": "2024-04-07T19:19:44.945Z",
+  "path": "/api/companies",
+  "method": "GET",
+  "statusCode": 500,
+  "error": {
+    "statusCode": 500,
+    "clientError": {
+      "code": "jwks_download_error",
+      "message": "Problem downloading token signing keys",
+      "id": 45244,
+      "area": "SampleApi",
+      "utcTime": "2024-04-07T19:19:45.027Z"
+    },
+    "serviceError": {
+      "details": {
+        "code": "ERR_JOSE_GENERIC",
+        "description": "Expected 200 OK from the JSON Web Key Set HTTP response"
+      },
+      "stack": [
+        "JOSEError: Expected 200 OK from the JSON Web Key Set HTTP response",
+        "at fetchJwks (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/node/esm/runtime/fetch_jwks.js:30:15)",
+        "at process.processTicksAndRejections (node:internal/process/task_queues:95:5)",
+        "at async RemoteJWKSet.reload (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/node/esm/jwks/remote.js:86:9)",
+        "at async RemoteJWKSet.getKey (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/node/esm/jwks/remote.js:49:13)",
+        "at async flattenedVerify (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/node/esm/jws/flattened/verify.js:72:15)",
+        "at async compactVerify (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/node/esm/jws/compact/verify.js:15:22)",
+        "at async jwtVerify (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/node/esm/jwt/verify.js:5:22)",
+        "at async AccessTokenValidator.execute (file:///home/gary/dev/oauth.websample1/api/src/host/oauth/accessTokenValidator.ts:1:794)",
+        "at async ApiController.authorizationHandler (file:///home/gary/dev/oauth.websample1/api/src/host/controller/apiController.ts:1:1209)"
+      ]
+    }
+  }
+}
+
 ```
 
 ### Supportability
@@ -359,4 +414,3 @@ The initial API integrates with an authorization server and validates JWTs corre
 
 - Next we will drill into [JWT Access Token Validation](/posts/jwt-access-token-validation)
 - For a list of all blog posts see the [Index Page](/posts/index)
-
