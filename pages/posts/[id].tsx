@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import {MDXRemote} from 'next-mdx-remote';
 import Layout from '../../components/layout';
 import {getAllPostIds, getPostData} from '../../lib/posts';
@@ -32,12 +33,16 @@ export async function getStaticPaths(): Promise<any> {
  * Render a post given its MDX source and frontmatter
  */
 export default function Post({postData}: any): JSX.Element {
+
+    const components = {
+        Link,
+    };
   
     return (
         <Layout>
             <article className={utilStyles.article}>
                 <h1 className={utilStyles.headingXl}>{postData.frontmatter.title}</h1>
-                <MDXRemote {...postData.source} />
+                <MDXRemote {...postData.source} components={components}  />
             </article>
         </Layout>
     );
