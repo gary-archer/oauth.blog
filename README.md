@@ -2,10 +2,6 @@
 
 Web static content for my blog at https://apisandclients.com.
 
-## Temporary Online URL
-
-- http://apisandclients.com.s3-website.eu-west-2.amazonaws.com
-
 ## Running the Blog
 
 | Command | Description |
@@ -19,4 +15,3 @@ Web static content for my blog at https://apisandclients.com.
 
 The blog is primarily written using markdown and has minimal JavaScript logic.\
 The overall structure is from [Next.js Tutorials](https://nextjs.org/learn-pages-router/basics/data-fetching/blog-data).
-
