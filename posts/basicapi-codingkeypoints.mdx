@@ -2,17 +2,17 @@
 title: 'Basic API – Coding Key Points'
 ---
 
-Previously we covered SPA Coding Key Points for the first code sample. In this post we’ll drill into some important identity related code in the API.
+Previously we covered [SPA Coding Key Points](/posts/basicspa-codingkeypoints) for the first code sample. In this post we’ll drill into some important identity related code in the API.
 
 ### Code Layout
 
-The API uses Node.js Express as the HTTP server and is coded in TypeScript. The business functionality is in a logic folder and the plumbing, including OAuth handling, is in the host folder:
+The API uses [Node.js Express](https://expressjs.com/) as the HTTP server and is coded in TypeScript. The business functionality is in a logic folder and the plumbing, including OAuth handling, is in the host folder:
 
-IMAGE
+![API code layout](/images/60/api-layout.jpg)
 
 ### Dependencies
 
-Use of third party libraries has been kept fairly simple, and the most interesting dependency in the package.json file is the jose security library, used to validate JWTs:
+Use of third party libraries has been kept fairly simple, and the most interesting dependency in the package.json file is the [jose security library](https://github.com/panva/jose), used to validate JWTs:
 
 ```json
 {
@@ -30,7 +30,7 @@ Use of third party libraries has been kept fairly simple, and the most interesti
 
 ## API Entry Point
 
-When npm start is run, the startup/app.ts class executes, which configures the Express HTTP server and then starts listening for requests:
+When **npm start** is run, the **startup/app.ts** class executes, which configures the Express HTTP server and then starts listening for requests:
 
 ```typescript
 (async () => {
@@ -124,7 +124,7 @@ public initializeWebStaticContentHosting(): void {
 }
 ```
 
-In the real world you would use a separate web host component, and this will often be a Content Delivery Network. The Final SPA will switch to using a dedicated web host.
+In the real world you would use a separate web host component, and this will often be a Content Delivery Network. The [Final SPA](/posts/final-spa-overview) will switch to using a dedicated web host.
 
 ### Service Logic Classes
 
@@ -313,11 +313,11 @@ The API also performs solid error handling, with these main classes:
 
 | Class | Description |
 | ----- | ----------- |
-| ServerError | Represents a technical problem in the API |
-| ClientError | Represents a useful error response for an API client |
-| ExceptionHandler | Catches any exceptions thrown by the API |
-| ErrorFactory | Used to create exceptions to throw |
-| ErrorCodes | A list of error causes |
+| <span style={{color:'green'}}>**ServerError**</span> | Represents a technical problem in the API |
+| <span style={{color:'green'}}>**ClientError**</span> | Represents a useful error response for an API client |
+| <span style={{color:'green'}}>**ExceptionHandler**</span> | Catches any exceptions thrown by the API |
+| <span style={{color:'green'}}>**ErrorFactory**</span> | Used to create exceptions to throw |
+| <span style={{color:'green'}}>**ErrorCodes**</span> | A list of error causes |
 
 An unhandled exception handler is used to deal with adding error details to logs and returning a useful response to the SPA:
 
@@ -349,7 +349,7 @@ Errors are included in logs and any technical problems, such as when contacting 
 
 ### Supportability
 
-Future posts will drill much deeper into logging and error handling. These are high value areas for back end systems, and people productivity is improved when they are implemented in a solid end-to-end manner.
+Future posts will drill much deeper into [logging](/posts/effective-api-logging) and [error handling](/posts/error-handling-and-supportability). These are high value areas for back end systems, and people productivity is improved when they are implemented in a solid end-to-end manner.
 
 ### Where Are We?
 
