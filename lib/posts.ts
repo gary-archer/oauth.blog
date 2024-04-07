@@ -1,9 +1,8 @@
 import fs from 'fs';
 import matter from 'gray-matter';
+import {serialize} from 'next-mdx-remote/serialize';
 import path from 'path';
-import {remark} from 'remark';
 import remarkGfm from 'remark-gfm'
-import remarkHtml from 'remark-html';
 import remarkPrism from 'remark-prism'
 
 const postsDirectory = path.join(process.cwd(), 'posts');
@@ -18,36 +17,30 @@ export function getAllPostIds(): any {
 
         return {
             params: {
-                id: fileName.replace(/\.md$/, ''),
+                id: fileName.replace(/\.mdx$/, ''),
             },
         };
     });
 }
 
 /*
- * Get the data and HTML for one post
- * - gray-matter parses the post metadata
- * - remark converts markdown into an HTML string
- * - remark-gfm processes GitHub Flavored Markdown to process tables
- * - remark-prism renders code blocks
+ * Get the data for one post and return it as MDX source that can be rendered by MDXRemote
  */
 export async function getPostData(id: string): Promise<any> {
 
-    const fullPath = path.join(postsDirectory, `${id}.md`);
+    const fullPath = path.join(postsDirectory, `${id}.mdx`);
     const fileContents = fs.readFileSync(fullPath, 'utf8');
+    const {content, data} = matter(fileContents);
 
-    const matterResult = matter(fileContents);
-
-    const processedContent = await remark()
-        .use(remarkPrism)
-        .use(remarkGfm)
-        .use(remarkHtml, { sanitize: false })
-        .process(matterResult.content);
-    const contentHtml = processedContent.toString();
-
+    const mdxSource = await serialize(content, {
+        mdxOptions: {
+          remarkPlugins: [remarkGfm, remarkPrism],
+        },
+        scope: data,
+    });
+    
     return {
-        id,
-        contentHtml,
-        ...matterResult.data,
+        source: mdxSource,
+        frontmatter: data,
     };
 }

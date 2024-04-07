@@ -1,3 +1,4 @@
+import {MDXRemote} from 'next-mdx-remote';
 import Layout from '../../components/layout';
 import {getAllPostIds, getPostData} from '../../lib/posts';
 import utilStyles from '../../styles/utils.module.css';
@@ -28,16 +29,15 @@ export async function getStaticPaths(): Promise<any> {
 }
 
 /*
- * Render a post given its data
- * The use of dangerouslySetInnerHTML is only done at development time and not in the deployed system
+ * Render a post given its MDX source and frontmatter
  */
 export default function Post({postData}: any): JSX.Element {
   
     return (
         <Layout>
             <article className={utilStyles.article}>
-                <h1 className={utilStyles.headingXl}>{postData.title}</h1>
-                <div dangerouslySetInnerHTML={{ __html: postData.contentHtml }} />
+                <h1 className={utilStyles.headingXl}>{postData.frontmatter.title}</h1>
+                <MDXRemote {...postData.source} />
             </article>
         </Layout>
     );
