@@ -2,7 +2,7 @@
 title: 'SPA and API - OAuth Messages'
 ---
 
-In our last post we described [How to Run the Basic SPA Sample](/posts/basicspa-execution). Next we will take a closer look at HTTP messages used by our UI and API, to understand OAuth request and response payloads.
+In our last post we explained <Link href='/posts/basicspa-execution'>How to Run the Basic SPA Sample</Link>. Next we will take a closer look at HTTP messages used by our UI and API, to understand OAuth request and response payloads.
 
 ### OAuth Workflows
 
@@ -12,7 +12,7 @@ This page will provide screenshots to visualise the partial workflow covered by 
 
 ### Developer URLs
 
-This blog recommends an [OAuth Development Setup](/posts/oauth-infrastructure-setup) where three logical domains similar to the following are used on a development computer. This best enables thinking about the responsibility of each component.
+This blog recommends an <Link href='/posts/oauth-infrastructure-setup'>OAuth Development Setup</Link> where three logical domains similar to the following are used on a development computer. This best enables thinking about the responsibility of each component.
 
 | Component	| Base URL |
 | --------- | -------- |
@@ -26,7 +26,7 @@ When using an HTTP value for the SPA’s redirect URI, Cognito has a restriction
 
 Most of the time I trace HTTP/S messages using a proxy tool rather than browser tools. This allows me to view traffic from both the SPA and API together. See the below post if you are new to this type of tool:
 
-- [HTTP Proxy Setup](/posts/http-debugging-setup)
+- <Link href='/posts/http-debugging-setup'>HTTP Proxy Setup</Link>
 
 ### Step 1. SPA Downloads its Configuration
 
@@ -75,7 +75,7 @@ Once a login completes successfully, a session or SSO (single sign-on) cookie is
 
 ![User Session Cookie](/images/40/user-session-cookie.jpg)
 
-The most standard option for identity systems is to use **SameSite=none**, to inform browsers that this is a third party cookie. At the time of  writing, Cognito instead uses **SameSite=lax** which will cause some [token renewal problems](/posts/user-sessions-and-token-renewal) in later posts.
+The most standard option for identity systems is to use **SameSite=none**, to inform browsers that this is a third party cookie. At the time of  writing, Cognito instead uses **SameSite=lax** which will cause some <Link href='/posts/user-sessions-and-token-renewal'>token renewal problems</Link> in later posts.
 
 ### Step 7. An Authorization Response is Returned
 
@@ -93,7 +93,7 @@ The SPA then makes a direct HTTPS back channel request to the authorization serv
 
 In OAuth there are multiple grant messages and this is just one of them. The result of all grant messages is to receive tokens, and we have configured Cognito to return access tokens with a short 15 minute expiry.
 
-An OAuth flow for SPAs should avoid returning refresh tokens to the browser, since it is a long lived credential and the browser has nowhere secure to store it. Yet AWS Cognito does not allow the refresh token to be disabled. The [Final SPA](/posts/final-spa-overview) will show a better way to deal with refresh tokens.
+An OAuth flow for SPAs should avoid returning refresh tokens to the browser, since it is a long lived credential and the browser has nowhere secure to store it. Yet AWS Cognito does not allow the refresh token to be disabled. The <Link href='/posts/final-spa-overview'>Final SPA</Link> will show a better way to deal with refresh tokens, though it will require a more complex flow.
 
 ### Step 9. Proof Key for Code Exchange is Used
 
@@ -161,7 +161,7 @@ Because the SPA included the **openid** scope, an ID token is also received, whi
 
 ![ID Token Claims](/images/40/id-token-claims.jpg)
 
-The [ID Tokens](/posts/id-tokens) post explains how I always configure the authorization server to exclude any personally data such as names and emails from ID tokens. This reduces security concerns about unintentionally revealing sensitive data.
+The <Link href='posts/id-tokens'>ID Tokens</Link> post explains how I always configure the authorization server to exclude any personally data such as names and emails from ID tokens. This reduces security concerns about unintentionally revealing sensitive data.
 
 ### Step 13. UI Downloads User Info
 
@@ -271,7 +271,7 @@ Once you have a productive process for tracing HTTP requests in both browser and
 
 We have used OAuth technologies to securely integrate our SPA and API with an authorization server, and we understand the messages used. The initial end-to-end flow is missing some web and API lifecycle behaviours, and these will be addressed in the next code sample.
 
-### Next Steps
+### Next
 
-- [Basic SPA Code Sample – Coding Key Points](/posts/basicspa-codingkeypoints)
-- For a list of all blog posts see the [Index Page](/posts/index)
+- <Link href='/posts/basicspa-codingkeypoints'>Basic SPA Code Sample – Coding Key Points</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

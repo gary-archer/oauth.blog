@@ -2,7 +2,7 @@
 title: 'Basic API – Coding Key Points'
 ---
 
-Previously we covered [SPA Coding Key Points](/posts/basicspa-codingkeypoints) for the first code sample. In this post we’ll drill into some important identity related code in the API.
+Previously we covered <Link href='/posts/basicspa-codingkeypoints'>SPA Coding Key Points</Link> for the first code sample. In this post we’ll drill into some important identity related code in the API.
 
 ### Code Layout
 
@@ -124,7 +124,7 @@ public initializeWebStaticContentHosting(): void {
 }
 ```
 
-In the real world you would use a separate web host component, and this will often be a Content Delivery Network. The [Final SPA](/posts/final-spa-overview) will switch to using a dedicated web host.
+In the real world you would use a separate web host component, and this will often be a Content Delivery Network. The <Link href='/posts/final-spa-overview'>Final SPA</Link> will switch to using a dedicated web host.
 
 ### Service Logic Classes
 
@@ -228,7 +228,7 @@ public async execute(request: Request): Promise<ClaimsPrincipal> {
 }
 ```
 
-The API is responsible for providing correct inputs to the library, so it is important for API developers to understand these, which are summarised in a separate [Access Token Validation](/posts/index) page.
+The API is responsible for providing correct inputs to the library, so it is important for API developers to understand these, which are summarised in a separate <Link href='/posts/index'>Access Token Validation</Link> page.
 
 ### Claims Principal
 
@@ -404,13 +404,13 @@ Errors are included in logs and any technical problems, such as when contacting 
 
 ### Supportability
 
-Future posts will drill much deeper into [logging](/posts/effective-api-logging) and [error handling](/posts/error-handling-and-supportability). These are high value areas for back end systems, and people productivity is improved when they are implemented in a solid end-to-end manner.
+Future posts will drill much deeper into <Link href='/posts/effective-api-logging'>logging</Link> and <Link href='/posts/error-handling-and-supportability'>error handling</Link>. These are high value areas for back end systems, and people productivity is improved when they are implemented in a solid end-to-end manner.
 
 ### Where Are We?
 
 The initial API integrates with an authorization server and validates JWTs correctly. The API also does some initial work on claims, logging and error handling, and we will do more work on these areas for future samples.
 
-### Next Steps
+### Next
 
-- Next we will drill into [JWT Access Token Validation](/posts/jwt-access-token-validation)
-- For a list of all blog posts see the [Index Page](/posts/index)
+- Next we will drill into <Link href='/posts/jwt-access-token-validation'>JWT Access Token Validation</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

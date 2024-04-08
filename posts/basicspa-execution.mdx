@@ -2,7 +2,7 @@
 title: 'Basic SPA – How to Run the Sample'
 ---
 
-The Overview Page summarised the behaviour of the initial [SPA and API code sample](/posts/basicspa-overview). Next we will get it running on a Developer PC, then visually describe the important OAuth related behaviour.
+Previously we summarised the behaviour of the initial <Link href='/posts/basicspa-overview'>SPA and API Code Sample</Link>. Next we will get it running on a Developer PC, then visually describe the important OAuth related behaviour.
 
 ### Prerequisites
 
@@ -70,8 +70,8 @@ The API acts as an **OAuth Resource Server** and uses these configuration values
 
 Both the SPA and API use endpoints from my personal AWS Cognito account, which is a low cost cloud solution. Jump ahead to these future posts for further details:
 
-- [Authorization Server Setup](https://authguidance.com/oauth-infrastructure-setup/)
-- [AWS Cognito Cloud Setup](https://authguidance.com/managed-authorization-server-setup/)
+- <Link href='/posts/oauth-infrastructure-setup'>Authorization Server Setup</Link>
+- <Link href='/posts/managed-authorization-server-setup'>AWS Cognito Cloud Setup</Link>
 
 OAuth clients must be registered at the authorization server, and our SPA includes an online entry as follows:
 
@@ -99,7 +99,7 @@ This blog’s code samples will run on the local computer using DNS based URLs t
 - API: http`:`//api.mycompany.com/api
 - SPA: http`:`//web.mycompany.com/spa
 
-To enable this on a development computer, add these entries to your hosts file. The [OAuth Infrastructure Setup](https://authguidance.com/2019/09/15/developer-domain-setup/) post says more about the use of domnain-based URLs.
+To enable this on a development computer, add these entries to your hosts file:
 
 ```markdown
 127.0.0.1 localhost web.mycompany.com api.mycompany.com
@@ -198,5 +198,5 @@ The initial code sample is focused on how an SPA, API and Authorization Server w
 
 ### Next
 
-- Next we will look at some [SPA and API OAuth Messages](/posts/basicspa-oauthworkflow)
-- For a list of all blog posts see the [Index Page](/posts/index)
+- Next we will look at some <Link href='/posts/basicspa-oauthworkflow'>SPA and API OAuth Messages</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>
