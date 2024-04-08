@@ -41,7 +41,7 @@ export default function Post({postData}: any): JSX.Element {
     return (
         <Layout>
             <article className={utilStyles.article}>
-                <h1 className={utilStyles.headingXl}>{postData.frontmatter.title}</h1>
+                <h1>{postData.frontmatter.title}</h1>
                 <MDXRemote {...postData.source} components={components}  />
             </article>
         </Layout>

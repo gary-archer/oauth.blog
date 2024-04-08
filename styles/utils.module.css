@@ -1,7 +1,6 @@
 .container {
-    max-width: 60rem;
-    padding: 0 1rem;
-    margin: 3rem auto 6rem;
+    max-width: 65rem;
+    margin: 4rem auto 4rem;
 }
 
 .navbar {
@@ -9,43 +8,17 @@
     top: 0;
     right: 0;
     margin-right: 2rem;
-    margin-top: -10px;
 }
 
 .navbarHeader {
     margin-left: 1rem;
 }
 
-.headingXl {
-    font-size: 2.0625rem;
-    line-height: 1.3;
-    font-weight: 700;
-    margin: 1rem 0;
-    margin-top: 40px;
-}
-
-.headingLg {
-    font-size: 1.75rem;
-    line-height: 1.25;
-    font-weight: 700;
-    margin: 1rem 0;
-    margin-bottom: -15px;
-}
-
-.headingMd {
-    font-size: 1.2rem;
-    line-height: 1.5;
-    margin-bottom: -5px;
-}
-
-.infoText {
-    font-size: 0.9rem;
+.subHeadingText {
+    font-size: 1rem;
     color: #666;
+    margin-top: -20px;
     margin-bottom: 50px;
-}
-
-.padding1px {
-    padding-top: 1px;
 }
 
 @media all and (max-width: 1000px)

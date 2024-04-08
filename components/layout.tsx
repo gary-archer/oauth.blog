@@ -25,12 +25,10 @@ export default function Layout( {children}: {children: React.ReactNode} ): JSX.E
                 <title>{siteTitle}</title>
             </Head>
             <header>
-                <>
-                    <h2 className={utilStyles.headingLg}>
-                        <Link href='/'>{siteTitle}</Link>
-                    </h2>
-                    <p className={utilStyles.infoText}>Designs and Code Samples</p>
-                </>
+                <h2>
+                    <Link href='/'>{siteTitle}</Link>
+                </h2>
+                <p className={utilStyles.subHeadingText}>Designs and Code Samples</p>
             </header>
             <main>{children}</main>
             <Navbar />
