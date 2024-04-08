@@ -1,6 +1,7 @@
 .container {
     max-width: 65rem;
     margin: 4rem auto 4rem;
+    padding: 0 1rem;
 }
 
 .navbar {
