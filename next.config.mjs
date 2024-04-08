@@ -2,7 +2,7 @@
  * @type {import('next').NextConfig}
  */
 export default {
-    reactStrictMode: true,
+    reactStrictMode: false,
     experimental: {
         largePageDataBytes: 1024 * 1000,
       },

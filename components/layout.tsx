@@ -8,17 +8,12 @@ import utilStyles from '../styles/utils.module.css';
 /*
  * The main site layout is a fixed header that is swapped out during navigation
  */
-let isLoaded = false;
 export default function Layout( {children}: {children: React.ReactNode} ): JSX.Element {
 
     const rootRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-
-        if (!isLoaded) {
-            addCopyToClipboardButtons(rootRef);
-            isLoaded = true;
-        }
+        addCopyToClipboardButtons(rootRef);
     });
   
     const siteTitle = 'APIs and Clients End-to-End';
