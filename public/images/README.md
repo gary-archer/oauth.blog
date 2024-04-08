@@ -1,1 +1,0 @@
-# Makes images work

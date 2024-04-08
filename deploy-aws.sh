@@ -91,7 +91,7 @@ cd ../..
 # TODO: Ensure that I invalidate Cloudfront files in an efficient way without incurring undue costs
 #
 DISTRIBUTION_ID='E1YM2UP28R4CHP'
-# aws cloudfront create-invalidation --distribution-id=E1P4XPOL1PNE6Z --paths '/*'
+aws cloudfront create-invalidation --distribution-id=$DISTRIBUTION_ID --paths '/*'
 
 #
 # Open the system browser
