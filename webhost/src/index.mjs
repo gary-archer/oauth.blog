@@ -8,9 +8,9 @@ expressApp.use(compression())
 const port = 3001;
 const physicalRoot = '../dist';
 
-// Add security headers
 expressApp.use('/*', (request, response, next) => {
 
+    // Add security headers
     let policy = "default-src 'none';";
     policy += " script-src 'unsafe-eval' 'self';";
     policy += " connect-src 'self';";
@@ -28,6 +28,25 @@ expressApp.use('/*', (request, response, next) => {
     response.setHeader('x-xss-protection', '1; mode=block');
     response.setHeader('x-content-type-options', 'nosniff');
     response.setHeader('referrer-policy', 'same-origin');
+
+    // Add performance headers
+    const fullUrl = `${request.protocol}://${request.hostname}${request.originalUrl.toLowerCase()}`;
+    const path = new URL(fullUrl).pathname;
+    const extensions = [
+        '.jpg',
+        '.ico',
+        '.js',
+        '.css',
+    ];
+
+    const cacheableExtension = extensions.find((ext) => {
+        return path.endsWith(`${ext}`);
+    });
+
+    if (cacheableExtension) {
+        response.setHeader('cache-control', 'public, max-age=31536000, immutable');
+    }
+
     next();
 });
 

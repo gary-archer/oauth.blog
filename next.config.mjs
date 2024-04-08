@@ -10,5 +10,5 @@ export default {
     distDir: 'dist',
     images: {
         unoptimized: true,
-    },
+    }
 };
