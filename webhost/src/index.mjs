@@ -1,7 +1,10 @@
+import compression from 'compression';
 import express from 'express';
 
 // Create the express app
 const expressApp = express();
+expressApp.use(compression())
+
 const port = 3001;
 const physicalRoot = '../dist';
 

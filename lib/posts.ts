@@ -36,7 +36,6 @@ export async function getPostData(id: string): Promise<any> {
         mdxOptions: {
           remarkPlugins: [remarkGfm, remarkPrism],
         },
-        scope: data,
     });
     
     return {

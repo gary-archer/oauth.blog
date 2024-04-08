@@ -6,12 +6,13 @@
     "license": "MIT",
     "type": "module",
     "engines": {
-      "node": ">=20"
+        "node": ">=20"
     },
     "scripts": {
-      "start": "node src/index.mjs"
+        "start": "node src/index.mjs"
     },
     "dependencies": {
-      "express": "^4.19.2"
+        "compression": "^1.7.4",
+        "express": "^4.19.2"
     }
-  }
+}
