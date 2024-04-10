@@ -20,11 +20,13 @@ body {
 }
 
 table {
-    border-spacing:0;
+    table-layout: fixed;
+    width:100%;
+    border-collapse: collapse;
 }
 
 th, td {
-    border: 1px solid #555;
+    border: 1px solid gray;
     padding: 10px;
     text-align:left;
 }
