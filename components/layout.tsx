@@ -22,8 +22,6 @@ export default function Layout( {children}: {children: React.ReactNode} ): JSX.E
                 <meta name='description' content={siteTitle} />
                 <title>{siteTitle}</title>
                 <link rel='icon' href='/favicon.ico' />
-                <link href='/app.css' rel='stylesheet' />
-                <link href='/prism-tomorrow.css' rel='stylesheet' />
             </Head>
             <header>
                 <h2>
