@@ -3,7 +3,6 @@ import Link from 'next/link';
 import {useEffect, useRef} from 'react';
 import {addCopyToClipboardButtons} from './codeProcessor';
 import Navbar from './navbar';
-import utilStyles from '../styles/utils.module.css';
 
 /*
  * The main site layout is a fixed header that is swapped out during navigation
@@ -18,17 +17,19 @@ export default function Layout( {children}: {children: React.ReactNode} ): JSX.E
   
     const siteTitle = 'APIs and Clients End-to-End';
     return (
-        <div ref={rootRef} className={utilStyles.container}>
+        <div ref={rootRef} className='container'>
             <Head>
-                <link rel="icon" href="/favicon.ico" />
-                <meta name="description" content={siteTitle} />
+                <meta name='description' content={siteTitle} />
                 <title>{siteTitle}</title>
+                <link rel='icon' href='/favicon.ico' />
+                <link href='/app.css' rel='stylesheet' />
+                <link href='/prism-tomorrow.css' rel='stylesheet' />
             </Head>
             <header>
                 <h2>
                     <Link href='/'>{siteTitle}</Link>
                 </h2>
-                <p className={utilStyles.subHeadingText}>Designs and Code Samples</p>
+                <p className='subHeadingText'>Designs and Code Samples</p>
             </header>
             <main>{children}</main>
             <Navbar />

@@ -45,6 +45,8 @@ expressApp.use('/*', (request, response, next) => {
 
     if (cacheableExtension) {
         response.setHeader('cache-control', 'public, max-age=31536000, immutable');
+    } else {
+        response.setHeader('cache-control', 'no-cache, must-revalidate');
     }
 
     next();

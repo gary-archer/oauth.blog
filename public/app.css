@@ -53,6 +53,30 @@ img {
     display: block;
 }
 
+.container {
+    max-width: 65rem;
+    margin: 4rem auto 4rem;
+    padding: 0 1rem;
+}
+
+.navbar {
+    position: absolute;  
+    top: 0;
+    right: 0;
+    margin-right: 2rem;
+}
+
+.navbarHeader {
+    margin-left: 1rem;
+}
+
+.subHeadingText {
+    font-size: 1rem;
+    color: gray;
+    margin-top: -20px;
+    margin-bottom: 50px;
+}
+
 @media all and (max-width: 768px)
 {
     h1 {
@@ -77,5 +101,21 @@ img {
 
     img {
         max-width: 100%;
+    }
+
+    .article {
+        max-width: 100%;
+    }
+
+    .navbar {
+        position: relative;
+    }
+
+    .navbarHeader {
+        margin-left: 0rem;
+    }
+
+    .subHeadingText {
+        font-size: 0.9rem;
     }
 }

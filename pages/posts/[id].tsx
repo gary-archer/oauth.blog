@@ -2,7 +2,6 @@ import Link from 'next/link'
 import {MDXRemote} from 'next-mdx-remote';
 import Layout from '../../components/layout';
 import {getAllPostIds, getPostData} from '../../lib/posts';
-import utilStyles from '../../styles/utils.module.css';
 
 /*
  * Return props for the runtime page ID
@@ -40,7 +39,7 @@ export default function Post({postData}: any): JSX.Element {
   
     return (
         <Layout>
-            <article className={utilStyles.article}>
+            <article className='article'>
                 <h1>{postData.frontmatter.title}</h1>
                 <MDXRemote {...postData.source} components={components}  />
             </article>
