@@ -35,4 +35,8 @@
     .navbarHeader {
         margin-left: 0rem;
     }
+
+    .subHeadingText {
+        font-size: 0.9rem;
+    }
 }
