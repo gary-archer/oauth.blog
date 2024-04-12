@@ -12,7 +12,7 @@ export default function Layout( {children}: {children: React.ReactNode} ): JSX.E
     const rootRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        addCopyToClipboardButtons(rootRef);
+        setTimeout(() => addCopyToClipboardButtons(rootRef), 1000);
     });
   
     const siteTitle = 'APIs and Clients End-to-End';
