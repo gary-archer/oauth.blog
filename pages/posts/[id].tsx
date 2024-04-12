@@ -1,5 +1,4 @@
-import Link from 'next/link'
-import {MDXRemote} from 'next-mdx-remote';
+import dynamic from 'next/dynamic';
 import Layout from '../../components/layout';
 import {getAllPostIds, getPostData} from '../../lib/posts';
 
@@ -33,15 +32,12 @@ export async function getStaticPaths(): Promise<any> {
  */
 export default function Post({postData}: any): JSX.Element {
 
-    const components = {
-        Link,
-    };
-  
+    const Mdx = dynamic(import(`/posts/${postData.fileName}`), {ssr: false} );
     return (
         <Layout>
             <article className='article'>
                 <h1>{postData.frontmatter.title}</h1>
-                <MDXRemote {...postData.source} components={components}  />
+                <Mdx />
             </article>
         </Layout>
     );

@@ -1,9 +1,6 @@
 import fs from 'fs';
 import matter from 'gray-matter';
-import {serialize} from 'next-mdx-remote/serialize';
 import path from 'path';
-import remarkGfm from 'remark-gfm'
-import remarkPrism from 'remark-prism'
 
 const postsDirectory = path.join(process.cwd(), 'posts');
 
@@ -28,18 +25,14 @@ export function getAllPostIds(): any {
  */
 export async function getPostData(id: string): Promise<any> {
 
-    const fullPath = path.join(postsDirectory, `${id}.mdx`);
+    const fileName = `${id}.mdx`;
+    const fullPath = path.join(postsDirectory, fileName);
     const fileContents = fs.readFileSync(fullPath, 'utf8');
-    const {content, data} = matter(fileContents);
+    const frontmatter = matter(fileContents);
 
-    const mdxSource = await serialize(content, {
-        mdxOptions: {
-          remarkPlugins: [remarkGfm, remarkPrism],
-        },
-    });
-    
     return {
-        source: mdxSource,
-        frontmatter: data,
+        id,
+        fileName,
+        frontmatter: frontmatter.data,
     };
 }

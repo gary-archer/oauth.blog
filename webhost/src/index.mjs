@@ -12,11 +12,13 @@ expressApp.use('/*', (request, response, next) => {
 
     // Add security headers
     let policy = "default-src 'none';";
-    policy += " script-src 'unsafe-eval' 'self';";
+    // policy += " script-src 'unsafe-eval' 'self';";
+    policy += " script-src 'self';";
     policy += " connect-src 'self';";
     policy += " child-src 'self';";
     policy += " img-src 'self';";
-    policy += " style-src 'unsafe-inline' 'self';";
+    // policy += " style-src 'unsafe-inline' 'self';";
+    policy += " style-src 'self';";
     policy += " object-src 'none';";
     policy += " frame-ancestors 'none';";
     policy += " base-uri 'self';";
