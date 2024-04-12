@@ -7,10 +7,7 @@ import remarkPrism from 'remark-prism'
  */
 const nextConfig = {
     reactStrictMode: false,
-    pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'mdx'],
-    experimental: {
-        mdxRs: false, 
-    },
+    pageExtensions: ['tsx', 'mdx'],
     output: 'export',
     distDir: 'dist',
     images: {
@@ -18,11 +15,9 @@ const nextConfig = {
     },
 };
 
-// Maybe it's my use of dynamic?
-// https://github.com/vercel/next.js/issues/46659
 const mdxConfig = {
     options: {
-        remarkPlugins: [],
+        remarkPlugins: [remarkGfm, remarkPrism],
     },
 };
 

@@ -1,4 +1,3 @@
-import {getPostData} from '../lib/posts';
 import Post from './posts/[id]';
 
 /*
@@ -6,10 +5,9 @@ import Post from './posts/[id]';
  */
 export async function getStaticProps(): Promise<any> {
   
-    const homePageData = await getPostData('home');
     return {
         props: {
-            postData: homePageData,
+            filename: 'home.mdx',
         },
     };
 }

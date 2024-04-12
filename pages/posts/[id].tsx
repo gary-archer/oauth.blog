@@ -1,16 +1,16 @@
+import fs from 'fs';
 import dynamic from 'next/dynamic';
+import path from 'path';
 import Layout from '../../components/layout';
-import {getAllPostIds, getPostData} from '../../lib/posts';
 
 /*
  * Return props for the runtime page ID
  */
 export async function getStaticProps({params}: any): Promise<any> {
-
-    const postData = await getPostData(params.id);
+    
     return {
         props: {
-            postData,
+            filename: `${params.id}.mdx`,
         },
     };
 }
@@ -20,7 +20,14 @@ export async function getStaticProps({params}: any): Promise<any> {
  */
 export async function getStaticPaths(): Promise<any> {
 
-    const paths = getAllPostIds();
+    const postsDirectory = path.join(process.cwd(), 'posts');
+    const mdxFiles = fs.readdirSync(postsDirectory);
+    const paths = mdxFiles.map((filename) => ({
+        params: {
+            id: filename.replace(/\.mdx$/, ''),
+        }
+    }));
+
     return {
         paths,
         fallback: false,
@@ -30,14 +37,13 @@ export async function getStaticPaths(): Promise<any> {
 /*
  * Render a post given its MDX source and frontmatter
  */
-export default function Post({postData}: any): JSX.Element {
+export default function Post({filename}: any): JSX.Element {
 
-    const Mdx = dynamic(import(`/posts/${postData.fileName}`), {ssr: false} );
+    const MdxContent = dynamic(() => import(`../../posts/${filename}`));
     return (
         <Layout>
             <article className='article'>
-                <h1>{postData.frontmatter.title}</h1>
-                <Mdx />
+                <MdxContent />
             </article>
         </Layout>
     );

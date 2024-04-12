@@ -7,7 +7,7 @@ The content for my blog at https://apisandclients.com.
 | Command | Description |
 | ------- | ----------- |
 | npm install | First install dependencies |
-| npm start | Run in development mode with a browser at http://localhost:3000 |
+| npm start | Run in development mode with a browser at http://localhost:3000 and wait a couple of minutes |
 | ./deploy-local.sh | Run in deployed mode locally using http://localhost:3001 |
 | ./deploy-aws.sh | I use this script to deploy static content to AWS Cloudfront |
 
