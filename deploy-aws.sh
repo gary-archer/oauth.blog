@@ -54,17 +54,17 @@ rm -rf tmp 2>/dev/null
 mv dist/posts tmp
 
 #
-# Upload all files except HTML files
+# Delete any existing files in the S3 bucket
 #
-aws s3 cp dist "s3://$BUCKET_NAME" --recursive
+aws s3 rm "s3://$BUCKET_NAME" --recursive
 if [ $? -ne 0 ]; then
   exit 1
 fi
 
 #
-# Delete any existing HTML files
+# Upload all files except HTML files
 #
-aws s3 rm "s3://$BUCKET_NAME/posts" --recursive
+aws s3 cp dist "s3://$BUCKET_NAME" --recursive
 if [ $? -ne 0 ]; then
   exit 1
 fi
