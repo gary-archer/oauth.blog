@@ -1,4 +1,4 @@
-import createMDX from '@next/mdx';
+import withMDX from '@next/mdx';
 import remarkGfm from 'remark-gfm'
 import remarkPrism from 'remark-prism'
 
@@ -7,7 +7,10 @@ import remarkPrism from 'remark-prism'
  */
 const nextConfig = {
     reactStrictMode: false,
-    pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'mdx'],
+    pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'mdx'],
+    experimental: {
+        mdxRs: false, 
+    },
     output: 'export',
     distDir: 'dist',
     images: {
@@ -15,11 +18,12 @@ const nextConfig = {
     },
 };
 
-const withMDX = createMDX({
+// Maybe it's my use of dynamic?
+// https://github.com/vercel/next.js/issues/46659
+const mdxConfig = {
     options: {
         remarkPlugins: [],
-        rehypePlugins: [],
     },
-});
+};
 
-export default withMDX(nextConfig);
+export default withMDX(mdxConfig)(nextConfig);
