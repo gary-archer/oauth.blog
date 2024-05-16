@@ -1,0 +1,86 @@
+# User Data Management
+
+In our previous post we discussed <Link href='/posts/developer-ssl-setup'>SSL Trust Configuration</Link>. Next we will focus on managing users in an OAuth Architecture, since in many setups identity data and business data will need to work together.
+
+### User Attributes in Business Data
+
+In many mature backend systems, users will have a *Data History* that includes an existing user identity. This typically involves hard or soft foreign keys from some kind of users table to resources owned by or associated to each user.
+
+This blog uses an example business data setup where investments are associated to managers. An initial data schema before OAuth was adopted might use relationships similar to this, to map business users to business resources:
+
+![user resources](/images/120/user-resources.jpg)
+
+### User Attributes in Identity Data
+
+When planning an OAuth architecture or migration, first design the user account schema that the authorization server will use. The first four fields are built into authorization servers, whereas the last two fields are Custom User Attributes. The <Link href='/posts/oauth-infrastructure-setup'>initial authorization server setup</Link> post explained how these values were configured in AWS Cognito.
+
+| Attribute | Description |
+| --------- | ----------- |
+| <span style={{color:'green'}}>**Subject**</span> | A generated identifier for the user |
+| <span style={{color:'green'}}>**Email**</span> | The user’s email address |
+| <span style={{color:'green'}}>**Given Name**</span> | The first name(s) for the user |
+| <span style={{color:'green'}}>**Family Name**</span> | The surname(s) for the user |
+| <span style={{color:'green'}}>**Manager ID**</span> | A business identifier for the user |
+| <span style={{color:'green'}}>**Role**</span> | Categorizes the type of user |
+
+The values chosen should be fairly stable and not change often. The *Manager ID* links the identity data to the business data. The *Role* is a field that will be used by the authorization logic in APIs later.
+
+### User Migrations
+
+The authorization server should provide a user management API. Most OAuth migrations begin by populating the identity data from business data, using calls to the authorization server’s user management APIs. Core identity values such as name and email are then managed in the identity data and returned to applications in tokens. These values are then either removed from the business data or made read-only.
+
+### Volatile User Data
+
+It is common to keep some identity values in the business data, where they are easier to manage. These are often not core to a user’s identity. Examples might include product-specific or volatile business values.
+
+As a simplified version of this concept, this blog’s example setup stores the following user fields in the API’s own data. In this blog the *Manager ID* is stored in both sources of user data, to link them together:
+
+| Attribute | Description |
+| --------- | ----------- |
+| <span style={{color:'green'}}>**Manager ID**</span> | The business user identity |
+| <span style={{color:'green'}}>**Title**</span> | An informational title for the user |
+| <span style={{color:'green'}}>**Regions**</span> | Regions for which the user has access to data |
+
+### API Flows
+
+After an OAuth migration, APIs will by default receive access tokens containing only the generated subject claim. This identity may not  be useful to APIs that operate on business data:
+
+![user token identity](/images/120/user-token-identity.jpg)
+
+Even basic authorization servers should support issuing any field in the identity data to access tokens. This blog’s API code samples receive access tokens containing the business user identity. An example AWS Cognito access token has the following form of payload:
+
+![token claims](/images/120/token-claims.jpg)
+
+More complete authorization servers will also support issuing claims to access tokens from the business data, or other sources. Therefore you should be able to store user data wherever you like.
+
+### User Management Operations
+
+When working with user data, the authorization server’s user management APIs may also be called for operations such as those in the following table. In at least some cases, you may need to design how to save attributes to both the identity data and to business data:
+
+| Operation | Description |
+| --------- | ----------- |
+| <span style={{color:'green'}}>**Existing User Migration**</span> | Existing users are migrated in bulk by reading business user data and updating identity data |
+| <span style={{color:'green'}}>**Administrator User Creation**</span> | An administrator creates users and assigns attributes across both data sources |
+| <span style={{color:'green'}}>**Self Sign Up**</span> | A user signs up, provides proof of their identity, and attributes are saved to both data sources |
+| <span style={{color:'green'}}>**Profile Edits**</span> | The user edits their profile and data is saved to both data sources |
+
+In some cases, after self sign up APIs may receive access tokens with an empty business user identity. When required, this can trigger some actions to populate initial business data, such as prompting the user with a welcome screen.
+
+### Clients and User Info
+
+Frontend apps often need to get identity data for the current user, such as the name for display. This is done by sending the access token to the authorization server’s user info endpoint. In this blog’s example AWS Cognito setup, the following fields are returned:
+
+![oauth userinfo](/images/120/oauth-userinfo.jpg)
+
+It is also common for clients to need to get user attributes from business data, so that they can show and hide certain UI elements. This blog’s final APIs provide a separate endpoint that returns business user attributes, for display in the frontend:
+
+![api userinfo](/images/120/api-userinfo.jpg)
+
+### Where Are We?
+
+We have summarized design choices when storing user attributes in an OAuth architecture. A clean separation between core identity and business specific attributes can provide the best manageability for APIs and clients.
+
+### Next
+
+- Next we’ll explain this blog’s <Link href='/posts/api-authorization-design'>API Authorization Behaviour</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

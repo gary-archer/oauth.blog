@@ -1,0 +1,274 @@
+# SSL Trust Configuration
+
+Previously we discussed the basics of our <Link href='/posts/http-debugging-setup'>HTTP Proxy Setup</Link>, and next we will deal with HTTPS connections securely. All future code samples will then use SSL for all connections. I use *SSL* as the colloquial term, to represent [transport level security (TLS) v1.3](https://en.wikipedia.org/wiki/Transport_Layer_Security#TLS_1.3).
+
+### Goal: Developer Productivity
+
+When working with OAuth secured UIs and APIs, SSL messages tend to be required in development environments:
+
+- Messages to the Authorization Server often must use HTTPS
+- Some vendors also require HTTPS URLs for Web Redirect URIs
+
+In some setups, being able to view HTTPS messages in flight can be highly useful, both for learning  OAuth standards, and troubleshooting failed messages.
+
+### Goal: Real World Development URLs
+
+For the first code sample we created custom domain names for local PC hosting, and in the next sample these will be updated to HTTPS URLs:
+
+- https`:`//web.mycompany.com/spa
+- https`:`//api.mycompany.com/api
+
+Code samples will download and use development certificates and keys precreated by the [openssl command line tool](https://www.openssl.org/). We will take a closer look at how the creation script works at the end of this post.
+
+### SSL Trust Model
+
+I avoid standalone SSL certificates for local development. Instead I follow a public key infrastructure approach, in the same way as for real internet certificates. Each development certificate has a root authority, whose public key can be distributed and which components can be configured to trust.
+
+### Technical Challenges
+
+Getting SSL Trust working can be problematic in some cases, since it requires different settings across tools and technologies. We will describe configuration for all of the following clients:
+
+- Chrome / Safari Browsers
+- Microsoft Browser
+- Firefox Browser
+- Electron Desktop Apps
+- Node.js APIs
+- .NET APIs
+- Java APIs
+- Kotlin Android Apps
+- Swift iOS Apps
+- Command Line Tools
+
+In this blog we will run multiple UI and API code samples, then view OAuth messages for all of them, across these operating systems:
+
+- Windows
+- macOS
+- Linux
+- Android
+- iOS
+
+### HTTP Proxy Root Certificates
+
+HTTP proxy tools use a man in the middle technique to replace the root of the target URL’s SSL certificate. This enables the traffic to be viewed as HTTP, then re-encrypted using the proxy’s own certificate:
+
+![mitm cert](/images/110/mitm-cert.jpg)
+
+Some corporate networks use their own SSL Proxy / Firewall Filter that works in a similar manner way, injecting root certificates that replace the root authority of any non-whitelisted external URLs.
+
+### Development SSL Certificates
+
+The next code sample will use a *Wildcard SSL Certificate* issued by a development root certificate authority. The wildcard certificate will use this blog’s custom domain names as *Subject Alternative Names*:
+
+![wildcard development cert](/images/110/wildcard-development-cert.jpg)
+
+### Identity the Root Authority to Trust
+
+When running this blog’s code samples, the root authority to trust when tracing HTTPS requests will depend whether an HTTP proxy is being used.
+
+| Scenario | Trust Configuration |
+| -------- | ------------------- |
+| <span style={{color:'green'}}>**HTTP Proxy Running**</span>  | Trust the proxy root certificate |
+| <span style={{color:'green'}}>**HTTP Proxy Not Running**</span> | Trust the development root certificate |
+
+The following sections describe how to trust the proxy root certificate across various components. The steps to trust the development root certificate are equivalent.
+
+### Configure Operating System Trust
+
+On Windows we must run the *Microsoft Management Console (MMC.EXE)*, then select the *Certificate Snap In* and import the root certificate under *Local Computer / Trusted Root Certification Authorities*:
+
+![windows trust](/images/110/windows-trust.jpg)
+
+On macOS we instead add the root certificate to the *Keychain Access* application under *System / Certificates*, then enable the *Always Trust* option:
+
+![macos trust](/images/110/macos-trust.jpg)
+
+On Linux I configure a root certificate to be trusted by copying it to one of the following folders, depending on which distribution I am using. I also ensure that the file uses a *.crt* extension rather than *.pem*:
+
+- /usr/local/share/ca-certificates
+- /etc/pki/ca-trust/source/anchors
+
+Then I run one of these commands, and the one to use again depends on the Linux distribution:
+
+- sudo update-ca-certificates
+- sudo update-ca-trust
+
+### Trusting a Root Certificate in Browsers
+
+Browsers generally inherit SSL trust from one of the operating system default trust stores above. There may be some exceptions though, such as Google Chrome on Linux having its own certificate store, similar to that described for Firefox below.
+
+### Trusting a Root Certificate in the Firefox Browser
+
+The Firefox browser has its own trust store, under *Options / Privacy & Security / Certificates / View Certificates / Authorities / Import*, and we can import root certificates here:
+
+![firefox trust](/images/110/firefox-trust.jpg)
+
+### Trusting a Root Certificate in Node.js APIs
+
+In the previous post we used a hack to get Node.js to trust a root certificate by setting this environment variable:
+
+```bash
+export NODE_TLS_REJECT_UNAUTHORIZED=0
+```
+
+A more correct option is to only trust whitelisted root CAs using the following environment variable, which I set permanently on my PC:
+
+```bash
+export NODE_EXTRA_CA_CERTS=<path to bundle file>
+```
+
+The environment variable points to a CA bundle file that contains the public keys of multiple root certificates, and I use a local file containing a number of entries:
+
+```markdown
+# mycompany.com
+-----BEGIN CERTIFICATE-----
+MIIDZzCCAk+gAwIBAgIJAN7ZkzJkHq8DMA0GCSqGSIb3DQEBCwUAMCsxKTAnBgNV
+BAMTIFNlbGYgU2lnbmVkIENBIGZvciBteWNvbXBhbnkuY29tMB4XDTIxMTIwNjE4
+MTU0MVoXDTMxMTIwNDE4MTU0MVowKzEpMCcGA1UEAxMgU2VsZiBTaWduZWQgQ0Eg
+Zm9yIG15Y29tcGFueS5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
+AQCcstoGEwgoCNp4uJjyquvbFtMjlFEMrRBXKiiC/cF5u/qWUaOnCc2Yg6kyD9rf
+eyQTVhjvxt4CrlZJqDeW/+EUY1NdMaztji9lGMv3YqtKRlYL8JzpiWQNHn7qeQhx
+OmJJKEPF8XhriqjOBXVA2RefgKngbq6bv3xOvpplEjXBaiEC8ukHU7T0itplWEsu
+RV9aY+o2odslkoTITEqkW9WFrNXwLwVH05tNb+5f7Jw/WE8uF+vPY5/9D98/LgZM
+8wYQ0tvv+37FdJl25vk29zFaLEQf5iNO+IH1WtLDHdesCNYHq8CIluFC0o3Jf9ti
+kz6Z5p2wiXrN+hkCnDsvOI29AgMBAAGjgY0wgYowHQYDVR0OBBYEFJ1scXlGbEsP
+/+P6XNOq3x39eLqvMFsGA1UdIwRUMFKAFJ1scXlGbEsP/+P6XNOq3x39eLqvoS+k
+LTArMSkwJwYDVQQDEyBTZWxmIFNpZ25lZCBDQSBmb3IgbXljb21wYW55LmNvbYIJ
+AN7ZkzJkHq8DMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBAFnAxVG9
+28nMEh3oYkvWCodGrAR8r0Vb2ck0FVOEeper78YhtvzzhW1mMhwnONo83PVpKmIf
+6YlQC3XAb3y/0bVc/FtoN40Qh+zHL+WkOx8zqdE4fyRhq1AcGhFQ5Ccx7g+2GbcL
+wVO3T+8FjR8Zc+9CWxdE4sDx9RB+34fq6f/6fJTIYp97F/A1FjLGS19rmm09VadL
+c708yePaEAOjDCo47t3Y2myO6gGZCPgPsvdP3osxf6QfXLkTwGlrO07+DL0LNDZz
+hfnsSjWkqnYf/gqyt00xplaP8vGsoidaSrwAXjGsqwt7rPFQRSoi8elE+3m5/Zaw
++Wmf3vgbiKxlTwY=
+-----END CERTIFICATE-----
+
+# Charles Proxy
+```
+
+Some Windows tools provide root certificates in a binary DER format. These will need to be translated to PEM format, via the below command, then added to the bundle file:
+
+```bash
+openssl x509 -inform der -in myRoot.cer -out myRoot.pem
+```
+
+### Trusting a Root Certificate in .NET APIs
+
+Later we will provide an <Link href='/posts/net-core-code-sample-overview/'>OAuth Secured .NET API</Link> and trust will be inherited from the operating system SSL trust store.
+
+### Trusting a Root Certificate in Java APIs
+
+We will also provide an <Link href='/posts/java-spring-boot-api-overview'>OAuth Secured Sample Java API</Link>, and each Java installation has its own certificate trust store in a cacerts file. This is located under the Java install location in a lib/security folder. On macOS this is at the following type of location, for a Java 21 installation:
+
+- /Library/Java/JavaVirtualMachines/zulu-21.jdk/Contents/Home/lib/security
+
+Operations to manage certificates use the [keytool utility](https://www.techquintal.com/java-keytool-keystore-commands), and I use the following commands to add, find and remove a trusted root:
+
+```bash
+sudo "$JAVA_HOME/bin/keytool" -import -alias charlesroot -cacerts -file ~/Desktop/charlesroot.pem -storepass changeit -noprompt
+sudo "$JAVA_HOME/bin/keytool" -list -alias charlesroot -cacerts -storepass changeit -noprompt
+sudo "$JAVA_HOME/bin/keytool" -delete -alias charlesroot -cacerts -storepass changeit -noprompt
+```
+
+### Trusting a Root Certificate in Electron Apps
+
+Later we will provide some <Link href='/posts/desktop-apps-overview'>OAuth Secured Desktop Apps</Link>, where there are two processes, which determine certificate trust differently:
+
+| Area | Trust Behaviour |
+| ---- | --------------- |
+| <span style={{color:'green'}}>**Main Process**</span> | For requests from the main side of the app, extra root CAs [cannot be trusted using NODE_EXTRA_CA_CERTS](https://github.com/electron/electron/issues/10257). For development purposes you have to use the environment variable *NODE_TLS_REJECT_UNAUTHORIZED=0*. |
+| <span style={{color:'green'}}>**Renderer Process**</span> | The Chromium browser uses the system trust store on macOS or Windows, or you must import certificates into the browser on Linux desktops. |
+
+### Trusting a Root Certificate in Command Line Tools
+
+Command line tools usually use the default operating system trust store, so that these commands work once root certificates are trusted:
+
+```bash
+curl https://api.mycompany.com/api/companies
+openssl s_client -connect api.mycompany.com:443
+```
+
+It is also possible to use a different certificate bundle file via an override, which may be required in some cases, and is useful for troubleshooting:
+
+```bash
+curl --cacert ~/certs/trusted.ca.pem https://api.mycompany.com/api/companies
+openssl s_client -CAfile ~/certs/trusted.ca.pem -connect api.mycompany.com:443
+```
+
+The results include some technical output after which a trusted certificate has a zero return code:
+
+![openssl verified](/images/110/openssl-verified.jpg)
+
+### Trusting a Root Certificate in iOS and Android
+
+Mobile SSL Trust as its own complexities, which are covered in the later posts on mobile setup:
+
+- <Link href='/posts/android-https-debugging'>Android HTTPS Debugging</Link>
+- <Link href='/posts/ios-https-debugging'>iOS HTTPS Debugging</Link>
+
+### Creating Development Certificates with OpenSSL
+
+Our first code sample uses port 80 but all subsequent samples listen on SSL port 443. The server will use a wildcard certificate whose root is the below self issued authority:
+
+![development certs](/images/110/development-certs.jpg)
+
+If required, the domain names listed in the *server.ext* file can be replaced with your own values and you can then run the *makeCerts.sh* script to create your own certificates:
+
+![cert creation script](/images/110/cert-creation-script.jpg)
+
+The end result is a *pkcs#12 file*, which combines the public certificate and private key, along with a password to protect the private key. You can view the PEM file properties in an [online certificate viewer](https://ssltools.godaddy.com/views/certDecoder), to understand issuer and DNS details:
+
+![cert decoder](/images/110/cert-decoder.jpg)
+
+<span style={{color:'red'}}>For convenience I store these certificates and keys in a [public GitHub repository](https://github.com/gary-archer/oauth.developmentcertificates) so that they are easily downloaded and used in my code examples. In a real solution you should of course not check private keys into a public repository like this.</span>
+
+### Running UIs and APIs over SSL
+
+When our API samples start up, the pkcs#12 file is read and used to listen on SSL port 443:
+
+```typescript
+public async startListening(): Promise<void> {
+
+    const port = this._configuration.api.port;
+    if (this._configuration.api.sslCertificateFileName && this._configuration.api.sslCertificatePassword) {
+
+        const pfxFile = await fs.readFile(this._configuration.api.sslCertificateFileName);
+        const sslOptions = {
+            pfx: pfxFile,
+            passphrase: this._configuration.api.sslCertificatePassword,
+        };
+
+        const httpsServer = https.createServer(sslOptions, this._expressApp);
+        httpsServer.listen(port, () => {
+            console.log(`API is listening on HTTPS port ${port}`);
+        });
+
+    } else {
+
+        this._expressApp.listen(port, () => {
+            console.log(`API is listening on HTTP port ${port}`);
+        });
+    }
+}
+```
+
+The host process then serves content securely for both of these base URLs:
+
+- API JSON data from https`:`//api.mycompany.com
+- Web static content from https`:`//web.mycompany.com
+
+I always issue the full DNS API and web domain names in the *Subject Alternative Names* of the certificate to avoid any client errors due to mismatched host names:
+
+![development cert spa](/images/110/development-cert-spa.jpg)
+
+The Google Chrome browser has some useful tools under *Main Menu / More Tools / Developer Tools / Security*. We can use them to view SSL strength details, and it shows that our scripts produce TLS 1.3 certificates:
+
+![certificate strength](/images/110/certificate-strength.jpg)
+
+### Where Are We?
+
+We have improved our development setup, so that our future UIs and APIs will run over *Real World SSL URLs*. We are also able to view all OAuth messages sent over SSL URLs on a development computer.
+
+### Next
+
+- Next we will focus on <Link href='/posts/user-data'>User Data Management</Link> in an OAuth Architecture
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

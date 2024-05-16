@@ -1,0 +1,551 @@
+# Final SPA – Coding Key Points
+
+Previously we explained <Link href='/posts/how-to-run-the-react-js-spa'>How to Run the Final SPA</Link>. Next we will describe the main changes in the SPA code, which now uses cookies as API credentials. See also the <Link href='/posts/api-journey-client-side'>Client Side API Journey</Link> for a summary of the requirements being met.
+
+### Previous Samples
+
+We provided two earlier plain TypeScript OAuth code samples. These used access tokens in the browser, which is no longer recommended.
+
+| Solution | Description |
+| -------- | ----------- |
+| <Link href='/posts/basicspa-codingkeypoints'>Code Sample 1</Link> | Authorization code flow (PKCE), calling APIs with access tokens and handling 401 responses |
+| <Link href='/posts/updated-spa-coding-key-points'>Code Sample 2</Link> | Added in-memory token storage, silent token renewal and logout |
+
+### SPA Code
+
+The earlier SPA has been updated to a React app that runs at a */spa* path. Additional paths, for other SPAs, could run within the same web domain, to prevent the code base for any one app becoming too large:
+
+![spa code](/images/240/spa-code.jpg)
+
+If additional apps are added to the web domain, they should be for the same business area. They will share each other’s API cookies and also each other’s cross site scripting threats.
+
+### HTML Markup
+
+The final SPA uses the same HTML markup as our earlier SPAs, though DOM elements are now populated from the SPA’s JSX views. Micro-UIs each use a *base* path within the overall web domain:
+
+```html
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>
+
+        <base href='/spa/' />
+        <title>OAuth Demo App</title>
+
+        <link rel='stylesheet' href='bootstrap.min.css'>
+        <link rel='stylesheet' href='app.css'>
+    </head>
+    <body>
+        <div id='root' class='container'></div>
+
+        <script type='module' src='vendor.bundle.js'></script>
+        <script type='module' src='react.bundle.js'></script>
+        <script type='module' src='app.bundle.js'></script>
+    </body>
+</html>
+```
+
+### Web Host
+
+The final logic to serve static content has also been updated. This serves a *favicon.ico* file from the root folder, and the SPA’s static content from the */spa* folder. Other folders could be added in future, for further micro-frontends:
+
+```typescript
+public initialise(): void {
+
+    const spaBasePath = '/spa/';
+    const spaRoot = this._getSpaFilesBasePath();
+    this._express.use(spaBasePath, express.static(spaRoot));
+
+    this._express.get('*', (request, response) => {
+
+        const requestPath = request.path.toLowerCase();
+        if (requestPath === '/favicon.ico') {
+
+            const root = this._getRootFilesBasePath();
+            response.sendFile('favicon.ico', {root});
+
+        } else if (requestPath.startsWith(spaBasePath)) {
+
+            response.sendFile('index.html', {root: spaRoot});
+
+        } else {
+
+            response.redirect(spaBasePath);
+        }
+    });
+}
+```
+
+If required, it would be trivial to configure the [Webpack Dev Server](https://sbcode.net/threejs/webpack-dev-server/) for local development, which would simplify the setup further when developing views. Yet I prefer to use the more full-featured Express web host during development, so that I can test any production web behaviour locally.
+
+### React Library Setup
+
+In the main SPA, OpenID Connect is no longer implemented using a JavaScript security library. Instead, all *package.json* dependencies are focused on either views or API calls:
+
+```json
+"dependencies": {
+  "axios": "^1.6.8",
+  "guid-typescript": "^1.0.9",
+  "js-event-bus": "^1.1.1",
+  "react": "^18.2.0",
+  "react-dom": "^18.2.0",
+  "react-modal": "^3.16.1",
+  "react-router-dom": "^6.9.0"
+}
+```
+
+### Entry Point
+
+The entry point to the SPA begins with an index.tsx file. Path based routing is used, and managed by the React router. The router uses the base path expressed in the *index.html* file:
+
+```typescript
+import React, {StrictMode} from 'react';
+import ReactDOM from 'react-dom/client';
+import {BrowserRouter} from 'react-router-dom';
+import {App} from './app/app';
+import {AppViewModel} from './app/appViewModel';
+import {BasePath} from './plumbing/utilities/basePath';
+import {ErrorBoundary} from './views/errors/errorBoundary';
+
+const props = {
+    viewModel: new AppViewModel(),
+};
+
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+root.render (
+    <StrictMode>
+        <ErrorBoundary>
+            <BrowserRouter basename={BasePath.get()}>
+                <App {...props} />
+            </BrowserRouter>
+        </ErrorBoundary>
+    </StrictMode>
+);
+```
+
+### Routes and Navigation
+
+In the *app.tsx* module of the main SPA, views now use JSX syntax. Routes are used to enable users to navigate and swap out the main area of the app.
+
+```jsx
+return (
+    <>
+        <TitleView {...getTitleProps()} />
+        <HeaderButtonsView {...getHeaderButtonProps()} />
+        {model.error && <ErrorSummaryView {...getErrorProps()} />}
+        {model.isLoaded &&
+            <>
+                <SessionView {...getSessionProps()} />
+                <Routes>
+                    <Route path='/companies/:id' element={<TransactionsContainer {...getTransactionsProps()} />} />
+                    <Route path='/loggedout'     element={<LoginRequiredView {...getLoginRequiredProps()} />} />
+                    <Route path='/*'             element={<CompaniesContainer {...getCompaniesProps()} />} />
+                </Routes>
+            </>
+        }
+    </>
+);
+```
+
+### Mobile First Layout
+
+The demo SPA’s static content is deployed to the AWS content delivery network, and is available online, including from mobile devices. We have therefore done more work to improve the mobile layout.
+
+In our transactions view the following markup shows 3 items per row on large screens, 2 items per row on medium screens and only a single item per row on small mobile devices:
+
+```jsx
+<div className='col-lg-4 col-md-6 col-xs-12' key={transaction.id} />
+```
+
+The transactions mobile view therefore looks like this when using a mobile resolution:
+
+![mobile transactions](/images/240/mobile-transactions.jpg)
+
+The companies list becomes too squashed up for smaller sizes, so we have provided a different view of the data instead:
+
+```jsx
+return  (
+    <>
+        {state.error && <ErrorSummaryView {...getErrorProps()}/>}
+        {state.companies.length > 0 && (props.isMobileLayout ?
+            <CompaniesMobileView {...getChildProps()}/> :
+            <CompaniesDesktopView {...getChildProps()}/>)}
+
+    </>
+);
+```
+
+At mobile dimensions the companies list now uses a card based layout rather than a grid based layout:
+
+![mobile companies](/images/240/mobile-companies.jpg)
+
+### Views, View Models and State
+
+React manages rendering when *view state* changes, and views are given *props* when created. I also like to use *view models* to handle operations such as API calls, and to keep the view classes UI focused:
+
+```typescript
+export interface CompaniesContainerProps {
+    isMobileLayout: boolean;
+    viewModel: CompaniesContainerViewModel;
+}
+```
+
+Views will be recreated frequently when view state changes. Meanwhile the main application state is contained within view model classes, and these should only be created once. I manage this by storing child view model references within the root *AppViewModel*:
+
+```typescript
+public getCompaniesViewModel(): CompaniesContainerViewModel {
+
+    if (!this._companiesViewModel) {
+
+        this._companiesViewModel = new CompaniesContainerViewModel(
+            this.fetchClient!,
+            this._eventBus,
+            this._viewModelCoordinator!,
+        );
+    }
+
+    return this._companiesViewModel;
+}
+```
+
+This is a portable way to manage application state in UIs. Later in this blog I use the same pattern for mobile apps developed in Swift and Kotlin.
+
+### Separation of View Logic from General Logic
+
+I use the React framework’s hook based syntax when developing the SPA’s views, as shown below. In mobile development I use other frameworks, such as SwiftUI, which have their own specific view syntax.
+
+```typescript
+export function CompaniesContainer(props: CompaniesContainerProps): JSX.Element {
+
+    const model = props.viewModel;
+    model.useState();
+
+    useEffect(() => {
+        startup();
+        return () => cleanup();
+    }, []);
+}
+```
+
+I avoid the use of frameworks like React or SwiftUI for general logic, including API and OAuth requests. This leads to more natural class based code that is easier to port across technologies.
+
+### Triggering API Requests
+
+Data loading in views that call APIs first occurs when the [useEffect hook](https://reactjs.org/docs/hooks-effect.html) executes. The view’s startup method is then called, to trigger calls to APIs. The loadData method is also called when the *Reload Data* button is clicked.
+
+```typescript
+async function startup(): Promise<void> {
+    model.eventBus.on(EventNames.ReloadData, onReload);
+    await loadData();
+}
+```
+
+API requests are triggered from views using code similar to the following. After each API call the view model rebinds any data or error values to the React state, to trigger a rendering update:
+
+```typescript
+async function loadData(options?: ViewLoadOptions): Promise<void> {
+    await model.callApi(options);
+}
+```
+
+The view model code is also quite simple and uses a fetch client that deals with lower level aspects. The view model coordinator provides a mechanism for triggering a new login redirect when the API session expires:
+
+```typescript
+public async callApi(options?: ViewLoadOptions): Promise<void> {
+
+    const fetchOptions = {
+        cacheKey: FetchCacheKeys.Companies,
+        forceReload: options?.forceReload || false,
+        causeError: options?.causeError || false,
+    };
+
+    this._viewModelCoordinator.onMainViewModelLoading();
+    this._updateError(null);
+
+    try {
+
+        const result = await this._fetchClient.getCompanyList(fetchOptions);
+        if (result) {
+            this._updateCompanies(result);
+        }
+
+    } catch (e: any) {
+
+        this._updateError(ErrorFactory.fromException(e));
+        this._updateCompanies([]);
+
+    } finally {
+
+        this._viewModelCoordinator.onMainViewModelLoaded(fetchOptions.cacheKey);
+    }
+}
+```
+
+### Concurrent API Calls from Views
+
+In previous samples we ensured that the page loaded in a sequential manner, and error handling was also done sequentially:
+
+- First the main view called the API to get the data and then update the UI’s main area
+- Next the userinfo view called the API, then displayed the user name in the top right
+
+![spa views](/images/240/spa-views.jpg)
+
+It is more typical in an SPA for multiple API requests to be in flight at the same time, so we have updated to this model. Fetch requests are triggered when React renders the tree of views, and the ordering of API requests is not deterministic.
+
+### Concurrent View Errors
+
+In the event of either view experiencing a problem they now render their own error. You can rehearse API errors by long pressing the *Reload Data* button for a few seconds, resulting in an *Error Summary* view being rendered for each view that made an API request:
+
+![error summary](/images/240/error-summary.jpg)
+
+When clicked, a summary view uses a React modal dialog to display the *Error Detail* View from our earlier samples:
+
+![error details](/images/240/error-details.jpg)
+
+### Triggering Login Redirects
+
+A login required error occurs when the user is not authenticated or when the API session expires. This error could now occur concurrently, so our SPA handles the condition via a *ViewModelCoordinator* object.
+
+Once all view models have loaded, or tried to load, if there is one or more *login_required* errors, an event is fired, only once. This event is received by the main application view, which then triggers a login redirect.
+
+```typescript
+private _handleErrorsAfterLoad(): void {
+
+    if (this._loadedCount === this._loadingCount) {
+
+        const errors = this._getLoadErrors();
+
+        const loginRequired = errors.find((e) => e.errorCode === ErrorCodes.loginRequired);
+        if (loginRequired) {
+            this._eventBus.emit(EventNames.LoginRequired, new LoginRequiredEvent());
+            return;
+        }
+
+        const oauthConfigurationError = errors.find((e) =>
+            (e.statusCode === 401 && e.errorCode === ErrorCodes.invalidToken) ||
+            (e.statusCode === 403 && e.errorCode === ErrorCodes.insufficientScope));
+
+        if (oauthConfigurationError) {
+            this._authenticator.clearLoginState();
+            return;
+        }
+    }
+}
+```
+
+The *ViewModelCoordinator* object also deals with invalid token errors, such as incorrect scope, claims or audience configurations. For these errors, the app clears its login state to enable retries after the OAuth configuration has been fixed. The app then receives new tokens and the user can recover.
+
+### API Credentials
+
+API requests now use cookie credentials, with the *HTTP-only, Secure, SameSite=strict* properties. Any data changing commands also send a *CSRF token*, in line with OWASP best practices for CSRF prevention:
+
+```typescript
+private async _callApiWithCredential(
+    method: Method,
+    url: string,
+    fetchOptions: FetchOptions,
+    dataToSend: any): Promise<any> {
+
+    const requestOptions = {
+        method,
+        url,
+        data: dataToSend,
+        headers,
+        withCredentials: true,
+    } as AxiosRequestConfig;
+
+    this._authenticator.addCsrfToken(requestOptions);
+
+    const response = await axios.request(requestOptions);
+    return response.data;
+}
+```
+
+When access tokens expire, they are refreshed and the API request retried, as for earlier SPA code examples. This now causes cookies to be rewritten, so that they contain new underlying tokens:
+
+```typescript
+try {
+    return await this._callApiWithCredential(method, url, options, dataToSend);
+
+} catch (e1: any) {
+
+    const error1 = ErrorFactory.fromHttpError(e1, url, 'API');
+    if (error1.statusCode !== 401) {
+        throw error1;
+    }
+
+    try {
+        await this._authenticator.synchronizedRefresh();
+
+    } catch (e2: any) {
+
+        throw ErrorFactory.fromHttpError(e2, url, 'API');
+    }
+
+    try {
+
+        return await this._callApiWithCredential(method, url, options, dataToSend);
+
+    }  catch (e3: any) {
+        throw ErrorFactory.fromHttpError(e3, url, 'API');
+    }
+}
+```
+
+### API Request Cache
+
+The lower level API code uses a basic caching layer. This avoids duplicated API calls, such as when the user navigates to a view they have visited before, or uses the back button. The caching layer also deals efficiently with re-entrancy when views are recreated, such as when React strict mode is used.
+
+### API Driven OpenID Connect
+
+The final SPA continues to drive its own authentication flow, with the help of a remote OAuth agent. The following operations are used and the overall coding model is the same as that used for this blog’s earlier SPA code samples.
+
+```typescript
+export interface Authenticator {
+    isLoggedIn(): boolean;
+    login(currentLocation: string): Promise<void>;
+    handlePageLoad(): Promise<string | null>;
+    logout(): Promise<void>;
+    clearLoginState(): void;
+    addCsrfToken(options: AxiosRequestConfig): void;
+    synchronizedRefresh(): Promise<void>
+    expireAccessToken(): Promise<void>;
+    expireRefreshToken(): Promise<void>;
+}
+```
+
+The SPA begins a login by getting an authorization request URL from the OAuth agent and then redirecting the entire window to it:
+
+```typescript
+public async login(currentLocation: string): Promise<void> {
+
+    try {
+
+        const response = await this._callOAuthAgent('POST', '/login/start');
+        HtmlStorageHelper.preLoginLocation = currentLocation;
+        location.href = response.authorizationRequestUrl;
+
+    } catch (e) {
+
+        throw ErrorFactory.fromLoginOperation(e, ErrorCodes.loginRequestFailed);
+    }
+}
+```
+
+When the login response is received, the page load handler processes the login response. This results in cookies being issued to the browser, after which the SPA can send them in secured API requests:
+
+```typescript
+public async handlePageLoad(): Promise<string | null> {
+
+    if (location.search) {
+
+        const args = new URLSearchParams(location.search);
+        const state = args.get('state');
+        if (state) {
+
+            try {
+
+                const request = {
+                    pageUrl: location.href,
+                };
+                const response = await this._callOAuthAgent(
+                    'POST',
+                    '/login/end',
+                    request) as EndLoginResponse;
+
+                if (!response.handled || !response.csrf) {
+                    throw ErrorFactory.fromInvalidLoginResponse();
+                }
+
+                HtmlStorageHelper.csrfToken = response.csrf;
+                return HtmlStorageHelper.getAndRemovePreLoginLocation() || '/';
+
+            } catch (e: any) {
+
+                if (this._isSessionExpiredError(e)) {
+                    return null;
+                }
+
+                throw ErrorFactory.fromLoginOperation(e, ErrorCodes.loginResponseFailed);
+            }
+        }
+    }
+
+    return null;
+}
+```
+
+The SPA retains full control over login usability. Rather than using a few lines of code to interact with the *oidc-client-ts* library, the SPA instead uses a few lines of code to interact with its OAuth agent.
+
+### Login Redirects in Micro-Frontends
+
+Since API endpoints are used to manage OAuth operations and cookies, their usage could easily be shared between multiple micro-frontends in the same web domain.
+
+In this case, each frontend would use the same OAuth client. If a shell application managed the login and logout redirects, there could be a single redirect URI. Alternatively, a separate redirect URI per micro-frontend could be used.
+
+### Synchronized Token Refresh
+
+The demo app uses a class called *ConcurrentActionHandler*, to avoid sending multiple token refresh requests at the same time. This prevents potential reliability problems when single use refresh tokens are used.
+
+Token refresh requests are therefore only sent for the first view that requests it. All other views wait, then receive the same result as the first view. This is managed by a technique of queueing up promises:
+
+```typescript
+public async execute(action: () => Promise<void>): Promise<void> {
+
+    const promise = new Promise<void>((resolve, reject) => {
+
+        const onSuccess = () => {
+            resolve();
+        };
+
+        const onError = (error: any) => {
+            reject(error);
+        };
+
+        this._callbacks.push([onSuccess, onError]);
+    });
+
+    const performAction = this._callbacks.length === 1;
+    if (performAction) {
+
+        try {
+
+            await action();
+
+            this._callbacks.forEach((c) => {
+                c[0]();
+            });
+
+        } catch (e) {
+
+            this._callbacks.forEach((c) => {
+                c[1](e);
+            });
+        }
+
+        this._callbacks = [];
+    }
+
+    return promise;
+}
+```
+
+### Future Code Growth
+
+The final SPA deals reliably with some tricky areas, in the lower level plumbing classes. Some of these could be turned into a shared library, which would reduce code considerably.
+
+In a real company the web code base could be grown effectively, across multiple micro-frontends, by adding new view and view model classes. The security-first design, and early focus on code setup, helps to enable this.
+
+### Global Deployment
+
+For optimal global performance, the secured SPA is designed to be deployed to a content delivery network. The finishing touches of release builds and deploying to the AWS CDN are covered in the <Link href='/posts/cdn-static-content-delivery'>Web Content Delivery</Link> post.
+
+### Where Are We?
+
+Our final SPA has been security hardened, by using token handler API components to perform the OpenID Connect and cookie issuing work. This migration has been done while continuing to enable an optimal developer experience, which includes an update to use the React web framework.
+
+### Next
+
+- We will begin our second theme with some <Link href='/posts/api-platform-design'>API Platform Behaviour</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

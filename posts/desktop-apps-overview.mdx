@@ -1,0 +1,116 @@
+# Desktop Code Sample Overview
+
+Previously we summarised this blog’s <Link href='/posts/native-architecture-goals'>Native Architecture Goals</Link>. Secured mobile apps will be covered in later posts. First though, we will implement an initial OpenID Connect secured desktop code sample.
+
+### Features
+
+The behaviour provided in our initial sample is summarised below:
+
+| Feature | Description |
+| ------- | ----------- |
+| <span style={{color:'green'}}>**Cross Platform**</span> | The desktop app will run on Windows, macOS and Linux and will be coded in TypeScript |
+| <span style={{color:'green'}}>**Security Library Integration**</span> | A third party library will implement OpenID Connect logins and token handling |
+| <span style={{color:'green'}}>**System Browser Logins**</span> | The desktop app will invoke the system browser to sign the user in, then listen for the login response |
+| <span style={{color:'green'}}>**Reliability**</span> | We will handle some re-entrancy scenarios when our app interacts with the system browser |
+
+### Components
+
+The sample connects to <Link href='/posts/cloud-hosting'>components hosted in AWS</Link>, so that readers only need to run the desktop apps's code to get a complete solution. This includes the use of web content for a post-login page rendered in the system browser.
+
+![components](/images/410/components.jpg)
+
+### Code Download
+
+The code for our initial desktop app can be downloaded from [here](https://github.com/gary-archer/oauth.desktopsample1), and we will cover full details of how to run it in the next post:
+
+![repo](/images/410/repo.jpg)
+
+### Code Sample Behaviour
+
+Our overall Desktop UI will have the same simple theme and views as this blog's earlier SPAs, though the login user experience will feel different:
+
+![desktop app](/images/410/desktop-app.jpg)
+
+### Desktop App Technology
+
+We will implement our app using [Electron](https://www.electronjs.org/), which uses web technologies for desktop screen development. We will therefore be able to re-use most code from the <Link href='/posts/improved-spa-code-sample-overview'>Plain TypeScript SPA</Link> that we built earlier.
+
+![electronjs](/images/410/electronjs.jpg)
+
+### Platform Specific Appearance
+
+Our desktop app will run on Windows, macOS and Linux, and the following screenshots show the minor differences in appearance:
+
+![windows app](/images/410/windows-app.jpg)
+
+![macos app](/images/410/macos-app.jpg)
+
+![linux app](/images/410/linux-app.jpg)
+
+### AppAuth-JS Security Library
+
+We will use the [AppAuth-JS Library](https://github.com/openid/AppAuth-JS) to implement the OpenID Connect  flow. Once the behaviour is understood you should be able to adapt it to any other desktop technology.
+
+![appauthjs](/images/410/appauthjs.jpg)
+
+### Deprecated WebView Logins
+
+A few years ago it was standard for OAuth secured desktop apps to use a webview for logins. Typically logins would use a popup window hosting a webview browser control. The popup would capture the login response from the webview via an *Out of Browser Redirect URI* such as *urn:ietf:wg:oauth:2.0:oob*.
+
+However, using webviews is no longer recommended. Webviews runs a private browser session, where SSO cookies may be dropped and password autofill may have issues. Authorization servers are encouraged to inspect the user agent and [block login requests from webviews](https://developers.googleblog.com/2016/08/modernizing-oauth-interactions-in-native-apps.html):
+
+![google webview](/images/410/google-webview.jpg)
+
+Instead, in 2021 it is recommended to open an external system browser  window on which the user performs their login. Doing so avoids the use of a private browser session, yet feels less integrated into the desktop app.
+
+### Native Authorization Responses
+
+A web client runs in a browser and has an addressable URL on which to receive login responses. Native apps need a different mechanism, and the [RFC 8252 standard](https://datatracker.ietf.org/doc/rfc8252) explains the 3 options that can be used:
+
+![native response options](/images/410/native-response-options.jpg)
+
+Only the first two options work for a desktop app, and the loopback option will be used for this blog’s initial desktop app. The final desktop app will instead use a private URI scheme. Later, this blog’s mobile apps will use claimed HTTPS schemes.
+
+| Option | Example Redirect URI | Usable By |
+| ------ | -------------------- | --------- |
+| <span style={{color:'green'}}>**Loopback Interface**</span> | 	http`:`//127.0.0.1:8000 | Desktop apps |
+| <span style={{color:'green'}}>**Private URI Scheme**</span> | x-mycompany-myapp`:`/callback | Mobile or desktop apps |
+| <span style={{color:'green'}}>**Claimed HTTPS Scheme**</span> | https`:`//web.mycompany.com/myapp | Mobile apps |
+
+### The AppAuth Code Sample
+
+To quickly see a login via the System Browser, you can run the AppAuth-JS Electron code sample via these commands:
+
+```bash
+git clone https://github.com/googlesamples/appauth-js-electron-sample
+cd appauth-js-electron-sample
+npm install
+npm start
+```
+
+A simple desktop app is then presented, and we can click the *Sign In* option to invoke an OAuth login on the system browser:
+
+![appauth unauthenticated](/images/410/appauth-unauthenticated.jpg)
+
+When the *Sign In* link is clicked, the system browser is opened. If the user is not already logged in, there will be a prompt to sign in via Google:
+
+![appauth login](/images/410/appauth-login.jpg)
+
+The Desktop App supplies a *loopback’*value of http`:`//127.0.0.1:8000 for the OAuth redirect URI, and creates an HTTP endpoint on this port, to listen for the response.
+
+After login, a request is sent to this HTTP endpoint, with the authorization response URL. The desktop app then extracts the returned authorization code and swaps it for tokens, after which it can call APIs.
+
+### Login User Experience
+
+The login UX for the desktop view is not ideal. There is a disconnected browser window, and a blank page by default. We will show how to render a custom page, and also how to handle retries, to ensure reliability.
+
+![appauth authenticated](/images/410/appauth-authenticated.jpg)
+
+### Where Are We?
+
+This post explained the behaviours of the initial desktop code sample, to get logins and API calls working with basic reliability. Next we will show how to build and run it locally.
+
+### Next
+
+- Next we will explain How to <Link href='/posts/desktop-app-how-to-run-the-code-sample'>Run the Desktop Code Sample</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

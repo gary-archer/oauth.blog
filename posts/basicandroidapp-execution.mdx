@@ -1,0 +1,325 @@
+# How to Run the Android Code Sample
+
+Previously we provided an <Link href='/posts/android-code-sample-overview'>Android Code Sample Overview</Link> and next we will describe how to run and test the code sample. Readers who are new to Android development may also want to browse these earlier pages:
+
+- <Link href='/posts/android-setup'>Android Setup and the AppAuth Sample</Link>
+- <Link href='/posts/android-https-debugging'>Android HTTPS Debugging</Link>
+
+### Prerequisite: Install Android Studio
+
+We can run our sample on macOS, Windows or Linux, but first install an up to date version of Android Studio, so that you have access to the latest Kotlin and Jetpack features.
+
+### Step 1: Download the Code
+
+The project is available [here](https://github.com/gary-archer/oauth.mobilesample.android), and can be downloaded / cloned to your local PC with the following command:
+
+```bash
+git clone https://github.com/gary-archer/oauth.mobilesample.android
+```
+
+![repo](/images/510/repo.jpg)
+
+### Step 2: Open the Project in Android Studio
+
+Shortly we will describe the coding model, where we implement OAuth integration in an unobtrusive manner, so that Android views only need to make simple API calls and other classes deal with OAuth plumbing:
+
+![project](/images/510/project.jpg)
+
+When the project is loaded there will be a *Gradle Sync* to download third party libraries. Ensure that this completes successfully, and also that Java 17 is configured under *Preferences / Build,Execution,Deployment / Build Tools / Gradle / Gradle JDK*:
+
+![gradle settings](/images/510/gradle-settings.jpg)
+
+### Step 3: Run the App on an Emulator
+
+You can now run our demo app via the Run Icon in the Android Studio toolbar. You may then get an initial prompt to *Secure Your Device*, after which you will be able to login with the following test credential:
+
+- User: *guestuser`@`mycompany.com*
+- Password: *GuestPassword1*
+
+Next save the password when prompted, then navigate between views by clicking an item in the companies view or using the *Home* button:
+
+![running app](/images/510/running-app.jpg)
+
+### Step 4: View Library Dependencies
+
+View the app’s *build.gradle.kts* file to understand the our Single Activity App’s third party dependencies, which include the AppAuth Library. The app requires Android 8 (SDK 26) and above, since this simplifies some areas of the Android implementation.
+
+```kotlin
+object VERSION {
+    const val kotlin_extensions = "1.12.0"
+    const val compose = "1.8.0"
+    const val compose_bom = "2023.09.02"
+    const val compose_ui = "1.5.3"
+    const val material3 = "1.1.2"
+    const val navigation = "2.7.4"
+    const val appauth = "0.11.1"
+    const val browser = "1.6.0"
+    const val okhttp = "4.11.0"
+    const val gson = "2.10.1"
+    const val okio = "3.4.0"
+    const val eventbus = "3.3.1"
+    const val detekt = "1.23.1"
+}
+
+dependencies {
+
+    implementation("androidx.core:core-ktx:${VERSION.kotlin_extensions}")
+
+    implementation("androidx.activity:activity-compose:${VERSION.compose}")
+    implementation(platform("androidx.compose:compose-bom:${VERSION.compose_bom}"))
+
+    implementation("androidx.navigation:navigation-ui-ktx:${VERSION.navigation}")
+    implementation("androidx.navigation:navigation-compose:${VERSION.navigation}")
+
+    implementation("androidx.compose.ui:ui:${VERSION.compose_ui}")
+    implementation("androidx.compose.ui:ui-graphics:${VERSION.compose_ui}")
+    implementation("androidx.compose.material3:material3:${VERSION.material3}")
+
+    implementation ("net.openid:appauth:${VERSION.appauth}")
+
+    implementation ("androidx.browser:browser:${VERSION.browser}")
+
+    implementation ("com.squareup.okhttp3:okhttp:${VERSION.okhttp}")
+    implementation ("com.google.code.gson:gson:${VERSION.gson}")
+
+    implementation ("com.squareup.okio:okio:${VERSION.okio}")
+
+    implementation ("org.greenrobot:eventbus:${VERSION.eventbus}") 
+}
+```
+
+### Step 5: View the Single Activity Configuration
+
+View the *Android Manifest File* to see the declaration of our single activity, which runs in [Single Top](https://inthecheesefactory.com/blog/understand-android-activity-launchmode/en) mode, meaning it is by default created only once, in a similar  manner to the main window in an SPA.
+
+```xml
+<activity
+        android:name=".app.MainActivity"
+        android:exported="true"
+        android:launchMode="singleTop"
+        android:configChanges="orientation|screenSize">
+
+    <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
+    </intent-filter>
+</activity>
+```
+
+### Step 6: Understand Configuration Settings
+
+When our app runs it uses the API and OAuth settings from an embedded JSON configuration file at *res/raw/mobile_config.json*:
+
+```json
+{
+  "app": {
+    "apiBaseUrl":             "https://api.authsamples.com/investments"
+  },
+  "oauth": {
+    "authority":              "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+    "userInfoEndpoint":       "https://login.authsamples.com/oauth2/userInfo",
+    "clientId":               "2vshs4gidsbpnjmsprhh607ege",
+    "webBaseUrl":             "https://authsamples.com",
+    "loginRedirectPath":      "/apps/basicmobileapp/postlogin.html",
+    "postLogoutRedirectPath": "/apps/basicmobileapp/postlogout.html",
+    "scope":                  "openid profile email https://api.authsamples.com/investments",
+    "deepLinkBaseUrl":        "https://mobile.authsamples.com",
+    "customLogoutEndpoint":   "https://login.authsamples.com/logout"
+  }
+}
+```
+
+### Step 7: Understand Login Redirects
+
+By using AppAuth libraries the standard *Authorization Code Flow (PKCE)* message is sent:
+
+![authorization request](/images/510/authorization-request.jpg)
+
+Our AWS Cognito authorization server accepts the request because the *Client ID*, *Redirect URI* and *Scope* of the request match those configured in a Cognito OAuth client. After user login an authorization code is returned to the app:
+
+![oauth client 1](/images/510/oauth-client1.jpg)
+![oauth client 2](/images/510/oauth-client2.jpg)
+
+### Step 8: Understand Redirect Response Handling
+
+The result of successful authorization is the following message, and note that this is sent to an internet hosted web page rather than directly to our Android app:
+
+![authorization response](/images/510/authorization-response.jpg)
+
+Two interstitial web pages are used with our Android sample, hosted at the following URLs:
+
+- https`:`//authsamples.com/apps/basicmobileapp/postlogin.html
+- https`:`//authsamples.com/apps/basicmobileapp/postlogout.html
+
+If we use the *View Source* option in a desktop browser for one of the above URLs, we can see that they just forward query parameters from the login response using a deep linking URL:
+
+![view source](/images/510/view-source.jpg)
+
+The *Deep Linking HTTPS Scheme* for login responses is associated to the app via the below Android manifest entry, which overrides the default AppAuth behaviour of using a private URI scheme:
+
+```xml
+<activity
+    android:name="net.openid.appauth.RedirectUriReceiverActivity"
+    android:exported="true">
+
+    <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data
+            android:scheme="https"
+            android:host="mobile.authsamples.com"
+            android:path="/basicmobileapp/oauth/callback" />
+    </intent-filter>
+</activity>
+```
+
+Note that if the interstitial page is left for a couple of minutes before the user clicks *Return to the App*, the authorization code could time out, leading to a user error. The user can always retry and recover though.
+
+### Step 9: Understand Login Completion
+
+Once the authorization code is received by the app, it sends an *Authorization Code Grant* request to Cognito’s token endpoint, which returns OAuth tokens in the response:
+
+![authorization code grant](/images/510/authorization-code-grant.jpg)
+
+The token data is then stored in *Android Shared Preferences*, and the operating system ensures that other apps cannot access the tokens.
+
+### Step 10: Test Login Actions
+
+It is worth performing certain tests while the Chrome custom tab window is active, to ensure that the app does not throw exceptions or recreate views unnecessarily:
+
+![login](/images/510/login.jpg)
+
+The first of these is to switch away from the app and then reactivate it from its shortcut:
+
+![shortcut](/images/510/shortcut.jpg)
+
+Technically, when the app is invoked via a shortcut, the launcher action is used, which is a command similar to the following, and it can potentially cause the single activity to be recreated. If this occurs there should be no adverse effects on the login process.
+
+```bash
+adb shell am start -n com.authsamples.basicmobileapp/com.authsamples.basicmobileapp.app.MainActivity -a android.intent.action.MAIN -c android.intent.category.LAUNCHER
+```
+
+Similarly I would recommend changing the screen orientation half way through login and then completing the sign in.
+
+![landscape](/images/510/landscape.jpg)
+
+The app’s *MainActivity* is configured with *launchMode=singleTop* and  *configChanges=orientation|screenSize*. It is therefore redrawn but not recreated when the orientation changes.
+
+### Step 11: Test Restarting the App after Login
+
+Restarting the app after a login will just load OAuth tokens from secure storage, and a new login is not required.
+
+### Step 12: Test Deep Linking
+
+While the app is running we can test deep linking on an emulator via a command such as the following. If required our app performs a login or token renewal before moving to the deep link destination:
+
+```bash
+adb shell am start -a android.intent.action.VIEW -d https://mobile.authsamples.com/basicmobileapp/deeplink/company/2
+```
+
+Our app uses a special activity to manage *Deep Link Forwarding* in a controlled manner:
+
+```xml
+<activity
+    android:name=".app.DeepLinkForwardingActivity"
+    android:exported="true"
+    android:launchMode="singleTask"
+    android:noHistory="true">
+
+    <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data
+            android:scheme="https"
+            android:host="mobile.authsamples.com"
+            android:pathPrefix="/basicmobileapp/deeplink/" />
+    </intent-filter>
+</activity>
+```
+
+This enables us to ignore any deep linking requests when our activity is not top most, which most commonly means a Chrome custom tab is being shown.
+
+### Step 13: Test Access Token Expiry
+
+We can use the *Expire Access Token* and *Reload Data* buttons to cause an invalid token to be sent to the API, resulting in a 401 response:
+
+![access token expiry](/images/510/access-token-expiry.jpg)
+
+After every API call the UI checks for 401 responses, and handles them by getting a new access token. The API request is then retried once with the new token, so that the user session is silently extended. Note that a mobile app is a public client and the refresh token is not protected with a client credential:
+
+![concurrent refresh](/images/510/concurrent-refresh.jpg)
+
+### Step 14: Test Refresh Token Expiry
+
+We can use *Expire Refresh Token* followed by *Reload Data* to simulate the end of a user session, which might occur if a user left the app running overnight:
+
+![refresh token expiry](/images/510/refresh-token-expiry.jpg)
+
+On the next request for data the attempt to renew the access token will fail, and the result of the refresh token grant message will be an *Invalid Grant* response:
+
+![invalid grant](/images/510/invalid-grant.jpg)
+
+This will trigger a login redirect, and the user may be prompted to sign in again, but will experience no errors.
+
+### Step 15: Test Logout
+
+To implement logout, a *LogoutRedirectUriReceiverActivity* was added, to map the HTTPS scheme logout callback path:
+
+```xml
+<activity
+    android:name=".plumbing.oauth.logout.LogoutRedirectUriReceiverActivity"
+    android:exported="true">
+
+    <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data
+            android:scheme="https"
+            android:host="mobile.authsamples.com"
+            android:path="/basicmobileapp/oauth/logoutcallback" />
+    </intent-filter>
+</activity>
+```
+
+AWS Cognito also uses a vendor specific logout solution and the logout request requires *client_id* and *logout_url* parameters:
+
+![logout request](/images/510/logout-request.jpg)
+
+When logout completes we are returned to the below post logout view within our app. In a real world app you could then test logging in as another user with different settings or permissions.
+
+![new user login](/images/510/new-user-login.jpg)
+
+### Step 16: Test Failure Scenarios
+
+Our mobile app runs multiple views which could fail concurrently, so we implement the same *Error HyperLink Behaviour* as for our earlier React apps. The following examples cause errors that the UI must handle:
+
+| Scenario | Instructions |
+| -------- | ------------ |
+| <span style={{color:'red'}}>UI Error</span> | Load data normally, then switch to airplane mode and click reload, to cause a connectivity exception |
+| <span style={{color:'red'}}>API Error</span> | Long press the *Reload* button, which then sends a custom HTTP header to the API to rehearse an API 500 exception |
+
+Our error display looks as follows after concurrent view failures. The user can click a hyperlink to see details, or press the Home button to retry:
+
+![error summary](/images/510/error-summary.jpg)
+
+The summary view uses an Android modal dialog to display a view with error details, which would help to enable fast problem resolution:
+
+![error details](/images/510/error-details.jpg)
+
+### Step 17: Test Back Navigation
+
+The user can use the highlighted button to return to previously loaded views. It is worth testing that this behaves correctly for your own apps:
+
+![back navigation](/images/510/back-navigation.jpg)
+
+### Where Are We?
+
+We have shown how to run this blog’s Android code sample,  and test its technical behaviour. Next we will drill into the infrastructure needed to enable the use of OAuth claimed HTTPS schemes.
+
+### Next
+
+- Next we will describe some required <Link href='/posts/android-infrastructure-setup'>Android Mobile Infrastructure</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

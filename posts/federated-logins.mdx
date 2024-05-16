@@ -1,0 +1,80 @@
+# User Authentication Behaviour
+
+Previously we explained this blog’s <Link href='/posts/api-authorization-design'>API Authorization Behaviour</Link>. Next we provide a brief overview of some key points that should be understood about user authentication in an OAuth context.
+
+### The OpenID Connect Code Flow
+
+OAuth clients must never implement user authentication in code. Instead they run an authorization code flow to hand over authentication to the authorization server, as explained in the earlier post on <Link href='/posts/basicspa-oauthworkflow'>OAuth Messages</Link>.
+
+![code flow](/images/140/code-flow.jpg)
+
+This enables many possible ways to login, including those listed below. Multiple authentication factors can be chained together, and the authentication complexity is externalized to the authorization server:
+
+- Basic passwords, as used in this blog
+- Email, phone or One Time Password verification
+- External identity providers (social logins)
+- External identity providers (business partner)
+- Cryptography backed options such as passkeys or digital wallets
+- Custom authentication using the authorization server’s plugin system
+
+In all cases, once authentication completes, the client receives an authorization code in the browser response. This is swapped for tokens, after which the client receives an access token from the authorization server and can call APIs in the correct manner.
+
+### Identity Provider Logins
+
+If an application integrates directly with an external identity provider (IDP), an authorization code flow is run, but not against the authorization server (AS). This is incorrect, and limits your login options to a single identity provider.
+
+In addition, the client will also receive *foreign access tokens*, which are not designed to protect your APIs. Instead, your APIs must only ever receive access tokens issued by your company’s own authorization server.
+
+The correct flow is shown below, where the application performs an authorization code flow against the authorization server. The authorization server then runs a second authorization code flow against the identity provider:
+
+![federated login](/images/140/federated-login.jpg)
+
+The end-to-end flow then works as follows:
+
+- Register the IDP as an authentication method in the AS and assign at least an *Issuer URI*, *Client ID*, *Client Secret* and *Scope*
+- Register the AS as a client in the IDP and assign at least a *Redirect URI*, *Client ID*, *Client secret* and *Scope*
+
+The exact details may vary depending on particular systems, the security standards they use, and their published values for federation. In AWS Cognito, an OpenID Connect identity provider is added in the following screen:
+
+![idp configuration](/images/140/idp-configuration.jpg)
+
+When a client is configured to use an external OpenID Connect identity provider, the following main steps occur:
+
+- Client redirects to AS
+- AS redirects to IDP
+- User authenticates at the IDP
+- IDP returns an authorization code to the AS
+- AS posts the IDP code back to the IDP to get IDP tokens
+- AS returns an authorization code to the client
+-Client posts the AS code back to the AS to get AS tokens
+
+### Consistent API User Identity
+
+The deeper behaviour when designing authentication is ensuring that access tokens and their user identities remain the same when the user’s primary authentication factor changes. This blog’s AWS Cognito access token is designed to contain the following fields:
+
+![token identity](/images/140/token-identity.jpg)
+
+The process of matching logins to existing accounts is called *Account Linking*. It requires some data storage in the authorization server and you must also define the logic that will be used to link accounts.
+
+In simple cases you may be able to deterministically match up user attributes, such as by email address. Another option is to force the user to login with their existing method as part of onboarding to a new one.
+
+Yet many authorization servers have poor support for account linking. Without care, there can be outcomes such as <span style={{color:'red'}}>duplication of user accounts</span>, which damage the integrity of both your identity and business data.
+
+### Custom Authentication
+
+Any authentication method implemented by the authorization server consists of the following steps:
+
+- HTML forms that run in the browser and interact with the server
+- Authorization server endpoints that validate proofs
+- Authorization server logic that assign the user identity
+
+A good authorization server provides extensibility to enable any possible authentication method, using these three main steps. Therefore you should not be restricted by the default login options provided.
+
+### Where Are We?
+
+We have explained how OAuth enables users to be authenticated in many ways. When reviewing an authorization server’s authentication support, judge it by the built-in authentication methods, the account linking features and the extensibility.
+
+### Next
+
+- Next we'll explain how <Link href='/posts/user-sessions-and-token-renewal'>Iframe Access Token Renewal</Link> works for SPAs
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

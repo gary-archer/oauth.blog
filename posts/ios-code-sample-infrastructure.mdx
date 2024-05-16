@@ -1,0 +1,115 @@
+# iOS Code Sample – Infrastructure
+
+Previously we described <Link href='/posts/how-to-run-the-ios-code-sample'>How to Run the iOS Code Sample</Link>, and next we will focus further on the infrastructure used by our OAuth solution.
+
+### AWS CloudFront Domains
+
+Our iOS sample uses 2 online domains, which we configured previously as part of our <Link href='/posts/cloud-domain-setup'>Cloud Domain Setup</Link>:
+
+| Domain | Usage |
+| ------ | ----- |
+| <span style={{color:'green'}}>**mobile.authsamples.com**</span> | The domain name for mobile deep linking, which points to a Cloud location that hosts deep linking assets |
+| <span style={{color:'green'}}>**authsamples.com**</span> | We use the root domain for ad-hoc hosting of simple web pages, including interstitial post-login and post-logout web pages |
+
+### Interstitial Web Page Hosting
+
+Our web pages are first uploaded to an AWS S3 bucket:
+
+![s3 bucket](/images/560/s3-bucket.jpg)
+
+They are then included in one of this blog’s <Link href='/posts/cdn-static-content-delivery'>CloudFront Distributions</Link>, so that the pages are served over an HTTPS URL:
+
+![cloudfront distro](/images/560/cloudfront-distro.jpg)
+
+Pages are then available at these URLs:
+
+- https`:`//authsamples.com/apps/basicmobileapp/postlogin.html
+- https`:`//authsamples.com/apps/basicmobileapp/postlogout.html
+
+### Deep Linking Assets File
+
+To support deep linking needed for claimed HTTPS scheme logins to work, the project includes a *security/.well-known/apple-app-site-association* document that associates our app’s *Unique ID* with its *Hosting Domain*:
+
+```json
+{
+    "applinks": {
+        "apps": [],
+        "details": [
+            {
+                "appID": "U3VTCHYEM7.com.authsamples.basicmobileapp",
+                "paths": [ "/basicmobileapp/*" ]
+            }
+        ]
+    }
+}
+```
+
+The deep linking domains allowed by the app are configured as *Associated Domains*, which are a type of *iOS Entitlement*:
+
+![associated domains](/images/560/associated-domains.jpg)
+
+I uploaded the assets file to run at the below HTTPS URL, in a similar manner to the interstitial pages. We use a second S3 bucket and CloudFront distribution for the root domain:
+
+- https`:`//mobile.authsamples.com/.well-known/apple-app-site-association
+
+The *mobile.authsamples.com* S3 bucket has a *.well-known* folder containing the assets files for both Android and iOS:
+
+![asset hosting](/images/560/asset-hosting.jpg)
+
+The Apple file needs to be configured to return a content type of *application/json*, which is configured under the S3 file’s properties:
+
+![content type](/images/560/content-type.jpg)
+
+### Deep Linking Online Verification
+
+We can verify the configuration via the following test site:
+
+- https`:`//branch.io/resources/aasa-validator
+
+The details for our demo app can be provided to the site as follows:
+
+![verification settings](/images/560/verification-settings.jpg)
+
+We will then get the following validated results:
+
+![deep linking verification](/images/560/deep-linking-verification.jpg)
+
+### Deep Linking Registration Process
+
+During installation of our app we can run the iOS console tool and filter on our domain name, though the information is pretty limited:
+
+![ios debug](/images/560/ios-debug.jpg)
+
+### Deep Linking Registration Failures
+
+Deep linking registration can fail, and one way to reproduce this is to configure the mobile device to use an <Link href='/posts/ios-https-debugging'>HTTP Proxy</Link>:
+
+![http proxy](/images/560/http-proxy.jpg)
+
+Registration will fail because the iOS system does not trust the HTTP proxy’s man in the middle certificate. The result is that the app installs successfully but the claimed HTTPS scheme is not registered. In the console tool you can filter on *app-site* to see basic failure details, and you may also be able to get further details from the *sysdiagnose* tool.
+
+### HTTP Debugging and Claimed HTTPS Schemes
+
+During development, I proceed as follows when I want to view OAuth or API messages for the iOS app. The mobile OS re-registers universal links every time the app is redeployed from Xcode:
+
+- Deploy the app from Xcode without using an HTTP proxy
+- Deep linking registration will then succeed
+- Next start the HTTP proxy on the host MacBook
+- Messages from the app will then be captured successfully
+
+### iOS Code Signing
+
+When Xcode is used to build and install our app on a real device, the app must be signed with an Apple certificate linked to the *Team ID*. Therefore readers of this blog can only run the app on an emulator:
+
+![code signing](/images/560/code-signing.jpg)
+
+For a real app you would go through a complete Apple deployment process to the app store, after which deep linking registration would work on any iOS device.
+
+### Where Are We?
+
+We have explained some infrastructure plumbing needed for our iOS code sample. Using claimed HTTPS schemes for mobile logins required some interaction between the mobile device and cloud endpoints.
+
+### Next
+
+- Next we will describe some <Link href='/posts/ios-code-sample-coding-key-points'>iOS Coding Key Points</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

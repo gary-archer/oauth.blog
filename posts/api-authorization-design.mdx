@@ -1,0 +1,238 @@
+# API Authorization Behaviour
+
+The previous post on <Link href='/posts/user-data'>User Data Management</Link> ensured that a subset of user attributes are stored in the authorization server. In this post we will focus on data protection in APIs, using identity attributes issued to access tokens.
+
+The security techniques for OAuth API authorization are published in many online articles. This post summarizes some security best practices, but its main focus is manageability, for scalable authorization.
+
+### Managing API Authorization
+
+The end-to-end flow to get data in a client might look like this, where a token containing the user identity is sent and then authorization is enforced by one or more APIs:
+
+![api authorization](/images/130/api-authorization.jpg)
+
+The above example might include handling business rules like these:
+
+- User bob has full access to orders from his own branch
+- User bob has read access to orders from other branches in his area
+- User bob has no access to orders from branches in other areas
+
+In some cases, end-to-end flows involve multiple APIs. Each API team should be able to manage authorization productively, without depending too much on an identity team. Achieving this outcome requires an authorization design where scopes and claims are designed with insight.
+
+### API Authorization Steps
+
+The OAuth 2.0 authorization framework is primarily about protecting business data using access tokens. You can think of it as three main steps:
+
+| Step | Description |
+| ---- | ----------- |
+| <span style={{color:'green'}}>**Token Validation**</span> | JWT Access Token Validation, to ensure integrity of the message credential |
+| <span style={{color:'green'}}>**Scope Checks**</span> | Coundary checks to ensure that an access token is allowed to be used for a particular business area |
+| <span style={{color:'green'}}>**Claims-Based Authorization**</span> | Detailed permission checks against resources, using claims to apply business rules |
+
+### Step 1: Token Validation
+
+The <Link href='/posts/jwt-access-token-validation'>JWT Access Token Validation</Link> post described how an API verifies the JWT’s digital signature. If the token is not valid a 401 error is returned:
+
+```json
+{
+  "code": "invalid_token",
+  "message": "Missing, invalid or expired access token"
+}
+```
+
+Think of token validation as an entry level check to authenticate the request to the API, after which the API can trust data in the access token’s payload.
+
+### Step 2: Scopes
+
+Access tokens are used to restrict API privileges granted to clients. This starts by assigning one or more scopes to the OAuth client when it is registered in the authorization server.
+
+The OAuth 2.0 specification does not define how scopes should be used, and that is up to each architect to design. Often a good choice is to do so based on business area, starting with high level values:
+
+| Examples | Usage |
+| -------- | ----- |
+| <span style={{color:'green'}}>**sales**</span> | Access tokens can call API endpoints that deal with sales, such as in an online retail use case |
+| <span style={{color:'green'}}>**finance**</span> | Access tokens can call API endpoints that deal with more security sensitive areas, related to finance and money |
+ 
+A client that is issued an access token with only a *sales* scope can never call *finance* API endpoints. This would be immediately rejected by the API, with a 403 forbidden error. This is true even if the user has finance rights.
+
+### Scaling Scopes
+
+Scopes are fixed at design time and typically cannot be used for dynamic purposes, such as different scopes for different types of user. Aim to keep scopes fairly high level, since creating too many scopes too early can result in productivity problems.
+
+As APIs scale it is common for them to call each other. All of them must validate an access token, such as by forwarding the token between APIs. Solutions such as creating a separate scope for each microservice can work against this goal.
+
+### Built-In Scopes
+
+In addition to business scopes, user facing applications typically use OpenID Connect built-in scopes, which represent areas of the user’s personal data. These tend to be more fine-grained than the business scopes:
+
+| Examples | Usage Scenario |
+| -------- | -------------- |
+| <span style={{color:'green'}}>**openid**</span> | Allows an app to use the user’s identity |
+| <span style={{color:'green'}}>**profile**</span> | Allows an app to get a user’s name related information |
+| <span style={{color:'green'}}>**email**</span>	| Allows an app to access a user’s email related information |
+
+### Audience Checks
+
+APIs also have an expected audience. This provides a way to group APIs together, to enable access tokens to be shared, or to prevent it. In a small microservices setup, where a set of APIs work together, one option is to use values like this:
+
+| API | Audience |
+| --- | -------- |
+| <span style={{color:'green'}}>**Orders**</span> | api.mycompany.com |
+| <span style={{color:'green'}}>**Products**</span> | api.mycompany.com |
+| <span style={{color:'green'}}>**Billing**</span> | api.mycompany.com |
+
+### Step 3: Claims
+
+The deeper authorization behaviour in OAuth is using claims effectively. Claims are trusted values used for user identification and authorization. The following main requirements exist when designing claims:
+
+| Requirement | Description |
+| ----------- | ----------- |
+| <span style={{color:'green'}}>**Least Privilege**</span> | The client receives a least privilege access token, rather than being granted all of a user’s privileges |
+| <span style={{color:'green'}}>**Correct Authorization**</span> | The API must receive an object that enables it to implement its business authorization |
+| <span style={{color:'green'}}>**Access Token Confidentiality**</span> | Access tokens returned to internet clients should not reveal the scopes and claims |
+| <span style={{color:'green'}}>**API Manageability**</span> | Frequent coordinated rollouts of APIs and the authorization server should not be required |
+
+### Access Token Claims
+
+The authorization server issues claims based on the scopes configured against the client. The <Link href='/posts/managed-authorization-server-setup/'>Cloud Authorization Server Setup</Link> blog post explains how this works for this blog’s example setup in AWS Cognito, where a lambda function issues different custom claims depending on the scope.
+
+In some cases, claims issued are dynamic. APIs cannot always decide how to authorize solely from a user ID in an access token. Sometimes they instead need to be provided with values by the access token.
+
+### Access Token Confidentiality
+
+Access tokens are only meant to be read by APIs. Ideally, clients should not be able to read access tokens. As a privacy best practice, some authorization servers can issue access tokens in a *reference* or *opaque* format to internet clients.
+
+When opaque access tokens are sent to APIs they should ideally be exchanged for a JWT access token in an API gateway, which then forwards a JWT to the API. Some authorization servers provide an [OAuth token introspection](https://datatracker.ietf.org/doc/draft-ietf-oauth-jwt-introspection-response/) capability that enables this.
+
+### Claims Principal
+
+After APIs validate their JWT access token, the claims in the JWT payload are trusted, since the API has cryptographically proven that they were issued by the authorization server.
+ then form a claims principal object that is injected into service logic classes. The values the API logic needs to implement its authorization are then readily available:
+
+```json
+export class CompanyService {
+
+    private readonly _repository: CompanyRepository;
+    private readonly _claims: ClaimsPrincipal;
+
+    public constructor(repository: CompanyRepository, claims: ClaimsPrincipal) {
+        this._repository = repository;
+        this._claims = claims;
+    }
+}
+```
+
+A well designed claims principal expresses your API’s main authorization and is useful to your API’s code. It help to enable API security code that is easy to use and extend over time.
+
+### Extensible Claims
+
+There are also a few deeper behaviours you may run into later in your API journey that require you to refine your claims design:
+
+| Requirement | Description |
+| ----------- | ----------- |
+| <span style={{color:'green'}}>**Technology Limitations**</span> | Some authorization servers may have limitations meaning you cannot issue your desired claims |
+| <span style={{color:'green'}}>**Versioning and Compatibility**</span> | The access token claims should be stable as your business authorization evolves |
+| <span style={{color:'green'}}>**Manageability and Deployment**</span> | You should not need to continually deploy APIs and the authorization server together |
+
+It is possible to use a secondary technique that still forms the best claims principal for each API, without introducing productivity problems. This involves receiving the main identity claims in the JWT access token, after which the API looks up fine grained permissions from its own data:
+
+![token to claims](/images/130/token-to-claims.jpg)
+
+This results in a claims principal object whose overall contents an API team can control, without depending on an identity team to frequently reconfigure the authorization server:
+
+```json
+export class ClaimsPrincipal {
+    public jwtClaims: JWTPayload;
+    public extraClaims: ExtraClaims;
+}
+```
+
+This blog’s API code examples use this technique. It provides additional choices but should not be overused. True claims are those asserted by the authorization server. The main identity values should always be issued to access tokens when possible.
+
+### This Blog’s Example Claims
+
+This blog’s APIs will use the following form of access token payload. When designing access tokens, imagine you had to explain its security to a reviewer or a PEN tester. You should be able to point out how the scopes and claims restrict privileges.
+
+In this blog’s access tokens, the scope restricts access to an investments business area. The scope and audience would allow the access token to be forwarded between multiple related APIs. A custom claim for manager_id provides a familiar user identity to the API. A custom role claim is also issued:
+
+```json
+{
+  "iss": "https://login.authsamples.com",
+  "aud": "api.mycompany.com",
+  "scope": "openid profile investments",
+  "sub": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "manager_id": "10345",
+  "role": "user",
+  "exp": 1714363304.086
+}
+```
+
+Meanwhile, the following extra claims are looked up when an access token is first received:
+
+| Extra Claim | Description |
+| ----------- | ----------- |
+| <span style={{color:'green'}}>**Title**</span> | A business title for the end user, which is displayed by the user facing application |
+| <span style={{color:'green'}}>**Regions**</span> | An array claim representing a simplified version of the branches concept described earlier in this post |
+
+The API then authorizes using both the role from the access token and the regions array from the extra claims:
+
+```typescript
+private _isUserAuthorizedForCompany(company: Company): boolean {
+
+    const role = ClaimsReader.getStringClaim(this._claims.jwt, CustomClaimNames.role).toLowerCase();
+    if (role === 'admin') {
+        return true;
+    }
+
+    if (role !== 'user') {
+        return false;
+    }
+
+    const extraClaims = this._claims.extra as SampleExtraClaims;
+    const found = extraClaims.regions.find((c) => c === company.region);
+    return !!found;
+}
+```
+
+### Claims Caching Algorithm
+
+This blog’s APIs uses the following algorithm for OAuth processing, where a thread-safe memory cache stores a hash of the access token mapped to extra claims. This ensures that the extra claims data source lookup only occurs occasionally.
+
+```typescript
+export class OAuthAuthorizer {
+
+    public async execute(request: Request): Promise<ClaimsPrincipal> {
+
+        const accessToken = BearerToken.read(request);
+        if (!accessToken) {
+            throw ErrorFactory.createClient401Error('No access token was supplied in the bearer header');
+        }
+
+        const jwtClaims = await this._accessTokenValidator.execute(accessToken);
+
+        const accessTokenHash = createHash('sha256').update(accessToken).digest('hex');
+        let extraClaims = await this._cache.getExtraUserClaims(accessTokenHash);
+        if (extraClaims) {
+            this._extraClaimsProvider.createClaimsPrincipal(jwtClaims, extraClaims, request);
+        }
+
+        extraClaims = await this._extraClaimsProvider.lookupExtraClaims(jwtClaims, request);
+
+        await this._cache.setExtraUserClaims(accessTokenHash, extraClaims!, jwtClaims.exp!);
+
+        return this._extraClaimsProvider.createClaimsPrincipal(jwtClaims, extraClaims, request);
+    }
+}
+```
+
+This technique adds complexity to API code. Avoid it when getting started with OAuth API security and instead use claims only from the access token payload. Understand though that in future  you may need design options for evolving the finer grained authorization values.
+
+One reason I use the above algorithm is to show how to customize OAuth middleware in some mainstream technology stacks. It can be useful to know how to do this, to provide best control over current and future API security behaviour.
+
+### Where Are We?
+
+We have described some ways to deal with tokens and claims, to implement API authorization. When dealing with business rules there is a balance between security and manageability, since the authorization server should not be overly coupled to volatile business logic.
+
+### Next
+
+- Next we will summarize this blog’s <Link href='/posts/federated-logins'>User Authentication Behaviour</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

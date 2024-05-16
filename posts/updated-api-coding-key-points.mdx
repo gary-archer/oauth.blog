@@ -1,0 +1,205 @@
+# Updated API – Coding Key Points
+
+In our previous post we described the <Link href='/posts/updated-spa-coding-key-points'>SPA Coding Key Points</Link> for the updated code sample. Next we will look at the main API code changes.
+
+### API Authorization Implementation
+
+In the first sample’s <Link href='/posts/basicapi-codingkeypoints'>API Coding Key Points</Link> we explained that OAuth processing consists of the following two main code areas:
+
+| Responsibility | Description |
+| -------------- | ----------- |
+| <span style={{color:'green'}}>**Authenticate Requests**</span> | Verify that a valid token is received or return a 401 error response if this is not the case |
+| <span style={{color:'green'}}>**Set up Authorization**</span> | Read claims needed for authorization, then pass them through to the API’s business logic |
+
+The updated API <Link href='/posts/jwt-access-token-validation'>validates JWT access tokens</Link> in the same way as the first code sample, but now also checks for a required scope:
+
+```typescript
+const scopes = ClaimsReader.getClaim(claims['scope'] as string, 'scope');
+if (scopes.indexOf(this._configuration.scope) === -1) {
+
+    throw new ClientError(
+        403,
+        ErrorCodes.insufficientScope,
+        'The token does not contain sufficient scope for this API');
+}
+```
+
+The API then builds a *ClaimsPrincipal* object from the access token claims. This is injected into the API’s *CompanyService* class, which then has immediate access to the values it needs to implement its business authorization:
+
+```typescript
+public async getCompanyList(): Promise<Company[]> {
+
+    const companies = await this._repository.getCompanyList();
+    return companies.filter((c) => this._isUserAuthorizedForCompany(c));
+}
+
+public async getCompanyTransactions(id: number): Promise<CompanyTransactions> {
+
+    const data = await this._repository.getCompanyTransactions(id);
+    if (!data || !this._isUserAuthorizedForCompany(data.company)) {
+        throw this._unauthorizedError(id);
+    }
+
+    return data;
+}
+```
+
+The sample’s business logic uses both a role claim from the access token and a regions claim that is meant to represent a finer grained permission that is not issued to the access token:
+
+```typescript
+private _isUserAuthorizedForCompany(company: Company): boolean {
+
+    const role = ClaimsReader.getStringClaim(this._claims.jwt, 'role');
+    if (role === 'admin') {
+        return true;
+    }
+
+    if (role !== 'user') {
+        return false;
+    }
+
+    const found = this._claims.extra.regions.find((c) => c === company.region);
+    return !!found;
+}
+```
+
+### OAuth Middleware Customization
+
+The API’s claims are customized to include additional claims, so that some authorization values are derived from the access token and others are looked up from the API’s own data:
+
+```typescript
+export class ClaimsPrincipal {
+
+    private _jwtClaims: JWTPayload;
+    private _extraClaims: ExtraClaims;
+
+    public constructor(jwtClaims: JWTPayload, extraClaims: ExtraClaims) {
+        this._jwtClaims = jwtClaims;
+        this._extraClaims = extraClaims;
+    }
+}
+```
+
+The API receives its business user identity in the access token. This is a *manager_id* to represent a user who manages investments. The API then uses a hard coded implementation to get extra claims from its own data:
+
+```typescript
+export class ExtraClaimsProvider {
+
+    public async lookupExtraClaims(jwtClaims: JWTPayload): Promise<ExtraClaims> {
+
+        const managerId = ClaimsReader.getStringClaim(jwtClaims, 'manager_id');
+        if (managerId === '20116') {
+
+            return new ExtraClaims('Global Manager', ['Europe', 'USA', 'Asia']);
+
+        } else if (managerId == '10345') {
+
+            return new ExtraClaims('Regional Manager', ['USA']);
+
+        } else {
+
+            return new ExtraClaims('', []);
+        }
+    }
+}
+```
+
+The main authorizer Express middleware does the main work to set up a useful claims principal:
+
+```typescript
+public async authorizeRequestAndGetClaims(request: Request): Promise<ClaimsPrincipal> {
+
+    const accessToken = this._readAccessToken(request);
+    if (!accessToken) {
+        throw ClientError.create401('No access token was supplied in the bearer header');
+    }
+
+    const tokenClaims = await this._accessTokenValidator.execute(accessToken);
+
+    const accessTokenHash = createHash('sha256').update(accessToken).digest('hex');
+    let extraClaims = await this._cache.getExtraUserClaims(accessTokenHash);
+    if (extraClaims) {
+        return new ClaimsPrincipal(tokenClaims, extraClaims);
+    }
+
+    extraClaims = await this._extraClaimsProvider.lookupExtraClaims(tokenClaims);
+
+    await this._cache.setExtraUserClaims(accessTokenHash, extraClaims, tokenClaims.exp!);
+
+    return new ClaimsPrincipal(tokenClaims, extraClaims);
+}
+```
+
+When a token is first received, the extra claims are cached using the [Node Memory Cache](https://github.com/mpneuried/nodecache). A time to live is set that must not exceed the access token’s expiry claim:
+
+```typescript
+public async addClaimsForToken(accessTokenHash: string, claims: ExtraClaims, expiry: number): Promise<void> {
+
+    const epochSeconds = Math.floor((new Date() as any) / 1000);
+    let secondsToCache = expiry - epochSeconds;
+    if (secondsToCache > 0) {
+
+        console.debug(`Token to be cached will expire in ${secondsToCache} seconds (hash: ${accessTokenHash})`);
+
+        if (secondsToCache > this._cache.options.stdTTL!) {
+            secondsToCache = this._cache.options.stdTTL!;
+        }
+
+        console.debug(`Adding token to claims cache for ${secondsToCache} seconds (hash: ${accessTokenHash})`);
+        await this._cache.set(accessTokenHash, claims, secondsToCache);
+    }
+}
+```
+
+When the same token is received on subsequent API requests, the cached claims are retrieved immediately. This ensures that the API performs well:
+
+```typescript
+public async getClaimsForToken(accessTokenHash: string): Promise<ExtraClaims | null> {
+
+    const claims = await this._cache.get<ExtraClaims>(accessTokenHash);
+    if (!claims) {
+
+        console.debug(`New token will be added to claims cache (hash: ${accessTokenHash})`);
+        return null;
+    }
+
+    console.debug(`Found existing token in claims cache (hash: ${accessTokenHash})`);
+    return claims;
+}
+```
+
+When getting started with OAuth secured APIs you should not need complex code like this. Instead derive the claims principal directly from the access token. Later on though, you could run into productivity problems if many fine-grained authorization values are managed in the authorization server.
+
+If so, this is one possible way to ensure a stable access token and avoid needing to frequently deploy APIs and the authorization server together. It keeps the claims principal useful to the API’s logic, and reduces the need for access token versioning.
+
+### User Info
+
+The API has a new endpoint to provide business user attributes to the SPA client. This endpoint returns the user name for display, and also the regions information shown in the SPA’s tooltip:
+
+```typescript
+export class UserInfoService {
+
+    private readonly _claims: ClaimsPrincipal;
+
+    public constructor(claims: ClaimsPrincipal) {
+        this._claims = claims;
+    }
+
+    public getUserInfo(): any {
+
+        return {
+            title: this._claims.extra.title,
+            regions: this._claims.extra.regions,
+        };
+    }
+}
+```
+
+### Where Are We?
+
+We have updated the API’s access tokens to include a business scope and some custom claims, including a business user identity. The API looks up extra values needed for its authorization. Business logic then receives a  useful claims principal and uses it to enforce business authorization.
+
+### Next
+
+- Next we will configure a <Link href='/posts/azure-active-directory-setup'>Microsoft Entra ID SPA and API Setup</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

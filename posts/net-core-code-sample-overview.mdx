@@ -1,0 +1,192 @@
+# .NET API – Overview
+
+Previously we described a <Link href='/posts/final-nodeapi-coding-key-points'>Node.js Coding Model</Link> that included some behaviours from this blog’s <Link href='/posts/api-journey-server-side'>API Journey – Server Side</Link> blog post. Next we will provide an equivalent API in C# and .NET.
+
+### Final API Code Sample Overview
+
+As for other code examples on this blog, the API has a simple money based theme of investments. It provides only a couple of simple endpoints that return fictional hard coded data.
+
+The API aims to be visual and can serve this blog’s apps, such as the <Link href='/posts/how-to-run-the-react-js-spa'>Final SPA</Link> below. Running both together is a good way to ensure that the API is client focused. API logs are then generated via requests from the client:
+
+![spa and api](/images/320/spa-and-api.jpg)
+
+### API URLs
+
+During development the API is run as a standalone component. Either XUnit tests or a load test can be used as API clients. These tests can get user level access token to call the API and verify its OAuth security. This is done by pointing the API to a mock authorization server:
+
+| Component | Base URL |
+| --------- | -------- |
+| <span style={{color:'green'}}>**API**</span> | https`:`//apilocal.authsamples-dev.com:446 |
+| <span style={{color:'green'}}>**Mock Authorization Server**</span> | https`:`//login.authsamples-dev.com:447 |
+
+### Prerequisite 1: Domain Setup
+
+First update the hosts file to create web and API domains for local development. Include the web domain if running the SPA and API together:
+
+```markdown
+127.0.0.1 apilocal.authsamples-dev.com login.authsamples-dev.com web.authsamples-dev.com
+```
+
+### Prerequisite 2: Install .NET
+
+Download and install the latest [.NET SDK](https://dotnet.microsoft.com/download), which can be installed on Windows, macOS or Linux:
+
+![dotnet](/images/320/dotnet.jpg)
+
+### Prerequisite 3: Optionally Install a .NET IDE
+
+I use [Visual Studio Code](https://code.visualstudio.com/download) for C# development:
+
+![vscode](/images/320/vscode.jpg)
+
+### Prerequisite 4: Optionally Install Node.js
+
+If you want to run the SPA as well as the API, install [Node.js](https://nodejs.org/en/download) for your operating system, which is used to build the SPA’s JavaScript bundles.
+
+### Prerequisite 5: Install Docker
+
+To run API tests, or to run the full SPA and API solution, utility components are run in docker. Therefore ensure that a local docker engine, such as [Docker Desktop](https://www.docker.com/products/docker-desktop) is installed.
+
+### Step 1: Build and Run the API
+
+The API sample is available [here](https://github.com/gary-archer/oauth.apisample.netcore) and can be be downloaded / cloned to your local PC:
+
+```bash
+git clone https://github.com/gary-archer/oauth.apisample.netcore
+```
+
+![repo](/images/320/repo.jpg)
+
+Next run the following script, which downloads some OpenSSL generated development certificates, then runs the API on port 446:
+
+```bash
+./start.sh
+```
+
+![running api](/images/320/running-api.jpg)
+
+### Step 2: Configure SSL Trust
+
+The API runs over SSL using a development certificate, and to prevent trust problems from tests or the browser you will need to trust the highlighted root certificate below, by <Link href='/posts/developer-ssl-setup'>Configuring Browser Trust</Link>:
+
+![certs](/images/320/certs.jpg)
+
+You will then be able to navigate to the API URL in a browser without any SSL warnings:
+
+![browse to api](/images/320/browse-to-api.jpg)
+
+### Step 3: Run Integration Tests
+
+To run XUnit tests, the API must be pointed to a mock authorization server, so must run with a test configuration. Stop the API if it is running, then re-run it via this command:
+
+```bash
+./testsetup.sh
+```
+
+Next run the tests with the following command:
+
+```bash
+./integration_tests.sh
+```
+
+This will spin up a mock JWKS URI hosted at HTTPS endpoints provided by the Wiremock utility. A number of tests are then run, which make HTTP requests to the API. These tests focus on the API’s key security behaviour:
+
+![test results](/images/320/test-results.jpg)
+
+### Step 4: Run a Basic Load Test
+
+While the API is running with a test configuration, you can also run a basic load test. This test ensures that the API code has no concurrency bugs, by firing parallel API requests:
+
+```bash
+./load_test.sh
+```
+
+The test fires 100 HTTP requests to the API, in batches of 5 concurrent requests at a time. This intentionally rehearses certain types of error, and the expected result is 3 errors from a total of 100 requests:
+
+![load test](/images/320/load-test.jpg)
+
+For further details on testing the API with user level tokens but without running a full user login flow, see the <Link href='/posts/api-automated-tests'>API Automated Tests</Link> blog post.
+
+### Step 5: Run the SPA Client
+
+The API can be the source of data for any of this blog’s Final UIs. Run the <Link href='/posts/how-to-run-the-react-js-spa'>Final SPA</Link> using the following commands, where SPA resources are downloaded to a parallel folder:
+
+```bash
+cd ..
+git clone https://github.com/gary-archer/oauth.websample.final
+cd oauth.websample.final
+./build.sh LOCALAPI
+./run.sh LOCALAPI
+```
+
+This will run a number of commands in child terminals, the last of which runs the default browser at https`:`//web.authsamples-dev.com/spa. You can then sign into the SPA using this blog’s test credential:
+
+- User: *guestuser`@`mycompany.com*
+- Password: *GuestPassword1*
+
+The SPA will then make OAuth secured requests to the API, which will result in the API’s code writing JSON logs.
+
+### Main Feature 1: Extensible Authorization
+
+The API implements its security according to these two blog posts, using a JOSE library and some custom claims handling:
+
+- <Link href='/posts/jwt-access-token-validation'>JWT Access Token Validation</Link>
+- <Link href='/posts/api-authorization-design'>API Authorization Design</Link>
+
+The overall behaviour should be to deal with OAuth security in the correct ways, while setting up the API’s business logic with the authorization values it needs. These values may originate from multiple data sources and may not always be issued to tokens:
+
+```csharp
+public class CompanyService
+{
+    private readonly CompanyRepository repository;
+    private readonly CustomClaimsPrincipal claims;
+
+    public CompanyService(CompanyRepository repository, CustomClaimsPrincipal claims)
+    {
+        this.repository = repository;
+        this.claims = claims;
+    }
+}
+```
+
+### Main Feature 2: Production Supportability
+
+The other main objective of the API code sample will be JSON logging of API requests, to include useful technical support fields. Logging console output looks like this on a development computer:
+
+```json
+{
+  "id": "65904f11-5fd4-429b-bf6d-3e27285e4fd7",Step 1: Build and Run the API
+
+  "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "statusCode": 200,
+  "millisecondsTaken": 12,
+  "millisecondsThreshold": 500,
+  "correlationId": "5d9ced72-02be-7069-45e8-fd4bcfdb1881",
+  "sessionId": "004d32bc-9755-b50e-6315-5be09f277ebe"
+}
+```
+
+Meanwhile, logs are also written to files in a bare JSON format, ready for log shipping:
+
+![bare logs](/images/320/bare-logs.jpg)
+
+The <Link href='/posts/log-aggregation-setup'>Elasticsearch Log Aggregation Setup</Link> can also be followed, to enable <Link href='/posts/api-technical-support-analysis'>Technical Support Queries</Link> against the API. This would be useful in a production system, where there would be many API requests per day.
+
+### Cloud Native Deployment
+
+The API would typically be deployed as a container in a cloud native environment. The API includes some Docker and Kubernetes deployment resources. A basic deployment can be run with these commands:
+
+```bash
+./deployment/docker-local/build.sh
+./deployment/docker-local/deploy.sh
+./deployment/docker-local/teardown.sh
+```
+
+### Where Are We?
+
+We have described the key behaviour of our final .NET API. In the next post we will take a closer look at how the OAuth integration has been coded.
+
+### Next
+
+- Next we will drill into <Link href='/posts/net-core-api-oauth-integration'>OAuth Integration</Link> for our .NET API
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

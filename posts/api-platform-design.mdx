@@ -1,0 +1,86 @@
+# API Platform Behaviour
+
+Previously we completed this blog’s SPA theme by describing the <Link href='/posts/reactjs-codingkeypoints'>Final SPA Coding Key Points</Link>. Next we will summarise some back end technical  behaviour for a platform of multiple APIs in an OAuth architecture.
+
+### API Technical Goals
+
+Companies will typically want the following main behaviours when running multiple microservices:
+
+| Behaviour | Description |
+| --------- | ----------- |
+| <span style={{color:'green'}}>**Productive**</span> | The overall design promotes simple code and encourages a business focus for most API work |
+| <span style={{color:'green'}}>**Secure**</span> | APIs implement security the same way for requests from all types of client, and the lower level security is externalised |
+| <span style={{color:'green'}}>**Supportable**</span> | Errors or slowness can be diagnosed quickly in most cases, due to solid logging and error handling designs |
+| <span style={{color:'green'}}>**Scalable**</span> | Design patterns used can be scaled across multiple microservices and development teams |
+
+### Key Components
+
+The application level flows used in this blog will focus on the following components. Web and mobile clients call APIs, which are hosted behind an API gateway:
+
+![api platform](/images/250/platform.jpg)
+
+A gateway is used to handle any client specific security differences. This blog’s final SPA calls a gateway entry point that handles web specific security, including [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), [CSRF](https://owasp.org/www-community/attacks/csrf) and converting from secure cookies to JWT access tokens.
+
+This keeps such code out of APIs, so that, regardless of the type of client, APIs only ever need to implement JWT validation and claims based authorization.  This avoids complex code and scales well.
+
+### API Security
+
+Each API then performs the following main steps, and handles secured requests from any client in the same way. This secures internal and external API requests in the same way, and enables any API endpoint to be exposed to the internet, for the best business value:
+
+- <Link href='/posts/jwt-access-token-validation'>JWT Access Token Validation</Link>
+- <Link href='/posts/api-authorization-design'>Claims Based Authorization</Link>
+
+APIs will also call each other. The communication between APIs can be synchronous or asynchronous. In either case it is desirable to flow the user identity and other claims in a verifiable way, by sharing the JWT access token. Therefore the overall design of clients and APIs needs to enable this.
+
+This blog provides 3 final REST APIs, in <Link href='/posts/api-architecture-node'>Node.js</Link>, <Link href='/posts/net-core-code-sample-overview'>.NET</Link> and <Link href='/posts/java-spring-boot-api-overview'>Java</Link>, which are almost identical. Each API has some difficult plumbing code to enable the above behaviours. Once complete, the API functionality could grow without adding complexity.
+
+### Scalable Architecture
+
+What makes an API platform is the ability to scale components without adding complexity. This involves growing scopes and claims, across both clients and APIs. In the following starting point, a single scope is used across two related microservices, making token sharing straightforward:
+
+![initial scopes](/images/250/initial-scopes.jpg)
+
+It should then be possible to easily connect other apps to the same APIs. This works when applications have only a limited number of functions. Particular apps might be issued access tokens with a higher privilege scope, or particular API endpoints might require a different scope:
+
+![updated scopes](/images/250/updated-scopes.jpg)
+
+Common problems that add complexity when scaling the API architecture are summarised in the below table:
+
+| Problem | Description |
+| ------- | ----------- |
+| <span style={{color:'red'}}>Large Apps</span> | If an app is too large then it needs scopes with permissions to too many areas. Instead favour a micro-UI approach, that can feel like a single large app to users when required. |
+| <span style={{color:'red'}}>Too Many Scopes</span> | If scopes are named technically, such as after microservices, then tokens can be difficult to share, causing frequent changes to both clients and other APIs. |
+| <span style={{color:'red'}}>Claims Conflicts</span> | Finer business permissions should be managed in APIs and not in the authorization server, to avoid coupling these components together at the deployment and people levels. |
+
+### Authorization Server
+
+This is the key security component, and should provide at least the following capabilities:
+
+| Capabilities | Description |
+| ------------ | ----------- |
+| <span style={{color:'green'}}>**Support for Standards**</span> | There should be up to date support for many security standards, which map to company use cases. This includes many authentication methods. |
+| <span style={{color:'green'}}>**Extensibility**</span> | It must be possible to take control over user attributes. This can include splitting storage between identity and business data, then using both during authentication and token issuing. |
+| <span style={{color:'green'}}>**Operational**</span> | The authorization server is a critical component. It must therefore perform well, match your API deployments and have good troubleshooting features. |
+
+### Observability
+
+Since OAuth is a separated architecture, solid approaches to logging, error handling and technical support are needed. Therefore this blog will take particular care over these areas, using third-party components that provide the best visibility:
+
+- <Link href='/posts/effective-api-logging'>Effective API Logging</Link>
+- <Link href='/posts/error-handling-and-supportability'>Error Handling and Supportability</Link>
+- <Link href='/posts/api-technical-support-analysis'>Technical Support Analysis</Link>
+
+### Cloud Platform
+
+This blog starts with <Link href='/posts/cloud-hosting'>Low Cost Cloud Hosting</Link>, by following a *Platform as a Service (PaaS)* model. The web side of the architecture is optimised, using a low cost cloud content delivery network. The API side of the architecture uses Serverless lambdas, which have some technical limitations.
+
+This blog’s patterns may therefore work better with a *Container as a Service (CaaS)* approach where platforms like Kubernetes provide rich capabilities and best of breed supporting components for APIs and their databases.
+
+### Where Are We?
+
+We have briefly summarised some foundations when designing a modern cloud hosted API platform. In this blog’s second theme I will focus on demonstrating the API behaviours.
+
+### Next
+
+- Next we will drill into technical aspects of the <Link href='/posts/api-journey-server-side'>API Journey – Server Side</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

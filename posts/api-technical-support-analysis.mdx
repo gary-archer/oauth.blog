@@ -1,0 +1,410 @@
+# API Technical Support Analysis
+
+Previously we provided an <Link href='/posts/log-aggregation-setup'>Log Aggregation Setup</Link>, and enabled logs to be queried. This post shows how different technical stakeholders could then query the log aggregation system, in a people friendly manner, to manage common technical support use cases.
+
+### Deployed Components
+
+If you have followed the logging setup you will first be running the secured SPA, which calls secured APIs via a cookie layer:
+
+![spa client](/images/400/spa-client.jpg)
+
+You can run the SPA and its backend components, then run the Kibana system to issue technical support queries. The main focus of this post is control over log data, so we will only use the *Dev Tools* console:
+
+![logging system](/images/400/logging-system.jpg)
+
+The following sections represent log queries by user type. The first section is for *DevOps* users, the second for *Testers* and the third for *Developers*.
+
+### 1. DevOps Technical Support Queries
+
+DevOps teams need effective filtering to understand systems under load, where there may be 100,000 or more API requests per day.
+
+### 1.1. Production Incident Drill Down
+
+Consider an incident that occurred yesterday at 9:00pm in your time zone, reported via the following screenshot in an email. The SPA enables you to simulate a user experiencing a problem due to a backend error, by long pressing the *Reload Data* button for a couple of seconds:
+
+![error display](/images/400/error-display.jpg)
+
+The exception details can then be quickly looked up via the following type of query. This matches the *Fairly Unique Identifier* displayed, which is designed to be easy for end users to read, write or say.
+
+```markdown
+GET apilogs*/_search
+{ 
+  "query":
+  {
+    "match":
+    {
+      "errorId": 54308
+    }
+  }
+}
+```
+
+This is a Lucene query and brings back a document. The DevOps user can then quickly access the underlying server error details and find the cause. The important behaviour is to get to the code area that is failing, which is just an error simulation in this case.
+
+```json
+{
+    "_index": "apilogs-2022.09.26",
+    "_id": "17580a1c-1631-f80f-e32e-9e237d47cbab",
+    "_score": 1,
+    "_source": {
+    "hostName": "finalapi-544cf4b557-ntvrg",
+    "resourceId": "2",
+    "apiName": "SampleApi",
+    "method": "GET",
+    "errorCode": "exception_simulation",
+    "millisecondsTaken": 4,
+    "operationName": "getCompanyTransactions",
+    "sessionId": "720078f3-bd50-e9f1-26d4-2b7c9e606402",
+    "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+    "errorData": {
+        "serviceError": {
+            "stack": [
+            "Error: An unexpected exception occurred in the API",
+            "at Function.createServerError (/usr/api/dist/plumbing/errors/errorFactory.js:15:16)",
+            "at CustomHeaderMiddleware.processHeaders (/usr/api/dist/plumbing/middleware/customHeaderMiddleware.js:22:51)",
+            "at Layer.handle [as handle_request] (/usr/api/node_modules/express/lib/router/layer.js:95:5)",
+            "at trim_prefix (/usr/api/node_modules/express/lib/router/index.js:328:13)",
+            "at /usr/api/node_modules/express/lib/router/index.js:286:9",
+            "at param (/usr/api/node_modules/express/lib/router/index.js:365:14)",
+            "at param (/usr/api/node_modules/express/lib/router/index.js:376:14)",
+            "at Function.process_params (/usr/api/node_modules/express/lib/router/index.js:421:3)",
+            "at next (/usr/api/node_modules/express/lib/router/index.js:280:10)",
+            "at ClaimsCachingAuthorizer.authorizeRequestAndGetClaims (/usr/api/dist/plumbing/security/baseAuthorizer.js:51:13)"
+            ],
+            "details": ""
+        },
+        "clientError": {
+            "area": "SampleApi",
+            "code": "exception_simulation",
+            "utcTime": "2023-03-26T10:57:28.482Z",
+            "id": 54308,
+            "message": "An unexpected exception occurred in the API"
+        },
+        "statusCode": 500
+    },
+    "path": "/investments/companies/2/transactions",
+    "@timestamp": "2023-03-26T10:57:28.482Z",
+    "name": "total",
+    "utcTime": "2023-03-26T10:57:28.482Z",
+    "millisecondsThreshold": 500,
+    "correlationId": "fa20ca8e-8506-c4f0-9217-1cac1a83a2c8",
+    "errorId": 48649,
+    "id": "17580a1c-1631-f80f-e32e-9e237d47cbab",
+    "clientApplicationName": "FinalSPA",
+    "statusCode": 500
+}
+```
+
+Certain error fields are denormalized to the top level, to also enable instances or types of errors to be found by SQL queries:
+
+```markdown
+POST _sql?format=txt
+{"query": """
+SELECT
+  utcTime,
+  operationName,
+  clientApplicationName,
+  sessionId,
+  statusCode,
+  userId 
+FROM
+  "apilogs*"
+WHERE
+  errorCode='exception_simulation' 
+AND
+  utcTime between '2019-08-16T09:30:00' and '2019-08-16T10:30:00'
+ORDER BY
+  utcTime ASC
+"""}
+```
+
+For this type of query, the output format is represented differently in the Kibana UI, as a tabular list of columns:
+
+```markdown
+|   apiName    |    operationName     |clientApplicationName|  statusCode   |     errorCode      |                userId             |
+---------------+----------------------+---------------------+---------------+--------------------+------------------------------------
+SampleApi      |getCompanyTransactions|FinalSPA             |500            |exception_simulation|a6b404b1-98af-41a2-8e7f-e4061dc0bf86
+```
+
+Support staff can then query *how often* this type of error has been occurring and for *which users*:
+
+```markdown
+POST _sql?format=txt
+{"query": """
+SELECT
+  utcTime,
+  operationName,
+  clientApplicationName,
+  sessionId,
+  statusCode,
+  userId
+FROM
+  "apilogs*"
+WHERE 
+  errorCode='exception_simulation' 
+AND
+  utcTime between '2019-08-16T09:30:00' and '2019-08-16T10:30:00'
+ORDER BY 
+  utcTime ASC
+"""}
+```
+
+Support staff can also query *what else the user was doing* around this time, to identify usage patterns that led to the incident:
+
+```markdown
+POST _sql?format=txt 
+{"query": """
+SELECT
+  apiName,
+  method,
+  path,
+  clientApplicationName,
+  statusCode,
+  errorCode
+FROM
+  "apilogs*"
+WHERE
+  sessionId='720078f3-bd50-e9f1-26d4-2b7c9e606402'
+ORDER BY
+  utcTime ASC
+LIMIT 100
+"""}
+```
+
+This will return results similar to the following, and for the example SPA this provides a clear picture of the user’s backend activity against both the Final API and the OAuth Agent:
+
+```markdown
+|   apiName    |    method     |            path                      |clientApplicationName|  statusCode   |     errorCode      |
+|--------------+---------------+--------------------------------------+---------------------+---------------+--------------------|
+|SampleApi     |GET            |/investments/companies                |FinalSPA             |200            |null                |
+|SampleApi     |GET            |/investments/userinfo                 |FinalSPA             |200            |null                |
+|SampleApi     |GET            |/investments/companies/2/transactions |FinalSPA             |200            |null                |
+|SampleApi     |GET            |/investments/userinfo                 |FinalSPA             |401            |invalid_token       |
+|SampleApi     |GET            |/investments/companies/2/transactions |FinalSPA             |401            |invalid_token       |
+|SampleApi     |GET            |/investments/companies/2/transactions |FinalSPA             |200            |null                |
+|SampleApi     |GET            |/investments/userinfo                 |FinalSPA             |200            |null                |
+|SampleApi     |GET            |/investments/companies/2/transactions |FinalSPA             |500            |exception_simulation|
+```
+
+This provides powerful options for enabling DevOps staff to resolve code level problems. This can help enable qualities such as resolving <span style={{color:'red'}}>80% of production incidents</span> without the need to involve a specialist developer.
+
+### 1.2. Querying by Transaction IDs
+
+Some UI systems may only display errors in terms of a business identifier, such as a transaction ID. If you receive such a screenshot, then entries will be findable in logs if that ID is used in REST URL path segments:
+
+```markdown
+PUT /customers/123/orders/456-789
+```
+
+When this is the case, the API logging saves the dynamic REST path segments into a *resourceId* column, and for the above URL its value would be *123/456-789*. We can therefore use a partial match to locate the full data:
+
+```markdown
+POST _sql?format=txt
+{
+  "query": """SELECT * from "apilogs*" where resourceId like '%456-789%'"""
+}
+```
+
+When designing APIs, avoid secure values in URL path segments, such as the above customer ID. You then avoid the potential for a man in the middle to change them. Instead, deliver secure values to APIs by issuing them to  JWT access tokens.
+
+### 1.3. Reporting Failure Occurrences
+
+It can be common in software for there to be intermittent problems which are initially ignored, but then occur again at highly inconvenient times. Good logging forces failures or slowness to instead be visible, so that you can see where you might need to improve:
+
+```markdown
+POST _sql?format=txt
+{"query": """
+SELECT
+  clientApplicationName,
+  apiName,
+  operationName,
+  statusCode,
+  errorCode,
+  COUNT(1) as frequency
+FROM
+  "apilogs*"
+WHERE
+  errorCode IS NOT NULL 
+AND
+  statusCode <> 401
+AND
+  utcTime > '2019-08-01' 
+GROUP BY
+  clientApplicationName,
+  apiName,
+  operationName,
+  statusCode,
+  errorCode
+"""}
+```
+
+Reports can then be provided to engineering teams once per sprint. Each type of issue should be understood, and actions such as adding more log detail can be planned, if needed.
+
+```markdown
+|clientApplicationName|    apiName    |    operationName     |  statusCode   |     errorCode      |   frequency   |
+|---------------------+---------------+----------------------+---------------+--------------------+---------------|
+|FinalSPA             |SampleApi      |getCompanyTransactions|404            |company_not_found   |6              |
+|FinalSPA             |SampleApi      |getCompanyList        |500            |exception_simulation|2              |
+|FinalSPA             |SampleApi      |getCompanyList        |500            |server_error        |7              |
+|BasicIosApp          |SampleApi      |getCompanyTransactions|500            |file_read_error     |1              |
+|BasicAndroidApp      |SampleApi      |getCompanyTransactions|400            |invalid_company_id  |1              |
+|BasicDesktopApp      |SampleApi      |getUserInfo           |500            |server_error        |2              |
+```
+
+Some 400 errors are part of normal application flows, whereas others are unexpected, and might point to a bug. An example might be incorrect handling of Unicode characters.
+
+### 2. Productive Quality Assurance
+
+Technical support logs can be very useful for testing, both for general productivity, and also because it forces all errors and slowness to be visible.
+
+### 2.1. Analysing your own UI Session
+
+Our sample UIs all send a *Session ID* to the API via a custom header. This field is nothing to do with OAuth or authenticated user sessions, and is only used for log filtering:
+
+![log session id](/images/400/log-session-id.jpg)
+
+This enables testers to only view logs for the entries they are interested in, for their own UI session:
+
+```markdown
+POST _sql?format=txt
+{
+"query": """SELECT * from "apilogs*" where sessionId='196f31be-8a28-e0d6-3247-a29a4a3d86ca'"""
+}
+```
+
+### 2.2. Measuring Problems in Test Systems
+
+A useful mechanism is to use logs to monitor all errors that occur in test systems. Those that are part of normal application flows, such as expiry, can use error codes representing expected failures, so that they can be filtered out of the report.
+
+```markdown
+POST _sql?format=txt
+{"query": """
+SELECT
+  clientApplicationName,
+  apiName,
+  operationName,
+  statusCode,
+  errorCode,
+  COUNT(1) as frequency
+FROM
+  "apilogs*"
+WHERE
+  errorCode IS NOT NULL 
+AND
+  statusCode <> 401
+AND
+  utcTime > '2019-08-01' 
+GROUP BY
+  clientApplicationName,
+  apiName,
+  operationName,
+  statusCode,
+  errorCode
+"""}
+```
+
+Other errors may need to be discussed. Some temporary errors are expected when working with infrastructure, yet if they happen frequently it is a sign that something is wrong and needs further engineering work.
+
+### 2.3. Performance Testing
+
+Companies sometimes use performance tests on real world data sets before releasing a feature. The Session ID sent to APIs would be used in the same way by both load tests and UI clients. To get the server side logs for the *5 slowest requests* in a load test, the following type of advanced Lucene query could be used:
+
+```markdown
+POST apilogs*/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+        "term": {"sessionId": "cc24c3dd-9bda-7ebe-c941-062a93691e83"}
+        }
+      ],
+      "filter": [
+        {
+          "range": {"utcTime": {"gte": "2019-08-01"}}
+        },
+        {
+          "script": {"script": "doc['millisecondsTaken'].value > doc['millisecondsThreshold'].value"}
+        },
+        {
+          "term": {"operationName": "getCompanyTransactions"}
+        }
+      ]
+    }
+  },
+  "sort": [
+    {"millisecondsTaken": "desc"}
+   ],
+  "from" : 0, "size" : 5
+}
+```
+
+When this identifies slow requests you will want to be able to drill into details to understand why. Our API logging design writes a performance breakdown when a threshold is exceeded.
+
+The performance breakdown could include sanitized SQL with parameters. In the following example, unexpected SQL is being run, with a missing *where* clause. This would explain the cause of the slowness.
+
+```json
+{
+  "performance": {
+    "children": [
+      {
+        "name": "databaseLookup",
+  	    "detail": "select * from transactions",
+	    "millisecondsTaken": 9024
+      }
+    ],
+    "name": "total",
+    "millisecondsTaken": 9776
+  }
+}
+```
+
+### 3. Productive Development
+
+The preferred place to find problems is at the earliest stage of the pipeline, while the code is being written. This helps to ensure good quality and saves the business money.
+
+### 3.1. Cross Team Error Lookup
+
+A good logging system empowers developers when there is an error with someone else’s component, as in the below case, where a UI developer is experiencing an API problem:
+
+![error chain](/images/400/error-chain.jpg)
+
+Any developer in any team should be able to quickly look up the cause of the upstream error via a simple query:
+
+```markdown
+GET apilogs*/_search
+{
+  "query" : {
+    "match" : { "errorId" : 97264 }
+  }
+}
+```
+
+The UI developer can then sometimes find a workaround, or the API team can be notified. This ensures a scientific approach and avoids guesswork and delays.
+
+### 3.2. New Team Members
+
+When a new person joins a development team, they can run a UI session to quickly learn which API endpoints are used. This enables them to quickly get up to speed on how APIs are used.
+
+### 3.3. Concurrency Testing
+
+API development has risks of concurrency bugs, so it is recommended to verify no concurrency problems early, using some kind of <Link href='/posts/api-automated-tests'>basic load test</Link>. This blog’s final APIs fire 100 API requests and intentionally send some requests with invalid input, to rehearse API errors:
+
+![load test](/images/400/load-test.jpg)
+
+If any multi-threaded bugs are discovered, the same query techniques for a UI client session can be used to look up error details. Multi-threaded bugs in production are very serious and may be impossible to diagnose, even with good logging. The only option may be a system rollback.
+
+### 3.4. Error Rehearsal
+
+Developers are often involved in production support, which can be stressful for them if they are not prepared. They must therefore ensure that useful queryable logs are written, by testing failure scenarios when coding. The <Link href='/posts/error-handling-and-supportability'>Error Handling and Supportability</Link> post explains some techniques.
+
+Rehearsal often involves throwing exceptions temporarily, at various places in the API code, after which you check API logs and ensure that the logged details explain the cause in a clear way. Such tests should be done as a part of normal coding.
+
+### Where Are We?
+
+Our final APIs and clients implement this blog's <Link href='/posts/effective-api-logging'>Effective API Logging</Link> design, where API requests are logged according to a schema. Log aggregation is then implemented to enable queries against the schema. This post demonstrated the end result for technical staff, to provide significant benefits in people productivity.
+
+### Next
+
+- Next we will begin a new theme, by discussing <Link href='/posts/native-architecture-goals'>Native Architecture Goals</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

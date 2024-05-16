@@ -1,0 +1,194 @@
+# Android Code Sample – Overview
+
+Previously we covered our <Link href='/posts/ios-https-debugging'>iOS HTTPS Debugging Setup</Link> and next we will describe the behaviour of our main Android code sample, which is a *Single Activity App* coded in Kotlin.
+
+### Features
+
+The following table summarises the main features of the code sample, some of which is tricky to implement:
+
+| Feature | Description |
+| ------- | ----------- |
+| <span style={{color:'green'}}>**AppAuth Integration**</span> | We will implement the essential OpenID Connect behaviour by integrating the standard libraries |
+| <span style={{color:'green'}}>**Claimed HTTPS Schemes**</span> | The login result is returned to the app over HTTPS URLs, which is the most secure option according to security guidance |
+| <span style={{color:'green'}}>**Secure Token Storage**</span> | Tokens are stored on the device after login, and not accessible by other apps, so that users don’t need to authenticate on every app restart |
+| <span style={{color:'green'}}>**Deep Linking**</span> | Our app also supports HTTPS App Links, so that users can bookmark locations within the app |
+
+### Components
+
+The sample connects to <Link href='/posts/cloud-hosting'>components hosted in AWS</Link>, so that readers only need to run the Kotlin code from Android Studio to get a complete solution. By default our mobile app uses AWS Cognito as an authorization server.
+
+![components](/images/500/components.jpg)
+
+### Code Download
+
+The code for our mobile app can be downloaded from [here](https://github.com/gary-archer/oauth.mobilesample.android), and we will cover full details of how to run it in the next post:
+
+![repo](/images/500/repo.jpg)
+
+### Simple Mobile User Interface
+
+Our Mobile UI will provide the same <Link href='/posts/api-journey-client-side'>API Client Journey</Link> as earlier Web UIs, with a simple list view as the home page:
+
+![home view](/images/500/home-view.jpg)
+
+There will also be a details view, which exists primarily to demonstrate navigation and deep linking:
+
+![details view](/images/500/details-view.jpg)
+
+### Single Activity / View Application
+
+Our mobile UI will have identical functionality to the final React SPA, where the main view is swapped out as the user navigates. This is technically simpler and more efficient than replacing entire activities, and makes the app feel faster for end users.
+
+### Modern UI Technology
+
+The Android App will be coded in Kotlin and will use [Jetpack Compose](https://developer.android.com/jetpack) for its views. This mobile technology choice will simplify areas such as implementing views, data binding and navigation.
+
+![jetpack](/images/500/jetpack.jpg)
+
+### Security Recommendations
+
+There are risks with mobile apps that a malicious third party could install an app that uses our app’s *Client ID* and *Redirect URI*, so we will follow high security recommendations, to use *Claimed HTTP Schemes*:
+
+- [Financial Grade APIs / Native Apps](https://openid.net/specs/openid-financial-api-part-1-ID2.html#native-apps)
+
+![mobile login methods](/images/500/mobile-login-methods.jpg)
+
+This prevents a fake app from receiving a login result, since the attacker would not be able to make deep links work for their app.
+
+### Logins via the System Browser
+
+AppAuth user logins will be via a [Chrome Custom Tab](https://developer.chrome.com/docs/android/custom-tabs) window, which overlays the app’s mobile views and acts as a secure sandbox, so that the app itself never has access to the user’s credentials.
+
+![custom tab login](/images/500/custom-tab-login.jpg)
+
+AppAuth Android libraries deal with selecting the window for us at runtime. The result is that cookies and passwords can often be shared between web apps and mobile apps, to improve usability:
+
+- Single sign on can work across multiple web / mobile apps
+- Passwords can be remembered and used for multiple apps
+
+### Logins via Android Web Views are Problematic
+
+The following problems exist if you perform login redirects on a normal mobile web view. This is because the result is a *Browser Session Private to the App*:
+
+| Problem Area | Description |
+| ------------ | ----------- |
+| <span style={{color:'red'}}>Password Autofill</span> | This feature will generally work less reliably in a web view, resulting in a poor login experience |
+| <span style={{color:'red'}}>Single Sign On</span> | Cookies will not be shared with other apps and are likely to be dropped more aggressively within your own app |
+| <span style={{color:'red'}}>Could be Blocked</span> | Google is an example of an identity provider that [blocks logins on a mobile web view](https://auth0.com/blog/google-blocks-oauth-requests-from-embedded-browsers) |
+
+### Our Sample’s Login Usability Features
+
+Using Chrome custom tabs will provide the best chance of password autofill working, so that the user does not need to continually remember their password. After login we will store the *OAuth Refresh Token* on the device, using secure operating system storage private to our app. This ensures that, on subsequent application restarts, the first thing the user sees is the app:
+
+### Secured Device Prerequisite
+
+We need to ensure that the above usability features cannot be abused if the mobile device is stolen, so we require the device to have a *Secured Lock Screen*, and the user will see the below screen if this is not the case:
+
+![prerequisite screen](/images/500/prerequisite-screen.jpg)
+
+The user must then set a minimum security level of *Pattern*, *PIN* or *Password* and the app will then resume normally:
+
+![device pin](/images/500/device-pin.jpg)
+
+### Password Autofill Details
+
+On the initial login the user will need to type in their email and password. By default the Chrome custom tab will immediately disappear after login and the user will be unable to use Chrome’s *Save Password* feature.
+
+![password not remembered](/images/500/password-not-remembered.jpg)
+
+We will resolve this problem by presenting a *Post Login Page* after authentication but before the browser window is closed.
+
+![save password prompt](/images/500/save-password-prompt.jpg)
+
+### Reliable Login Cancellation
+
+Logins can be cancelled by closing the Chrome custom tab instead of successfully completing a login. We will handle this reliably and allow the user to retry:
+
+![cancelled login](/images/500/cancelled-login.jpg)
+
+### Reliable Session Management
+
+Our app has buttons to enable *Rehearsal of Expiry Events*, in order to verify that these do not cause any end user problems:
+
+![expiry testing](/images/500/expiry-testing.jpg)
+
+### Navigation with Expired Tokens
+
+Our session buttons help to ensure that built in *Back Stack Navigation* is reliable within the app as we swap out the main view. This may include *authenticating the user* or *refreshing an access token* before presenting the view.
+
+### Logout
+
+The sample also implements <Link href='/posts/logout'>Open ID Connect RP-Initiated Logout</Link>, to remove the authorization server’s session cookie. In a real-world app a logout capability enables you to test data access for different users with different settings or permissions.
+
+### Deep Linking
+
+The app also supports navigation via deep linking, where a user can receive *HTTPS App Link URLs* in an email, to activate the mobile app at specific locations:
+
+![deep linking email](/images/500/deep-linking-email.jpg)
+
+A deep link could point to an unauthorized or invalid resource, as demonstrated by the last two examples below:
+
+```markdown
+// A deep link to the home page
+https://mobile.authsamples.com/basicmobileapp/deeplink
+
+// A deep link to the transactions for company 2
+https://mobile.authsamples.com/basicmobileapp/deeplink/company/2
+
+// A deep link to an unauthorized resource
+https://mobile.authsamples.com/basicmobileapp/deeplink/company/3
+
+// A deep link to an invalid resource
+https://mobile.authsamples.com/basicmobileapp/deeplink/company/abc
+```
+
+In both cases our API will deny access gracefully by returning known error codes to the mobile app, which will then navigate back to the home page, so that the end user is not impacted.
+
+### Problems Receiving Redirect Responses
+
+A common issue when first using OAuth in a mobile app is that the system browser may not return the deep link containing the authorization response to the app, and fall back to processing it as a web request in the browser, typically with a 404 not found error.
+
+![not found login response](/images/500/not-found-login-response.jpg)
+
+This is due to a browser security requirement that there must be a user gesture before a deep link can be processed. Invoking a deep link immediately after a redirect can be unreliable. Therefore, when websites run on mobile devices, they often present the user with options like these when invoking the app. So when receiving the login response you may also need to present a continue button:
+
+- Open the app
+- Continue with web
+
+### Types of OAuth Redirect
+
+There are three scenarios where we will redirect the user on the Chrome custom tab window. Note that the second scenario can be reproduced in our code sample by clicking *Expire Refresh Token*, then clicking *Reload*.
+
+| Redirect Type | Description |
+| ------------- | ----------- |
+| <span style={{color:'green'}}>**Login**</span> | The user is interactively prompted to login |
+| <span style={{color:'green'}}>**Single Sign On**</span> | The user already has a valid session cookie and signs in automatically without a login screen |
+| <span style={{color:'green'}}>**Logout**</span> | The user’s session cookie is removed, with no prompt |
+
+In each case, there needs to be a screen before invoking the deep link. You may find using the OpenID Connect *prompt=login* parameter on every login redirect is reliable. In this blog I instead use a custom interstitial page, partly because AWS Cognito does not support the *prompt* parameter.
+
+### This Blog’s Interstitial Web Pages
+
+We will use the following custom *AWS Hosted Web Pages* that are returned to after login / logout redirects. A real company could present its own branded pages instead.
+
+![login interstitial page](/images/500/login-interstitial-page.jpg)
+![logout interstitial page](/images/500/logout-interstitial-page.jpg)
+
+### Test Cases
+
+Chrom custom tab logins improve usability, but they also add some complexity. Our code sample needs to ensure that, when the login window is top most, the following actions do not cause exceptions:
+
+| Test Case | Description |
+| --------- | ----------- |
+| <span style={{color:'green'}}>**Change Orientation**</span> | The user switches between portrait and landscape |
+| <span style={{color:'green'}}>**Reactivate App**</span> | The user switches to another app and then re-runs our app from the home screen via the app’s launcher icon |
+| <span style={{color:'green'}}>**Deep Link**</span> | The user selects a deep link message from an email |
+
+### Where Are We?
+
+We have described the desired functionality, and have described how to overcome some tricky areas. Since the app implements OpenID Connect in a standard way, it could be updated to support many other forms of user authentication, with zero code changes.
+
+### Next
+
+- Next we will cover <Link href='/posts/basicandroidapp-execution'>How to Run the Android Code Sample</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

@@ -1,0 +1,84 @@
+# Basic SPA – Overview
+
+In the <Link href='/posts/web-architecture-goals'>Web Architecture Goals</Link> post we explained that our first code sample's objective would be to get an integrated setup running on a developer PC, so that access tokens are sent between a UI, API and authorization server.
+
+### Behaviours
+
+The behaviour provided in our initial sample is summarised below:
+
+| Behaviour | Description |
+| --------- | ----------- |
+| <span style={{color:'green'}}>**Authorization Server**</span> | Developers can connect to a Cloud Authorization Server from code running on their PC |
+| <span style={{color:'green'}}>**SPA Security**</span> | Our SPA uses Authorization Code Flow (PKCE) for logins and uses Access Tokens to call the API |
+| <span style={{color:'green'}}>**API Security**</span> | The Web API validates JWT access tokens, then works with claims to implement authorization |
+| <span style={{color:'green'}}>**Reliable**</span> | Both the SPA and API handle expiry and other failure conditions in a solid manner |
+| <span style={{color:'green'}}>**Real World URLs**</span> | The SPA makes cross domain calls to the API on the local PC, and OAuth messages are viewable |
+
+### Components
+
+The Basic SPA Code Sample will get the below components and endpoints talking to each other, using OAuth based security:
+
+![Components](/images/20/components.jpg)
+
+### SPAs in 2021
+
+<span style={{color:'red'}}>This sample uses the traditional SPA solution, with OpenID Connect implemented solely in JavaScript. This is no longer recommended, and your production apps should instead use a <Link href='/posts/spa-back-end-for-front-end'>Backend for Frontend</Link> approach.</span>
+
+The traditional SPA flow remains useful for representing a pure SPA architecture, and learning about OAuth endpoints and messages. This blog's <Link href='/posts/final-spa-overview'>Final SPA</Link> provides a BFF based solution, but requires a more complex flow.
+
+### Code Download
+
+The code for our SPA and API can be downloaded from [here](https://github.com/gary-archer/oauth.websample1), and we will cover full details of how to run it, and the interactions involved, in the next post:
+
+![Repo](/images/20/repo.jpg)
+
+### Security Libraries
+
+In our SPA and API we will use the following respected open source libraries, which are referenced on the OpenID Connect Libraries website:
+
+| Component | Library | Features |
+| --------- | ------- | -------- |
+| <span style={{color:'green'}}>**SPA**</span> | [oidc-client-ts](https://github.com/authts/oidc-client-ts) | Implements OpenID Connect lifecycle events for a browser based client, including logins, logouts and token renewal |
+| <span style={{color:'green'}}>**API**</span> | [jose](https://github.com/panva/jose) | Validates JWT access tokens, returns claims and manages looking up and caching of token signing public keys |
+
+### Programming Languages
+
+This blog will use multiple technologies, and they will all be modern and cross platform. I will start with these JavaScript based stacks, and will use TypeScript for its extra language features and type checking benefits:
+
+| Component | Language | Platforms |
+| --------- | -------- | --------- |
+| <span style={{color:'green'}}>**SPA**</span> | TypeScript | Chrome / Edge / Firefox / Safari / Mobile |
+| <span style={{color:'green'}}>**API**</span> | Node.js + TypeScript | Windows / macOS / Linux |
+
+### Simple Web Technology for Early Samples
+
+We will use modern web technology, but will avoid web frameworks to start with, so that requirements and techniques are established that would work with any technology stack:
+
+| Step | Details |
+| ---- | ------- |
+| <span style={{color:'green'}}>**SPA OAuth Coding Model**</span> | First show how to integrate standards based OAuth support into a Simple SPA so that we can focus on OAuth requirements |
+| <span style={{color:'green'}}>**Modern SPA Framework**</span> | Avoid getting sidetracked by too much web technology initially, though later our Final SPA will use React |
+
+### Code Sample Theme
+
+This blog's samples represent a fictional financial scenario, where sensitive investment details are displayed. In a real financial app we would need to be diligent about protecting this data:
+
+![List View](/images/20/list-view.jpg)
+
+The actual data shown is just made up and does not represent anything real. The UI just renders fixed JSON data received from the API. Our Sample UIs will also include a basic *Transactions View* and we will imagine that this contains sensitive details from particular investors.
+
+![Details View](/images/20/details-view.jpg)
+
+This view primarily exists to demonstrate navigation and Deep Linking. Users can bookmark URLs to secured resources, and UIs may need to renew a token or log the user in before presenting the view:
+
+- http`:`//localhost/spa#company=1
+- http`:`//localhost/spa#company=2
+
+### Where Are We?
+
+We have an initial objective and we will build it in a solid manner, with clean code and a good separation of concerns between the SPA, an API and the authorization server.
+
+### Next
+
+- Next we will explain <Link href='/posts/basicspa-execution'>How to Run the Code Sample</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

@@ -1,0 +1,62 @@
+# Native Architecture Goals
+
+Previously we completed our API theme by covering some people focused <Link href='/posts/api-technical-support-analysis'>API Technical Support Analysis</Link>. Next we will build *OAuth Secured Native Apps* that connect to this blog’s cloud endpoints.
+
+At the start of this blog, the <Link href='/posts/web-architecture-goals'>Web Architecture Goals</Link> post articulated some high level qualities to aim for in a modern web application. This post  provides a similar summary for mobile and desktop apps. I recommend  monitoring important outcomes, to ensure that they are being achieved.
+
+### Goal: Consistent Frontend Architecture
+
+This blog’s desktop and mobile apps will have identical ‘business’ functionality to the SPA delivered in the first theme. All frontends do the same thing, to authenticate the user, call APIs and work with business data.
+
+Therefore all of this blog’s frontend apps use identical classes, with the same responsibilities. The code should feel the same for *React SPAs*, *React Electron Apps*, *Jetpack Compose Android Apps*, or *SwiftUI iOS Apps*.
+
+### Goal: Portable Frontend Technology
+
+The <Link href='/posts/final-spa-overview'>Final SPA</Link> was developed using React, and ideally a company should be able to use the same technology stack for native apps. At a real company, this would enable teams to easily switch from SPA to mobile development.
+
+However, web stacks are focused on rendering views and updating the DOM, whereas native apps need to do more than this. The best tool for the job must be chosen, with the least scope for blocking technical issues.
+
+### Goal: Best Native Security Capabilities
+
+Native apps must be able to interact with APIs, so need an API message credential. APIs must return only correct and allowed data for each user, so the user must be authenticated first.
+
+OAuth and OpenID Connect provide powerful options for issuing access tokens as API message credentials, and authenticating the user in many possible ways. [RFC 8252: OAuth for Native Apps](https://datatracker.ietf.org/doc/rfc8252) provides some best practice recommendations.
+
+Native apps must have full access to the underlying operating system, so that they can implement security flows. This includes the ability to use hardware backed keys on mobile devices, interact with the system browser, receive deep links, and store OAuth tokens securely.
+
+By following native security best practices, vetted by experts, companies will avoid most vulnerabilities and perform better in PEN tests. Using respected patterns and libraries, such as AppAuth, also makes it easier to explain security to reviewers.
+
+### Goal: Best Login Usability
+
+A poor login user experience can be a barrier to adoption for mobile apps. Aim to avoid asking users to login or type passwords on small keyboards too often. For native apps, this blog will use options such as password autofill, and tokens will be stored in secure OS storage that is private to the app.
+
+### Goal: Mobile Web Interoperability
+
+For mobile apps, it used to be common to reuse views from a web app, to provide part of the user experience. Webviews could be used to ensure that any bug fixes were rolled out to users immediately.
+
+Yet this type of design is now problematic because of security. Both apps should receive separate access tokens with different privileges. Web apps should also use the latest secure cookies as API credentials.
+
+These days it is therefore recommended to share data using APIs, and to implement views multiple times. This requires additional development, but ultimately results in the best user experience, since each frontend is developed using the optimal view technology.
+
+### Goal: Scalable Security
+
+OAuth enables native apps to externalize their security to the authorization server, and to libraries written by experts. This results in simplified application code, due to the outsourced security, and scales well to many frontend apps.
+
+### Goal: Easy to Deploy
+
+Mobile apps have standardized deployment mechanisms to app stores. Desktop apps should run on Windows, macOS and Linux. They should not require technical prerequisites such as a Java runtime. It must also be possible to install them with only normal user privileges.
+
+### Goal: Developer Productivity
+
+When choosing native technology stacks, ensure solid error handling control during native operations. Developers must be able to handle error and expiry conditions in their preferred way. Head scratching and delays caused by technical layers must be minimized.
+
+I have found JavaScript stacks for desktop apps to work pretty well. Yet for mobile apps my experience has been that using Kotlin and Swift results in the best productivity. This is despite the fact that the same app needs to be written twice.
+
+### Where Are We?
+
+This post clarified some key behaviour that will be delivered in this blog’s native apps. We will see that OAuth flows for native apps are tricky to implement, both technically, and to provide a good login user experience.
+
+### Next
+
+- Our next post will provide an <Link href='/posts/desktop-apps-overview'>Initial Desktop Sample Overview</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

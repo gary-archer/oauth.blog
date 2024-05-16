@@ -1,0 +1,493 @@
+# Basic SPA – Coding Key Points
+
+The <Link href='/posts/basicspa-oauthworkflow'>SPA and API OAuth Messages</Link> post explained the HTTP/S messages used by our code sample. In this post we’ll drill into some important identity related code in the SPA.
+
+### SPA Code
+
+The SPA uses the following types of static resource that are downloaded to the browser. In this blog we will keep HTML and CSS simple, so that our main code focus for SPAs is the JavaScript logic:
+
+| Area | Implementation Details |
+| ---- | ---------------------- |
+| <span style={{color:'green'}}>**HTML**</span> | We use a single static index.html page and its DOM elements are updated dynamically |
+| <span style={{color:'green'}}>**CSS**</span> | We use [Bootstrap](https://getbootstrap.com/docs/4.0/getting-started/introduction/) to control layout in a mobile first manner, and for most styling |
+| <span style={{color:'green'}}>**JavaScript**</span> | We use TypeScript code that gets compiled to JavaScript bundles when it runs in the browser |
+
+The SPA uses only a handful of external dependencies, expressed in its package.json file. The most interesting of these is the oidc-client-ts library, which implements OpenID Connect in JavaScript.
+
+```json
+{
+    "dependencies": {
+        "axios": "^1.6.8",
+        "mustache": "^4.2.0",
+        "oidc-client-ts": "^2.4.0"
+    }
+}
+```
+
+Concerns are separated into a number of TypeScript classes, and in particular we keep plumbing separated from the application logic:
+
+![SPA Code](/images/50/spa-code.jpg)
+
+### SPA Views
+
+Our SPA looks like this visually and consists of a number of subviews, arranged via rows and columns:
+
+![SPA Layout](/images/50/spa-layout.jpg)
+
+The Bootstrap Grid System is used to lay out elements at runtime, and the HTML we deploy is minimal:
+
+```html
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <base href='/spa/' />
+        <title>OAuth Demo App</title>
+
+        <link rel='stylesheet' href='css/bootstrap.min.css'>
+        <link rel='stylesheet' href='css/app.css'>
+    </head>
+    <body>
+        <div id='root' class='container' />
+        
+        <script type='module' src='dist/vendor.bundle.js'></script>
+        <script type='module' src='dist/app.bundle.js'></script>
+    </body>
+</html>
+```
+
+As the user navigates between screens, a main element within the root element will be updated with a different view.
+
+### SPA Entry Point
+
+When our SPA’s index.html page loads, it creates a global instance of an application class defined in the App.ts file, and calls execute on it:
+
+```typescript
+public async execute(): Promise<void> {
+
+    try {
+        window.onhashchange = this._onHashChange;
+
+        this._initialRender();
+
+        await this._initialiseApp();
+
+        await this._handleLoginResponse();
+
+        await this._loadMainView();
+
+    } catch (e) {
+
+        this._errorView?.report(e);
+    }
+}
+```
+
+### Application Startup
+
+The startup logic looks like this, and involves downloading the SPA’s configuration from the server, then initialising the oidc-client-ts library, as well as setting up a class to interact with the API:
+
+```typescript
+private async _initialiseApp(): Promise<void> {
+
+    this._configuration = await ConfigurationLoader.download('spa.config.json');
+
+    this._authenticator = new Authenticator(this._configuration.oauth);
+
+    this._apiClient = new ApiClient(this._configuration.app.apiBaseUrl, this._authenticator);
+
+    this._router = new Router(this._apiClient, this._errorView!);
+
+    this._isInitialised = true;
+}
+```
+
+### Security Library Configuration
+
+Our SPA configuration contains the following values, to enable it to connect to the API and to perform OAuth login redirects:
+
+```json
+{
+    "app": {
+        "apiBaseUrl":       "http://api.mycompany.com/api"
+    },
+    "oauth": {
+        "authority":        "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+        "clientId":         "62raqvncbki418n3ckl59uf0f4",
+        "redirectUri":      "http://localhost/spa",
+        "scope":            "openid profile"
+    }
+}
+```
+
+The oidc-client-ts provides a *UserManager* class and the SPA’s *Authenticator* class wraps this, to simplify code in the rest of the app:
+
+```typescript
+export class Authenticator {
+
+    private readonly _userManager: UserManager;
+
+    public constructor(config: OAuthConfiguration) {
+
+        const settings = {
+
+            authority: config.authority,
+            client_id: config.clientId,
+            redirect_uri: config.redirectUri,
+            scope: config.scope,
+            response_type: 'code',
+            loadUserInfo: true,
+            automaticSilentRenew: false,
+            monitorSession: false,
+
+        };
+
+        this._userManager = new UserManager(settings);
+    }
+}
+```
+
+### Triggering Login Redirects
+
+As part of the main *execute* method, a *Router* class determines the initial view based on the SPA’s current URL location:
+
+```typescript
+public async loadView(): Promise<void> {
+
+    this._errorView.clear();
+
+    const transactionsCompany = this.getTransactionsViewId();
+    if (transactionsCompany) {
+
+        const view = new TransactionsView(this._apiClient, transactionsCompany);
+        await view.load();
+
+    } else {
+
+        const view = new CompaniesView(this._apiClient);
+        await view.load();
+    }
+}
+```
+
+This results in the view executing and attempting to call an API in order to get its data:
+
+```typescript
+public async load(): Promise<void> {
+
+    try {
+
+        const data = await this._apiClient.getCompanyList();
+        this._renderData(data);
+
+    } catch (e) {
+
+        DomUtils.text('#main', '');
+        throw e;
+    }
+}
+```
+
+The view calls an *ApiClient* class, which tries to get an access token from the Authenticator class so that it can make the API call requested:
+
+```typescript
+private async _callApi(path: string, method: Method, dataToSend?: any): Promise<any> {
+
+    const url = `${this._apiBaseUrl}${path}`;
+    let token = await this._authenticator.getAccessToken();
+    if (!token) {
+        await this._authenticator.startLogin(null);
+        throw ErrorHandler.getFromLoginRequired();
+    }
+}
+```
+
+On the first request there will be no access token:
+
+```typescript
+public async getAccessToken(): Promise<string> {
+
+    const user = await this._userManager.getUser();
+    if (user && user.access_token) {
+        return user.access_token;
+    }
+
+    return null;
+}
+```
+
+This causes the ApiClient class to run an OpenID Connect redirect. The in-flight API call is also terminated, with a *login_required* error. The SPA’s error handling code ignores this error code, which prevents any error details from being rendered.
+
+The code to begin the redirect looks like this, and the SPA’s location before the redirect is saved to session storage. A more complex app might also save other page state:
+
+```typescript
+private async _startLogin(): Promise<void> {
+
+    const data = {
+        hash: location.hash.length > 0 ? location.hash : '#',
+    };
+
+    try {
+        await this._userManager.signinRedirect({state: data});
+    } catch (e) {
+        throw ErrorHandler.getFromLoginOperation(e, ErrorCodes.loginRequestFailed);
+    }
+}
+```
+
+The first code sample assumes that only a single API request is in-flight at a time. This blog’s final UI code samples will show a way to trigger login redirects when the frontend makes concurrent requests to APIs.
+
+### Handling Login Responses
+
+When the login is completed, the browser will return to the app with an authorization code, and will invoke the SPA’s index.html page again, which will restart the SPA.
+
+The SPA must handle the login response as part of its application startup. This ensures that an access token can be retrieved and avoids repeating the process in a redirect loop.
+
+If the SPA starts normally or as part of a page reload, *handleLoginResponse* is a no-op, but if it is an OpenID Connect response the current URL will have one of the following forms:
+
+- https`:`//localhost/spa?code=xxx&state=789024578
+- https`:`//localhost/spa?error=invalid_request&state=789024578
+
+If the SPA calculates that the current location is an OpenID Connect response it asks the oidc-client-ts library to process the response to exchange the code for tokens. The SPA then performs these actions:
+
+- Restores the location and state before the redirect
+- Removes the OpenID Connect response from the browser history
+
+```typescript
+public async handleLoginResponse(): Promise<void> {
+
+    if (location.search) {
+
+        const args = new URLSearchParams(location.search);
+        const state = args.get('state');
+        if (state) {
+
+            const storedState = await this._userManager.settings.stateStore?.get(state);
+            if (storedState) {
+
+                let redirectLocation = '#';
+                try {
+
+                    const user = await this._userManager.signinRedirectCallback();
+                    redirectLocation = user.state.hash;
+                    this._loginTime = new Date().getTime();
+
+                } catch (e: any) {
+
+                    throw ErrorHandler.getFromLoginOperation(e, ErrorCodes.loginResponseFailed);
+
+                } finally {
+
+                    history.replaceState({}, document.title, redirectLocation);
+                }
+            }
+        }
+    }
+}
+```
+
+This means the SPA supports *Deep Linking*, where the user can bookmark a page, then access it in a new browser session. After signing in, the user will return directly to the bookmarked location:
+
+- http`:`//localhost/spa/#company=2
+
+### Rendering User Info
+
+After login the SPA renders the logged in user’s name, and this information is stored in the UserManager class of the oidc-client-ts library, A user profile can be accessed with the following code:
+
+```typescript
+public async getUserInfo(): Promise<UserInfo | null> {
+
+    const user = await this._userManager.getUser();
+    if (user && user.profile) {
+        if (user.profile.given_name && user.profile.family_name) {
+
+            return {
+                givenName: user.profile.given_name,
+                familyName: user.profile.family_name,
+            };
+        }
+    }
+
+    return null;
+}
+```
+
+The initial SPA uses the default behaviour of the oidc-client-ts library, and stores token and user information in browser session storage.
+
+### API Calls with Access Tokens
+
+The SPA can now successfully get an access token from the oidc-client-ts library and call the API with it. The axios library is used for HTTP calls, which has good support for reading HTTP error responses:
+
+```typescript
+private async _callApiWithToken(
+    url: string,
+    method: Method,
+    dataToSend: any,
+    accessToken: string): Promise<any> {
+
+    const response = await axios.request({
+        url,
+        method,
+        data: dataToSend,
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+        },
+    });
+
+    AxiosUtils.checkJson(response.data);
+    return response.data;
+}
+```
+
+The API credential is a Bearer Token, and if an attacker can somehow get hold of one they can also send it to the API. A key OAuth security mitigation to protect against this is to keep access tokens short lived.
+
+### Safe Input Handling
+
+We use the technically simple [Mustache Template Library](https://github.com/janl/mustache.js/) to bind received data to the main element of our SPA. This ensures that we safely handle any potentially dangerous input received from the API or other sources.
+
+```typescript
+private _renderData(data: CompanyTransactions): void {
+
+    const viewModel = {
+        title: `Today's Transactions for ${data.company.name}`,
+        transactions: data.transactions.map((transaction) => {
+            return {
+                id: transaction.id,
+                investorId: transaction.investorId,
+                formattedAmountUsd: Number(transaction.amountUsd).toLocaleString(),
+            };
+        }),
+    };
+
+    const htmlTemplate =
+        `<div class='card border-0'>
+            <div class='card-header row fw-bold'>
+                <div class='col-12 text-center mx-auto fw-bold'>
+                    {{title}}
+                </div>
+            </div>
+            <div class='row'>
+                {{#transactions}}
+                    <div class='col-lg-4 col-md-6 col-xs-12'>
+                        <div class='card'>
+                            <div class='card-body'>
+                                <div class='row'>
+                                    <div class='col-6'>Transaction ID</div>
+                                    <div class='col-6 text-end valuecolor fw-bold'>{{id}}</div>
+                                </div>
+                                <div class='row'>
+                                    <div class='col-6'>Investor ID</div>
+                                    <div class='col-6 text-end valuecolor fw-bold'>{{investorId}}</div>
+                                </div>
+                                <div class='row'>
+                                    <div class='col-6'>Amount USD</div>
+                                    <div class='col-6 text-end moneycolor fw-bold'>{{formattedAmountUsd}}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {{/transactions}}
+            </div>
+        </div>`;
+
+    const html = mustache.render(htmlTemplate, viewModel);
+    DomUtils.html('#main', html);
+}
+```
+
+In later posts we will update our SPA to use React, and this web framework will provide similar input protection.
+
+### Navigation via Hash Change Events
+
+The SPA performs navigation after user actions by simply setting a URL hash value, such as *#company=2*. The application class subscribes to the *window.onhashchange* and asks the router to reload the main view.
+
+Each navigation action triggers additional API requests, and eventually the access token stored in the SPA will expire. The SPA must be prepared for this type of expiry event in order to run reliably.
+
+### Reliable API Calls
+
+Any reliable OAuth client must implement the following behaviour:
+
+- If an API call fails with a 401
+- Then try to get a new access token, once only
+- Then retry the API call, once only
+
+The code is structured to enable this, though the first code sample does not yet implement token refresh:
+
+```typescript
+private async _callApi(path: string, method: Method, dataToSend?: any): Promise<any> {
+
+    const url = `${this._apiBaseUrl}${path}`;
+
+    const token = await this._authenticator.getAccessToken();
+    if (!token) {
+        await this._authenticator.startLogin(null);
+        throw ErrorHandler.getFromLoginRequired();
+    }
+
+    try {
+
+        return await this._callApiWithToken(url, method, dataToSend, token);
+
+    } catch (e: any) {
+
+        const error = e as UIError;
+        if (error.statusCode !== 401)
+            throw e;
+
+        await this._authenticator.startLogin(error);
+        throw ErrorHandler.getFromLoginRequired();
+    }
+}
+```
+
+The SPA does not try to anticipate API 401 responses based on expiry times, since there are multiple reasons why these could occur. The SPA also never reads the content of access tokens, since only APIs should do this.
+
+### SPA Error Handling
+
+The SPA uses a number of error codes that it can program against, and some error codes can be returned from the API or the authorization server:
+
+```typescript
+export class ErrorCodes {
+    public static readonly loginRequired = 'login_required';
+    public static readonly loginRequestFailed = 'login_request_failed';
+    public static readonly loginResponseFailed = 'login_response_failed';
+    public static readonly generalUIError = 'ui_error';
+    public static readonly networkError = 'network_error';
+    public static readonly jsonDataError = 'json_data_error';
+    public static readonly responseError = 'http_response_error';
+    public static readonly companyNotFound = 'company_not_found';
+    public static readonly invalidCompanyId = 'invalid_company_id';
+}
+```
+
+The SPA’s *ErrorHandler* class translates errors into an object that contains error codes and other useful fields . This includes parsing the OAuth *error* and *error_description* fields from Cognito error responses:
+
+```typescript
+private static _getOAuthExceptionMessage(exception: any): string {
+
+    let oauthError = '';
+    if (exception.error) {
+        oauthError = exception.error;
+        if (exception.error_description) {
+            oauthError += ` : ${exception.error_description.replace(/\+/g, ' ')}`;
+        }
+    }
+
+    if (oauthError) {
+        return oauthError;
+    } else {
+        return ErrorHandler._getExceptionMessage(exception);
+    }
+}
+```
+
+The API does not return sensitive error details to the SPA, so the error data can be safely displayed. OAuth introduces additional endpoints, messages and configuration settings into UI clients, so there is plenty of scope for problems when getting integrated. I recommend implementing solid error handling and simulating failures early, since doing so improves productivity.
+
+### Where Are We?
+
+We have explained how the initial SPA is coded, and the oidc-client-ts security library is doing the difficult security work. The SPA’s code will be extended in the second code sample, to complete its session management.
+
+### Next
+
+- Next we will look at the sample’s <Link href='/posts/basicapi-codingkeypoints'>API Coding Key Points</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>
