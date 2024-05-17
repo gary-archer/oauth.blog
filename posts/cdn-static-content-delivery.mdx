@@ -280,8 +280,8 @@ function handler(event) {
     if (!requestUri.startsWith(spaBasePath)) {
 
         return {
-            statusCode: 302,
-            statusDescription: 'Found',
+            statusCode: 301,
+            statusDescription: 'Moved Permanently',
             headers: {
                 'location': {
                   value: spaBasePath,
