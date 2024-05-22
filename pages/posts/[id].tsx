@@ -3,19 +3,7 @@ import path from 'path';
 import Layout from '../../components/layout';
 
 /*
- * Return props for the runtime page ID
- */
-export async function getStaticProps({params}: any): Promise<any> {
-    
-    return {
-        props: {
-            filename: `${params.id}.mdx`,
-        },
-    };
-}
-
-/*
- * Control pages generated during the build
+ * When 'next build' is run this returns a collection of URL paths
  */
 export async function getStaticPaths(): Promise<any> {
 
@@ -30,6 +18,18 @@ export async function getStaticPaths(): Promise<any> {
     return {
         paths,
         fallback: false,
+    };
+}
+
+/*
+ * For each URL path returned above, this returns props that are processed by the layout component
+ */
+export async function getStaticProps({params}: any): Promise<any> {
+    
+    return {
+        props: {
+            filename: params.id,
+        },
     };
 }
 

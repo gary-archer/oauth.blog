@@ -7,7 +7,7 @@ export async function getStaticProps(): Promise<any> {
   
     return {
         props: {
-            filename: 'home.mdx',
+            filename: 'home',
         },
     };
 }

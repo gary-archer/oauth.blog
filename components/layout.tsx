@@ -7,7 +7,7 @@ import {addCopyToClipboardButtons} from './codeProcessor';
 import Navbar from './navbar';
 
 /*
- * The layout is MDX content with some JavaScript control over a navigation bar and copy buttons
+ * Process the layout for a filename that points to an MDX file
  */
 export default function Layout({filename}: any): JSX.Element {
 
@@ -74,7 +74,7 @@ export default function Layout({filename}: any): JSX.Element {
     /*
      * Load MDX, allow 50 milliseconds for it to render, then run some logic
     */
-    const MdxContent = dynamic(() => import(`../posts/${filename}`).then((result) => {
+    const MdxContent = dynamic(() => import(`../posts/${filename}.mdx`).then((result) => {
         setTimeout(onRendered, 50);
         return result;
     }));
