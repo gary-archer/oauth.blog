@@ -1,4 +1,5 @@
-import dynamic from 'next/dynamic';
+import {run} from '@mdx-js/mdx'
+import * as runtime from 'react/jsx-runtime';
 import Head from 'next/head';
 import Link from 'next/link';
 import {useRouter} from 'next/router'
@@ -9,24 +10,32 @@ import Navbar from './navbar';
 /*
  * Process the layout for a filename that points to an MDX file
  */
-export default function Layout({filename}: any): JSX.Element {
+export default function Layout(props: any): JSX.Element {
 
     const rootRef = useRef<HTMLDivElement>(null);
     const scrollPositions = useRef<{[file: string]: number}>({});
     const router = useRouter();
-    let [showNavBar, setShowNavBar] = useState(false);
+    const [mdxContent, setMdxContent] = useState(null);
 
     useEffect(() => {
         startup();
         return () => cleanup();
-    }, [filename]);
+    }, [props.filename]);
 
     /*
-     * Initialize the loaded state and subscribe for events
+     * Get JavaScript into a renderable component using MDX on demand, then run some logic after rendering
+     * https://mdxjs.com/guides/mdx-on-demand
      */
-    function startup() {
-        setShowNavBar(false);
+    async function startup() {
+        console.log(props);
         router.events.on('routeChangeStart', storeScrollPos);
+        console.log('*** before run');
+        console.log(props);
+        const result = await run(props.js, {...runtime});
+        console.log(result);
+        console.log('*** after run');
+        //setMdxContent();
+        setTimeout(onRendered, 50);
     }
 
     /*
@@ -40,7 +49,7 @@ export default function Layout({filename}: any): JSX.Element {
      * Store the scroll position when moving to a new page
      */
     function storeScrollPos() {
-        scrollPositions.current[filename] = window.scrollY;
+        scrollPositions.current[props.filename] = window.scrollY;
     };
 
     /*
@@ -48,9 +57,9 @@ export default function Layout({filename}: any): JSX.Element {
      */
     function restoreScrollPos() {
 
-        if (scrollPositions.current[filename]) {
+        if (scrollPositions.current[props.filename]) {
             window.scroll({
-                top: scrollPositions.current[filename],
+                top: scrollPositions.current[props.filename],
                 behavior: 'auto',
             });
         }
@@ -61,23 +70,12 @@ export default function Layout({filename}: any): JSX.Element {
      */
     function onRendered() {
         
-        // Show the navbar 
-        setShowNavBar(true);
-
         // Render copy buttons for prism text
         addCopyToClipboardButtons(rootRef);
 
         // Restore the previous scroll position
         restoreScrollPos();
     }
-
-    /*
-     * Load MDX, allow 50 milliseconds for it to render, then run some logic
-    */
-    const MdxContent = dynamic(() => import(`../posts/${filename}.mdx`).then((result) => {
-        setTimeout(onRendered, 50);
-        return result;
-    }));
 
     /*
      * Render the page
@@ -97,10 +95,12 @@ export default function Layout({filename}: any): JSX.Element {
                 <p className='subHeadingText'>Designs and Code Samples</p>
             </header>
             <main>
-                <article className='article'>
-                    <MdxContent />
-                    {showNavBar && <Navbar />}
-                </article>
+                {mdxContent && 
+                    <article className='article'>
+                        <mdxContent.default />
+                        <Navbar />
+                    </article>
+                }
             </main>
         </div>
     );

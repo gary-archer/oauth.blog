@@ -11,7 +11,7 @@ const physicalRoot = '../dist';
 expressApp.use('/*', (request, response, next) => {
 
     // Add security headers
-    let policy = "default-src 'none';";
+    /*let policy = "default-src 'none';";
     policy += " script-src 'self';";
     policy += " connect-src 'self';";
     policy += " child-src 'self';";
@@ -27,7 +27,7 @@ expressApp.use('/*', (request, response, next) => {
     response.setHeader('x-frame-options', 'DENY');
     response.setHeader('x-xss-protection', '1; mode=block');
     response.setHeader('x-content-type-options', 'nosniff');
-    response.setHeader('referrer-policy', 'same-origin');
+    response.setHeader('referrer-policy', 'same-origin');*/
 
     // Add performance headers
     const fullUrl = `${request.protocol}://${request.hostname}${request.originalUrl.toLowerCase()}`;
