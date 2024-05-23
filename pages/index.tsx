@@ -1,16 +1,21 @@
 import {compile} from '@mdx-js/mdx'
 import fs from 'fs-extra';
-import Post from './posts/[id]';
+import remarkGfm from 'remark-gfm'
+import remarkPrism from 'remark-prism'
 
+import Post from './posts/[id]';
 /*
  * Load MDX for the home component and compile it to the serializable JavaScript format
  * https://mdxjs.com/guides/mdx-on-demand
  */
 export async function getStaticProps(): Promise<any> {
 
-    // const mdx = await fs.readFile('posts/home.mdx', 'utf8');
-    const mdx = '# hi';
-    const js = await compile(mdx);
+    const mdx = await fs.readFile('posts/home.mdx', 'utf8');
+    
+    const js = await compile(mdx, {
+        outputFormat: 'function-body',
+        // remarkPlugins: [remarkGfm, remarkPrism],
+    });
     console.log(js);
 
     return {

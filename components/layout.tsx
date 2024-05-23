@@ -1,11 +1,13 @@
 import {run} from '@mdx-js/mdx'
-import * as runtime from 'react/jsx-runtime';
+import provider from '@mdx-js/react'
 import Head from 'next/head';
 import Link from 'next/link';
 import {useRouter} from 'next/router'
 import {useEffect, useRef, useState} from 'react';
+import runtime from 'react/jsx-runtime';
 import {addCopyToClipboardButtons} from './codeProcessor';
 import Navbar from './navbar';
+import { MDXComponents } from 'mdx/types';
 
 /*
  * Process the layout for a filename that points to an MDX file
@@ -27,15 +29,18 @@ export default function Layout(props: any): JSX.Element {
      * https://mdxjs.com/guides/mdx-on-demand
      */
     async function startup() {
-        console.log(props);
         router.events.on('routeChangeStart', storeScrollPos);
-        console.log('*** before run');
-        console.log(props);
-        const result = await run(props.js, {...runtime});
-        console.log(result);
-        console.log('*** after run');
-        //setMdxContent();
+        const module = await run(props.js, {...runtime});
+        setMdxContent(module);
         setTimeout(onRendered, 50);
+    }
+
+    function useMDXComponents(components: MDXComponents): MDXComponents {
+  
+        return {
+            Link,
+            ...components,
+        };
     }
 
     /*
@@ -97,7 +102,7 @@ export default function Layout(props: any): JSX.Element {
             <main>
                 {mdxContent && 
                     <article className='article'>
-                        <mdxContent.default />
+                        <mdxContent.default components={Link} />
                         <Navbar />
                     </article>
                 }
