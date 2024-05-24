@@ -1,12 +1,12 @@
 import fs from 'fs-extra';
 import {GetStaticPathsResult, GetStaticPropsContext, GetStaticPropsResult} from 'next';
 import path from 'path';
-import Layout from '../../components/layout';
-import {compileMdx} from '../../components/mdxCompiler';
+import {ClientView} from '../../views/clientview';
+import {compileMdx} from '../../utilities/mdxCompiler';
 import {PostProps} from '../../utilities/postProps';
 
 /*
- * When 'next build' is run this returns a collection of URL paths
+ * Return the IDs of all blog posts when 'next build' is run
  */
 export async function getStaticPaths(): Promise<GetStaticPathsResult> {
 
@@ -25,7 +25,7 @@ export async function getStaticPaths(): Promise<GetStaticPathsResult> {
 }
 
 /*
- * For each URL path returned above, this returns props that are processed by the layout component
+ * Return details for one of the blog's page when 'next build' is run
  */
 export async function getStaticProps(context: GetStaticPropsContext): Promise<GetStaticPropsResult<PostProps>> {
   
@@ -39,11 +39,11 @@ export async function getStaticProps(context: GetStaticPropsContext): Promise<Ge
 }
 
 /*
- * Run the main layout for the filename
+ * Run the client view
  */
 export default function Post(props: PostProps): JSX.Element {
 
     return (
-        <Layout {...props} />
+        <ClientView {...props} />
     );
 }

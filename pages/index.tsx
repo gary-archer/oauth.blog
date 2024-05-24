@@ -1,11 +1,10 @@
-import {GetStaticPropsContext, GetStaticPropsResult} from 'next';
-import Post from './posts/[id]';
-import {compileMdx} from '../components/mdxCompiler';
+import {GetStaticPropsResult} from 'next';
+import {compileMdx} from '../utilities/mdxCompiler';
 import {PostProps} from '../utilities/postProps';
+import {ClientView} from '../views/clientview';
 
 /*
- * Load MDX for the home component and compile it to the serializable JavaScript format
- * https://mdxjs.com/guides/mdx-on-demand
+ * Return details for the blog's home page when 'next build' is run
  */
 export async function getStaticProps(): Promise<GetStaticPropsResult<PostProps>> {
 
@@ -18,11 +17,11 @@ export async function getStaticProps(): Promise<GetStaticPropsResult<PostProps>>
 }
 
 /*
- * Render the home post
+ * Run the client view when requested
  */
 export default function Home(props: PostProps): JSX.Element {
 
     return (
-        <Post {...props} />
+        <ClientView {...props} />
     );
 }

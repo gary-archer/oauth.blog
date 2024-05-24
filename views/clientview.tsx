@@ -2,15 +2,15 @@ import Head from 'next/head';
 import Link from 'next/link';
 import {useRouter} from 'next/router'
 import {useEffect, useRef, useState} from 'react';
+import {addCopyToClipboardButtons} from '../utilities/codeProcessor';
+import {runMdx} from '../utilities/mdxRunner';
 import {PostProps} from '../utilities/postProps';
-import {addCopyToClipboardButtons} from './codeProcessor';
-import {runMdx} from './mdxRunner';
 import Navbar from './navbar';
 
 /*
- * Process the layout for a filename that points to an MDX file
+ * The main client side view
  */
-export default function Layout(props: PostProps): JSX.Element {
+export function ClientView(props: PostProps): JSX.Element {
 
     const [mdxContent, setMdxContent] = useState(null);
     const rootRef = useRef<HTMLDivElement>(null);
