@@ -2,14 +2,15 @@ import Head from 'next/head';
 import Link from 'next/link';
 import {useRouter} from 'next/router'
 import {useEffect, useRef, useState} from 'react';
+import {PostProps} from '../utilities/postProps';
 import {addCopyToClipboardButtons} from './codeProcessor';
-import Navbar from './navbar';
 import {runMdx} from './mdxRunner';
+import Navbar from './navbar';
 
 /*
  * Process the layout for a filename that points to an MDX file
  */
-export default function Layout(props: any): JSX.Element {
+export default function Layout(props: PostProps): JSX.Element {
 
     const [mdxContent, setMdxContent] = useState(null);
     const rootRef = useRef<HTMLDivElement>(null);
@@ -28,8 +29,7 @@ export default function Layout(props: any): JSX.Element {
 
         router.events.on('routeChangeStart', storeScrollPos);
         setMdxContent(await runMdx(props.js));
-        addCopyToClipboardButtons(rootRef);
-        restoreScrollPos();
+        setTimeout(onRendered, 50);
     }
 
     /*
@@ -37,6 +37,21 @@ export default function Layout(props: any): JSX.Element {
      */
     function cleanup() {
         router.events.off('routeChangeStart', storeScrollPos);
+    }
+
+    /*
+     * Run some operations once a page has rendered
+     */
+    function onRendered() {
+
+        // Render copy buttons for prism text
+        addCopyToClipboardButtons(rootRef);
+
+        // Restore the previous scroll position
+        restoreScrollPos();
+
+        // Restore the previous scroll position
+        restoreScrollPos();
     }
 
     /*

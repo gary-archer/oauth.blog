@@ -14,11 +14,9 @@
     "buildRelease": "next build"
   },
   "dependencies": {
-    "@mdx-js/loader": "^3.0.1",
+    "@mdx-js/mdx": "^3.0.1",
     "@mdx-js/react": "^3.0.1",
-    "@next/mdx": "^14.2.3",
     "@types/fs-extra": "^11.0.4",
-    "@types/mdx": "^2.0.13",
     "@types/node": "20.12.2",
     "@types/react": "^18.2.73",
     "fs-extra": "^11.2.0",
