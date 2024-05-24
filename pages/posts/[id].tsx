@@ -1,15 +1,15 @@
-import {compile} from '@mdx-js/mdx'
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
 import Layout from '../../components/layout';
+import {compileMdx} from '../../components/mdxCompiler';
 
 /*
  * When 'next build' is run this returns a collection of URL paths
  */
-/*export async function getStaticPaths(): Promise<any> {
+export async function getStaticPaths(): Promise<any> {
 
     const postsDirectory = path.join(process.cwd(), 'posts');
-    const mdxFiles = fs.readdirSync(postsDirectory);
+    const mdxFiles = await fs.readdir(postsDirectory);
     const paths = mdxFiles.map((filename) => ({
         params: {
             id: filename.replace(/\.mdx$/, ''),
@@ -20,27 +20,20 @@ import Layout from '../../components/layout';
         paths,
         fallback: false,
     };
-}*/
+}
 
 /*
  * For each URL path returned above, this returns props that are processed by the layout component
- * This includes MDX compiled to the serializable JavaScript format
- * https://mdxjs.com/guides/mdx-on-demand
  */
-/*export async function getStaticProps({params}: any): Promise<any> {
+export async function getStaticProps({params}: any): Promise<any> {
     
-    const mdx = await import(`../../posts/${params.id}.mdx`);
-    const js = await compile(mdx, {
-        outputFormat: 'function-body',
-    });
-
     return {
         props: {
             filename: params.id,
-            js,
+            js: await compileMdx(params.id),
         },
     };
-}*/
+}
 
 /*
  * Run the main layout for the filename

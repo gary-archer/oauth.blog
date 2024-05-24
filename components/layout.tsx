@@ -1,23 +1,20 @@
-import {run} from '@mdx-js/mdx'
-import provider from '@mdx-js/react'
 import Head from 'next/head';
 import Link from 'next/link';
 import {useRouter} from 'next/router'
 import {useEffect, useRef, useState} from 'react';
-import runtime from 'react/jsx-runtime';
 import {addCopyToClipboardButtons} from './codeProcessor';
 import Navbar from './navbar';
-import { MDXComponents } from 'mdx/types';
+import {runMdx} from './mdxRunner';
 
 /*
  * Process the layout for a filename that points to an MDX file
  */
 export default function Layout(props: any): JSX.Element {
 
-    const rootRef = useRef<HTMLDivElement>(null);
-    const scrollPositions = useRef<{[file: string]: number}>({});
-    const router = useRouter();
     const [mdxContent, setMdxContent] = useState(null);
+    const rootRef = useRef<HTMLDivElement>(null);
+    const router = useRouter();
+    const scrollPositions = useRef<{[file: string]: number}>({});
 
     useEffect(() => {
         startup();
@@ -25,22 +22,14 @@ export default function Layout(props: any): JSX.Element {
     }, [props.filename]);
 
     /*
-     * Get JavaScript into a renderable component using MDX on demand, then run some logic after rendering
-     * https://mdxjs.com/guides/mdx-on-demand
+     * Get JavaScript into a renderable component, then run some initialization after rendering
      */
     async function startup() {
-        router.events.on('routeChangeStart', storeScrollPos);
-        const module = await run(props.js, {...runtime});
-        setMdxContent(module);
-        setTimeout(onRendered, 50);
-    }
 
-    function useMDXComponents(components: MDXComponents): MDXComponents {
-  
-        return {
-            Link,
-            ...components,
-        };
+        router.events.on('routeChangeStart', storeScrollPos);
+        setMdxContent(await runMdx(props.js));
+        addCopyToClipboardButtons(rootRef);
+        restoreScrollPos();
     }
 
     /*
@@ -68,18 +57,6 @@ export default function Layout(props: any): JSX.Element {
                 behavior: 'auto',
             });
         }
-    }
-
-    /*
-     * Run some operations once a page has rendered
-     */
-    function onRendered() {
-        
-        // Render copy buttons for prism text
-        addCopyToClipboardButtons(rootRef);
-
-        // Restore the previous scroll position
-        restoreScrollPos();
     }
 
     /*
