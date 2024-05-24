@@ -12,7 +12,7 @@ expressApp.use('/*', (request, response, next) => {
 
     // Add security headers
     let policy = "default-src 'none';";
-    policy += " script-src 'self' 'unsafe-eval';";
+    policy += " script-src 'self';";
     policy += " connect-src 'self';";
     policy += " child-src 'self';";
     policy += " img-src 'self';";

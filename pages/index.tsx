@@ -1,5 +1,4 @@
 import {GetStaticPropsResult} from 'next';
-import {compileMdx} from '../utilities/mdxCompiler';
 import {PostProps} from '../utilities/postProps';
 import {ClientView} from '../views/clientview';
 
@@ -11,7 +10,6 @@ export async function getStaticProps(): Promise<GetStaticPropsResult<PostProps>>
     return {
         props: {
             filename: 'home',
-            js: await compileMdx('home'),
         },
     };
 }

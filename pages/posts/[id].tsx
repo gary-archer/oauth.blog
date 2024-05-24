@@ -2,7 +2,6 @@ import fs from 'fs-extra';
 import {GetStaticPathsResult, GetStaticPropsContext, GetStaticPropsResult} from 'next';
 import path from 'path';
 import {ClientView} from '../../views/clientview';
-import {compileMdx} from '../../utilities/mdxCompiler';
 import {PostProps} from '../../utilities/postProps';
 
 /*
@@ -33,7 +32,6 @@ export async function getStaticProps(context: GetStaticPropsContext): Promise<Ge
     return {
         props: {
             filename: id,
-            js: await compileMdx(id),
         },
     };
 }

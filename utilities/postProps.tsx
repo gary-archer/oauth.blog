@@ -3,5 +3,4 @@
  */
 export interface PostProps {
     filename: string;
-    js: Uint8Array | string;
 }

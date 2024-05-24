@@ -1,9 +1,9 @@
+import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import Link from 'next/link';
 import {useRouter} from 'next/router'
 import {useEffect, useRef, useState} from 'react';
 import {addCopyToClipboardButtons} from '../utilities/codeProcessor';
-import {runMdx} from '../utilities/mdxRunner';
 import {PostProps} from '../utilities/postProps';
 import Navbar from './navbar';
 
@@ -12,10 +12,10 @@ import Navbar from './navbar';
  */
 export function ClientView(props: PostProps): JSX.Element {
 
-    const [mdxContent, setMdxContent] = useState(null);
     const rootRef = useRef<HTMLDivElement>(null);
-    const router = useRouter();
     const scrollPositions = useRef<{[file: string]: number}>({});
+    const router = useRouter();
+    let [showNavBar, setShowNavBar] = useState(false);
 
     useEffect(() => {
         startup();
@@ -26,10 +26,8 @@ export function ClientView(props: PostProps): JSX.Element {
      * Get JavaScript into a renderable component, then run some initialization after rendering
      */
     async function startup() {
-
+        setShowNavBar(false);
         router.events.on('routeChangeStart', storeScrollPos);
-        setMdxContent(await runMdx(props.js));
-        setTimeout(onRendered, 50);
     }
 
     /*
@@ -39,20 +37,6 @@ export function ClientView(props: PostProps): JSX.Element {
         router.events.off('routeChangeStart', storeScrollPos);
     }
 
-    /*
-     * Run some operations once a page has rendered
-     */
-    function onRendered() {
-
-        // Render copy buttons for prism text
-        addCopyToClipboardButtons(rootRef);
-
-        // Restore the previous scroll position
-        restoreScrollPos();
-
-        // Restore the previous scroll position
-        restoreScrollPos();
-    }
 
     /*
      * Store the scroll position when moving to a new page
@@ -75,6 +59,29 @@ export function ClientView(props: PostProps): JSX.Element {
     }
 
     /*
+     * Run some operations once a page has rendered
+     */
+    function onRendered() {
+
+        // Show the navbar 
+        setShowNavBar(true);
+
+        // Render copy buttons for prism text
+        addCopyToClipboardButtons(rootRef);
+
+        // Restore the previous scroll position
+        restoreScrollPos();
+    }
+
+    /*
+     * Load MDX, allow 50 milliseconds for it to render, then run some logic
+    */
+    const MdxContent = dynamic(() => import(`../posts/${props.filename}.mdx`).then((result) => {
+        setTimeout(onRendered, 50);
+        return result;
+    }));
+
+    /*
      * Render the page
      */
     const siteTitle = 'APIs and Clients End-to-End';
@@ -92,12 +99,10 @@ export function ClientView(props: PostProps): JSX.Element {
                 <p className='subHeadingText'>Designs and Code Samples</p>
             </header>
             <main>
-                {mdxContent && 
-                    <article className='article'>
-                        <mdxContent.default components={Link} />
-                        <Navbar />
-                    </article>
-                }
+                <article className='article'>
+                    <MdxContent />
+                    {showNavBar && <Navbar />}
+                </article>
             </main>
         </div>
     );
