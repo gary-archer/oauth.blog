@@ -23,7 +23,7 @@ export function ClientView(props: PostProps): JSX.Element {
     }, [props.filename]);
 
     /*
-     * Get JavaScript into a renderable component, then run some initialization after rendering
+     * Set initial state and subscribe to events
      */
     async function startup() {
         setShowNavBar(false);
@@ -66,7 +66,7 @@ export function ClientView(props: PostProps): JSX.Element {
         // Show the navbar 
         setShowNavBar(true);
 
-        // Render copy buttons for prism text
+        // Render copy buttons for prism code snippets
         addCopyToClipboardButtons(rootRef);
 
         // Restore the previous scroll position
@@ -74,9 +74,9 @@ export function ClientView(props: PostProps): JSX.Element {
     }
 
     /*
-     * Load MDX, allow 50 milliseconds for it to render, then run some logic
-    */
-    const MdxContent = dynamic(() => import(`../posts/${props.filename}.mdx`).then((result) => {
+     * Load MDX, allow 50 milliseconds for it to render, then run post rendering logic
+     */
+    const MdxContent = dynamic(() => import(`../../posts/${props.filename}.mdx`).then((result) => {
         setTimeout(onRendered, 50);
         return result;
     }));

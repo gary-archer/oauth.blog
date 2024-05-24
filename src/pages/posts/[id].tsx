@@ -24,7 +24,7 @@ export async function getStaticPaths(): Promise<GetStaticPathsResult> {
 }
 
 /*
- * Return details for one of the blog's page when 'next build' is run
+ * Return details for the current page when 'next build' is run
  */
 export async function getStaticProps(context: GetStaticPropsContext): Promise<GetStaticPropsResult<PostProps>> {
   
@@ -37,7 +37,7 @@ export async function getStaticProps(context: GetStaticPropsContext): Promise<Ge
 }
 
 /*
- * Run the client view
+ * Run the client view for the current page
  */
 export default function Post(props: PostProps): JSX.Element {
 
