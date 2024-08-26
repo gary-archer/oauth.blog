@@ -1,0 +1,365 @@
+# API Journey – Server Side
+
+Previously we summarised this blog’s <Link href='/posts/api-platform-design'>API Platform Overview</Link>. Next we will take a closer look into some desired technical behaviours for APIs, as implemented by this blog’s final API code samples:
+
+- <Link href='/posts/api-architecture-node/'>Final Node.js API</Link>
+- <Link href='/posts/net-core-code-sample-overview'>Final .NET API</Link>
+- <Link href='/posts/java-spring-boot-api-overview'>Final Java API</Link>
+
+### Configuration
+
+APIs start by loading their configuration, which includes OAuth settings needed to ensure JWT security best practices when validating access tokens:
+
+```json
+{
+  "oauth": {
+    "issuer":                       "https://login.authsamples-dev.com",
+    "audience":                     "api.authsamples.com",
+    "scope":                        "investments",
+    "jwksEndpoint":                 "https://login.authsamples-dev.com:447/.well-known/jwks.json",
+    "claimsCacheTimeToLiveMinutes": 15
+  }
+}
+```
+
+### Dependencies
+
+APIs often follow a dependency injection based model and register instances and lifetimes when the API starts up:
+
+```typescript
+public static registerDependencies(container: Container): void {
+
+    container.bind<UserInfoController>(SAMPLETYPES.UserInfoController)
+        .to(UserInfoController).inRequestScope();
+    container.bind<CompanyController>(SAMPLETYPES.CompanyController)
+        .to(CompanyController).inRequestScope();
+
+    container.bind<CompanyService>(SAMPLETYPES.CompanyService)
+        .to(CompanyService).inTransientScope();
+    container.bind<CompanyRepository>(SAMPLETYPES.CompanyRepository)
+        .to(CompanyRepository).inTransientScope();
+    container.bind<UserRepository>(SAMPLETYPES.UserRepository)
+        .to(UserRepository).inTransientScope();
+    container.bind<JsonFileReader>(SAMPLETYPES.JsonFileReader)
+        .to(JsonFileReader).inTransientScope();
+}
+```
+
+When working with small dependency graphs I prefer request scoped lifetimes for controller classes, or transient lifetimes for non HTTP classes. This ensures that requests cannot interfere with each other, if for example one of these classes is coded in a non-thread-safe manner.
+
+### Middleware
+
+Singleton middleware classes are also created, for tasks such as OAuth authorization, logging and exception handling:
+
+```typescript
+export class UnhandledExceptionHandler {
+
+    public handleException(exception: any, request: Request, response: Response, next: NextFunction): void {
+        ...
+    }
+}
+```
+
+### Entry Points
+
+Entry points to API operations are usually expressed declaratively, such as defining the path and method for a REST API:
+
+```typescript
+@controller('/companies')
+export class CompanyController extends BaseHttpController {
+
+    private readonly _service: CompanyService;
+
+    public constructor(@inject(SAMPLETYPES.CompanyService) service: CompanyService) {
+        super();
+        this._service = service;
+    }
+
+    @httpGet('/:id/transactions')
+    public async getCompanyTransactions(@requestParam('id') id: string): Promise<CompanyTransactions> {
+        return this._service.getCompanyTransactions(id);
+    }
+}
+```
+### Async for High Throughput
+
+Most APIs spend the vast majority of the time for an API request  waiting on completion of asynchronous I/O events, most commonly:
+
+- Database access
+- Calls to other APIs
+
+This blog’s APIs use modern and standard *async await* code to ensure that each thread can process additional API calls during the first request’s I/O completion. In multi threaded languages this looks like this:
+
+![throughput](/images/260/throughput.jpg)
+
+### Zero Trust API Security
+
+This blog’s API code samples receive the following format of access token, which includes custom claims for *manager_id* and *role*:
+
+```json
+{
+  "iss": "https://login.authsamples-dev.com",
+  "aud": "api.authsamples.com",
+  "scope": "openid profile investments",
+  "sub": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "manager_id": "10345",
+  "role": "user",
+  "exp": 1715630456.455
+}
+```
+
+The API validates a JWT access token on every request, after which the token claims can be trusted:
+
+```typescript
+public async validateAccessToken(accessToken: string): JwtClaims {
+
+    const options = {
+        algorithms: ['RS256'],
+        issuer: this._configuration.issuer,
+        options.audience = this._configuration.audience;
+    } as JWTVerifyOptions;
+
+    const result = await jwtVerify(accessToken, this._jwksRetriever.remoteJWKSet, options);
+    return  result.payload;
+}
+```
+
+### Portable OAuth Implementation
+
+The OAuth behaviour in APIs is portable and does not depend on any specific authorization server. I ensure this by using a JOSE library, which provides the best options for working with JWTs and their signing keys:
+
+| Technology | JOSE Library |
+| ---------- | ------------ |
+| <span style={{color:'green'}}>**Node.js**</span> | [jose](https://github.com/panva/jose) |
+| <span style={{color:'green'}}>**jose4j**</span> | [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) |
+| <span style={{color:'green'}}>**.NET**</span> | [jose-jwt](https://github.com/dvsekhvalnov/jose-jwt) |
+
+### APIs Use Extensible Claims
+
+The API must then collect claims used for business authorization. This code often requires more data than just the token claims, in order to enforce  finer grained business permissions.
+
+There are various ways in which this can be managed. In this blog I do so by extending the OAuth middleware to handle looking up extra authorization values, as described in the <Link href='/posts/api-authorization-design'>API Authorization Behaviour</Link> blog post.
+
+```typescript
+export class ClaimsPrincipal {
+    public jwtClaims: JWTPayload;
+    public extraClaims: ExtraClaims;
+}
+```
+
+The API uses the following user attributes:
+
+| User Attribute | Represents |
+| -------------- | ---------- |
+| <span style={{color:'green'}}>**Scope**</span> | The main scope in the client’s access token is called ‘investments‘ to represent the app’s business area. |
+| <span style={{color:'green'}}>**Manager ID**</span> | The API receives its business user identity in access tokens sent by the client, though the UI does not use this value. |
+| <span style={{color:'green'}}>**Role**</span> | This is used for API authorization, and grants the admin role access to all regions. The role is stored in identity data and is issued to access tokens. |
+| <span style={{color:'green'}}>**Regions**</span> | This is used for API authorization, and only allows other users access to their region(s). It is meant to represent a finer grained business permission not issued to the access token. |
+| <span style={{color:'green'}}>**Name**</span> | The UI downloads data from the OAuth user info endpoint, then displays the *given_name* and *family_name* fields. |
+| <span style={{color:'green'}}>**Title**</span> | In the example, the user title is also stored outside the identity data. The UI displays this and the user’s regions in a tooltip. Both are downloaded from an API user info endpoint. |
+
+### APIs Authorize Access to Data
+
+Once all authorization data is available, it is injected into logic classes. Again there are multiple ways in which this might be done. The data needed to support correct API authorization should be readily available.
+
+```typescript
+@injectable()
+export class CompanyService {
+
+    private readonly _repository: CompanyRepository;
+    private readonly _claims: SampleClaimsPrincipal;
+
+    public constructor(
+        @inject(SAMPLETYPES.CompanyRepository) repository: CompanyRepository,
+        @inject(BASETYPES.ClaimsPrincipal) claims: ClaimsPrincipal) {
+
+        this._repository = repository;
+        this._claims = claims as SampleClaimsPrincipal;
+    }
+
+    public async getCompanyTransactions(companyId: number): Promise<CompanyTransactions> {
+
+        const data = await this._repository.getCompanyTransactions(companyId);
+
+        if (!data || !this._isUserAuthorizedForCompany(data.company)) {
+            throw this._unauthorizedError(companyId);
+        }
+
+        return data;
+    }
+}
+```
+
+Note that the claims principal is a natural request scoped object, so there could be other ways to inject it, though I think constructor injection results in the cleanest code. This is one of my motivations for avoiding singletons for service logic classes.
+
+### Testable OAuth Implementation
+
+OAuth API security should be tested frequently as part of a secure API development lifecycle. This blog’s API tests <Link href='/posts/api-automated-tests'>mock the authorization server</Link>, to enable the following type of test to be run on a development computer. The same JWT library is used during testing, to issue mock access tokens:
+
+```typescript
+describe('OAuth API Tests', () => {
+
+    before( async () => {
+        await authorizationServer.start();
+    });
+
+    after( async () => {
+        await authorizationServer.stop();
+    });
+    
+    it ('Call API returns 403 for invalid scope', async () => {
+
+        const jwtOptions = new MockTokenOptions();
+        jwtOptions.useStandardUser();
+        jwtOptions.scope = 'openid profile';
+        const accessToken = await authorizationServer.issueAccessToken(jwtOptions);
+
+        const options = new ApiRequestOptions(accessToken);
+        const response = await apiClient.getCompanyList(options);
+
+        assert.strictEqual(response.statusCode, 403, 'Unexpected HTTP status code');
+        assert.strictEqual(response.body.code, 'insufficient_scope', 'Unexpected error code');
+    });
+}
+```
+
+### API Returns Friendly Errors to Clients
+
+One of the reasons why I use a JOSE library is to take finer control of error responses for clients. For most API errors I return a `code` and `message`, and use the same format for OAuth errors:
+
+```json
+{
+  "code": "invalid_token",
+  "message": "Missing, invalid or expired access token"
+}
+```
+
+For 500 errors where there has been a server error, the API returns additional information to support error displays. This helps to enable fast problem resolution by support engineers:
+
+```json
+{
+  "code": "exception_simulation",
+  "message": "An unexpected exception occurred in the API",
+  "id": 79072,
+  "area": "SampleApi",
+  "utcTime": "2022-07-24T10:28:00.438Z"
+```
+
+### API Writes Queryable Logs
+
+API logs are structured and designed to be queried, so that the first error above would result in a log entry similar to this:
+
+```json
+{
+  "id": "7af62b06-8c04-41b0-c428-de332436d52a",
+  "utcTime": "2022-07-24T10:27:33.468Z",
+  "apiName": "SampleApi",
+  "operationName": "getCompanyTransactions",
+  "hostName": "MACSTATION.local",
+  "method": "GET",
+  "path": "/investments/companies/2/transactions",
+  "resourceId": "2",
+  "clientApplicationName": "FinalSPA",
+  "statusCode": 401,
+  "errorCode": "invalid_token",
+  "millisecondsTaken": 2,
+  "millisecondsThreshold": 500,
+  "correlationId": "15b030a2-c67d-01ae-7c3f-237b9a70dbba",
+  "sessionId": "77136323-ec8c-dce2-147a-bc52f34cb7cd",
+  "errorData": {
+    "statusCode": 401,
+    "clientError": {
+      "code": "invalid_token",
+      "message": "Missing, invalid or expired access token"
+    },
+    "context": "JWT verification failed : signature verification failed"
+  }
+}
+```
+
+The second error above would write a log entry that includes the client error ID, representing the exact error occurrence. This enables fast error lookup, where the cause should be captured by the stack trace and other details. Developers should rehearse such incidents to ensure that this works well.
+
+```json
+{
+  "id": "b36701c9-ddf2-d7da-df48-4dfcc918009b",
+  "utcTime": "2022-07-24T10:28:00.435Z",
+  "apiName": "SampleApi",
+  "operationName": "getCompanyTransactions",
+  "hostName": "MACSTATION.local",
+  "method": "GET",
+  "path": "/investments/companies/2/transactions",
+  "resourceId": "2",
+  "clientApplicationName": "FinalSPA",
+  "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "statusCode": 500,
+  "errorCode": "exception_simulation",
+  "errorId": 79072,
+  "millisecondsTaken": 9,
+  "millisecondsThreshold": 500,
+  "correlationId": "5f1f1bcb-79c4-00ee-a1fe-be5e4262eb75",
+  "sessionId": "77136323-ec8c-dce2-147a-bc52f34cb7cd",
+  "errorData": {
+    "statusCode": 500,
+    "clientError": {
+      "code": "exception_simulation",
+      "message": "An unexpected exception occurred in the API",
+      "id": 79072,
+      "area": "SampleApi",
+      "utcTime": "2022-07-24T10:28:00.438Z"
+    },
+    "serviceError": {
+      "details": "",
+      "stack": [
+        "Error: An unexpected exception occurred in the API",
+        "at Function.createServerError (/Users/gary/dev/oauth.apisample.nodejs/src/plumbing/errors/errorFactory.ts:16:16)",
+        "at CustomHeaderMiddleware.processHeaders (/Users/gary/dev/oauth.apisample.nodejs/src/plumbing/middleware/customHeaderMiddleware.ts:27:36)",
+        "at Layer.handle [as handle_request] (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/layer.js:95:5)",
+        "at trim_prefix (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:328:13)",
+        "at /Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:286:9",
+        "at param (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:365:14)",
+        "at param (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:376:14)",
+        "at Function.process_params (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:421:3)",
+        "at next (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:280:10)",
+        "at ClaimsCachingAuthorizer.authorizeRequestAndGetClaims (/Users/gary/dev/oauth.apisample.nodejs/src/plumbing/security/baseAuthorizer.ts:62:13)"
+      ]
+    }
+  }
+}
+```
+
+The logs enable many useful <Link href='/posts/api-technical-support-analysis'>technical support queries for people</Link>, to measure errors or slowness. For example, a breakdown of errors by their type is easily produced, for the last 2 weeks of activity in a test system. This enables any reliability issues to be ironed out, as part of quality processes.
+
+### API Responsibilities are Separated
+
+This blog’s final APIs are coded in multiple technologies. The code is largely identical regardless of programming language, since all implementations provide the same API:
+
+- <Link href='/posts/api-architecture-node'>Node.js Final API</Link>
+- <Link href='/posts/net-core-code-sample-overview'>.NET Final API</Link>
+- <Link href='/posts/java-spring-boot-api-overview'>Java Final API</Link>
+
+In order to provide the behaviours articulated on this page, some plumbing code is needed. A folder structure is used that starts by classifying each class as *host*, *logic* or *plumbing*:
+
+<div className="smallimage">
+![api code layout](/images/260/api-code-layout.jpg)
+</div>
+
+The goal in a real company would be to grow the API logic. It should be possible to externalize some of the plumbing to one or more shared libraries, so that the API’s code is mostly business focused.
+
+### Developers Run a Productive Setup
+
+The API development setup enables the developer to work on the API in isolation, which is the option that works best most of the time. When required, end-to-end setups are also supported, which can include running other components, such as a web client and API gateway.
+
+![spa and api](/images/260/spa-and-api.jpg)
+
+The API development URLs use SSL with realistic domain names. This best enables deployment related thinking during development. I avoid URLs such as *http://localhost:3000* for most development.
+
+### Where Are We?
+
+This post has summarised a non-functional journey for APIs whose complexity is not caused by OAuth. The same intricacies would exist if any other security framework was used.
+
+In this blog,  the difficult areas are dealt with as early as possible in the software pipeline, on a development computer. Doing so should improve quality and result in more predictable business delivery.
+
+### Next
+
+- Next we will take an equivalent look at <Link href='/posts/api-journey-client-side'>API Journey – Client Side</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

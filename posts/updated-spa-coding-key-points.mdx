@@ -1,0 +1,255 @@
+# Updated SPA – Coding Key Points
+
+In our previous post we described the behaviour of our <Link href='/posts/improved-spa-code-sample-overview'>Updated SPA and API Code Sample</Link>. Next we will look at the key changes to the SPA code.
+
+### SPA OAuth Configuration Changes
+
+Additional settings from the oidc-client-ts library have been used, to add the following features to the SPA:
+
+- In-memory token storage
+- Silent token renewal via Iframes
+- Logout
+
+The authenticator class therefore uses additional oidc-client-ts settings:
+
+```typescript
+public constructor(configuration: OAuthConfiguration) {
+
+    this._configuration = configuration;
+    const settings = {
+
+        authority: configuration.authority,
+        client_id: configuration.clientId,
+        redirect_uri: configuration.redirectUri,
+        scope: configuration.scope,
+        response_type: 'code',
+        userStore: new WebStorageStateStore({ store: new InMemoryWebStorage() }),
+        stateStore: new WebStorageStateStore({ store: sessionStorage }),
+
+        silent_redirect_uri: configuration.redirectUri,
+        automaticSilentRenew: false,
+        loadUserInfo: false,
+        post_logout_redirect_uri: configuration.postLogoutRedirectUri,
+    };
+
+    this._userManager = new UserManager(settings);
+}
+```
+
+### Enabling IFrame Renewal
+
+The final SPA uses a couple of security behaviours that are no longer recommended:
+
+| Behaviour | Description |
+| --------- | ----------- |
+| <span style={{color:'red'}}>Refresh Tokens</span> | AWS Cognito returns refresh tokens to the browser, which should be avoided when using this flow |
+| <span style={{color:'red'}}>Access Tokens</span> | These days you should also avoid returning access tokens to the browser due to XSS threats |
+
+In addition, when AWS Cognito is used as the authorization server, it has reliability problems that prevent iframe token renewal from working. In order to provide a basically working solution, the SPA uses the refresh token to renew access tokens when the provider is AWS Cognito. Since the refresh token is stored in memory, it is discarded and there is a full window redirect whenever the browser page is reloaded.
+
+To activate iframe based token renewal, simply set a different provider name in the SPA’s configuration file. Then run options such as refreshing the browser page to understand the problems:
+
+```json
+{
+    "app": {
+        "apiBaseUrl":             "https://api.authsamples-dev.com/api"
+    },
+    "oauth": {
+        "provider":               "cognito",
+        "authority":              "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+        "clientId":               "hje94a2jj3lgkobkh57ikenhh",
+        "redirectUri":            "https://www.authsamples-dev.com/spa",
+        "postLogoutRedirectUri":  "https://www.authsamples-dev.com/spa/loggedout.html",
+        "scope":                  "openid profile https://api.authsamples.com/investments",
+        "customLogoutEndpoint":   "https://login.authsamples.com/logout"
+    }
+}
+```
+
+Yet the code sample is intended to demonstrate iframe based token renewal and behaves this way if points to an authorization server that supports the correct behaviour. Therefore the key points of its implementation are therefore described next.
+
+### Silent Token Renewal Implementation
+
+A minimal iframe application performs the job of receiving iframe silent token renewal responses, so the entry point *index.ts* file now looks like this, to detect whether a frame or the main SPA are executing:
+
+```typescript
+if (window.top === window.self) {
+
+    const app = new App();
+    app.execute();
+
+} else {
+
+    const app = new IFrameApp();
+    app.execute();
+}
+```
+
+Silent renewal is initiated from the main window, and the oidc-client-ts library spins up an iframe and runs an authorization code flow (PKCE) redirect on it, using the OpenID Connect *prompt=none* parameter:
+
+```typescript
+private async _performAccessTokenRenewalViaIframeRedirect(): Promise<void> {
+
+    try {
+
+        await this._userManager.signinSilent();
+
+    } catch (e: any) {
+
+        if (e.error === ErrorCodes.loginRequired) {
+
+            await this._userManager.removeUser();
+
+        } else {
+
+            throw ErrorFactory.getFromTokenError(e, ErrorCodes.tokenRenewalError);
+        }
+    }
+}
+```
+
+On success a response URL of the following form is received, containing the authorization code:
+
+- *https://www.authsamples-dev.com/spa?code=xxx&state=yyy*
+
+The below code then runs in the minimal iframe app to send the response URL to the SPA’s main window, which then deals with exchanging the code for tokens and storing results:
+
+```typescript
+export class IFrameApp {
+
+    public async execute(): Promise<void> {
+
+        try {
+
+            const args = new URLSearchParams(location.search);
+            const state = args.get('state');
+            if (state) {
+
+                const configuration = await ConfigurationLoader.download('spa.config.json');
+                const settings = {
+                    authority: configuration.oauth.authority,
+                    client_id: configuration.oauth.clientId,
+                    redirect_uri: configuration.oauth.redirectUri,
+                };
+
+                const userManager = new UserManager(settings);
+                await userManager.signinSilentCallback();
+            }
+
+        } catch (e: any) {
+
+            const uiError = ErrorFactory.getFromTokenError(e, ErrorCodes.tokenRenewalError);
+            ErrorConsoleReporter.output(uiError);
+        }
+    }
+}
+```
+
+### Security Library Behaviour
+
+The oidc-client-ts library uses the [PostMessage API](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) to send the authorization response URL from the iframe to the main window. You can use code such as this to intercept the posted message and view the data:
+
+```typescript
+window.addEventListener('message', (evt) => {
+  console.log(evt);
+});
+```
+
+The main window then exchanges the code for tokens, using the PKCE *code_verifier* that was saved to session storage before the iframe redirect. You can view the oidc-client-ts library’s logging output, including validation of received tokens. To do so, append *#log=debug* to the SPA URL, and also ensure that the browser console tools use the *Preserve Log* and *All Levels* options:
+
+![oidc browser logs](/images/180/oidc-browser-logs.jpg?v=20240813)
+
+### SPA Basic Logout
+
+OpenID Connect RP initiated logout is trivial to implement, and our configuration instructs the oidc-client-ts library to return to the SPA’s post logout location afterwards:
+
+```typescript
+private async _startLogout(): Promise<void> {
+
+    try {
+
+        if (this._configuration.provider === 'cognito') {
+
+            await this._userManager.removeUser();
+            location.replace(this._getCognitoEndSessionRequestUrl());
+
+        } else {
+
+            await this._userManager.signoutRedirect();
+        }
+
+        HtmlStorageHelper.isLoggedIn = false;
+        HtmlStorageHelper.multiTabLogout = true;
+}
+```
+
+Some special handling is required for AWS Cognito, which requires a vendor specific end session request message.
+
+### SPA Multi Tab Logout
+
+The sample also supports multi-tab logout, as described in our earlier <Link href='/posts/logout'>Logout</Link> post. Rather than using OAuth iframe mechanisms that use the SSO session cookie, the SPA simply watches an *isLoggedOut* boolean flag in local storage, using the [Browser Storage API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API):
+
+```typescript
+private _onStorageChange(event: StorageEvent): void {
+
+    if (HtmlStorageHelper.isLoggedOutEvent(event)) {
+
+        this._authenticator!.onExternalLogout();
+        location.hash = '#loggedout';
+    }
+}
+```
+
+If a user is running multiple tabs and signs out on one of them, the above code will then run in all other tabs, each of which will simply remove its tokens and redirect the user to the logged out view:
+
+```typescript
+public async onExternalLogout(): Promise<void> {
+
+    await this._userManager.removeUser();
+    HtmlStorageHelper.isLoggedIn = false;
+}
+```
+
+### SPA Calls API to get User Info
+
+Finally, the SPA gets name details from the AWS Cognito user info endpoint, and some secondary user attributes from the API, then displays both together in the top right of the view:
+
+```typescript
+public async load(authenticator: Authenticator, apiClient: ApiClient): Promise<void> {
+
+    const oauthUserInfo = await authenticator.getUserInfo();
+    const apiUserInfo = await apiClient.getUserInfo();
+
+    if (oauthUserInfo && apiUserInfo) {
+
+        const viewModel = {
+            userName: this.getUserNameForDisplay(oauthUserInfo),
+            title: this.getUserTitle(apiUserInfo),
+            regions: this.getUserRegions(apiUserInfo),
+        };
+
+        const htmlTemplate =
+            `<div class='text-end mx-auto'>
+                <div class='fw-bold basictooltip'>{{userName}}
+                    <div class='basictooltiptext'>
+                        <small>{{title}}</small>
+                        <br />
+                        <small>{{regions}}</small>
+                    </div>
+                </div>
+            </div>`;
+
+        const html = mustache.render(htmlTemplate, viewModel);
+        DomUtils.html('#username', html);
+    }
+}
+```
+
+### Where Are We?
+
+We have completed coding of the traditional SPA flow, where access tokens are stored in memory in the browser, and the SSO session cookie is used to silently renew short lived access tokens when they expire.
+
+### Next
+
+- Next we will take an equivalent look to the <Link href='/posts/updated-api-coding-key-points'>API Coding Key Points</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

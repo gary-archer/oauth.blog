@@ -1,0 +1,74 @@
+# API Platform Overview
+
+Previously I completed this blog’s SPA theme with a <Link href='/posts/reactjs-codingkeypoints'>Final SPA Code Overview</Link>. Next, I summarise a handful of the most important technical behaviours for a platform of many APIs in an OAuth architecture.
+
+### API Technical Goals
+
+There are many technical goals you might articulate for an API platform. In this post I focus only on the following qualities:
+
+| Behaviour | Description |
+| --------- | ----------- |
+| <span style={{color:'green'}}>**Productive**</span> | The overall design reduces complexity and encourages a business focus for most API work. |
+| <span style={{color:'green'}}>**Secure**</span> | APIs implement security in the same way for requests from any type of client, with low-level security externalised. |
+| <span style={{color:'green'}}>**Supportable**</span> | Errors or slowness can be diagnosed quickly in most cases, due to solid logging and error handling designs. |
+| <span style={{color:'green'}}>**Scalable**</span> | Design patterns can scale across many APIs, clients and development teams. |
+
+### Key Components
+
+The application-level flows in this blog use the following main components. Web and mobile clients call APIs, which are hosted behind an API gateway:
+
+![api platform](/images/250/platform.jpg)
+
+A gateway is used to handle any client specific security differences. This blog’s final SPA calls a gateway entry point that handles web-specific security, including [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), [CSRF](https://owasp.org/www-community/attacks/csrf) and converting from secure cookies to JWT access tokens. This keeps such code out of APIs, so that APIs only ever need to implement JWT validation and claims-based authorization.  This reduces complexity and scales well.
+
+### Scalable API Security
+
+Each API should perform the following steps to securely handle incoming requests. You can then expose any API endpoint to the internet, to maximise business value:
+
+- <Link href='/posts/jwt-access-token-validation'>JWT Access Token Validation</Link>
+- <Link href='/posts/api-authorization-design'>Claims Based Authorization</Link>
+
+The API security architecture is scalable if you can add more clients and APIs without adding overall complexity. In OAuth, you need to scale your use of *scopes and claims* and avoid manageability problems.
+
+APIs should also call each other securely, using either synchronous or asynchronous requests. In either case it is desirable to flow the user identity and other claims in a verifiable way, by sharing a JWT access token. OAuth gives you design patterns to help enable this.
+
+### Authorization Server
+
+This is the key security component, and you should choose one that provides the following capabilities:
+
+| Capabilities | Description |
+| ------------ | ----------- |
+| <span style={{color:'green'}}>**Support for Standards**</span> | There should be up-to-date support for many security standards, which map to your use cases. This includes many authentication methods. |
+| <span style={{color:'green'}}>**Extensibility**</span> | It must be possible to take control over core behaviours and user attributes, so that you can authenticate users in your preferred ways and then issue your preferred access tokens. |
+| <span style={{color:'green'}}>**Reliability**</span> | The authorization server is a critical component. It should therefore align with your API deployments and have good troubleshooting support to enable fast incident resolution. |
+
+### Observability
+
+Since OAuth is a distributed architecture, you need solid approaches to logging, error handling and technical support. You then have confidence that the system runs reliably. Therefore this blog takes particular care over the following areas, using third-party components that provide the best visibility:
+
+- <Link href='/posts/effective-api-logging'>Effective API Logging</Link>
+- <Link href='/posts/error-handling-and-supportability'>Error Handling and Supportability</Link>
+- <Link href='/posts/api-technical-support-analysis'>Technical Support Analysis</Link>
+
+### Final APIs
+
+I provide 3 final REST APIs whose code is almost identical. Each API uses both *core identity user attributes* and *volatile business user attributes*, so that each API could evolve its use of claims in future. The APIs also implement the above observability behaviours.
+
+- <Link href='/posts/api-architecture-node'>Node.js API</Link>
+- <Link href='/posts/net-core-code-sample-overview'>.NET API</Link>
+- <Link href='/posts/java-spring-boot-api-overview'>Java API</Link>
+
+### Cloud Hosting
+
+This blog uses portable design patterns that work for any type of deployment. I use <Link href='/posts/cloud-hosting'>Serverless Hosting</Link> for some deployed API components, to minimise my personal hosting costs. Yet the final APIs are cloud native and can run in platforms like Kubernetes, where you can use best-of-breed supporting components for APIs.
+
+In all cases though, I use different hosting for the web and API sides of the architecture. The web side of the architecture is only static content and is deployed to many global locations by a low cost content delivery network. The API side of the architecture is more intricate so I prefer to run it wherever the API supporting components provide the best capabilities.
+
+### Where Are We?
+
+I have summarised some foundations to aim for when designing a modern API platform. In this blog’s second theme I demonstrate some techniques for meeting my API requirements.
+
+### Next
+
+- I summarize an <Link href='/posts/api-journey-server-side'>API Journey – Server Side</Link>.
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.

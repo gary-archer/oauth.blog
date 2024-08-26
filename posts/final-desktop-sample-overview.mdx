@@ -1,0 +1,241 @@
+# Final Desktop App – Overview
+
+Previously we covered <Link href='/posts/desktop-app-coding-key-points'>Coding Key Points</Link> for our initial desktop app. Next we will add some missing features to complete session management, harden security, and improve usability. The desktop app connects to <Link href='/posts/cloud-hosting'>HTTPS endpoints hosted in AWS</Link>, so that you only need to run the desktop app's code to get a fully integrated solution.
+
+### New Features
+
+The completed desktop code sample will demonstrate these main features:
+
+| Feature | Description |
+| ------- | ----------- |
+| <span style={{color:'green'}}>**React Update**</span> | We will update from plain TypeScript to a more complete frontend technology stack |
+| <span style={{color:'green'}}>**Deep Linking**</span> | Login responses will be returned as deep links, on private URI scheme based redirect URIs |
+| <span style={{color:'green'}}>**Secure Token Storage**</span> | We will persist OAuth tokens using operating system encryption private to the app and user |
+| <span style={{color:'green'}}>**Security Improvements**</span> | We will follow Electron security best practice by removing Node integration |
+
+### Code Download
+
+The code for our final desktop app can be downloaded from [here](https://github.com/gary-archer/oauth.desktopsample.final):
+
+```bash
+git clone https://github.com/gary-archer/oauth.desktopsample.final
+```
+
+![repo](/images/440/repo.jpg)
+
+### How to Run the Sample
+
+The instructions are almost identical to those for the <Link href='/posts/desktop-app-how-to-run-the-code-sample'>initial desktop sample</Link>. After cloning the sample code, run the following command from its folder:
+
+```bash
+./build.sh
+```
+
+The script builds webpack bundles for the main and renderer parts of the desktop app. The renderer build runs in watch mode so that a pure frontend development model can be followed, to update React code and quickly see changes:
+
+![webpack build](/images/440/webpack-build.jpg)
+
+To launch the app, open another terminal window and execute the following script:
+
+```bash
+./run.sh
+```
+
+### Updated Login User Experience
+
+The app executes logins in the same manner as our initial code sample:
+
+![desktop login](/images/440/desktop-login.jpg)
+
+This blog’s test credential can then be used to sign in:
+
+- User: *guestuser@example.com*
+- Password: *GuestPassword1*
+
+Once login completes, a completion web page is rendered in the browser. A similar page is also shown when receiving the logout response:
+
+![login web page](/images/440/login-web-page.jpg)
+
+When the user continues, a *Private URI Scheme* prompt is presented by the browser, that can deep link back to the desktop app:
+
+![login response prompt](/images/440/login-response-prompt.jpg)
+
+The desktop app is then brought to the foreground and can get data from the API using an OAuth access token:
+
+![logged in](/images/440/logged-in.jpg)
+
+After login our tokens are securely stored for the lifetime of the refresh token. The user can restart the app without requiring a new user login. OpenID Connect logout has also been implemented.
+
+### OAuth Configuration Changes
+
+The final desktop app’s configuration no longer uses HTTP ports, and now uses login and logout completion pages as redirect URIs:
+
+```json
+{
+    "app": {
+        "apiBaseUrl": "https://api.authsamples.com/investments",
+        "useProxy": false,
+        "proxyUrl": "http://127.0.0.1:8888"
+    },
+    "oauth": {
+        "authority":             "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+        "clientId":              "5r463je7qeddssfqttaa8cpv91",
+        "redirectUri":           "https://www.authsamples.com/apps/finaldesktopapp/postlogin.html",
+        "postLogoutRedirectUri": "https://www.authsamples.com/apps/finaldesktopapp/postlogout.html",
+        "scope":                 "openid profile https://api.authsamples.com/investments",
+        "customLogoutEndpoint":  "https://login.authsamples.com/logout",
+        "privateSchemeName":     "x-authsamples-desktopapp"
+    }
+}
+```
+
+### Deep Links and Login Reliability
+
+When a deep link is triggered after a redirect, it is possible that the browser will refuse to invoke it unless there is a user gesture. This is especially true if a redirect is entirely automatic, as for a single-sign-on or a logout.
+
+Instead there needs to be a screen before invoking the deep link. You may find using the OpenID Connect prompt=login parameter on every login redirect is reliable. In this blog I instead use a custom interstitial page, partly because AWS Cognito does not support the prompt parameter.
+
+### Interstitial Pages
+
+This blog uses interstitial pages that ensure a user gesture. This also improves a little on the default blank browser page that is otherwise displayed to the user after login. The configured redirect URIs point to AWS hosted web pages:
+
+
+- [https://www.authsamples.com/apps/finaldesktopapp/postlogin.html](https://www.authsamples.com/apps/finaldesktopapp/postlogin.html)
+- [https://www.authsamples.com/apps/finaldesktopapp/postlogout.html](https://www.authsamples.com/apps/finaldesktopapp/postlogout.html)
+
+I deployed the HTML pages to an AWS S3 Bucket and then made them available over SSL via an AWS CloudFront distribution:
+
+![s3 pages](/images/440/s3-pages.jpg)
+
+### Private URI Scheme Forwarding
+
+If you do a *View Source* for the above interstitial pages you will see that they simply forward the login response to the app via a private URI scheme URL:
+
+![response forwarding](/images/440/response-forwarding.jpg)
+
+One downside of this design is that if the user doesn’t click the *Return to the App* button for a couple of minutes, the authorization code could time out, leading to a user error. The user can always retry and recover though.
+
+### Private URI Scheme Browser Prompts
+
+All browsers recognize private URI schemes registered with the operating syastem and present a special prompt. For the final appearance, first build a packaged version of the desktop app:
+
+```bash
+./pack.sh
+```
+
+This results in a binary built by the [Electron Packager](https://github.com/electron/packager) to enable the built app to be tested:
+
+![built binary](/images/440/built-binary.jpg)
+
+The prompt messages then look as follows in the main browsers:
+
+**Google Chrome**
+
+![chrome prompt](/images/440/chrome-prompt.jpg)
+
+**Safari**
+
+![safari prompt](/images/440/safari-prompt.jpg)
+
+**Firefox**
+
+![firefox prompt](/images/440/firefox-prompt.jpg)
+
+**Edge**
+
+![edge prompt](/images/440/edge-prompt.jpg)
+
+### Final Cognito Desktop OAuth Client
+
+A new OAuth client has been created, which registers the interstitial pages for the redirect URI and the post logout redirect URI:
+
+![oauth client](/images/440/oauth-client.jpg)
+
+### Private URI Scheme Registration
+
+Our desktop app registers the Private URI Scheme as a per-user setting that does not require administrator privileges. On Windows this updates a per user registry location under *HKEY_CURRENT_USER*:
+
+![windows registration](/images/440/windows-registration.jpg)
+
+On macOS you can use the [SwiftDefaultApps](https://github.com/Lord-Kamina/SwiftDefaultApps) tool to view the scheme and the app it is registered to, which is also a per-user setting:
+
+![macos registration](/images/440/macos-registration.jpg)
+
+In my Linux distribution, the *Gnome Desktop System* controls custom schemes. Our sample includes a *.desktop* file with registration instructions:
+
+```markdown
+[Desktop Entry]
+Type=Application
+Name=Final Desktop App
+Exec=$APP_COMMAND %U
+StartupNotify=false
+MimeType=x-scheme-handler/x-authsamples-desktopapp
+```
+
+To use private URI schemes you need to be able to restrict the desktop app to a single instance. In some desktop cases, such as for a *Microsoft Excel Plugin*, this may not be possible, and you will need to use a loopback based solution.
+
+### Secure Token Storage
+
+The desktop app stores OAuth tokens in an encrypted text file. [Electron safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage) is used to create an operating system encryption key private to the user and app, for protecting the text. The result is that users do not need to login every time they restart the app.
+
+On macOS the encryption key is saved to the Keychain. On Windows and Linux the key is less visible. Windows uses the *DPAPI* subsystem, and my Ubuntu Linux system uses the *GNOME libsecret* subsystem. Further details on the underlying security are discussed in [this online thread](https://github.com/microsoft/vscode-discussions/discussions/748).
+
+![encryption key](/images/440/encryption-key.jpg)
+
+The actual tokens are stored as base64 encrypted bytes in a JSON file at one of the following locations:
+
+| Operating System | Stored Tokens Location |
+| ---------------- | ---------------------- |
+| <span style={{color:'green'}}>**Windows**</span> | ~/AppData/Roaming/finaldesktopapp/tokens.json |
+| <span style={{color:'green'}}>**macOS**</span> | ~/Library/Application Support/finaldesktopapp/tokens.json |
+| <span style={{color:'green'}}>**Linux (Gnome)**</span> | ~/.config/finaldesktopapp/tokens.json |
+
+### Deep Linking to Views
+
+The login and logout response messages received by the app are a type of deep link notification:
+
+- *x-authsamples-desktopapp:/callback?code=…&state=…*
+- *x-authsamples-desktopapp:/logoutcallback*
+
+We can also use deep linking to bookmark screens, by sending a user an email with a URL link such as this:
+
+- *x-authsamples-desktopapp:/companies/2*
+
+The easiest way to test deep linking is from a command shell, and this varies slightly for the different operating systems:
+
+| Operating System | Example Command |
+| ---------------- | --------------- |
+| <span style={{color:'green'}}>**Windows**</span> | start x-authsamples-desktopapp:/companies/2 |
+| <span style={{color:'green'}}>**macOS**</span> | open x-authsamples-desktopapp:/companies/2 |
+| <span style={{color:'green'}}>**Linux (Gnome)**</span> | xdg-open  x-authsamples-desktopapp:/companies/2 |
+
+If the desktop app is running, this command will cause it to update its location to the *Transactions View* for our second company. If not then it will start up at that location:
+
+![deep link](/images/440/deeplink.jpg)
+
+If the user is logged in and has a valid access token, the app will move directly to the deep linking destination screen. Otherwise a token renewal or login will be triggered, followed by deep link navigation afterwards.
+
+This blog’s APIs deny the default test user access to companies other than 2 and 4. Attempts to deep link to company 3 will fail API authorization and return a known error code. The desktop app handles this error specially, by returning the user to the list view:
+
+![deep link unauthorized](/images/440/deeplink-unauthorized.jpg)
+
+Finally, note that on macOS, startup deep links will only work if we first package the app with *npm run pack*, so that the scheme registration points to the packaged executable:
+
+![macos packaged](/images/440/macos-packaged.jpg)
+
+Desktop deep linking may not be as usable as web and mobile deep linking in practice. Email clients may consider the private URI scheme’s prefix suspect, and block this type of deep link.
+
+### Security Updates
+
+Node integration has been disabled, meaning that the *Renderer* side of the app can only perform low-privilege operations. Opening the system browser, processing deep links and dealing with secure storage are now all done of the *Main* side of the app.
+
+This adds a fair amount of complexity, and I ended up moving all logic that involves HTTP requests with tokens outside of the Chromium browser. This means all outgoing OAuth and API requests are proxied from renderer to main before being sent to the remote endpoint.
+
+### Where Are We?
+
+We have updated our desktop code sample with some essential features. Private URI scheme logins are a more integrated solution, though login usability remains unnatural, due to use of the disconnected browser.
+
+### Next
+
+- We will look at <Link href='/posts/final-desktop-app-coding-key-points'>Coding Key Points</Link> for the final desktop sample
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

@@ -1,0 +1,232 @@
+# Desktop App – How to Run the Code Sample
+
+Previously the <Link href='/posts/desktop-apps-overview'>Desktop Code Sample Overview</Link> provided a summary of behaviour. Next we will explain how to get the sample running locally and run some OAuth lifecycle events.
+
+### Prerequisite: Install Node.js
+
+If required, go to the [Node.js Website](https://nodejs.org/en/download/), then download and run the installer for your operating system.
+
+### Step 1: Download Code from GitHub
+
+The project is available [here](https://github.com/gary-archer/oauth.desktopsample1), and can be downloaded / cloned to your local computer with this command:
+
+```bash
+git clone https://github.com/gary-archer/oauth.desktopsample1
+```
+
+![repo](/images/420/repo.jpg)
+
+### Step 2: View the Code in an IDE
+
+The desktop app re-uses the view code from this blog’s <Link href='/posts/improved-spa-code-sample-overview'>second SPA</Link>, and has exactly the same views:
+
+```typescript
+export class CompaniesView {
+
+    private readonly _apiClient: ApiClient;
+
+    public constructor(apiClient: ApiClient) {
+        this._apiClient = apiClient;
+    }
+
+    public async load(): Promise<void> {
+
+        try {
+
+            const data = await this._apiClient.getCompanyList();
+            this._renderData(data);
+
+        } catch (e) {
+
+            DomUtils.text('#main', '');
+            throw e;
+        }
+    }
+
+    ...
+}
+```
+
+### Step 3: Build and Run the Code
+
+Run the following bash script to build the desktop app’s TypeScript code , then run the executable:
+
+```bash
+./start.sh
+```
+
+The UI loads its home page and prepares to call the API, then detects that there is no OAuth access token, so the *Login Required View* is presented:
+
+![initial view](/images/420/initial-view.jpg)
+
+### Step 4: Login via the System Browser
+
+When the sign in is selected the app provides some visual progress that login is taking place externally:
+
+![logging in](/images/420/logging-in.jpg)
+
+An OAuth authorization redirect is then triggered, in a separate system browser window, and this blog’s test credential can be used to sign in:
+
+- User: *guestuser@example.com*
+- Password: *GuestPassword1*
+
+![browser login](/images/420/browser-login.jpg)
+
+If password autofill was used for the test user, in an earlier SPA login, it is remembered for the desktop app.  After login the system browser moves to  a post-login page, rather than showing a blank page. If preferred, the browser could be redirected to an external site instead.
+
+![browser logged in](/images/420/browser-loggedin.jpg)
+
+The app is then returned to the foreground and can get OAuth tokens, after which it can successfully get data from a <Link href='/posts/serverless-api-overview'>cloud deployed API</Link>, then render it:
+
+![app logged in](/images/420/app-loggedin.jpg)
+
+### Step 5: View OAuth Configuration
+
+The desktop app has a JSON configuration file which includes its OAuth settings. By default the app connects to AWS endpoints, so that you only need to run the frontend locally:
+
+```json
+{
+    "app": {
+        "apiBaseUrl":       "https://api.authsamples.com/investments"
+    },
+    "oauth": {
+        "authority":        "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+        "clientId":         "6o4rlsod8j6phsnuf3pdjo640u",
+        "loopbackMinPort":  8001,
+        "loopbackMaxPort":  8003,
+        "scope":            "openid profile https://api.authsamples.com/investments",
+        "postLoginPage":    "https://www.authsamples.com/apps/basicdesktopapp/postlogin.html"
+    }
+}
+```
+
+In the default setup the following URLs are used:
+
+| Component | URL(s) |
+| --------- | ------ |
+| <span style={{color:'green'}}>**API**</span> | *https://api.authsamples.com* |
+| <span style={{color:'green'}}>**Authorization Server**</span> | *https://login.authsamples.com* |
+| <span style={{color:'green'}}>**Post Login Page**</span> | *https://www.authsamples.com/apps/basicdesktopapp/postlogin.html* |
+
+Note that the JSON configuration also includes details related to running a *Loopback Web Server* on the local computer:
+
+| Setting | Description |
+| ------- | ----------- |
+| <span style={{color:'green'}}>**Loopback Port Range**</span> | Port numbers used in OAuth redirect URIs |
+| <span style={{color:'green'}}>**Post Login Page**</span> | Where to send the browser after a login |
+
+### Step 6: OAuth Client Registration
+
+Our desktop app is registered as an OAuth client in AWS Cognito, with the following settings:
+
+![oauth client](/images/420/oauth-client.jpg)
+
+According to RFC 8252, it should be possible to register a redirect URI of *http://127.0.0.1* and any port should then be allowed at runtime. Yet some authorization servers do not support this. AWS Cognito required an *http://localhost* base URL instead of the loopback IP address, and I also had to register all possible redirect URI values.
+
+![loopback behaviour](/images/420/loopback-behaviour.jpg)
+
+### Step 7: Authorization Redirect
+
+The desktop app uses the *Authorization Code Flow (PKCE)*, as is standard for native apps, and redirect messages are equivalent to those for SPAs.
+
+![authorization redirect](/images/420/authorization-redirect.jpg)
+
+At this point the desktop app has started a local HTTP server. A low privilege port is used, with a value above 1024. The desktop app can therefore start the server without requiring local administrator rights.
+
+### Step 8: Login Completion Page
+
+The login completion page was uploaded to an AWS S3 Bucket and then an AWS CloudFront distribution was used to expose it over an HTTPS URL:
+
+![s3 page](/images/420/s3-page.jpg)
+
+### Step 9: Authorization Code Grant
+
+When the desktop app receives the login response it sends an authorization code grant message to swap the code for  OAuth tokens. PKCE is used to prove that the same caller who started the login is ending it.
+
+![authorization code grant](/images/420/authorization-code-grant.jpg)
+
+### Step 10: Understand Reactivation of the App
+
+When login completes, you may find that the browser  remains topmost and the user may have to manually switch back to the desktop app. Private URI scheme based logins have the best support for returning the app to the foreground, as will be demonstrated in the final desktop code sample.
+
+### Step 11: Test Login Re-Entrancy
+
+A busy user could fail to complete a login and close the browser window, leaving the UI in the following state. Our app allows the user to provide a gesture to retry the login, by clicking the *Home* button:
+
+![re entrancy](/images/420/re-entrancy.jpg)
+
+### Step 12: Simulate Expiry Events
+
+We can use the UI’s session buttons to simulate expiry related events during a user session:
+
+![expiry testing](/images/420/expiry-testing.jpg)
+
+Our first sample only stores tokens in memory, so that if we use the *Reload* option in the Electron menu, tokens are lost and the user has to sign in again. We will improve on this for the final code sample.
+
+### Step 13: Test Access Token Expiry
+
+We can rehearse access token expiry by clicking *Expire Access Token* followed by *Reload Data*. This adds characters to the access token so that the API returns a 401 response. The app then sends a *Refresh Token Grant* message to get a new access token and retries API requests. Note that a desktop app is a public client and the refresh token is not protected with a client credential:
+
+![expired access token](/images/420/expired-access-token.jpg)
+
+### Step 14: Test Refresh Token Expiry
+
+We can rehearse refresh token expiry by clicking *Expire Refresh Token* followed by *Reload Data*. This adds characters to the refresh token so that the Authorization Server returns an *invalid_grant* response:
+
+![expired refresh token](/images/420/expired-refresh-token.jpg)
+
+This error code means the user needs to sign in again, so we redirect the user to the *Login Required* view.
+
+### Step 15: Build the Desktop App Executable
+
+To build the app for distribution you can execute the *./pack.sh* script, which builds the app into a platform specific executable file under the *dist* folder, then runs it.
+
+### Local API Setup
+
+If required, you can run the desktop app against a local OAuth secured API.  Do so for one of this blog’s final APIs, by following the below steps.
+
+### Step A: Run the API
+
+Select one of the following API options and follow its instructions to run it locally:
+
+- <Link href='/posts/api-architecture-node'>Node.js API</Link>
+- <Link href='/posts/net-core-code-sample-overview'>.Net Core API</Link>
+- <Link href='/posts/java-spring-boot-api-overview'>Java Spring Boot API</Link>
+
+![running api](/images/420/running-api.jpg)
+
+### Step B: Point the Desktop App to a Local API
+
+To connect to local APIs, update the URL in the desktop.config.json file to the local computer's API:
+
+```json
+{
+    "app": {
+        "apiBaseUrl":       "https://api.authsamples-dev.com:446/investments"
+    },
+    "oauth": {
+        "authority":        "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+        "clientId":         "6o4rlsod8j6phsnuf3pdjo640u",
+        "loopbackMinPort":  8001,
+        "loopbackMaxPort":  8003,
+        "scope":            "openid profile https://api.authsamples.com/investments",
+        "postLoginPage":    "https://www.authsamples.com/apps/basicdesktopapp/postlogin.html"
+    }
+}
+```
+
+### Step C: Run the Desktop App
+
+When you now run the desktop app it will call the local API, and you can also focus on API behaviour, such as OAuth and log handling:
+
+![spa and api](/images/420/spa-and-api.jpg)
+
+### Where Are We?
+
+We have used our second SPA to build an OAuth-secured desktop app, which runs on all of the main operating systems. At this stage the app has some limitations which will be resolved in the second desktop sample.
+
+### Next
+
+- Next we will cover some <Link href='/posts/desktop-app-coding-key-points'>Coding Key Points</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>
+

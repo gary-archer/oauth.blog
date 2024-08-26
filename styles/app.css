@@ -1,0 +1,133 @@
+h1 {
+    font-family: Montserrat, Helvetica, sans-serif;
+    font-size: 2.5rem;
+}
+
+h2 {
+    font-family: Montserrat, Helvetica, sans-serif;
+    font-size: 1.75rem;
+    margin-top: -1em;
+}
+
+h3 {
+    font-family: Montserrat, Helvetica, sans-serif;
+    font-size: 1.4375rem;
+    line-height: 1.2;
+    margin-top: 2em;
+}
+
+body {
+    font-family: Merriweather, Georgia, serif;
+    font-size: 1.125rem;
+    line-height: 1.75;
+    letter-spacing: 0.25px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+p {
+    margin-top: 1em;
+}
+
+table {
+    table-layout: fixed;
+    width:100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid gray;
+    padding: 10px;
+    text-align:left;
+}
+
+pre {
+    min-width: 50%;
+}
+
+a {
+    color: #0070f3;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+img {
+    min-width: 70%;
+    max-width: 70%;
+    display: block;
+}
+
+.smallimage {
+    min-width: 60%;
+    max-width: 60%;
+    display: block;
+}
+
+.container {
+    max-width: 65rem;
+    margin: 4rem auto 4rem;
+    padding: 0 1rem;
+}
+
+.navbar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin-right: 2rem;
+}
+
+.navbarHeader {
+    margin-left: 1rem;
+}
+
+.subHeadingText {
+    font-size: 14px;
+    color: gray;
+    margin-top: -20px;
+    margin-bottom: 50px;
+}
+
+@media all and (max-width: 768px)
+{
+    h2 {
+        font-size: 1.6rem;
+    }
+
+    table {
+        max-width: 100%;
+    }
+
+    pre {
+        max-width: 100%;
+    }
+
+    img {
+        min-width: 100%;
+        max-width: 100%;
+    }
+
+    .smallimage {
+        min-width: 100%;
+        max-width: 100%;
+    }
+
+    .article {
+        max-width: 100%;
+    }
+
+    .navbar {
+        position: relative;
+    }
+
+    .navbarHeader {
+        margin-left: 0rem;
+        margin-top: 2em;
+    }
+
+    .subHeadingText {
+        font-size: 0.9rem;
+    }
+}

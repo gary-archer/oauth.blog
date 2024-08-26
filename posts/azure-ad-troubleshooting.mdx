@@ -1,0 +1,205 @@
+# Microsoft Entra ID OAuth Flow
+
+Previously we configured a <Link href='/posts/azure-active-directory-setup'>Microsoft Entra ID SPA and API</Link> code sample. In this post I will explain some differences I had to overcome to adapt this blog’s <Link href='/posts/improved-spa-code-sample-overview'>Updated SPA and API</Link> to Entra ID.
+
+### 1. SPA and API
+
+The SPA is the same as the earlier code sample, which ran in AWS Cognito. The SPA implements OpenID Connect and its lifecycle events. The API can validate tokens and get all claims it needs to protect its data. The correct data is then rendered based on the logged in user:
+
+![spa](/images/200/spa.jpg?v=20240822)
+
+### 2. OAuth Messages
+
+If you trace <Link href='/posts/basicspa-oauthworkflow'>OAuth HTTP Messages</Link> for the SPA, you will see that the SPA continues to use the standard authorization code flow (PKCE), to initiate user logins:
+
+![authorization request](/images/200/authorization-request.jpg?v=20240822)
+
+The login response contains an authorization code:
+
+![authorization response](/images/200/authorization-response.jpg?v=20240822)
+
+Login is then completed when the code is swapped for tokens:
+
+![redeem code for tokens](/images/200/redeem-code-for-tokens.jpg?v=20240822)
+
+The SPA is coded to use the traditional SPA flow with <Link href='/posts/user-sessions-and-token-renewal'>iframe based token renewal</Link> and I would rather avoid receiving a refresh token.
+
+### 3. ID Tokens Issued to the SPA
+
+The <Link href='/posts/id-tokens'>ID Tokens</Link> blog post describes how I avoid issuing personal data to ID tokens. In Entra ID you can ensure this by omitting the profile scope from the client configuration.
+
+In the SPA configuration I included the openid scope so that an ID token is returned. The ID token by default contains only protocol claims and is validated by the [oidc-client-ts](https://github.com/authts/oidc-client-ts) library.
+
+![id token](/images/200/id-token.jpg)
+
+### 4. Access Tokens Issued to the SPA
+
+    When I first integrated with Entra ID, I ran into an initial problem where the access token failed validation in my API. When I viewed the JWT access token in an [online JWT viewer](https://jwt.io/), there was a *nonce* field in the JWT header:
+
+![original access token](/images/200/original-access-token.jpg)
+
+After some research it turned out that this format of access token should only be received by Microsoft’s APIs. This access token type will always fail standards-based validation if used in your own APIs. I needed to use the second type of access token below:
+
+| Access Token Type | Description |
+| ----------------- | ----------- |
+| <span style={{color:'green'}}>**Microsoft APIs**</span> | These tokens contain a nonce field in the JWT header and are not designed for custom APIs to validate |
+| <span style={{color:'green'}}>**Custom APIs**</span> | Custom APIs need to receive a token that they can validate, as the result of exposing an API scope |
+
+This was fixed using the scope and permission settings described in the previous blog post. This results in a normal JWT access token being issued, with the correct issuer and audience, and without a nonce field in the JWT header. The code sample API then validates the JWT correctly.
+
+![final access token](/images/200/final-access-token.jpg)
+
+The access token contains a couple of technical user identifiers. The *oid* claim is the permanent user account ID, which is the same across all Entra ID applications. The *sub* claim is issued as a unique identifier per user and client, sometimes called a *Pairwise Pseudonymous Identifier (PPID)*.
+
+The custom claims from the previous post are also issued to the access token. This enables the API code to implement its authorization in a convenient way. I was unable to prevent personal data being included in the access token though, even if I removed all Graph permissions from the API.
+
+### 5. SPA OpenID Connect Configuration Changes
+
+Microsoft Graph is used as the OAuth User Info endpoint in Entra ID. Yet Graph requires access tokens with a nonce in the JWT header, so the SPA’s access token will not work against Graph endpoints.
+
+I therefore set the value *loadUserInfo=false* when configuring the *UserManager*. The SPA will get user info by routing the request via its API, as discussed shortly.
+
+```typescript
+export class Authenticator {
+
+    private readonly _userManager: UserManager;
+
+    public constructor(configuration: OAuthConfiguration) {
+
+        const settings = {
+
+            authority: configuration.authority,
+            client_id: configuration.clientId,
+            redirect_uri: configuration.redirectUri,
+            scope: configuration.scope,
+            response_type: 'code',
+            userStore: new WebStorageStateStore({ store: new InMemoryWebStorage() }),
+            stateStore: new WebStorageStateStore({ store: sessionStorage }),
+            silent_redirect_uri: configuration.redirectUri,
+            automaticSilentRenew: false,
+            post_logout_redirect_uri: configuration.postLogoutRedirectUri,
+            loadUserInfo: false,
+        };
+
+        this._userManager = new UserManager(settings);
+    }
+}
+```
+
+### 6. Built-In v Custom Scopes
+
+It is common in OAuth for a client to request a mix of built-in and custom scopes. Yet since the SPA will get user info via the API I configured only the *openid* built-in scope, so that the SPA receives an ID token. Note that if a client uses a mix of built-in and custom scopes, Entra ID omits the built-in scopes from the access tokens it issues.
+
+```json
+{
+    "app": {
+        "apiBaseUrl":             "https://api.authsamples-dev.com/api"
+    },
+    "oauth": {
+        "authority":              "https://login.microsoftonline.com/7f071fbc-8bf2-4e61-bb48-dabd8e2f5b5a/v2.0",
+        "clientId":               "e9a29a01-21b4-4533-bae6-438141ebc05c",
+        "redirectUri":            "https://www.authsamples-dev.com/spa/",
+        "postLogoutRedirectUri":  "https://www.authsamples-dev.com/spa/loggedout.html",
+        "scope":                  "openid api://552b475c-471d-43a1-9dfe-f6b895931110/investments"
+    }
+}
+```
+
+### 7. User Info Flow
+
+The SPA downloads personal data from the OAuth user info endpoint. This requires a Graph access token. The [On Behalf Of Flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-on-behalf-of-flow) can be used to swap the SPA’s access token for a Graph access token. However, this requires a client credential, which cannot be safely managed in the browser, so the SPA cannot use this flow directly. Therefore the SPA routes its user info request via the API.
+
+The SPA calls the first URL below. The API then performs the token exchange and sends the Graph access token to the second URL to get user info. The results are then returned to the SPA:
+
+- *https://api.authsamples-dev.com/oauthuserinfo*
+- *https://graph.microsoft.com/oidc/userinfo*
+
+The API gets a Graph access token by calling the Entra ID token endpoint and uses the following grant type. This request is based on the [RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523) specification and sometimes called a *User Assertion*:
+
+- grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer
+
+![on behalf of](/images/200/on-behalf-of.jpg?v=20240822)
+
+The API then sends the returned access token to the Graph endpoint, and returns the response to the SPA, which renders the user’s name in the top right corner of the browser:
+
+![userinfo](/images/200/userinfo.jpg?v=20240822)
+
+The API implements the On Behalf Of flow by forming a grant request with the following Node.js code:
+
+```typescript
+private async _getGraphAccessToken(accessToken: string): Promise<string> {
+
+    try {
+
+        const formData = new URLSearchParams();
+        formData.append('grant_type', 'urn:ietf:params:oauth:grant-type:jwt-bearer');
+        formData.append('client_id', this._configuration.graphClient.clientId);
+        formData.append('client_secret', this._configuration.graphClient.clientSecret);
+        formData.append('assertion', accessToken);
+        formData.append('scope', this._configuration.graphClient.scope);
+        formData.append('requested_token_use', 'on_behalf_of');
+
+        const options = {
+            url: this._configuration.tokenEndpoint,
+            method: 'POST',
+            data: formData,
+            headers: {
+                'content-type': 'application/x-www-form-urlencoded',
+                'accept': 'application/json',
+            },
+            httpsAgent: this._httpProxy.agent,
+        };
+
+        const response = await axios.request(options as AxiosRequestConfig) as any;
+        return response.data.access_token!;
+
+    } catch (e) {
+
+        throw ErrorFactory.fromUserInfoTokenGrantError(e, this._configuration.tokenEndpoint);
+    }
+}
+```
+
+### 8. IFrame Token Renewal
+
+The SPA uses almost identical code to the previous code sample, which used AWS Cognito as the authorization server. The oidc-client-ts library continues to perform the security work in a portable manner, and its integration was described in these earlier blog posts:
+
+- <Link href='/posts/basicspa-codingkeypoints'>SPA 1 – Coding Key Points</Link>
+- <Link href='/posts/basicapi-codingkeypoints'>SPA 2 – Coding Key Points</Link>
+
+A point of interest is that Entra ID correctly supports the traditional IFrame Silent Token Renewal solution for SPAs. It does so by issuing SSO cookies with the SameSite=none property, and by correctly handling the OpenID Connect prompt=none request parameter.
+
+In the SPA you can click *Expire Access Token* followed by *Reload Data* to force the API to return a 401 response. The SPA then runs an iframe redirect to refresh access tokens. Doing so avoids redirecting the whole window and impacting the end user, after which a new access token is received.
+
+![iframe token renewal](/images/200/iframe-token-renewal.jpg?v=20240822)
+
+This flow is no longer reliable in all browsers though, since the SSO cookie may be dropped when sent from the hidden iframe. This occurs in the Safari browser or for incognito windows and was explained earlier in this blog.
+
+### 9. Multi-Tab Browsing
+
+Since tokens are stored only in memory, opening a new tab / window, or reloading the current page, also runs a silent token renewal request on a hidden iframe. This may still work fairly well in some browsers, though there is a noticeable pause.
+
+### 10. Multi-Tab Logout
+
+Entra ID supports RP initiated logout in the standard way, so oidc-client-ts implements this for us and sends an end session request. The code sample continues to implement multi-tab logout in a similar manner to the previous code sample. This and other related behaviours for ending sessions are described in this blog’s <Link href='/posts/logout'>Logout</Link> page.
+
+### 11. Extensible API Claims
+
+The API follows this blog’s <Link href='/posts/api-authorization-design'>API Authorization Behaviour</Link> and uses some claims for authorization that are not contained in the Entra ID access token.
+
+![extensible claims](/images/200/extensible-claims.jpg)
+
+This technique was described in the earlier <Link href='/posts/updated-api-coding-key-points'>API Coding Key Points</Link> blog post, when AWS Cognito was used as the authorization server. It is a little complex and may not be needed in most APIs, but can potentially improve manageability as your APIs grow.
+
+### 12. Code Portability
+
+Entra ID has some vendor specific behaviour for user info and access tokens which adds a little complexity. Yet with a little work I was able to make the Entra ID code sample behave the same as the previous SPA and API code sample, which used AWS Cognito.
+
+### Where Are We?
+
+We have integrated our SPA and API with Entra ID to provide a working end-to-end flow. Using tokens in the browser is no longer recommended though, so we still have the same concerns as we had with the previous SPA. Next, we will focus on resolving them.
+
+### Next
+
+- We will discuss the Final SPA’s <Link href='/posts/spa-back-end-for-front-end'>Backend for Frontend Setup</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>
