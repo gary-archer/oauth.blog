@@ -44,15 +44,15 @@ In OAuth you use scopes to restrict API privileges that you grant to clients. Yo
 | <span style={{color:'green'}}>**sales**</span> | You might assign this scope for use at API endpoints that deal with selling products to the public. |
 | <span style={{color:'green'}}>**finance**</span> | You might use this scope for API endpoints that deal with a higher security money-based area. |
  
-A client with an access token that contains only a *sales* scope can never successfully access data from *finance* API endpoints. The API would immediately reject the access token with a 403 forbidden error. This is true even if the user has finance rights.
+A client with an access token that contains only a *sales* scope can never successfully access data from *finance* API endpoints. The API would immediately reject the access token with a 403 forbidden error. This is true even if the user has finance rights. Therefore, scopes enable you to set boundaries on where a client can use access tokens.
 
 ### Scopes and Manageability
 
-You cannot use the scopes you design for dynamic purposes, such as different scopes per user. Aim to keep scopes fairly high level, since creating too many scopes can result in productivity problems. For example, you might need to frequently update clients with new scopes, or deal with access token versioning in APIs. Consider only adding new scopes when you extend APIs to new business areas.
+You cannot use the scopes that you design for dynamic purposes, such as different scopes per user. Aim to keep scopes fairly high level, since creating too many scopes can result in productivity problems. For example, you might need to frequently update clients with new scopes, or deal with access token versioning in APIs. Consider only adding new scopes when you extend APIs to new business areas.
 
-In this blog I use a fictional *investments* scope and frontend clients require this scope to call any endpoint of my example APIs. If I was to develop a new frontend client for technical support staff with a different set of privileges, I might consider adding a new scope such as *investment:support* for use in that client. Scopes represent data and can be hierarchical.
+In this blog I use a fictional *investments* scope and frontend clients need access tokens with this scope to call any endpoint of my example APIs. More generally, scopes represent data and can be hierarchical. Scopes are also useful when you want to get a higher privilege access token. For example, before performing a money transfer you might send an authorization redirect requesting a high privilege scope such as *investments:payment*. A high privilege API endpoint could require that scope. 
 
-If multiple APIs call each other, they should each validate an access token and implement business authorization. When a user is present, each API should receive the user identity and other claims in its access token. The source API can send its current access token or get a new one from the authorization server with different scopes. You should design scopes in terms of end-to-end flows.
+You don't need many scopes since you use claims for most authorization. Yet you should design scopes in terms of end-to-end flows. If multiple APIs call each other, they should each validate an access token and implement business authorization. When a user is present, each API should receive the user identity and its required scopes and claims in its access token. The source API can send its current access token or use OAuth token exchange to get a new one from the authorization server with different scopes. 
 
 ### OpenID Connect Scopes
 
@@ -74,13 +74,13 @@ An API should require its own identity to be present in the audience (aud) claim
 
 Claims enable the deeper OAuth authorization behaviour. For each scope that the authorization server issues to access tokens, it also issues a set of claims. The <Link href='/posts/managed-authorization-server-setup'>Cloud Authorization Server Setup</Link> blog post explains how this works for this blog’s default authorization server. 
 
-You can issue different claims to access tokens per user and they are more flexible than scopes. You might consider issuing a scope like *investments:read*, though this is often insufficient, since users often have read-only access to some areas and read-write access to others. You can use claims to represent such relationships. Claims can be primitive values, arrays or objects.
+You can issue different claims to access tokens per user and they are more flexible than scopes. You might consider issuing a scope like *investments:read*, though this is often insufficient, since users often have read-only access to some data and read-write access to other data. Use claims to represent those types of rules. Claims can be primitive values, arrays or objects.
 
-In some cases, APIs cannot decide how to authorize solely from a user ID in an access token. For example, a client can trigger a new authorization redirect before a high-privilege operation and request a scope such as *payment*. Such a flow would include user consent. The resulting access token might contain claims to describe the payment, that the API uses for its authorization.
+In some cases, APIs cannot decide how to authorize solely from a user ID in an access token. For example, an access token with an *investments:payment* scope might also include payment-related claims from third-party systems that describe the payment, which an API endpoint needs to use to authorize the payment correctly.
 
 ### Claims Principal
 
-After your API validates a JWT access token you use its claims in your business authorization code. For example, you can inject a *ClaimsPrincipal* object that contains claims into classes that need it. A well-designed claims principal expresses your API’s main authorization and is useful to your API’s code.
+After your API validates a JWT access token you use its claims in your business authorization code. For example, you can inject a *ClaimsPrincipal* object that contains claims into classes that need it. A well-designed claims principal expresses your API’s main authorization data and should be useful to your API’s code.
 
 ```typescript
 export class CompanyService {
@@ -95,17 +95,19 @@ export class CompanyService {
 }
 ```
 
-Of course, you must always make all of the correct authorization checks in your API logic classes, to ensure that no client or user can access unauthorized data. As long as you ensure that there are no security weaknesses, you have some choices on how to manage claims.
+Of course, you must always make all of the correct authorization checks in your API logic classes, to ensure that no client or user can access unauthorized data. As long as you ensure that there are no security weaknesses, you have some choices on how you manage claims.
 
 ### Claims and Manageability
 
-In many real-world systems, claims do not represent a full authorization solution. For example, a role might map to many fine-grained business permissions that change often. Avoid managing fine-grained permissions as claims in your authorization server. Instead, your APIs might receive a user identity and role in its access token, then derive other values from the token claims.
+In many real-world systems, claims in access tokens do not provide every data value that you need for authorization. For example, some systems use roles that map to fine-grained permissions representing levels of access, such as the branch rules listed at the start of this post. Sometimes these permissions are volatile and you change or remodel them often.
 
-Usually you only need to issue a few custom claims to access tokens. These values should be stable and should not change within a user's authenticated session. Your API can get the most up-to-date values for other permissions. By using only stable claims, you prevent manageability problems and reduce the need for access token versioning. 
+You should manage volatile business permissions in your APIs rather than your authorization server. You usually only need to issue a few custom claims to access tokens. These values should be stable and should not change within a user's authenticated session. When your API authorizes requests it can derive volatile business permissions from other claims in the access token, like a user ID or role.
+
+Therefore, APIs often need to combine fine-grained business permissions with claims from the access token. As for your scopes design, when you get a good balance you use stable access tokens and you reduce the need to manage access tokens versioning. You can deploy APIs frequently without needing to redeploy or reconfigure the authorization server.
 
 ### Customizing the Claims Principal
 
-In your API code, you may therefore need to combine access token claims with more volatile permissions. You can do this in multiple ways, according to your coding preferences. When I first wrote this blog, AWS Cognito did not support issuing custom claims to access tokens, yet I still wanted a useful and expressive claims principal. Therefore I designed an object with the following structure:
+In your API code, you may therefore need to combine access token claims with extra values. You can do this in multiple ways, according to your coding preferences. When I first wrote this blog, the AWS Cognito authorization server did not support issuing custom claims to access tokens, yet I still wanted a useful and expressive claims principal. Therefore I designed an object with the following structure:
 
 ```json
 export class ClaimsPrincipal {
@@ -114,17 +116,17 @@ export class ClaimsPrincipal {
 }
 ```
 
-This blog uses a secondary technique to populate such an object on every API request, without issuing volatile permissions to tokens. Your API receives the main identity claims in the JWT access token, after which the API looks up fine grained-permissions from other sources, like its database:
+My code samples continue to use this technique, to show how to take closer control of claims. I perform JWT validation on every request and then look up extra values from a trusted source - like the API's database - before creating the claims principal. The business logic classes then receive a useful object with which to implement their authorization:
 
 ![token to claims](/images/130/token-to-claims.jpg)
 
-This approach shows a way to take control over OAuth behaviour, to simplify business logic code. Yet you should not overuse this technique. True claims are those that the authorization server asserts when it cryptographically signs access tokens. The main identity values should always be issued to access tokens when possible.
+This code setup is one way to ensure that your API's business logic receives future changes to volatile business permissions. Understand though, that true claims are those that the authorization server asserts when it cryptographically signs access tokens. The main identity values should always be issued to access tokens when possible, so that the API receives them in a cryptographically verifiable format. 
 
 ### This Blog’s Example Claims
 
 This blog’s APIs use the following form of access token payload. When you design access tokens, imagine you had to explain your API security to a reviewer or a penetration tester. You should be able to point out how the scopes and claims lock down the access token to restrict its privileges.
 
-In this blog’s access tokens, the scope restricts access to an *investments* business area. The scope and audience would allow the access token to be used by a small set of related APIs. A custom claim for *manager_id* provides a business user identity to the API. A custom *role* claim is issued to the access token, and the API can use it to derive volatile business permissions:
+The scope restricts access to an *investments* business area. The scope and audience would allow the access token to be used by a small set of related APIs. A custom claim for *manager_id* provides a business user identity to the API. A custom *role* claim is issued to the access token, and the API can use it to derive volatile business permissions:
 
 ```json
 {
@@ -145,7 +147,7 @@ The following extra claims are looked up when the API first receives its access 
 | <span style={{color:'green'}}>**Title**</span> | A business title for the end user in a particular context, which is displayed by the frontend application. |
 | <span style={{color:'green'}}>**Regions**</span> | An array claim representing a simplified version of the branches concept described at the start of this post. |
 
-The API authorizes access to resources using both the *role* from the access token and the *regions* array from the extra claims. If authorization rules evolve, my code can change the extra claims without needing to reconfigure the authorization server.
+The API authorizes access to resources using both the *role* from the access token and the *regions* array from the extra claims. If business authorization rules evolve, the API can update the extra claims object updates to the authorization server.
 
 ```typescript
 private _isUserAuthorizedForCompany(company: Company): boolean {
