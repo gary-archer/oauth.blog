@@ -1,30 +1,26 @@
 # ID Tokens
 
-Previously we discussed <Link href='/posts/logout'>Logout</Link> and we will finish our discussion of SPA Session Management by describing the role of ID Tokens, which are designed to be ready by client applications rather than APIs.
+Previously I explained some <Link href='/posts/logout'>Logout</Link> behaviors. I finish the discussion on SPA session management by describing the role of ID tokens, which are designed to be read by client applications rather than APIs.
 
 ### ID Token Role
 
-Before OpenID Connect, SAML was often used to secure websites. An ID token represents proof of the authentication event, in the same way as a SAML assertion and is provided to client applications.
+Before OpenID Connect, SAML was often used to secure websites. After user authentication, the website received a cryptographically signed SAML assertion to represent proof of the authentication event, and to provide the authentication method(s) and authentication time. An ID token has a similar role to a SAML assertion.
 
 ### Example ID Token
 
-This blog’s code samples use AWS Cognito as their default authorization server and use ID tokens contain the following fields:
+This blog’s code samples use AWS Cognito as their default authorization server and use ID tokens that contain the following fields:
 
 ![id token claims](/images/40/id-token-claims.jpg)
 
 ### Receiving ID Tokens
 
-An earlier post explained some <Link href='/posts/basicspa-oauthworkflow'>Initial OAuth Messages</Link>. An authorization code is received in a front channel browser response, then sent in a back channel HTTPS POST to the token endpoint of the authorization server, to swap the code for tokens.
+An earlier post explained some <Link href='/posts/basicspa-oauthworkflow'>Initial OAuth Messages</Link>. Clients receive an authorization code in a front channel browser response, then send in a back channel HTTPS POST to the token endpoint of the authorization server, to swap the code for tokens.
 
-In 2021 it is recommended to avoid receiving ID tokens in browser responses, and receive all tokens on the back channel, in the authorization code grant response. This is ensured by running an authorization code flow with *response_type=code*.
-
-Since the ID token is received over a trusted HTTPS connection, ID token validation is less necessary than in older flows, where the ID token was received in the front channel response. It remains a good practice for the client to use a library that validates the ID token.
+In 2021 it is recommended to avoid receiving ID tokens in browser responses, and receive all tokens on the back channel, in the authorization code grant response. You ensure this when you run an authorization code flow with *response_type=code*.
 
 ### ID Token v Access Token v Refresh Token
 
-After validation, SAML websites validated an assertion, then started a cookie based application session. An ID token can also be used in this way. In OAuth and OpenID Connect though, other tokens are also received.
-
-The app no longer invents its own back end credential. Instead an access token contains business permissions and is sent to APIs. The session time is represented by the refresh token.
+A SAML website would validate the assertion and then start a cookie-based application session. You can use an ID token in the same way. In OAuth and OpenID Connect though, the client also receive other tokens. The app no longer invents its own backend credential. Instead an access token contains business permissions and is sent to APIs. The refresh token represents the user session time for API requests.
 
 |   | ID Token | Access Token | Refresh Token |
 | - | -------- | ------------ | ------------- |
@@ -33,27 +29,25 @@ The app no longer invents its own back end credential. Instead an access token c
 | <span style={{color:'green'}}>**Lifetime**</span> | Expiry Not Used | Short Expiry | Long Expiry |
 | <span style={{color:'green'}}>**Silently Renewable**</span> | No | Yes | Yes |
 
-The ID token must not be used as an API message credential. It is not designed to be received by APIs, and does not contain business permissions. These are expressed in the access token using scopes and claims, then used by the API to implement its business authorization.
+You must not use the ID token as an API message credential. An ID token does not contain business permissions, which you express in access tokens using scopes and claims, and which APIs use to implement their business authorization.
 
 ### ID Tokens and Privacy
 
-Access and refresh formats can have various formats, though OpenID Connect mandates that ID tokens have the JWT format, since they must be readable by front end code. It is possible to also include personal details such as *name* and *email* in ID tokens, or other sensitive data.
+OpenID Connect mandates that ID tokens have the JWT format, since they must be readable by frontend code. It is possible to include personal details such as *name* and *email* in ID tokens. I consider it safer and more correct to avoid personal data in ID tokens, which then sits around for the entire authenticated user session, so that there is more risk of leaking sensitive data.
 
-It is safer to avoid personal data in ID tokens, which then sits around for the entire authenticated user session, so that there is more risk of sensitive data leaking unintentionally. This can result in a readable JWT being logged to the browser history or server logs.
+For example, ID tokens are sometimes sent on the front-channel in logout redirects. Personal data might then end up in the browser history or server logs. Therefore, this blog's code samples instead download personal data from the OpenID Connect userinfo endpoint.
 
-The <Link href='/posts/logout'>Logout</Link> blog post describes how an *id_token_hint* can be sent in a query parameter on the front channel. This is one way in which personal data in ID tokens can leak. Instead,  prefer my client applications to get OAuth personal data from the authorization server’s User Info endpoint.
+### Using ID Tokens
 
-### ID Token Usage
-
-When ID tokens contain only proof of the authentication event, they are rarely used by applications, and of far less significance than access tokens. This blog’s sample applications never use the ID token. It is a best practice to receive an ID token however, and let your app’s security library process it.
+When ID tokens contain only proof of the authentication event, they are rarely used by applications, and of far less significance than access tokens. This blog’s frontend code samples receive an ID token and then ignore it. It is a best practice to receive an ID token however, and let your app’s security library validate it.
 
 One of the main ways to use an ID token, is to take greater control over subsequent authorization code flows. One example is to read the *max_age* claim from the ID token, then send the *prompt=login* OpenID Connect parameter if a certain time period has passed, to force a new login.
 
 ### Where Are We?
 
-We understand the role of ID tokens, which provide verifiable proof of the authentication event to clients. All modern secured UIs should receive an ID token as part of using up to date security.
+I summarized a few points about ID tokens, which provide verifiable proof of the authentication event to clients. All modern secured frontends should receive an ID token as part of using up-to-date security.
 
 ### Next
 
-- Next we will implement an <Link href='/posts/improved-spa-code-sample-overview'>Updated SPA and API Code Sample</Link>
-- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>
+- I explain this blog's <Link href='/posts/improved-spa-code-sample-overview'>Updated SPA and API Code Sample</Link>.
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.

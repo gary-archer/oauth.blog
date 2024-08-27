@@ -30,7 +30,7 @@ The sample first downloads configuration settings from the server, to avoid hard
 
 ### Step 2. SPA Initiates an Authorization Redirect
 
-The SPA client needs to get an access token with which to call its APIs, and needs to initiate user authentication to get one. The SPA uses the *oidc-client-ts* library to create an authorization request URL containing OpenID Connect keywords. The SPA sets its location to this URL, to cause a front-channel browser redirect to Cognito’s authorization endpoint:
+The SPA client needs to get an access token with which to call its APIs, and needs to initiate user authentication to get one. The SPA uses the *oidc-client-ts* library to create an authorization request URL containing OpenID Connect keywords. The SPA sets its location to this URL, to cause a front channel browser redirect to Cognito’s authorization endpoint:
 
 ![Authorization Request](/images/40/authorization-request.jpg?v=20240727)
 
@@ -78,7 +78,7 @@ The SPA receives the response on its redirect URI. This can be a particular path
 
 ### Step 7. SPA Swaps Code for Tokens
 
-As part of its response processing, the library makes a direct HTTPS back-channel request to the authorization server’s token endpoint. This is an *authorization code grant* message, which swaps the code for tokens:
+As part of its response processing, the library makes a direct HTTPS back channel request to the authorization server’s token endpoint. This is an *authorization code grant* message, which swaps the code for tokens:
 
 ![Authorization Code Grant](/images/40/authorization-code-grant.jpg?v=20240727)
 

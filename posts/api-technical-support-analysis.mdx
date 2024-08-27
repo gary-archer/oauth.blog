@@ -2,7 +2,7 @@
 
 Previously I provided a <Link href='/posts/log-aggregation-setup'>Log Aggregation Setup</Link> to deploy tooling that enables log queries. This post shows how different technical stakeholders could then query the log aggregation system productively to support APIs. You could enable such a solution with this blog's <Link href='/posts/effective-api-logging'>Effective API Logging</Link> design.
 
-If you followed the logging setup you are running an API and an API client. You can use the client to initiate multiple requests to the API, then use the Kibana system to query the API logs you generate. The main focus of this post is control over log data, so I only use the *Dev Tools* console. I consider log queries for three roles of log user: *DevOps*, *Testers* and *Developers*.
+If you run an API and client you can use the client to initiate multiple requests to the API, then use the Kibana system to query the API logs you generate. The main focus of this post is control over log data, so I only use the *Dev Tools* console. I consider log queries for three roles of log user: *DevOps*, *Testers* and *Developers*.
 
 ![logging system](/images/400/logging-system.jpg)
 
@@ -110,35 +110,12 @@ ORDER BY
 """}
 ```
 
-For this type of query, the output format in the Kibana frontend is a tabular list of columns:
+For this type of query, the output format in the Kibana frontend is a tabular list of columns that shows *how often* this type of error has occurred and for *which users*:
 
 ```markdown
 |   apiName    |    operationName     |clientApplicationName|  statusCode   |     errorCode      |                userId             |
 ---------------+----------------------+---------------------+---------------+--------------------+------------------------------------
 SampleApi      |getCompanyTransactions|FinalSPA             |500            |exception_simulation|a6b404b1-98af-41a2-8e7f-e4061dc0bf86
-```
-
-Support staff can then query *how often* this type of error has occurred and for *which users*:
-
-```markdown
-POST _sql?format=txt
-{"query": """
-SELECT
-  utcTime,
-  operationName,
-  clientApplicationName,
-  sessionId,
-  statusCode,
-  userId
-FROM
-  "apilogs*"
-WHERE 
-  errorCode='exception_simulation' 
-AND
-  utcTime between '2019-08-16T09:30:00' and '2019-08-16T10:30:00'
-ORDER BY 
-  utcTime ASC
-"""}
 ```
 
 Support staff can also query *what else the user was doing* around this time, to identify usage patterns that led to the incident:

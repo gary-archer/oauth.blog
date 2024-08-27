@@ -169,7 +169,7 @@ public async callApi(options?: ViewLoadOptions): Promise<void> {
 
 In modern UI stacks such as React, Android Jetpack or Swift UI, views can be recreated many times, but view models and data should be created only once. To re-enforce this, React strict mode (in debug builds) immediately re-runs the view while the async code in the useEffect hook is executing.
 
-This causes a duplicate API request, and the idea is to force developers to write efficient UIs, that avoid unnecessary APIs requests. This leads to a design of caching API responses in the front end, in a thread safe dictionary, with a URL based cache key:
+This causes a duplicate API request, and the idea is to force developers to write efficient UIs, that avoid unnecessary APIs requests. This leads to a design of caching API responses in the frontend, in a thread safe dictionary, with a URL based cache key:
 
 ```typescript
 export class FetchCache {

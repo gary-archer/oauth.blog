@@ -1,78 +1,74 @@
 # IFrame Access Token Renewal
 
-In our previous post we described this blog’s <Link href='/posts/federated-logins'>User Authentication Behaviour</Link>. Next we will describe iframe based access token renewal  for SPAs. This flow is now problematic, due to recent browser restrictions.
+In the previous post I summarised this blog’s <Link href='/posts/federated-logins'>User Authentication Behaviour</Link>. Next we I explain iframe based access token renewal for SPAs. This flow is now problematic, due to recent browser restrictions.
 
 ### Traditional SPA Token Renewal
 
-The traditional SPA token renewal solution relied on returning only a short lived access token to the browser, and storing the access token in memory as the most secure option.
-
-To refresh the token, the authorization server’s HttpOnly SSO cookie was used, which is shared across all browser tabs. Therefore any browser tab should be able to reliably get a new access token by sending the cookie.
+The traditional SPA token renewal solution relied on returning only a short lived access token to the browser, and storing the access token in memory as the most secure JavaScript option. To refresh the token, the authorization server’s HttpOnly SSO cookie was used, which is shared across all browser tabs. Therefore any browser tab should be able to reliably get a new access token by sending the cookie.
 
 ### Iframe Token Renewal Requests
 
-In this flow, a hidden iframe is dynamically spun up, and its *src* is set to  an authorization request URL. An extra query parameter of *prompt=none* is used, to prevent any end user prompts, since the frame is invisible. This  request should also send the SSO cookie.
+In this flow, a security library dynamically creates a hidden iframe and sets its *src* to an authorization request URL. This request uses an extra query parameter of *prompt=none* to prevent any user prompts, since the frame is invisible. The request should also send the SSO cookie.
 
 ![prompt none code flow](/images/150/prompt-none-code-flow.jpg?v=20240822)
 
-If the SSO cookie is not expired, the authorization server returns a new authorization code in the browser response. The SPA then sends the code to the token endpoint with an authorization code grant message, to get updated tokens.
-
-Eventually the session cookie will expire, and iframe renewal will return a *login_required* response. The SPA must process this response specially and redirect the user to sign in again:
+If it receives a valid SSO cookie the authorization server validates it to identify the client, then returns a new authorization code in the browser response. The SPA then sends the code to the token endpoint in an authorization code grant request and gets a new set of tokens. Eventually the session cookie expires and iframe renewal returns a *login_required* response. The SPA must interpret this response as *end of session* and initiate user re-authentication:
 
 ![login required](/images/150/login-required.jpg?v=20240822)
 
 ### Iframe Token Renewal Options
 
-The following settings affect how iframe token renewal works:
+The following factors affect how iframe token renewal works:
 
 | Setting | Description |
 | ------- | ----------- |
-| <span style={{color:'green'}}>**Silent Redirect URI**</span> | The location on which to receive and process the silent token renewal response |
-| <span style={{color:'green'}}>**Automatic Silent Renew**</span> | Whether renewal is done using a background timer or on demand |
-| <span style={{color:'green'}}>**Token Storage**</span> | If tokens are stored in memory, then every browser tab needs its own access token |
+| <span style={{color:'green'}}>**Silent Redirect URI**</span> | The location on which to receive and process the silent token renewal response. |
+| <span style={{color:'green'}}>**Automatic Silent Renew**</span> | Whether renewal is done using a background timer or on demand. |
+| <span style={{color:'green'}}>**Token Storage**</span> | If tokens are stored in memory, then every browser tab needs its own access token. |
 
-This blog’s next code sample uses an SPA that stores access tokens only in memory. The SPA will therefore need to try to renew the access token when any of these conditions occur:
+This blog’s next code sample uses an SPA that stores access tokens only in memory. The SPA therefore needs to renew the access token when any of these conditions occur:
 
-- API returns a 401 response
-- User reloads the browser page
-- User opens an SPA view in a new browser tab
+- API returns a 401 response.
+- User reloads the browser page.
+- User opens an SPA view in a new browser tab.
 
-I avoid renewal on a background timer, since this compares the *expires_in* value from a token response to the current time. Yet an API can somtimes return a 401 response for other reasons, such as token signing key renewal, or an infrastructure event like a load balancing failover.
+If you prefer, you can configure the access token renewal request to run on a background timer, which compares the *expires_in* value from a token response to the current time. When the access token is close to expiry, the security library sends the token renewal request. Be aware though, that an API can return 401s for other reasons, so your SPA still needs to handle 401 errors.
 
 ### Visualizing Token Renewal
 
-To enable visualization of token renewal, the updated SPA enables access token renewal to be tested, by clicking *Expire Token* and then *Reload Data*:
+To enable visualization of token renewal, the next SPA code sample enables you to test access token renewal by clicking *Expire Token* followed by *Reload Data*:
 
 ![ui refresh testing](/images/150/ui-refresh-testing.jpg?v=20240822)
 
-This is a test mechanism that adds characters to the access token to get the API to return a 401 response. The important behaviour is to ensure that the SPA handles expiry seamlessly, by silently renewing the access token, then retrying the API call.
+This is a test mechanism that adds characters to the access token to get the API to return a 401 response. The important behaviour is to ensure that the SPA handles expiry conditions reliably.
 
-### Reliability Problems
+### Dropped Cookie Problems
 
-Recent SameSite cookie restrictions mean there are now limits on how the browser will send authorization server SSO cookies. For cross domain iframe requests, cookies are dropped by default in the Safari browser, or in Incognito windows from other browsers. All browsers are expected to adopt the Safari behaviour in the near future:
+Recent same site cookie restrictions mean there are now limits on how the browser will send authorization server SSO cookies. For cross domain iframe requests, cookies are dropped by default in the Safari browser, or in Incognito windows from other browsers. All browsers are expected to adopt the Safari behaviour in the short or medium term:
 
 ![browser restrictions](/images/150/browser-restrictions.jpg)
 
 These cookie restrictions help to prevent unwelcome website tracking of users by advertisers and other parties. Yet they have a side effect that traditional OpenID Connect silent token renewal is no longer reliable.
 
-In addition, some authorization servers may not support the silent renewal flow correctly. The SSO cookie needs to be issued with *SameSite=none*, yet Cognito uses *SameSite=lax*. This results in all current browsers refusing to send Cognito cookies from an iframe:
+In addition, some authorization servers may not support the silent renewal flow correctly. The authorization server SSO cookie should use the *SameSite=none* property, yet this blog's default authorization server produces cookies that use the *SameSite=lax* property. This results in all current browsers refusing to send its cookies from an iframe:
 
 ![sso cookie](/images/150/sso-cookie.jpg?v=20240822)
 
-Cognito also does not support the OpenID Connect *prompt=none* parameter. Instead it returns an HTML response to render the login page when the cookie is not sent, instead of the expected *login_required* error:
+The authorization server also does not support the OpenID Connect *prompt=none* parameter. Instead, it returns an HTML response to render the login page when it does not receive an SSO cookie, instead of returning the expected *login_required* error response:
 
 ![iframe render login](/images/150/iframe-render-login.jpg?v=20240822)
 
-If this occurs, the user experiences a hang for 10 or so seconds, after which an SPA might need to present an error display such as this:
+This results in a poor user experience where the browser hangs for 10 or so seconds. The *oidc-client-ts* security library then times out and the updated code sample reports an iframe timeout error.
 
 ![iframe timeout error](/images/150/iframe-timeout-error.jpg?v=20240822)
 
 ### Renewal Using Refresh Tokens
 
-An alternative option is for an SPA to use a refresh token to silently renew access tokens. To provide a basic working solution, this approach is used by this blog’s next SPA, when Cognito is used as the authorization server.
+An alternative option is for the SPA to use a refresh token to silently renew access tokens. To provide a basic working solution, this approach is used by this blog’s next SPA, when AWS Cognito is used as the authorization server.
 
 ![refresh token renewal](/images/150/refresh-token-renewal.jpg?v=20240822)
 
-Note however that there is no client credential in the refresh token grant request. Therefore, if there is an XSS vulnerability that leaks the refresh token, it could be exploited for a long time by an attacker. This remains true even if one-time-use refresh tokens are used.
+Yet I would prefer not to use refresh tokens in an SPA, which cannot securely store a client credential and present one in the refresh token grant request. Therefore, if there is an XSS vulnerability that leaks the refresh token, it could be exploited for a long time by an attacker.
 
 ### SPA Token Renewal Options
 
@@ -80,21 +76,19 @@ There are three options for SPA token renewal in 2021. We have seen that the fir
 
 | Method | Access Token Renewal Behaviour |
 | ------ | ------------------------------ |
-| <span style={{color:'red'}}>Hidden Iframes</span> | Medium security using iframe redirects, though this has reliability problems |
-| <span style={{color:'red'}}>Refresh Tokens</span> | Low security by storing a refresh token in local storage and using it to renew access tokens across all browser tabs |
-| <span style={{color:'green'}}>**Same Site Cookies**</span> | Best security using HttpOnly cookies that contain or reference OAuth tokens, across all browser tabs |
+| <span style={{color:'red'}}>Hidden Iframes</span> | Access tokens store in memory in the browser, but with serious reliability problems. |
+| <span style={{color:'red'}}>Refresh Tokens</span> | Low security by storing a refresh token in local storage and using it to renew access tokens across all browser tabs. |
+| <span style={{color:'green'}}>**Same Site Cookies**</span> | Best security using HttpOnly cookies that contain or reference OAuth tokens, across all browser tabs. |
 
 ### Backend for Frontend
 
-In 2021 the preferred option is to use the third option, via a Backend for Frontend. This has best protection against the JavaScript threats described in the [OAuth for Browser Based Apps](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps#name-the-threat-of-malicious-jav) document.
-
-The SPA can then perform token renewal securely as well as reliably. Once a BFF is in place, you may as well also keep access tokens out of the browser. This is the approach taken by this blog’s <Link href='/posts/final-spa-overview'>Final SPA</Link>.
+In 2021 the preferred option is to use the third option, using a Backend for Frontend. This provides the best protection against the JavaScript threats described in the [OAuth for Browser Based Apps](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps#name-the-threat-of-malicious-jav) document. The SPA can then perform token renewal in the most secure way, with good reliability. Once a BFF is in place, you may as well also keep access tokens out of the browser. This blog’s <Link href='/posts/final-spa-overview'>Final SPA</Link> uses this approach.
 
 ### Where Are We?
  
-We have described the traditional SPA token renewal flow, and why it is no longer recommended. However, the second code sample shows how to implement iframe based token renewal, since knowledge of the cookie  and browser security behaviours is useful for developers to know.
+I briefly described how the traditional SPA token renewal flow works and why you should no longer use it. However, the second code sample shows how to implement iframe based token renewal, since it is a technically interesting flow.
 
 ### Next
 
-- We will discuss <Link href='/posts/logout'>Logout</Link>, to complete our SPA Session Management
-- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>
+- I summarize <Link href='/posts/logout'>Logout</Link> behaviors as part of your SPA's session management.
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.
