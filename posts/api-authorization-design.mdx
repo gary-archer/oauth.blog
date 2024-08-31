@@ -50,8 +50,7 @@ A client with an access token that contains only a *sales* scope can never succe
 
 You cannot use the scopes that you design for dynamic purposes, such as different scopes per user. Aim to keep scopes fairly high level. In this blog I use a fictional *investments* scope and frontend clients need access tokens with this scope to call any endpoint of my example APIs. Creating too many scopes too early can result in productivity problems, like needing to frequently update clients with new scopes, or deal with access token versioning in APIs. Consider only adding new scopes when you extend APIs to new business areas.
 
-
-You don't need many scopes since you use claims for most authorization. Yet you should design scopes in terms of end-to-end flows. If multiple APIs call each other, they should each validate an access token and implement business authorization. When a user is present, each API should receive the user identity and its required scopes and claims in its access token. The source API can send its current access token or use OAuth token exchange to get a new one from the authorization server with different scopes. 
+You don't usually need many scopes since you use claims for most authorization. Yet you should design scopes in terms of end-to-end flows. If multiple APIs call each other, they should each validate an access token and implement business authorization. When a user is present, each API should receive the user identity and its required scopes and claims in its access token. The source API can send its current access token or use OAuth token exchange to get a new one from the authorization server with different scopes. 
 
 ### OpenID Connect Scopes
 

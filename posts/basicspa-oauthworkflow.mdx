@@ -164,6 +164,8 @@ Next the oidc-client-ts library sends the access token to the authorization serv
 
 ![User info](/images/40/userinfo.jpg?v=20240727)
 
+You should be able to control the fields in the userinfo response depending on the scopes in the access token. Later in this blog I issue the *manager_id* and *role* claims to access tokens when the client uses the *investments* scope. Clients without the *investments* scope, like the initial SPA, should not have access to these claims when they get userinfo.
+
 ### Step 13. SPA Calls API with Access Token
 
 Next the SPA calls the API and, because this is a cross domain call, the browser first triggers a pre-flight HTTP OPTIONS request:
