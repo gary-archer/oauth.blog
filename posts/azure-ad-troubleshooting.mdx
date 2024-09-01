@@ -160,14 +160,14 @@ private async _getGraphAccessToken(accessToken: string): Promise<string> {
 }
 ```
 
-### 8. IFrame Token Renewal
+### 8. Iframe Token Renewal
 
 The SPA uses almost identical code to the previous code sample, which used AWS Cognito as the authorization server. The oidc-client-ts library continues to perform the security work in a portable manner, and its integration was described in these earlier blog posts:
 
 - <Link href='/posts/basicspa-codingkeypoints'>SPA 1 – Coding Key Points</Link>
 - <Link href='/posts/basicapi-codingkeypoints'>SPA 2 – Coding Key Points</Link>
 
-A point of interest is that Entra ID correctly supports the traditional IFrame Silent Token Renewal solution for SPAs. It does so by issuing SSO cookies with the SameSite=none property, and by correctly handling the OpenID Connect prompt=none request parameter.
+A point of interest is that Entra ID correctly supports the traditional iframe-based silent token renewal solution for SPAs. It does so by issuing SSO cookies with the SameSite=none property, and by correctly handling the OpenID Connect prompt=none request parameter.
 
 In the SPA you can click *Expire Access Token* followed by *Reload Data* to force the API to return a 401 response. The SPA then runs an iframe redirect to refresh access tokens. Doing so avoids redirecting the whole window and impacting the end user, after which a new access token is received.
 

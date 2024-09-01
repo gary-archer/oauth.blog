@@ -1,13 +1,13 @@
 # Updated SPA – Code Overview
 
-In the previous post I described the behaviour of the <Link href='/posts/improved-spa-code-sample-overview'>Updated SPA and API Code Sample</Link>. Next I summarize some changes to the SPA code.
+In the previous post I described the behaviour of the <Link href='/posts/improved-spa-code-sample-overview'>Updated SPA and API Code Sample</Link>. Next I summarize some changes to the SPA code, with a particular focus on <Link href='/posts/user-sessions-and-token-renewal'>Iframe-Based Access Token Renewal</Link> and its difficulties.
 
 ### SPA OAuth Configuration Changes
 
 I use additional settings from the *oidc-client-ts* library to use the following features in the SPA:
 
 - In-memory token storage.
-- Silent token renewal via Iframes.
+- Silent token renewal via iframes.
 - Logout.
 
 The authenticator class therefore uses additional oidc-client-ts settings:
@@ -36,7 +36,7 @@ public constructor(configuration: OAuthConfiguration) {
 }
 ```
 
-### Enabling IFrame Renewal
+### Enabling Iframe-Based Access Token Renewal
 
 The final SPA uses a couple of security behaviours that no longer align with security best practices:
 
@@ -108,11 +108,11 @@ private async _performAccessTokenRenewalViaIframeRedirect(): Promise<void> {
 }
 ```
 
-My *IFrameApp* class gets instantiated when the authorization server redirects the iframe back to the SPA, which receives a response URL of the following form, containing the authorization code:
+An instance of the *IFrameApp* class gets instantiated when the authorization server sends a redirect response back to the SPA, with a URL of the following form, containing the authorization code:
 
 - *https://www.authsamples-dev.com/spa?code=xxx&state=yyy*
 
-The job of the iframe app is to POST the response URL to the SPA’s main window, which then exchanges the code for tokens. The tokens are then stored in-memory.
+The job of the iframe app is to POST the response URL to the SPA’s main window, which then exchanges the code for tokens. The SPA then stores the tokens in-memory.
 
 ```typescript
 export class IFrameApp {
@@ -145,8 +145,6 @@ export class IFrameApp {
 }
 ```
 
-### Security Library Behaviour
-
 The oidc-client-ts library uses the [PostMessage API](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) to send the authorization response URL from the iframe to the main window. You can use code such as the following to intercept the posted message and view the data:
 
 ```typescript
@@ -158,6 +156,158 @@ window.addEventListener('message', (evt) => {
 When the main window exchanges the code for token it uses the PKCE *code_verifier* that was saved to session storage before the iframe redirect. You can view the oidc-client-ts library’s logging output, including validation of received tokens. To do so, append *#log=debug* to the SPA URL, and also ensure that the browser console tools use the *Preserve Log* and *All Levels* options:
 
 ![oidc browser logs](/images/180/oidc-browser-logs.jpg?v=20240813)
+
+### Updated API Flow
+
+The SPA's *ApiClient* object now uses an updated algorithm to call APIs, that includes token refresh. I like to only trigger login redirects when one of the following conditions is true:
+
+- There is no access token yet.
+- Token refresh fails with an *invalid_grant* error code, meaning end of session.
+
+I write the code as follows, but note that the *oidc-client-ts* library's *signInSilent* method does not return error codes, to enable my preferred logic. Therefore, if refreshing an access token fails for other reasons, like a dropped SSO cookie during an iframe redirect, this logic could lead to a redirect loop.
+
+```typescript
+private async _callApi(path: string, method: Method, dataToSend?: any): Promise<any> {
+
+    const url = `${this._apiBaseUrl}${path}`;
+
+    let token = await this._authenticator.getAccessToken();
+    if (!token) {
+
+        await this._authenticator.startLogin(null);
+        throw ErrorFactory.getFromLoginRequired();
+    }
+
+    try {
+
+        return await this._callApiWithToken(url, method, dataToSend, token);
+
+    } catch (e1: any) {
+
+        const error = e1 as UIError;
+        if (error.statusCode !== 401) {
+            throw error;
+        }
+
+        token = await this._authenticator.refreshAccessToken();
+        if (!token) {
+
+            await this._authenticator.startLogin(error);
+            throw ErrorFactory.getFromLoginRequired();
+        }
+
+        return await this._callApiWithToken(url, method, dataToSend, token);
+    }
+}
+```
+
+Therefore, I use the same type of logic from the first SPA, where *startLogin* uses a time-based check to prevent redirect loops:
+
+```typescript
+private async _preventRedirectLoop(api401Error: UIError | null): Promise<void> {
+
+    if (api401Error && this._loginTime) {
+
+        const currentTime = new Date().getTime();
+        const millisecondsSinceLogin = currentTime - this._loginTime;
+        if (millisecondsSinceLogin < 1000) {
+
+            await this.clearLoginState();
+            throw api401Error;
+        }
+    }
+}
+```
+
+When using refresh tokens, the refresh operation should take a short time such as 100 milliseconds and users should not notice any time overhead. Yet when you use iframe based token refresh, this time can take considerably longer and has greater user impact.
+
+### Access Token Refresh Before Expiry
+
+There is a much simpler way to implement token refresh, by updating the *oidc-client-ts* settings to those shown here. A background timer then attempts to refresh the access token by comparing the current time to the *expires_in* field from the token response. The time for iframe-based token refresh occurs in the background so you avoid impacting users.
+
+```markdown
+userStore: new WebStorageStateStore({ store: localStorage }),
+automaticSilentRenew: false,
+```
+
+Your API logic can then interpret any 401 returned from APIs as end of session and redirect the user to-reauthenticate. You should also consider adding logic to <Link href='/posts/basicspa-codingkeypoints#preventing-redirect-loops'>prevent redirect loops</Link> to deal with conditions if APIs permanently reject access tokens.
+
+```typescript
+private async _callApi(path: string, method: Method, dataToSend?: any): Promise<any> {
+
+    const url = `${this._apiBaseUrl}${path}`;
+
+    let token = await this._authenticator.getAccessToken();
+    if (!token) {
+
+        await this._authenticator.startLogin(null);
+        throw ErrorFactory.getFromLoginRequired();
+    }
+
+    try {
+
+        return await this._callApiWithToken(url, method, dataToSend, token);
+
+    } catch (e1: any) {
+
+        const error = e1 as UIError;
+        if (error.statusCode !== 401) {
+            throw error;
+        }
+
+        await this._authenticator.startLogin(error);
+        throw ErrorFactory.getFromLoginRequired();
+    }
+}
+```
+
+Yet local storage is also the <span style={{color:'red'}}>least secure way to manage access tokens in the browser</span>, with greatest XSS threats.
+
+### The SPA OAuth Journey
+
+When you use the traditional SPA flow using only JavaScript code, you typically undergo a journey like this:
+
+- You first store access tokens in local storage, to prevent losing them during page reloads and multi-tab browsing.
+- You then realise this is bad from a security viewpoint and try to use in-memory access token storage to improve security.
+- You must then manage page reloads and multi-tab browsing, and token refresh becomes considerably more difficult.
+- You then realise that even with very careful code, your SPA still has security and reliability issues.
+
+Eventually, you come to realise that to solve the security, usability and reliability conditions, you need a backend component that assists the SPA with its security and also serves the SPA to ensure the best usability and reliability. You can realise such a solution with a correctly designed <Link href="/posts/spa-back-end-for-front-end">Backend for Frontend</Link> as I show later in this blog. An important part of this design is error responses that put the SPA in control.
+
+### SPA Calls API to get User Info
+
+Once the SPA has an access token it uses it to get two sources of user information. The SPA now explicitly sends the access token to the OpenID connect userinfo endpoint. Yet the SPA also renders user attributes not stored in the authorization server. It gets them by calling the API, then renders data from both sources in the top right of the view.
+
+```typescript
+public async load(authenticator: Authenticator, apiClient: ApiClient): Promise<void> {
+
+    const oauthUserInfo = await authenticator.getUserInfo();
+    const apiUserInfo = await apiClient.getUserInfo();
+
+    if (oauthUserInfo && apiUserInfo) {
+
+        const viewModel = {
+            userName: this.getUserNameForDisplay(oauthUserInfo),
+            title: this.getUserTitle(apiUserInfo),
+            regions: this.getUserRegions(apiUserInfo),
+        };
+
+        const htmlTemplate =
+            `<div class='text-end mx-auto'>
+                <div class='fw-bold basictooltip'>{{userName}}
+                    <div class='basictooltiptext'>
+                        <small>{{title}}</small>
+                        <br />
+                        <small>{{regions}}</small>
+                    </div>
+                </div>
+            </div>`;
+
+        const html = mustache.render(htmlTemplate, viewModel);
+        DomUtils.html('#username', html);
+    }
+}
+```
 
 ### SPA Basic Logout
 
@@ -196,41 +346,6 @@ private _onStorageChange(event: StorageEvent): void {
 
         this._authenticator!.onExternalLogout();
         location.hash = '#loggedout';
-    }
-}
-```
-
-### SPA Calls API to get User Info
-
-Finally, the SPA gets name details from the authorization server's OpenID Connect userinfo endpoint, and some secondary user attributes from the API, then displays both together in the top right of the view:
-
-```typescript
-public async load(authenticator: Authenticator, apiClient: ApiClient): Promise<void> {
-
-    const oauthUserInfo = await authenticator.getUserInfo();
-    const apiUserInfo = await apiClient.getUserInfo();
-
-    if (oauthUserInfo && apiUserInfo) {
-
-        const viewModel = {
-            userName: this.getUserNameForDisplay(oauthUserInfo),
-            title: this.getUserTitle(apiUserInfo),
-            regions: this.getUserRegions(apiUserInfo),
-        };
-
-        const htmlTemplate =
-            `<div class='text-end mx-auto'>
-                <div class='fw-bold basictooltip'>{{userName}}
-                    <div class='basictooltiptext'>
-                        <small>{{title}}</small>
-                        <br />
-                        <small>{{regions}}</small>
-                    </div>
-                </div>
-            </div>`;
-
-        const html = mustache.render(htmlTemplate, viewModel);
-        DomUtils.html('#username', html);
     }
 }
 ```

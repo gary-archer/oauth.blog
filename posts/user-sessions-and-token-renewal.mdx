@@ -1,6 +1,6 @@
-# IFrame Access Token Renewal
+# Iframe-Based Access Token Renewal
 
-In the previous post I summarised this blog’s <Link href='/posts/federated-logins'>User Authentication Behaviour</Link>. Next I explain iframe based access token renewal for SPAs. This flow is now problematic, due to recent browser restrictions.
+In the previous post I summarised this blog’s <Link href='/posts/federated-logins'>User Authentication Behaviour</Link>. Next I explain iframe-based access token renewal for SPAs. This flow is now problematic, due to recent browser restrictions.
 
 ### Traditional SPA Token Renewal
 
@@ -12,7 +12,7 @@ In this flow, a security library dynamically creates a hidden iframe and sets it
 
 ![prompt none code flow](/images/150/prompt-none-code-flow.jpg?v=20240822)
 
-If it receives a valid SSO cookie the authorization server validates it to identify the client, then returns a new authorization code in the browser response. The SPA then sends the code to the token endpoint in an authorization code grant request and gets a new set of tokens. Eventually the session cookie expires and iframe renewal returns a *login_required* response. The SPA must interpret this response as *end of session* and initiate user re-authentication:
+If the authorization server receives a valid SSO cookie it returns a new authorization code in the browser response. The SPA then sends the code to the token endpoint in an authorization code grant request and gets a new set of tokens. Eventually the session cookie expires and iframe renewal returns a *login_required* response. The SPA must interpret this response as *end of session* and initiate user re-authentication:
 
 ![login required](/images/150/login-required.jpg?v=20240822)
 
@@ -32,7 +32,7 @@ This blog’s next code sample uses an SPA that stores access tokens only in-mem
 - User reloads the browser page.
 - User opens an SPA view in a new browser tab.
 
-If you prefer, you can configure the access token renewal request to run on a background timer, which compares the *expires_in* value from a token response to the current time. When the access token is close to expiry, the security library sends the token renewal request. Be aware though, that an API can return 401s for other reasons, so your SPA still needs to handle 401 errors.
+If you prefer, you can configure the access token renewal request to run on a background timer, which compares the *expires_in* value from a token response to the current time. When the access token is close to expiry, the security library sends the token renewal request. Be aware though, that an API can return 401s for other reasons, so your SPA should continue to expect and handle 401 errors from APIs.
 
 ### Visualizing Token Renewal
 
@@ -80,13 +80,15 @@ There are three options for SPA token renewal in 2021. We have seen that the fir
 | <span style={{color:'red'}}>Refresh Tokens</span> | Low security by storing a refresh token in local storage and using it to renew access tokens across all browser tabs. |
 | <span style={{color:'green'}}>**Same Site Cookies**</span> | Best security using HttpOnly cookies that contain or reference OAuth tokens, across all browser tabs. |
 
+The <Link href='/posts/updated-spa-coding-key-points'>Updated SPA – Code Overview</Link> explains the complexities you must deal with if you attempt to implement iframe-based access token renewal with in-memory storage. Even with careful code there are security, reliability and usability issues.
+
 ### Backend for Frontend
 
-In 2021 the preferred option is to use the third option, using a Backend for Frontend. This provides the best protection against the JavaScript threats described in the [OAuth for Browser Based Apps](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps#name-the-threat-of-malicious-jav) document. The SPA can then perform token renewal in the most secure way, with good reliability. Once a BFF is in place, you may as well also keep access tokens out of the browser. This blog’s <Link href='/posts/final-spa-overview'>Final SPA</Link> uses this approach.
+In 2021 the preferred option is to use a Backend for Frontend approach. This provides the best protection against the JavaScript threats described in the [OAuth for Browser Based Apps](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps#name-the-threat-of-malicious-jav) document. The SPA can then perform token renewal in the most secure way, with good reliability. This blog’s <Link href='/posts/final-spa-overview'>Final SPA</Link> uses an API-driven BFF to achieve the best all-round solution.
 
 ### Where Are We?
  
-I briefly described how the traditional SPA token renewal flow works and why you should no longer use it. However, the second code sample shows how to implement iframe based token renewal, since it is is useful to know about these OAuth techniques.
+I briefly described how the traditional SPA token renewal flow works and why you should no longer use it. However, the second code sample shows how to implement iframe based token renewal, since it is remains useful to know about the OAuth techniques.
 
 ### Next
 

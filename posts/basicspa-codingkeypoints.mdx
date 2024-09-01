@@ -416,6 +416,58 @@ private async _callApi(path: string, method: Method, dataToSend?: any): Promise<
 
 The SPA does not try to anticipate API 401 responses based on expiry times, since 401s can occur for multiple reasons. Example events that might cause 401s in some deployments are token revocation, cryptographic key renewal or load-balancing failovers. Note also that the SPA only even sends the access token and never reads it, since only APIs should read access token payloads.
 
+### Preventing Redirect loops
+
+When developing an OAuth client you should ensure that your app is not vulnerable to redirect loops, where there is a cycle of redirecting the user, getting an access token, then API calls failing with a 401 response. You can rehearse this condition if you set the issuer to an incorrect value in the API's configuration:
+
+```json
+{
+    "api": {
+        "port": 80,
+        "trustedOrigins": [
+            "http://localhost"
+        ],
+        "useProxy": false,
+        "proxyUrl": "http://127.0.0.1:8888"
+    },
+    "oauth": {
+        "jwksEndpoint": "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json",
+        "algorithm":    "RS256",
+        "issuer":       "xxx",
+        "audience":     ""
+    }
+}
+```
+
+The initial SPA prevents redirect loops with the following time-based check during the *startLogin* request. I show a better solution based on token refresh in future code samples.
+
+```typescript
+public async startLogin(api401Error: UIError | null): Promise<void> {
+
+    try {
+
+        const data = {
+            hash: location.hash.length > 0 ? location.hash : '#',
+        };
+
+        if (api401Error && this._loginTime) {
+
+            const currentTime = new Date().getTime();
+            const millisecondsSinceLogin = currentTime - this._loginTime;
+            if (millisecondsSinceLogin < 250) {
+                throw api401Error;
+            }
+        }
+
+        await this._userManager.signinRedirect({state: data});
+
+    } catch (e: any) {
+
+        throw ErrorHandler.getFromLoginOperation(e, ErrorCodes.loginRequestFailed);
+    }
+}
+```
+
 ### SPA Error Handling
 
 The SPA's code uses a number of error codes to represent failure causes. Some of these are returned from the API or the authorization server:
