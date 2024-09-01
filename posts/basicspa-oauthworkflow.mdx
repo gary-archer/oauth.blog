@@ -197,7 +197,7 @@ To verify the access token’s digital signature, the API must download token si
 
 The response contains public keys in the *JSON Web Key* format, and the security library selects the one that matches the key identifier (*kid*) in the access token’s JWT header. The library then uses the public key to cryptographically verify the JWT's signature.
 
-The API security library (or a utility that assists it) caches JSON Web Keys in memory to avoid unnecessary lookups on subsequent API requests whose access tokens use the same key identifier.
+The API security library (or a utility that assists it) caches JSON Web Keys in-memory to avoid unnecessary lookups on subsequent API requests whose access tokens use the same key identifier.
 
 ### Step 15. API Returns Error Status Codes
 

@@ -144,7 +144,7 @@ In AWS, the entire API is spun up on every single HTTP request. There is no need
 
 ### JWT Access Token Validation
 
-Previously we explained this blog’s approach to <Link href='/posts/jwt-access-token-validation'>JWT Access Token Validation</Link>, which involves caching the token signing public keys in memory. For the Serverless API I needed to provide a custom key retriever to the JOSE library:
+Previously we explained this blog’s approach to <Link href='/posts/jwt-access-token-validation'>JWT Access Token Validation</Link>, which involves caching the token signing public keys in-memory. For the Serverless API I needed to provide a custom key retriever to the JOSE library:
 
 ```typescript
 const result = await jwtVerify(accessToken, this._jwksRetriever.getKey, options);

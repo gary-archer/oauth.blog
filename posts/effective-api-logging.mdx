@@ -423,7 +423,7 @@ When an API calls upstream APIs they should include the client context in forwar
 
 ### Request Logging Implementation
 
-An implementation needs to populate a *LogEntry* object stored in memory during the lifetime of the API request, then output its data when the request ends. This is trickier to code than when using a logger per class:
+An implementation needs to populate a *LogEntry* object stored in-memory during the lifetime of the API request, then output its data when the request ends. This is trickier to code than when using a logger per class:
 
 - You may need to capture identity details in an *Authentication Filter*.
 - You may need to capture HTTP request details in a *Logging Filter*.

@@ -322,7 +322,7 @@ private async _endLogin(result: LoginRedirectResult): Promise<void> {
 }
 ```
 
-The initial desktop app simply stores the tokens in memory. Every time the app is restarted, the user is prompted to re-login. We will show how to improve this user experience in the final desktop code sample.
+The initial desktop app simply stores the tokens in-memory. Every time the app is restarted, the user is prompted to re-login. We will show how to improve this user experience in the final desktop code sample.
 
 ### Loopback Web Server
 
@@ -411,7 +411,7 @@ This should usually be OK, since the alternative is to keep a web server running
 
 ### Refreshing Access Tokens
 
-After 15 minutes the desktop app’s access token expires, and the AppAuth *TokenRequest* object is used again, to send a token refresh token request, then update tokens stored in memory:
+After 15 minutes the desktop app’s access token expires, and the AppAuth *TokenRequest* object is used again, to send a token refresh token request, then update tokens stored in-memory:
 
 ```typescript
 private async _performTokenRefresh(): Promise<void> {
