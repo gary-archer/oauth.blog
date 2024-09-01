@@ -1,6 +1,6 @@
 # Updated API – Coding Key Points
 
-In the previous post I provided an <Link href='/posts/updated-spa-coding-key-points'>SPA Code Overview</Link> for the second code sample. Next I summarize the main API code changes.
+The previous post I provided an <Link href='/posts/updated-spa-coding-key-points'>SPA Code Overview</Link> for the second code sample. Next I summarize the main API code changes.
 
 ### API Authorization Implementation
 
@@ -8,10 +8,10 @@ In the first sample’s <Link href='/posts/basicapi-codingkeypoints'>API Coding 
 
 | Responsibility | Description |
 | -------------- | ----------- |
-| <span style={{color:'green'}}>**Authenticate Requests**</span> | Verify that a valid token is received or return a 401 error response if this is not the case |
-| <span style={{color:'green'}}>**Set up Authorization**</span> | Read claims needed for authorization, then pass them through to the API’s business logic |
+| <span style={{color:'green'}}>**Authenticate Requests**</span> | Verify incoming access tokens and return a 401 error response for invalid tokens. |
+| <span style={{color:'green'}}>**Set up Authorization**</span> | Read claims needed for authorization, then pass them through to the API’s business logic. |
 
-The updated API <Link href='/posts/jwt-access-token-validation'>validates JWT access tokens</Link> in the same way as the first code sample, but now also checks for a required scope:
+The updated API implements <Link href='/posts/jwt-access-token-validation'>JWT Access Token Validation</Link> in the same way as the first code sample, but now also implements this blog's <Link href='/posts/api-authorization-design'>API Authorization Behaviour</Link>. This starts with enforcing its required scope:
 
 ```typescript
 const scopes = ClaimsReader.getClaim(claims['scope'] as string, 'scope');
@@ -44,7 +44,7 @@ public async getCompanyTransactions(id: number): Promise<CompanyTransactions> {
 }
 ```
 
-The sample’s business logic uses both a role claim from the access token and a regions claim that is meant to represent a finer grained permission that is not issued to the access token:
+The sample’s business logic uses both a *role* claim from the access token and a *regions* claim that is meant to represent a finer grained permission that is not issued to the access token:
 
 ```typescript
 private _isUserAuthorizedForCompany(company: Company): boolean {
@@ -65,7 +65,7 @@ private _isUserAuthorizedForCompany(company: Company): boolean {
 
 ### OAuth Middleware Customization
 
-The API’s claims are customized to include additional claims, so that some authorization values are derived from the access token and others are looked up from the API’s own data:
+The API’s claims are customized to include additional finer-grained authorization values:
 
 ```typescript
 export class ClaimsPrincipal {
@@ -80,7 +80,7 @@ export class ClaimsPrincipal {
 }
 ```
 
-The API receives its business user identity in the access token. This is a *manager_id* to represent a user who manages investments. The API then uses a hard coded implementation to get extra claims from its own data:
+The API receives its business user identity in the access token. This is a *manager_id* to represent a user who manages investments. The API uses a mock implementation to get extra claims from its own data, to show the approach:
 
 ```typescript
 export class ExtraClaimsProvider {
@@ -130,7 +130,7 @@ public async authorizeRequestAndGetClaims(request: Request): Promise<ClaimsPrinc
 }
 ```
 
-When a token is first received, the extra claims are cached using the [Node Memory Cache](https://github.com/mpneuried/nodecache). A time to live is set that must not exceed the access token’s expiry claim:
+When a token is first received, the extra claims are cached using the [Node Memory Cache](https://github.com/mpneuried/nodecache). A time-to-live is set that must not exceed the access token’s *exp* (expiry) claim:
 
 ```typescript
 public addClaimsForToken(accessTokenHash: string, claims: ExtraClaims, expiry: number): void {
@@ -151,7 +151,7 @@ public addClaimsForToken(accessTokenHash: string, claims: ExtraClaims, expiry: n
 }
 ```
 
-When the same token is received on subsequent API requests, the cached claims are retrieved immediately. This ensures that the API performs well:
+When the API receives the same access token on subsequent API requests, it immediately retrieves cached claims. This ensures that the API performs well:
 
 ```typescript
 public getClaimsForToken(accessTokenHash: string): ExtraClaims | null {
@@ -168,9 +168,7 @@ public getClaimsForToken(accessTokenHash: string): ExtraClaims | null {
 }
 ```
 
-When getting started with OAuth secured APIs you should not need complex code like this. Instead derive the claims principal directly from the access token. Later on though, you could run into productivity problems if many fine-grained authorization values are managed in the authorization server.
-
-If so, this is one possible way to ensure a stable access token and avoid needing to frequently deploy APIs and the authorization server together. It keeps the claims principal useful to the API’s logic, and reduces the need for access token versioning.
+When getting started with OAuth secured APIs you should not need complex code like this. Instead, derive the claims principal directly from the access token. The above authorization blog post says more about the technique.
 
 ### User Info
 
@@ -197,9 +195,9 @@ export class UserInfoService {
 
 ### Where Are We?
 
-We have updated the API’s access tokens to include a business scope and some custom claims, including a business user identity. The API looks up extra values needed for its authorization. Business logic then receives a  useful claims principal and uses it to enforce business authorization.
+The key goal on the data side of the second code sample is a setup that can productively use user attributes from multiple data sources. Both the API and the SPA it serves can work with user attributes stored either in the authorization server or the business data.
 
 ### Next
 
-- Next we will configure a <Link href='/posts/azure-active-directory-setup'>Microsoft Entra ID SPA and API Setup</Link>
-- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>
+- I port the second code sample to another provider, in the <Link href='/posts/azure-active-directory-setup'>Microsoft Entra ID SPA and API Setup</Link>.
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.

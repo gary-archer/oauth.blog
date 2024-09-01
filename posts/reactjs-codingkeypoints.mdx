@@ -373,7 +373,7 @@ private async _callApiWithCredential(
 }
 ```
 
-Apps that use tokens can determine whether the user is authenticated by the presence of tokens, which is the technique this blog also uses for native apps. For SPAs with cookies, I use a similar technique of storing a boolean *isLoggedIn=true* flag in local storage. When access tokens expire, they are refreshed and the API request retried, as for earlier SPA code examples. Token refresh now causes cookies to be rewritten, so that they contain new underlying tokens.
+Apps that use tokens can determine whether the user is authenticated by the presence of tokens, which is the technique this blog also uses for native apps. For SPAs with cookies, I use a similar technique of storing a boolean *isLoggedIn=true* flag in local storage. When access tokens expire, they are refreshed and the API request retried, as for earlier SPA code samples. Token refresh now causes cookies to be rewritten, so that they contain new underlying tokens.
 
 The SPA's cookies are session cookies, so if the user runs the SPA, signs in and then closes their browser, cookies are removed. The next time the user runs the app, the *isLoggedIn=true* flag will be set and the SPA will call APIs, and receive 401 responses. The SPA (and this blog's native apps) cope reliably with this condition and prompt the user to re-authenticate. I use the following overall algorithm for API requests, to handle all of these concerns:
 
