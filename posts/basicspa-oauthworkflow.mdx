@@ -64,9 +64,13 @@ In some use cases, you can configure the authorization server to present a conse
 
 Once a login completes successfully, the authorization server issues a SSO (single sign-on) cookie to the browser. This is a third-party cookie since the authorization server runs in an unrelated domain from the SPA. In subsequent authorization requests the authorization server knows the user is already signed in when it receives this cookie, and can avoid login prompts.
 
-![User Session Cookie](/images/40/user-session-cookie.jpg?v=20240727)
+![User Session Cookie](/images/40/user-session-cookie.jpg?v=20240901)
 
-The most standard option for identity systems is to issue *SameSite=none* cookies, to inform browsers to send the (third-party) SSO cookie in top-level redirects to the authorization server. Yet at the time of  writing, Cognito instead uses *SameSite=lax*, which causes some <Link href='/posts/user-sessions-and-token-renewal'>token renewal problems</Link> in later posts.
+There are a couple of issues with the way cookies are set:
+
+- I like to configure the authorization server to use *session cookies* that automatically expire when the user closes all browser windows. When the SSO cookie is persistent, as for AWS Cognito, the user is only signed out of the app qwhen the user closes the browser. When the app restarts, the user performs a *Single Sign On (SSO)* and is automatically signed in. This is not the behavior I want.
+
+- Identity systems issue cookies that are usually always third-party from the app's viewpoint. To work in the best ways for applications, they should use the *SameSite=none* cookie property. This instructs browsers to send the cookie when the app redirects to the authorization server. I say more about the impact in the <Link href='/posts/user-sessions-and-token-renewal'>Iframe-Based Token Renewal</Link> blog post.
 
 ### Step 6. SPA Receives an Authorization Response
 

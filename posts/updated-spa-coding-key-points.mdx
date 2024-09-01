@@ -219,49 +219,16 @@ private async _preventRedirectLoop(api401Error: UIError | null): Promise<void> {
 }
 ```
 
-When using refresh tokens, the refresh operation should take a short time such as 100 milliseconds and users should not notice any time overhead. Yet when you use iframe based token refresh, this time can take considerably longer and has greater user impact.
+### Low Security Options
 
-### Access Token Refresh Before Expiry
-
-There is a much simpler way to implement token refresh, by updating the *oidc-client-ts* settings to those shown here. A background timer then attempts to refresh the access token by comparing the current time to the *expires_in* field from the token response. The time for iframe-based token refresh occurs in the background so you avoid impacting users.
+There are simpler ways to implement token refresh. For example, you can update the *oidc-client-ts* settings to those shown here. A background timer then attempts to refresh the access token by comparing the current time to the *expires_in* field from the token response. The time for iframe-based token refresh occurs in the background so you avoid impacting users. You can also avoid performing a token refresh if the user reloads the page or opens a new browser tab:
 
 ```markdown
 userStore: new WebStorageStateStore({ store: localStorage }),
-automaticSilentRenew: false,
+automaticSilentRenew: true,
 ```
 
-Your API logic can then interpret any 401 returned from APIs as end of session and redirect the user to-reauthenticate. You should also consider adding logic to <Link href='/posts/basicspa-codingkeypoints#preventing-redirect-loops'>prevent redirect loops</Link> to deal with conditions if APIs permanently reject access tokens.
-
-```typescript
-private async _callApi(path: string, method: Method, dataToSend?: any): Promise<any> {
-
-    const url = `${this._apiBaseUrl}${path}`;
-
-    let token = await this._authenticator.getAccessToken();
-    if (!token) {
-
-        await this._authenticator.startLogin(null);
-        throw ErrorFactory.getFromLoginRequired();
-    }
-
-    try {
-
-        return await this._callApiWithToken(url, method, dataToSend, token);
-
-    } catch (e1: any) {
-
-        const error = e1 as UIError;
-        if (error.statusCode !== 401) {
-            throw error;
-        }
-
-        await this._authenticator.startLogin(error);
-        throw ErrorFactory.getFromLoginRequired();
-    }
-}
-```
-
-Yet local storage is also the <span style={{color:'red'}}>least secure way to manage access tokens in the browser</span>, with greatest XSS threats.
+For best reliability, you could also store a refresh token in local storage and avoid the use of iframe-based access token refresh completely. Yet persistent storage is the <span style={{color:'red'}}>least secure way to manage tokens in the browser</span>, with greatest XSS threats. When you also store refresh tokens, you make threats much worse, since an attacker can use the refresh token to get new access tokens without needing to supply a client credential.
 
 ### The SPA OAuth Journey
 
