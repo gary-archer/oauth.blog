@@ -42,8 +42,8 @@ The final SPA uses a couple of security behaviours that no longer align with sec
 
 | Behaviour | Description |
 | --------- | ----------- |
-| <span style={{color:'red'}}>Refresh Tokens in the Browser.</span> | The AWS Cognito authorization server returns refresh tokens to the browser, which should not be done when using this flow. |
-| <span style={{color:'red'}}>Access Tokens in the Browser.</span> | These days you should also avoid returning access tokens to the browser due to XSS threats. |
+| <span style={{color:'red'}}>Refresh Tokens in the Browser</span> | The AWS Cognito authorization server returns refresh tokens to the browser, which should not be done when using this flow. |
+| <span style={{color:'red'}}>Access Tokens in the Browser</span> | These days you should also avoid returning access tokens to the browser due to XSS threats. |
 
 With AWS Cognito there are also some reliability problems with iframe token renewal. To provide a working and reliable solution, the SPA uses the refresh token to renew access tokens when the provider is AWS Cognito. Since I store the refresh token in-memory, there is an OpenID Connect redirect whenever the browser page is reloaded.
 
