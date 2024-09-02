@@ -10,7 +10,7 @@ I use additional settings from the *oidc-client-ts* library to use the following
 - Silent token renewal via iframes.
 - Logout.
 
-The authenticator class therefore uses additional oidc-client-ts settings:
+The SPA's authenticator class therefore supplies additional settings to the *oidc-client-ts* library:
 
 ```typescript
 public constructor(configuration: OAuthConfiguration) {
@@ -35,38 +35,6 @@ public constructor(configuration: OAuthConfiguration) {
     this._userManager = new UserManager(settings);
 }
 ```
-
-### Enabling Iframe-Based Access Token Renewal
-
-The final SPA uses a couple of security behaviours that no longer align with security best practices:
-
-| Behaviour | Description |
-| --------- | ----------- |
-| <span style={{color:'red'}}>Refresh Tokens in the Browser</span> | The AWS Cognito authorization server returns refresh tokens to the browser, which should not be done when using this flow. |
-| <span style={{color:'red'}}>Access Tokens in the Browser</span> | These days you should also avoid returning access tokens to the browser due to XSS threats. |
-
-With AWS Cognito there are also some reliability problems with iframe token renewal. To provide a working and reliable solution, the SPA uses the refresh token to renew access tokens when the provider is AWS Cognito. Since I store the refresh token in-memory, there is an OpenID Connect redirect whenever the browser page is reloaded.
-
-To activate iframe based token renewal, simply set a different provider name in the SPA’s configuration file. Then run options such as refreshing the browser page to understand the problems:
-
-```json
-{
-    "app": {
-        "apiBaseUrl":             "https://api.authsamples-dev.com/api"
-    },
-    "oauth": {
-        "provider":               "cognito",
-        "authority":              "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
-        "clientId":               "hje94a2jj3lgkobkh57ikenhh",
-        "redirectUri":            "https://www.authsamples-dev.com/spa",
-        "postLogoutRedirectUri":  "https://www.authsamples-dev.com/spa/loggedout.html",
-        "scope":                  "openid profile https://api.authsamples.com/investments",
-        "customLogoutEndpoint":   "https://login.authsamples.com/logout"
-    }
-}
-```
-
-Yet the code sample is intended to demonstrate iframe-based token renewal and behaves this way if points to an authorization server that supports the correct behaviour. Therefore, I describe the intended behavior next.
 
 ### Silent Token Renewal Implementation
 
@@ -219,7 +187,7 @@ private async _preventRedirectLoop(api401Error: UIError | null): Promise<void> {
 }
 ```
 
-### Low Security Options
+### Low Security Token Storage Options
 
 There are simpler ways to implement token refresh. For example, you can update the *oidc-client-ts* settings to those shown here. A background timer then attempts to refresh the access token by comparing the current time to the *expires_in* field from the token response. The time for iframe-based token refresh occurs in the background so you avoid impacting users. You can also avoid performing a token refresh if the user reloads the page or opens a new browser tab:
 
@@ -230,14 +198,34 @@ automaticSilentRenew: true,
 
 For best reliability, you could also store a refresh token in local storage and avoid the use of iframe-based access token refresh completely. Yet persistent storage is the <span style={{color:'red'}}>least secure way to manage tokens in the browser</span>, with greatest XSS threats. When you also store refresh tokens, you make threats much worse, since an attacker can use the refresh token to get new access tokens without needing to supply a client credential.
 
+By default, iframe-based token renewal does not work at all with AWS Cognito. To provide some kind of working demo solution with that authorization server I use a low security solution with refresh tokens stored in-memory. Usability is intentionally suboptimal, and there is a new OpenID Connect redirect (a single-sign-on event) every time you reload the page or open a new browser tab. To activate iframe-based token renewal you must set a different *provider* name in the SPA’s configuration file.
+
+```json
+{
+    "app": {
+        "apiBaseUrl":             "https://api.authsamples-dev.com/api"
+    },
+    "oauth": {
+        "provider":               "cognito",
+        "authority":              "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+        "clientId":               "hje94a2jj3lgkobkh57ikenhh",
+        "redirectUri":            "https://www.authsamples-dev.com/spa",
+        "postLogoutRedirectUri":  "https://www.authsamples-dev.com/spa/loggedout.html",
+        "scope":                  "openid profile https://api.authsamples.com/investments",
+        "customLogoutEndpoint":   "https://login.authsamples.com/logout"
+    }
+}
+```
+
+
 ### The SPA OAuth Journey
 
-When you use the traditional SPA flow using only JavaScript code, you typically undergo a journey like this:
+When you implement the traditional SPA flow using only JavaScript code, you typically undergo a journey like this:
 
-- You first store access tokens in local storage, to prevent losing them during page reloads and multi-tab browsing.
-- You then realise this is bad from a security viewpoint and try to use in-memory access token storage to improve security.
+- You first store tokens in local storage, to prevent losing them during page reloads and multi-tab browsing.
+- You then realise this is bad from a security viewpoint and try to use in-memory token storage to improve security.
 - You must then manage page reloads and multi-tab browsing, and token refresh becomes considerably more difficult.
-- You then realise that even with very careful code, your SPA still has security and reliability issues.
+- You then become aware that, even with very careful code, your SPA still has security and reliability issues.
 
 Eventually, you come to realise that to solve the security, usability and reliability conditions, you need a backend component that assists the SPA with its security and also serves the SPA to ensure the best usability and reliability. You can realise such a solution with a correctly designed <Link href="/posts/spa-back-end-for-front-end">Backend for Frontend</Link> as I show later in this blog. An important part of this design is error responses that put the SPA in control.
 

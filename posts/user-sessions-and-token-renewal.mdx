@@ -80,8 +80,6 @@ Note that an SPA can use PKCE to protect its authorization code grant requests. 
 
 The <Link href='/posts/updated-spa-coding-key-points'>Updated SPA – Code Overview</Link> explains some code complexities if you attempt to implement iframe-based access token renewal with in-memory storage. Even with careful code there are security, reliability and usability issues due to cookie issues.
 
-By default, the second code sample does not work at all with AWS Cognito. To provide some kind of working demo solution I fall back to using refresh tokens stored in-memory for that authorization server. Usability is intentionally suboptimal, and there is a new OpenID Connect redirect (a single-sign-on event) every time you reload the page or open a new browser tab.
-
 ### Backend for Frontend
 
 In 2021 the preferred option is to use a Backend for Frontend approach. This provides the best protection against the JavaScript threats described in the [OAuth for Browser Based Apps](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps#name-the-threat-of-malicious-jav) document. The SPA can then perform token renewal in the most secure way, with good reliability. This blog’s <Link href='/posts/final-spa-overview'>Final SPA</Link> uses an API-driven BFF to achieve the best all-round solution.
