@@ -266,7 +266,7 @@ public async load(authenticator: Authenticator, apiClient: ApiClient): Promise<v
 
 ### SPA Basic Logout
 
-To implement logout I remove tokens from the app and then perform an OpenID Connect RP-initiated logout to remove the SSO cookie. The oidc-client-ts library does this in a one-liner. Yet AWS Cognito, like some other authorization servers, has vendor-specific logout behavior. The SPA therefore has to implement a workaround, which is an annoyance.
+To implement logout I remove tokens from the app and then perform an OpenID Connect RP-initiated logout to remove the SSO cookie. The oidc-client-ts library does this in a one-liner. Yet AWS Cognito, like some other authorization servers, has vendor-specific logout behaviour. The SPA therefore has to implement a workaround, which is an annoyance.
 
 ```typescript
 public async startLogout(): Promise<void> {

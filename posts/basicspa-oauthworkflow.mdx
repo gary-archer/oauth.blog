@@ -68,7 +68,7 @@ Once a login completes successfully, the authorization server issues a SSO (sing
 
 There are a couple of issues with the way cookies are set:
 
-- I like to configure the authorization server to use *session cookies* that automatically expire when the user closes all browser windows. When the SSO cookie is persistent, as for AWS Cognito, the user is only signed out of the app qwhen the user closes the browser. When the app restarts, the user performs a *Single Sign On (SSO)* and is automatically signed in. This is not the behavior I want.
+- I like to configure the authorization server to use *session cookies* that automatically expire when the user closes all browser windows. When the SSO cookie is persistent, as for AWS Cognito, the user is only signed out of the app qwhen the user closes the browser. When the app restarts, the user performs a *Single Sign On (SSO)* and is automatically signed in. This is not the behaviour I want.
 
 - Identity systems issue cookies that are usually always third-party from the app's viewpoint. To work in the best ways for applications, they should use the *SameSite=none* cookie property. This instructs browsers to send the cookie when the app redirects to the authorization server. I say more about the impact in the <Link href='/posts/user-sessions-and-token-renewal'>Iframe-Based Token Renewal</Link> blog post.
 
