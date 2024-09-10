@@ -1,14 +1,10 @@
 # How to Run the React SPA
 
-Previously we provided a <Link href='/posts/final-spa-overview'>Final SPA Overview</Link> and next we will show how to run the final SPA on a development computer in a couple of different configurations.
-
-### Prerequisites
-
-The scripts in this post are meant to be run from a Linux or macOS terminal, or a Git Bash shell on Windows. You also need to have an up to date version of Node.js installed.
+Previously I provided a <Link href='/posts/final-spa-overview'>Final SPA Overview</Link> with the main high-level architecture behaviors. Next I show how to run the final SPA on a development computer in a couple of different configurations.
 
 ### Step 1: Download the GitHub Code
 
-The SPA project is available here, and can be downloaded / cloned to your local computer with this command:
+Clone the code sample's GitHub repository to your local computer with the following command:
 
 ```bash
 git clone https://github.com/gary-archer/oauth.websample.final
@@ -18,14 +14,14 @@ git clone https://github.com/gary-archer/oauth.websample.final
 
 ### Step 2: Add Domains to your Computer
 
-You will need to ensure that this blog’s web development domain points to your local computer, by making a local DNS entry in your hosts file, which will exist at one of these locations:
+You need to use this blog’s web development domain. Add a local DNS entry in your hosts file, which exists at one of these locations:
 
 | OS | Path |
 | -- | ---- |
 | <span style={{color:'green'}}>**Windows**</span> | c:\system32\drivers\etc\hosts |
 | <span style={{color:'green'}}>**macOS / Linux**</span> | /etc/hosts |
 
-Add entries as follows to represent the domain that serves the SPA’s static web content:
+Add the following entry to point the SPA's web origin to your local computer:
 
 ```markdown
 127.0.0.1  localhost www.authsamples-dev.com
@@ -33,13 +29,13 @@ Add entries as follows to represent the domain that serves the SPA’s static we
 
 ### Step 3: View Components in an IDE
 
-The web code consists of the following main areas:
+The repository's code consists of the following main areas:
 
 | Component | Description |
 | --------- | ----------- |
-| <span style={{color:'green'}}>**spa**</span> | The code for the SPA, which calls cross domain APIs using secure cookies |
-| <span style={{color:'green'}}>**webhost**</span> | A web host for local computer setups, to serve web static content to the browser |
-| <span style={{color:'green'}}>**deployment**</span> | Resources used for managing and automating various deployment scenarios |
+| <span style={{color:'green'}}>**spa**</span> | The code for the SPA, which calls APIs using secure cookies. |
+| <span style={{color:'green'}}>**webhost**</span> | A web host for local computer setups, to serve web static content to the browser. |
+| <span style={{color:'green'}}>**deployment**</span> | Resources used to manage and automate web host deployments. |
 
 <div className="smallimage">
 ![code layout](/images/230/code-layout.jpg)
@@ -47,7 +43,7 @@ The web code consists of the following main areas:
 
 ### Step 4: View the React Code
 
-The SPA has been updated to use React, though view classes have the same behaviour as those from <Link href='/posts/basicspa-codingkeypoints'>Earlier SPA Code Samples</Link>:
+The SPA now uses React for its views, which have identical behaviour to those from <Link href='/posts/basicspa-codingkeypoints/#spa-views'>Earlier SPA Code Samples</Link>:
 
 ```typescript
 export function TitleView(props: TitleViewProps): JSX.Element {
@@ -67,13 +63,13 @@ export function TitleView(props: TitleViewProps): JSX.Element {
 }
 ```
 
-React provides a modern toolset that will helps to enable productivity and capabilities for web development:
+React provides a modern toolset that helps to enable productivity:
 
 | Benefit | Description |
 | ------- | ----------- |
-| <span style={{color:'green'}}>**Markup**</span> | A strongly typed and secure way to work with markup and the DOM, including handling of dangerous input |
-| <span style={{color:'green'}}>**Components**</span> | A componentized development model, that promotes clean code and a separation of concerns |
-| <span style={{color:'green'}}>**Ecosystem**</span> | We can follow web development best practice techniques from the community |
+| <span style={{color:'green'}}>**Markup**</span> | A strongly typed and secure way to work with markup and the DOM, including handling of dangerous input. |
+| <span style={{color:'green'}}>**Components**</span> | A componentized development model, that promotes clean code and a separation of concerns. |
+| <span style={{color:'green'}}>**Ecosystem**</span> | Web development best practice techniques from the React community. |
 
 ### Step 5: Build the Code
 
@@ -83,13 +79,13 @@ Open a terminal and run the following command. The script builds the SPA into Ja
 ./build.sh
 ```
 
-This runs the frontend in watch mode, so that it can be developed with a pure SPA development model. The React code can be updated and changes quickly reflected in the browser:
+The frontend runs in watch mode, so that you can follow a pure SPA development model. You can update the React code and quickly see changes in the browser:
 
 ![spa build](/images/230/spa-build.jpg)
 
 ### Step 6: Configure SSL Trust
 
-The web host uses SSL and downloads some development certificates, so you must ensure that your browser trusts the root certificate at the below location, as explained in the <Link href='/posts/developer-ssl-setup'>Developer SSL Setup</Link> post.
+The web host uses SSL and downloads some development certificates, so you must ensure that your browser trusts the root certificate at the below location, according to the <Link href='/posts/developer-ssl-setup#trust-a-root-certificate-in-browsers'>Developer SSL Setup</Link> post.
 
 ```markdown
 certs/authsamples-dev.ca.crt
@@ -97,34 +93,32 @@ certs/authsamples-dev.ca.crt
 
 ### Step 7: Run the App
 
-Next start a second terminal window and run the following command, which will start the web host, then invoke the default browser at *https://www.authsamples-dev.com*:
+Next start a second terminal window and run the following command, to start the web host, then run the default browser at *https://www.authsamples-dev.com*:
 
 ```bash
 ./run.sh
 ```
 
-### Step 8: Login to the SPA
+### Step 8: Sign In to the SPA
 
 You will then be prompted to sign in, and can do so with this test credential:
 
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
 
-After login the SPA sends an HttpOnly encrypted cookie containing an AWS Cognito access token to the AWS API gateway. The cookie is decrypted and the access token is forwarded to lambda-based APIs which validate the access token and use claims-based authorization. When the frontend is authorized it receives and renders data returned from the API:
+After login, the SPA sends an HttpOnly encrypted cookie containing an AWS Cognito access token to the AWS API gateway. The OAuth Proxy decrypts the cookie and forwards the access token to lambda-based APIs. These API endpoints validate the access token and implement claims-based authorization. For authorized requests, the SPA receives and renders the API's response data:
 
 ![spa data](/images/230/spa-data.jpg?v=20240713)
 
 ### Step 9: View Secure Cookies
 
-The SPA no longer uses tokens in the browser. Instead, API requests send a short-lived access token encrypted into an *HttpOnly SameSite=strict Secure* cookie. Since Cognito uses RS256 JWTs, the cookie size is around 1.5KB, which is comfortably below browser limits.
-
-You can use browser tools to view secure cookies, which are for the backend for frontend subdomain and not the web origin. The SPA does not require any cookies to download static content, and does not use cookies when the user performs navigation operations:
+When the SPA makes API requests it sends a short-lived access token encrypted into an *HttpOnly SameSite=strict Secure* cookie. Since Cognito uses RS256 JWTs, the cookie size is around 1.5KB, which is comfortably below browser 4KB cookie size limits. You can use browser tools to view secure cookies, which are for the backend for frontend subdomain and not the web origin. The SPA does not require any cookies to download static content, and does not use cookies when the user performs navigation operations:
 
 ![cookie properties](/images/230/cookie-properties.jpg?v=20240817)
 
 ### Step 10: View Updated SPA Configuration
 
-In earlier samples, the SPA performed its own OpenID Connect work in JavaScript. This work is now done by remote token handler components, and the SPA code and configuration is therefore reduced to a backend for frontend base URL:
+In earlier samples, the SPA performed its own OpenID Connect flow in JavaScript. This work is now done by remote token handler components, and the SPA configuration is therefore reduced to a backend for frontend base URL:
 
 ```json
 {
@@ -134,7 +128,7 @@ In earlier samples, the SPA performed its own OpenID Connect work in JavaScript.
 
 ### Step 11: Understand Web Security Headers
 
-The web host now writes a number of security headers, the most interesting of which is the *Content Security Policy*. This has the following values, since the SPA now only makes remote calls via its backend for frontend:
+The web host now writes a number of security headers, the most interesting of which is the *Content Security Policy*. It contains the following values, since the SPA now only makes remote calls via its backend for frontend:
 
 ```markdown
 content-security-policy:
@@ -157,7 +151,7 @@ referrer-policy: same-origin
 
 ### Local API Setup
 
-It is also possible to run an API that provides the SPA’s data on the local computer, but you then need to manage cookies for this routing. One way to do so is to run a local token handler. To do so, first ensure that a docker engine is installed, and also the envsubst tool.
+It is also possible to run an API that provides the SPA’s data on the local computer, but you then need to manage cookies for this routing. One way to do so is to run a local token handler. To do so, first ensure that a docker engine is installed, and also the *envsubst* tool.
 
 ### Step A: Run the API
 
@@ -182,11 +176,12 @@ Next, add the API subdomain and local backend for frontend domain to your comput
 To make the SPA connect to one of this blog’s final APIs, first ensure that the API is running. Then use a *LOCALAPI* parameter when running the scripts described earlier:
 
 ```bash
-./build.sh LOCALAPI
-./run.sh LOCALAPI
+export LOCALAPI=true
+./build.sh
+./run.sh
 ```
 
-This will run the utility token handler components in a small docker compose network. The SPA’s configuration will then be updated as follows, to route to the API via the local backend for frontend rather than the cloud one:
+This runs the utility token handler components in a small docker compose network. The SPA’s configuration then routes to the API via the local backend for frontend rather than the cloud BFF:
 
 ```json
 {
@@ -196,13 +191,13 @@ This will run the utility token handler components in a small docker compose net
 
 ### Step D: Use the SPA and API
 
-When you now use the SPA it will call the local API rather than a cloud API. The API behaviour includes logging output that is explained in later blog posts, under the API theme.
+When you now use the SPA it calls the local API rather than a cloud API. The API behaviour includes logging output that is explained in later posts, under this blog's API theme.
 
 ![spa and api](/images/230/spa-and-api.jpg?v=20240713)
 
 ### Step E: Understand Token Handler Deployment
 
-To understand how I deploy the OAuth agent and OAuth proxy components, you can study my [deployment resources](https://github.com/gary-archer/oauth-agent-node-express/blob/master/deployment/docker-local/docker-compose.yml). I use the Kong API Gateway to expose a backend for frontend with the following configuration settings, expressed as environment variables:
+Study my [deployment resources](https://github.com/gary-archer/oauth-agent-node-express/blob/master/deployment/docker-local/docker-compose.yml) to understand how I deploy the OAuth agent and OAuth proxy components. I use the Kong API Gateway to expose a backend for frontend with the following configuration settings, expressed as environment variables:
 
 ```bash
 PORT=8000
@@ -223,21 +218,19 @@ SERVER_CERT_P12_PATH='./certs/authsamples-dev.ssl.p12'
 SERVER_CERT_P12_PASSWORD='Password1'
 ```
 
-When using the token handler pattern you remotely deploy these components. You do not need to develop them. The frontend development setup is therefore focused solely on the user interface, in the same way as this blog’s earlier SPAs.
-
 ### Step F: Free Docker Resources
 
 To free resources in the docker compose network, run the following command:
 
 ```bash
-./teardown.sh LOCALAPI
+./teardown.sh
 ```
 
 ### Where Are We?
 
-We have explained how to run the final web sample, which has more moving parts than earlier code samples. The React demo SPA can be run as a single component under development. The app is in control of its own OpenID Connect flow. After user logins, the SPA calls deployed API components using secure cookies.
+I explained how to run the final SPA code sample, which has more moving parts than earlier code samples. The React demo SPA can be run as a single component under development. The app is in control of its own OpenID Connect flow. After user logins, the SPA calls deployed API components using secure cookies.
 
 ### Next
 
-- Next we will drill into some <Link href='/posts/reactjs-codingkeypoints'>Coding Key Points</Link> for the final SPA
-- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>
+- Next I drill into some <Link href='/posts/reactjs-codingkeypoints'>Coding Key Points</Link> for the final SPA.
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.
