@@ -1,12 +1,12 @@
 # SPA Backend for Frontend
 
-In the previous post I ran a <Link href='/posts/azure-ad-troubleshooting'>Microsoft Entra ID SPA and API OAuth Flow</Link>. This blog's example SPA now needs hardening before it is final, to follow security best practices in the browser and minimize threats. The SPA must also resolve its <Link href='/posts/user-sessions-and-token-renewal'>Token Renewal Usability and Reliability Issues</Link>.
+In the previous post I ran a <Link href='/posts/azure-ad-troubleshooting'>Microsoft Entra ID SPA and API OAuth Flow</Link>. This blog's example SPA now needs hardening before it is final, to follow security best practices in the browser and to minimize threats. The SPA must also resolve its <Link href='/posts/user-sessions-and-token-renewal'>Token Renewal Usability and Reliability Issues</Link>.
 
 ### Security Best Practices for SPAs
 
-The definitive document on security best practices is [OAuth 2.0 for Browser Based Apps](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps). The threats of malicious JavaScript are greater when JavaScript code can use tokens directly. The option with the strongest security guarantees is to use the browser's built in defenses, namely SameSite cookies, cross-origin resource sharing (CORS) and a strong Content Security Policy (CSP). 
+The definitive document on security best practices is [OAuth 2.0 for Browser Based Apps](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps). The threats of malicious JavaScript are greater when JavaScript code can use tokens directly. The option with the strongest security guarantees is to use the browser's built in defences, namely SameSite cookies, cross-origin resource sharing (CORS) and a strong Content Security Policy (CSP). 
 
-This means, to limit the impact of Cross Site Scripting (XSS) exploits, single page applications should use cookies to transport access tokens to APIs. These cookies should use the *HttpOnly SameSite=strict Secure* properties. This does not make browser security perfect, but limits the impact of XSS exploits. You must combine the cookie approach with XSS prevention best practices.
+This means, to limit the impact of Cross Site Scripting (XSS) exploits, single page applications should use cookies to transport access tokens to APIs. These cookies should use the *HttpOnly SameSite=strict Secure* properties. This does not make browser security perfect, but limits the impact of XSS exploits. You must combine browser defences with XSS prevention best practices.
 
 ### High Level Requirements
 
@@ -15,8 +15,8 @@ At a higher level, there were three main requirements I wanted to meet for this 
 | Requirement | Description |
 | ----------- | ----------- |
 | <span style={{color:'green'}}>**Strong Browser Security**</span> | Follow current best practices, with only the latest and most secure cookies used in the browser. |
-| <span style={{color:'green'}}>**Globally Equal Performance**</span> | Deploy the SPA to a content delivery network, so that web latency is roughly the same everywhere. |
-| <span style={{color:'green'}}>**Pure SPA Development**</span> | Web developers work productively on frontends, with small code bases and no security plumbing. |
+| <span style={{color:'green'}}>**Globally Equal Performance**</span> | Deploy the SPA to a content delivery network, so that web latency is roughly the same at any global location. |
+| <span style={{color:'green'}}>**Pure SPA Development**</span> | Web developers work productively on modern frontends, with small code bases and no security plumbing. |
 
 The cookie requirement is an awkward one for SPAs. When developing SPAs and APIs you should not need to return to older website technology stacks. The key technique to maintain an SPA architecture and meet all three requirements is to use API-driven cookie issuing,
 
@@ -31,15 +31,15 @@ In 2021 I adopted the [Token Handler Pattern](https://github.com/curityio/spa-us
 
 ### Security Components
 
-I illustrate the overall components here, where the token handler acts as an advanced reverse proxy. Calls from the SPA to APIs must be SameSite so that cookies are classified as first-party, to ensure that the browser sends them in API requests.
+I illustrate the overall components here, where the token handler acts as an advanced reverse proxy. Calls from the SPA to APIs must be SameSite so that cookies are classified as first-party, to ensure that the browser does not drop them during API requests due to third-party cookie restrictions.
 
 ![components](/images/210/components.jpg)
 
-I deploy the final SPA’s web content to an [AWS CloudFront](https://aws.amazon.com/cloudfront/) web subdomain and these static web files do not need securing. The SPA calls a business API that does not do any cookie processing. The API uses exactly the same code to handle requests from web, desktop and mobile clients.
+I deploy the final SPA’s web content as an [AWS CloudFront Distribution](https://aws.amazon.com/cloudfront/) and static web files do not need securing. The SPA calls a business API that does not do any cookie processing. The API uses exactly the same code to handle requests from web, desktop and mobile clients.
 
 ### API Driven Cookie Issuing
 
-The final SPA calls APIs via a dedicated *bff* subdomain that runs in the same parent site as the SPA's web origin. This deployment ensures that the browser does not drop cookies due to third-party cookie restrictions when the SPA calls APIs. CORS restricts API access to the SPA's precise web origin. The cookie sent to APIs uses the following properties and contains an encrypted short-lived access token.
+The final SPA calls APIs via a dedicated *bff* subdomain that runs in the same parent site as the SPA's web origin. The deployment ensures that the browser sends cookies when the SPA calls APIs. CORS restricts the use of cookies to the SPA's precise web origin. The cookie sent to APIs uses the following properties and contains an encrypted short-lived access token.
 
 - HttpOnly
 - SameSite=strict
@@ -50,7 +50,7 @@ Although there is a cookie layer, the overall architecture and key behaviours of
 
 ### Cloud Environment
 
-I designed these URLs for the deployed AWS environment. The */spa* path for the SPA indicates that you could deploy additional micro-frontends for the same business area alongside it and share the same cookies. Similarly, you could deploy additional APIs under the API base URL:
+I designed the following URLs for the deployed AWS environment. The */spa* path for the SPA indicates that you could deploy additional micro-frontends for the same business area alongside it and share the same cookies. Similarly, you could deploy additional APIs under the API base URL:
 
 | Component | Base URL |
 | --------- | -------- |
@@ -62,7 +62,7 @@ I designed these URLs for the deployed AWS environment. The */spa* path for the 
 
 ### Web Development Environment
 
-Even more important than deployed environments is the local development environment, since this is where most work is done. You therefore need a productive setup that helps to enable a fast time to market for web development. I designed these URLs for local development of the final SPA in React. Developers run a local web static content host, with all API components in the AWS cloud.
+Even more important than deployed environments is the local development environment, since this is where most work is done. You therefore need a productive setup that helps to enable a fast time to market for web development. I designed the following URLs for local development of the final SPA. Developers run a local web static content host, with all API components running in the AWS cloud.
 
 | Component | Base URL |
 | --------- | -------- |
@@ -72,7 +72,7 @@ Even more important than deployed environments is the local development environm
 | <span style={{color:'green'}}>**OAuth Agent**</span> | *https://bff.authsamples-dev.com/oauth-agent* |
 | <span style={{color:'green'}}>**Authorization Server**</span> | *https://login.authsamples.com* |
 
-For local development URLs I used a suffix of *-dev*. The *authsamples-dev.com* site represents components that run on the local computer. Yet the *bff* subdomain runs in AWS, solely to support local SPA development. For the web origin and API routes to work together, you must alias the web domain to *localhost* in your computer’s hosts file:
+For local development URLs I used a hostname suffix of *-dev*. The *authsamples-dev.com* site represents components that run on the local computer. Yet the *bff* subdomain runs in AWS, solely to support local SPA development. For the web origin and API routes to work together, you must alias the web domain to *localhost* in your computer’s hosts file:
 
 ```markdown
 127.0.0.1 www.authsamples-dev.com
@@ -96,9 +96,9 @@ It gets more complicated when you need to run both the SPA and APIs locally, whi
 
 Developers must then also add the *bfflocal* subdomain to the hosts file. You can then run a more complete local setup, which is useful for developers who want to focus on end-to-end API and client journeys.
 
-![spa and api](/images/210/spa-and-api.jpg?v=20240713)
+![spa and api](/images/210/spa-and-api.jpg?v=20240910)
 
-More generally there can be reliability and productivity benefits when you invest in setups that enable development and testing together. You can run some components locally from code, where other components run in deployed environments or in docker.
+More generally there can be reliability and productivity benefits when you invest in setups that enable development and testing together. You can decide to run some components locally from code, with other components running in deployed environments or in docker.
 
 ### Where Are We?
 

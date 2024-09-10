@@ -81,11 +81,11 @@ Open a terminal and run the following command. The script builds the SPA into Ja
 
 The frontend runs in watch mode, so that you can follow a pure SPA development model. You can update the React code and quickly see changes in the browser:
 
-![spa build](/images/230/spa-build.jpg)
+![spa build](/images/230/spa-build.jpg?v=20240910)
 
 ### Step 6: Configure SSL Trust
 
-The web host uses SSL and downloads some development certificates, so you must ensure that your browser trusts the root certificate at the below location, according to the <Link href='/posts/developer-ssl-setup#trust-a-root-certificate-in-browsers'>Developer SSL Setup</Link> post.
+The web host uses SSL and downloads some development certificates, so you must ensure that your browser trusts the root certificate at the below location, according to the <Link href='/posts/developer-ssl-setup#trust-a-root-certificate-in-browsers'>SSL Trust Configuration</Link> post.
 
 ```markdown
 certs/authsamples-dev.ca.crt
@@ -161,8 +161,6 @@ Select one of this blog’s final APIs from the below list, and follow its instr
 - <Link href='/posts/net-core-code-sample-overview'>.NET API</Link>
 - <Link href='/posts/java-spring-boot-api-overview'>Java Spring Boot API</Link>
 
-![running api](/images/230/running-api.jpg)
-
 ### Step B: Update DNS
 
 Next, add the API subdomain and local backend for frontend domain to your computer’s hosts file:
@@ -193,7 +191,7 @@ This runs the utility token handler components in a small docker compose network
 
 When you now use the SPA it calls the local API rather than a cloud API. The API behaviour includes logging output that is explained in later posts, under this blog's API theme.
 
-![spa and api](/images/230/spa-and-api.jpg?v=20240713)
+![spa and api](/images/230/spa-and-api.jpg?v=20240910)
 
 ### Step E: Understand Token Handler Deployment
 
@@ -228,7 +226,7 @@ To free resources in the docker compose network, run the following command:
 
 ### Where Are We?
 
-I explained how to run the final SPA code sample, which has more moving parts than earlier code samples. The React demo SPA can be run as a single component under development. The app is in control of its own OpenID Connect flow. After user logins, the SPA calls deployed API components using secure cookies.
+I explained how to run the final SPA code sample, which has more moving parts than earlier code samples. The SPA can be run as a single component under development with a pure SPA developer experience. The app is in control of its own OpenID Connect flow. After user logins, the SPA calls deployed API components using secure cookies.
 
 ### Next
 

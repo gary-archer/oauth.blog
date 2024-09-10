@@ -13,7 +13,7 @@ The updated SPA and API code sample has the following additional features:
 | <span style={{color:'green'}}>**Silent Token Renewal**</span> | The SPA now supports silent access token renewal using the SSO cookie. |
 | <span style={{color:'green'}}>**Multi Tab Browsing**</span> | The token renewal solution enables multi tab-browsing without noticeable user impact. |
 | <span style={{color:'green'}}>**Logout**</span> | The SPA implements a basic form of logout, including logout across multiple browser tabs. |
-| <span style={{color:'green'}}>**Developer SSL URLs**</span> | Both the SPA and API run on a development computer using real-world HTTPS URLs. |
+| <span style={{color:'green'}}>**Real-World URLs**</span> | Both the SPA and API run on a development computer using real-world HTTPS URLs. |
 
 ### Updated Components
 
@@ -29,7 +29,7 @@ The traditional SPA flow remains useful to represent a pure SPA architecture and
 
 ### Code Download
 
-Clone the project with the below command:
+Clone the code sample's GitHub repository with the following command:
 
 ```bash
 git clone https://github.com/gary-archer/oauth.websample2
@@ -106,7 +106,7 @@ First run the build script to prepare the SPA and API, which primarily runs *npm
 
 ### Configure SSL Browser Trust
 
-The build script also downloads OpenSSL generated certificates from a [Development Certificates](https://github.com/gary-archer/oauth.developmentcertificates) repository to a subdirectory of the API. The API and web static content hosting uses SSL so you must ensure that your browser trusts the root certificate at the below location, as explained in the <Link href='/posts/developer-ssl-setup#trust-a-root-certificate-in-browsers'>Developer SSL Setup</Link> post.
+The build script also downloads OpenSSL generated certificates from a [Development Certificates](https://github.com/gary-archer/oauth.developmentcertificates) repository to a subdirectory of the API. The API and web static content hosting uses SSL so you must ensure that your browser trusts the root certificate at the below location, as explained in the <Link href='/posts/developer-ssl-setup#trust-a-root-certificate-in-browsers'>SSL Trust Configuration</Link> post.
 
 ```markdown
 api/certs/authsamples-dev.ca.crt

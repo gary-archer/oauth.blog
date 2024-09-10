@@ -1,6 +1,6 @@
 # Final SPA – Overview
 
-Previously I explained the <Link href='/posts/spa-back-end-for-front-end'>Backend for Frontend</Link> setup  for the final SPA, where remote API components issue cookies for the SPA. Next I summarise the main frontend behaviours of the completed SPA, after which I show how to run it locally.
+Previously I explained the <Link href='/posts/spa-back-end-for-front-end'>Backend for Frontend</Link> setup for the final SPA, where remote API components issue cookies on behalf of the SPA. Next I summarise the main frontend behaviours of the completed SPA, after which I show how to run it locally.
 
 ### Key Features
 
@@ -9,20 +9,20 @@ The final SPA improves on the previous <Link href='/posts/improved-spa-code-samp
 | Requirement | Description |
 | ----------- | ----------- |
 | <span style={{color:'green'}}>**Best Browser Security**</span> | The SPA calls APIs using the strongest *HttpOnly SameSite=strict* cookies, with no tokens in the browser. |
-| <span style={{color:'green'}}>**Globally Equal Performance**</span> | The SPA's static web content is delivered to many locations via a *Content Delivery Network (CDN)*. |
-| <span style={{color:'green'}}>**Pure SPA Development**</span> | Web developers work productively on frontends, with small code bases and no security plumbing. |
+| <span style={{color:'green'}}>**Globally Equal Performance**</span> | Deploy the SPA to a content delivery network, so that web latency is roughly the same at any global location. |
+| <span style={{color:'green'}}>**Pure SPA Development**</span> | Web developers work productively on modern frontends, with small code bases and no security plumbing. |
 
 ### Cloud Hosting
 
-I deploy the overall system of the SPA and APIs to AWS. I upload the SPA’s web static content to S3, then CloudFront replicates the web resources to many global locations, without the need to manage servers or containers:
+I deploy the overall system of the SPA and APIs to AWS. I upload the SPA’s web static content to S3, then CloudFront replicates the web resources to ~400 global locations, without the need to manage servers or containers:
 
 ![aws technologies](/images/220/aws-technologies.jpg)
 
-I deploy the API code sample to AWS as <Link href='/posts/serverless-api-overview'>Serverless Lambda Functions</Link> that the AWS API Gateway exposes to the internet. This provides low cost backend hosting for my code samples.
+I deploy the API code sample to AWS as <Link href='/posts/serverless-api-overview'>Serverless Lambda Functions</Link> that the AWS API Gateway exposes to the internet. I find this API technology a little suboptimal in some areas, including performance, but it provides low cost backend hosting for this blog's demo APIs.
 
 ### Online Deployment
 
-Any reader can use the AWS deployed version of the above architecture from this blog’s <Link href='/posts/quick-start'>Cloud Samples Quick Start</Link> page. You can sign in to the SPA as a test user account, then test OAuth lifecycle events via the demo app’s buttons:
+Any reader can run the AWS deployed version of the SPA from this blog’s <Link href='/posts/quick-start'>Cloud Samples Quick Start</Link> page. You can sign in to the SPA with a test user account, then test OAuth lifecycle events via the demo app’s buttons:
 
 ![online spa](/images/220/online-spa.jpg?v=20240713)
 
@@ -58,7 +58,7 @@ A second entry exists to run the SPA during development, which has an equivalent
 
 ### React Code
 
-The SPA’s code has been updated to use React as a web framework, to enable better features during coding of views. The SPA renders a tree of views which leads to concurrent API requests. The SPA synchronises both token renewal and login operations when tokens expire.
+The SPA’s code now uses React as a web framework, to enable better features during coding of views. The SPA renders a tree of views which leads to concurrent API requests. The SPA must synchronise the triggering of both token renewal and user re-authentication when tokens expire.
 
 ```jsx
 return (
@@ -82,7 +82,7 @@ return (
 
 ### Path Based Routing
 
-Earlier SPAs in this blog used hash based routing. The final SPA instead uses React’s support for path-based routes. The SPA continues to use a *base* path expressed in the index.html file:
+Earlier SPAs in this blog used hash-based routing. The final SPA instead uses React’s support for path-based routes. The SPA continues to use a *base* path expressed in the index.html file:
 
 ```html
 <!DOCTYPE html>
@@ -119,7 +119,7 @@ Since the SPA is now cloud-deployed, you can access it on small mobile devices, 
 
 ### Web Performance Behaviors
 
-It is common to add undue complexity to web applications in efforts to achieve fast page loads. In some cases, foundations such as deployment are suboptimal. Remote users, who may be located thousands of miles from the web host, then get poor performance.
+Developers sometimes add undue complexity to web applications in efforts to optimize and achieve fast page loads. In some cases remote users, who may be located thousands of miles from the web host and therefore experience poor performance. The best way to resolve this type of problem is to get foundations right using standard solutions.
 
 I prefer to have an awareness of web performance factors but only follow mainstream practices and avoid most optimizations. A strong separation of concerns and clean code should then perform well enough. You should also keep views and API operations simple, especially for your first page. The final SPA uses the following performance-related behaviors.
 
@@ -128,7 +128,7 @@ I prefer to have an awareness of web performance factors but only follow mainstr
 | <span style={{color:'green'}}>**Content Delivery**</span> | Web latency is roughly equal for all global users, since a CDN ensures that all web downloads are fairly local. |
 | <span style={{color:'green'}}>**Static Content Caching**</span> | The SPA uses cache control headers for web assets, to serve future requests from the browser cache. |
 | <span style={{color:'green'}}>**API Response Caching**</span> | The SPA caches HTTP GET responses to prevent redundant API requests, such as during back navigation. |
-| <span style={{color:'green'}}>**Download Sizes**</span> | As the SPA's code grows I could use micro-frontends to modularize downloads of JavaScript and CSS. |
+| <span style={{color:'green'}}>**Download Sizes**</span> | As the SPA's code grows I would aim for medium-sized downloads using bundle splitting techniques and micro-frontends. |
 
 Requests from the SPA to APIs use CORS, which is standard in any pure SPA architecture, but adds a small performance overhead. The browser sends preflight OPTIONS requests when a user first accesses an API endpoint, after which the browser caches the CORS response for 24 hours.
 

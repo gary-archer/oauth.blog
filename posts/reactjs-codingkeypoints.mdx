@@ -1,10 +1,10 @@
 # Final SPA – Coding Key Points
 
-Previously I explained <Link href='/posts/how-to-run-the-react-js-spa'>How to Run the Final SPA</Link>, which uses cookies as API credentials. Next I describe the main changes to the SPA's code, with a particular focus on API requests. See also the <Link href='/posts/api-journey-client-side'>Client Side API Journey</Link> for a summary of the requirements being met.
+Previously I explained <Link href='/posts/how-to-run-the-react-js-spa'>How to Run the Final SPA</Link>, which uses cookies to transport short-lived access tokens to APIs. Next I describe the main changes to the SPA's code, with a particular focus on API requests. See also the <Link href='/posts/api-journey-client-side'>Client Side API Journey</Link> for a summary of the requirements being met.
 
 ### Previous Samples
 
-I provided two earlier plain TypeScript OAuth code samples. These used access tokens in the browser, which is no longer recommended.
+I provided two earlier plain TypeScript SPA and API code samples. These SPAs used access tokens in the browser, which is no longer recommended.
 
 | Solution | Description |
 | -------- | ----------- |
@@ -50,7 +50,7 @@ The final SPA uses the same HTML markup as earlier SPAs:
 
 ### Web Host
 
-The final SPA could use any web static content host, but this component is always lightweight and never interferes with the frontend experience. For development I use the full-featured Express HTTP server to test production web behaviour locally, such as the content security policy. The web host's logic serves the SPA’s static content from the */spa* folder. Other folders could be added in future, for additional micro-frontends:
+The final SPA could use any web static content host, but this component should always be lightweight and never interferes with the frontend experience. For development I use the full-featured Express HTTP server for local testing of production web behaviours, like its content security policy. The web host's logic serves the SPA’s static content from the */spa* folder. Other folders could be added in future, for additional micro-frontends:
 
 ```typescript
 public initialise(): void {
@@ -192,7 +192,7 @@ At mobile dimensions the companies list now uses a card-based layout rather than
 
 ### Views, View Models and State
 
-React manages rendering when *state* changes, and views are created with *props*. I also like to use *view models* to handle operations such as API calls, and to keep the view classes focused on presentation:
+React manages rendering when *state* changes, and views get created with *props*. I also like to use *view models* to handle operations such as API calls, and to keep the view classes focused on presentation:
 
 ```typescript
 export interface CompaniesContainerProps {
@@ -201,7 +201,7 @@ export interface CompaniesContainerProps {
 }
 ```
 
-Views are recreated frequently, whereas I manage application state within view model classes that get created only once. I manage this by storing child view model references within the root *AppViewModel*:
+Views get recreated frequently, whereas I manage application state within view model classes that get created only once. I manage this by storing child view model references within the root *AppViewModel*:
 
 ```typescript
 public getCompaniesViewModel(): CompaniesContainerViewModel {
@@ -223,7 +223,7 @@ This technique is a basic but portable way to manage application state in fronte
 
 ### Separation of View Logic from General Logic
 
-I use the React framework’s hook-based syntax to develop the SPA’s views, as shown below. In mobile development I use other frameworks, such as SwiftUI, which have their own view syntax.
+I use the React framework’s hook-based syntax to develop the SPA’s views. In mobile development I use other frameworks, such as SwiftUI, which have their own view syntax.
 
 ```typescript
 export function CompaniesContainer(props: CompaniesContainerProps): JSX.Element {
@@ -238,11 +238,11 @@ export function CompaniesContainer(props: CompaniesContainerProps): JSX.Element 
 }
 ```
 
-I avoid the use of frameworks like React or SwiftUI for general logic, including API and OAuth requests. This leads to more natural object-based code that is easier to port across technologies.
+I avoid the use of frameworks like React or SwiftUI for non-view logic, such as that for API and OAuth requests. This leads to more natural object-based code that is easier to port across technologies.
 
 ### Triggering API Requests
 
-For views that call APIs, data loading typically begins when the [useEffect hook](https://reactjs.org/docs/hooks-effect.html) executes. The view’s *startup* method calls a *loadData* method to triggers calls to APIs. The *Reload Data* button also invokes the *loadData* method.
+For views that call APIs, data loading typically begins when the [useEffect hook](https://reactjs.org/docs/hooks-effect.html) executes. The view’s *startup* method calls a *loadData* method to trigger API requests. The *Reload Data* button also invokes the *loadData* method.
 
 ```typescript
 async function startup(): Promise<void> {
@@ -259,7 +259,7 @@ async function loadData(options?: ViewLoadOptions): Promise<void> {
 }
 ```
 
-The view model code is business-focused and uses a *fetch* client to deal with lower level aspects. The *ViewModelCoordinator* object provides a mechanism to trigger a new login redirect when the API session expires:
+The view model logic is business-focused and uses a *fetch* client to deal with lower level aspects. The *ViewModelCoordinator* object provides a mechanism to trigger a new login redirect when the API session expires:
 
 ```typescript
 public async callApi(options?: ViewLoadOptions): Promise<void> {
@@ -313,7 +313,7 @@ When clicked, a summary view uses a React modal dialog to display the *Error Det
 
 ![error details](/images/240/error-details.jpg?v=20240713)
 
-Now that you understand that API requests run concurrently, let's see how the SPA initially calculates that it must initiate user authentication, to get an access token with which it can call APIs.
+Before any such concurrent API requests can run, the SPA must calculate the user's authentication status, then initiate a login to get an access token with which it can call APIs.
 
 ### Getting the User's Authenticated Status
 
@@ -341,7 +341,7 @@ private _handleErrorsAfterLoad(): void {
 
 ### API Driven OpenID Connect
 
-The final SPA continues to drive its own authentication flow, with the help of a remote OAuth agent. The SPA uses the following operations, and this blog's earlier SPA code examples used pretty much the same interface.
+The final SPA continues to drive its own authentication flow, with the help of a remote OAuth agent. The SPA uses the following operations and this blog's earlier SPA code examples used pretty much the same interface.
 
 ```typescript
 export interface Authenticator {
@@ -374,7 +374,7 @@ public async login(currentLocation: string): Promise<void> {
 }
 ```
 
-When the login response is received, the page load handler processes the login response. The result is to issue encrypted session cookies (which contain the underlying OAuth tokens) to the browser.
+When the login response is received, the page load handler processes the login response. The result is to issue encrypted session cookies, which contain the underlying OAuth tokens, to the browser.
 
 ```typescript
 public async handlePageLoad(): Promise<string | null> {
@@ -421,7 +421,7 @@ The SPA retains full control over login usability. Rather than using a few lines
 
 ### API Requests with Cookies
 
-After login the SPA uses *HttpOnly SameSite=strict Secure* cookies to transport access tokens to APIs. The SPA must use the *withCredentials* flag to instruct the browser to send cookies to its backend for frontend. The SPA sends a custom header to enforce CORS preflight requests, as a CSRF prevention best practice. The SPA also sends some custom headers to the API for logging purposes.
+After login the SPA uses *HttpOnly SameSite=strict Secure* cookies to call APIs. The SPA must use the *withCredentials* flag to instruct the browser to send cookies to its backend for frontend. The SPA sends a custom header to enforce CORS preflight requests, as a CSRF prevention best practice. The SPA also sends some custom headers to the API for logging purposes.
 
 ```typescript
 private async _callApiWithCredential(
@@ -450,7 +450,7 @@ private async _callApiWithCredential(
 }
 ```
 
-When the current access token expires, the SPA makes a token refresh request to get new tokens, rewrite cookies and retry the original API request. It is also possible that the user could close all browser windows when the *isLoggedIn=true* flag is set. The next time the user runs the app, session cookies are no longer present and APIs return 401 responses. The SPA (and this blog's native apps) cope reliably with these conditions using the following overall algorithm for API requests:
+When the current access token expires, the SPA makes a token refresh request to get new tokens, rewrite cookies and retry the original API request. It is also possible that the user could close all browser windows when the *isLoggedIn=true* flag is set. The next time the user runs the app, session cookies are no longer present and APIs return 401 responses. The SPA, and this blog's native apps, cope reliably with these conditions using the following overall algorithm for API requests:
 
 ```typescript
 if (!this._authenticator.isLoggedIn()) {
@@ -485,11 +485,11 @@ try {
 }
 ```
 
-The lower level API code uses a basic caching layer. This avoids duplicated API calls, such as when the user navigates to an already visited view, or uses the back button. The caching layer also deals efficiently with re-entrancy when views are recreated, such as when you use React strict mode.
+The lower level API code uses a basic caching layer. This avoids duplicated API calls, such as when the user navigates to an already visited view, or uses the back button. The caching layer also deals efficiently with re-entrancy, when views are recreated in React strict mode.
 
 ### Synchronized Token Refresh
 
-The SPA uses a class called *ConcurrentActionHandler* to avoid sending multiple token refresh requests at the same time. This prevents potential reliability problems when the authorization server issues single-use refresh tokens. The SPA only sends a physical token refresh request for the first view that requests a refresh. All other views wait, then receive the same result as the first view. I manage this using a technique of queueing up promises:
+The SPA uses a class called *ConcurrentActionHandler* to avoid sending multiple token refresh requests at the same time. This prevents potential reliability problems when the authorization server issues single-use refresh tokens. The SPA only sends a token refresh request for the first view that requests it. All other views wait, then receive the same result as the first view. I manage this using a technique of queueing up promises:
 
 ```typescript
 public async execute(action: () => Promise<void>): Promise<void> {
@@ -534,9 +534,9 @@ public async execute(action: () => Promise<void>): Promise<void> {
 
 ### Finishing Touches
 
-The final SPA deals reliably with some tricky areas, in the lower-level plumbing classes. Some of these could be turned into a shared library, which would reduce code. In a real organization the goal would be to grow the web code base by adding new view and view model classes. A security-first design, with an early focus on code setup and deployment, helps to enable this.
+The final SPA deals reliably with some tricky areas, in the lower-level plumbing classes. Some of these could be turned into a shared library, which would reduce code. In a real organization the goal would be to grow the web code base by adding new view and view model classes. An early focus on security, development setups, deployment and reliability helps to enable this.
 
-There is one remaining post for this blog's final SPA. It is part of the cloud theme and covers <Link href='/posts/cdn-static-content-delivery'>Web Content Delivery</Link> using a cloud platform. The SPA's static content gets uploaded to a content delivery network which deploys it to ~400 global locations for globally equal performance. Ultimately though, the SPA behaves exactly the same on a development computer as it does in any deployed system.
+There is one remaining post for this blog's final SPA. It is part of the cloud theme and covers <Link href='/posts/cdn-static-content-delivery'>Web Content Delivery</Link> using a cloud platform. The SPA's static content gets uploaded to a content delivery network which deploys it to ~400 global locations for globally equal performance. The SPA's deployment is also portable and runs the same anywhere, including a development computer.
 
 ### Where Are We?
 
