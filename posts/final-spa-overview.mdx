@@ -1,34 +1,34 @@
 # Final SPA – Overview
 
-Previously we provided an explanation of the <Link href='/posts/spa-back-end-for-front-end'>Backend for Frontend</Link> setup  for the final SPA, where remote API components issue cookies for the SPA. Next we will summarise the main frontend behaviours of the completed SPA, then get it running locally.
+Previously I explained the <Link href='/posts/spa-back-end-for-front-end'>Backend for Frontend</Link> setup  for the final SPA, where remote API components issue cookies for the SPA. Next I summarise the main frontend behaviours of the completed SPA, after which I show how to run it locally.
 
 ### Key Features
 
-Our final SPA improves on the previous <Link href='/posts/improved-spa-code-sample-overview'>Updated SPA</Link>, to meet some key requirements. It is difficult to satisfy all of these at the same time:
+The final SPA improves on the previous <Link href='/posts/improved-spa-code-sample-overview'>Updated SPA</Link>, to meet some key requirements. It is difficult to satisfy all of these at the same time:
 
 | Requirement | Description |
 | ----------- | ----------- |
-| <span style={{color:'green'}}>**Best Browser Security**</span> | The SPA calls APIs using the strongest *HttpOnly SameSite=strict* cookies, with no tokens in the browser |
-| <span style={{color:'green'}}>**Globally Equal Performance**</span> | Our static web content will be delivered to many locations via a *Content Delivery Network (CDN)* |
-| <span style={{color:'green'}}>**Pure SPA Development**</span> | Web developers work productively on frontends, with small code bases and no security plumbing |
+| <span style={{color:'green'}}>**Best Browser Security**</span> | The SPA calls APIs using the strongest *HttpOnly SameSite=strict* cookies, with no tokens in the browser. |
+| <span style={{color:'green'}}>**Globally Equal Performance**</span> | The SPA's static web content is delivered to many locations via a *Content Delivery Network (CDN)*. |
+| <span style={{color:'green'}}>**Pure SPA Development**</span> | Web developers work productively on frontends, with small code bases and no security plumbing. |
 
 ### Cloud Hosting
 
-The overall system is also deployed to AWS. The SPA’s web static content is deployed to S3, then CloudFront replicates the web resources to many global locations, without the need to manage servers or containers:
+I deploy the overall system of the SPA and APIs to AWS. I upload the SPA’s web static content to S3, then CloudFront replicates the web resources to many global locations, without the need to manage servers or containers:
 
 ![aws technologies](/images/220/aws-technologies.jpg)
 
-In AWS, the API is implemented as <Link href='/posts/serverless-api-overview'>Serverless Lambda Functions</Link>, and exposed to the internet via the AWS API Gateway. This provides a low cost solution for my online demos.
+I deploy the API code sample to AWS as <Link href='/posts/serverless-api-overview'>Serverless Lambda Functions</Link> that the AWS API Gateway exposes to the internet. This provides low cost backend hosting for my code samples.
 
 ### Online Deployment
 
-Any reader can log in to the AWS deployed version of the above architecture from this blog’s <Link href='/posts/quick-start'>Cloud Samples Quick Start</Link> page, then test OAuth lifecycle events via the demo app’s buttons:
+Any reader can use the AWS deployed version of the above architecture from this blog’s <Link href='/posts/quick-start'>Cloud Samples Quick Start</Link> page. You can sign in to the SPA as a test user account, then test OAuth lifecycle events via the demo app’s buttons:
 
 ![online spa](/images/220/online-spa.jpg?v=20240713)
 
-### Local Execution
+### Code Sample
 
-The SPA is provided in a GitHub code sample, which manages only frontend concerns. The deployment resources handle use cases for hosting static content. The next post will show how to  run the code sample locally.
+The SPA code sample manages only frontend concerns. The resources in the *deployment* folder represent web static content hosting variations. The next post shows how to run the code sample locally.
 
 <div className="smallimage">
 ![code layout](/images/220/code-layout.jpg)
@@ -36,7 +36,7 @@ The SPA is provided in a GitHub code sample, which manages only frontend concern
 
 ### Development URLs
 
-The following URLs are accessed during local development, and only the first of these runs on the local computer:
+You use the following URLs during local development and only the first of these runs on the local computer:
 
 | Component | Base URL |
 | --------- | -------- |
@@ -46,21 +46,19 @@ The following URLs are accessed during local development, and only the first of 
 | <span style={{color:'green'}}>**OAuth Agent**</span> | *https://bff.authsamples.com-dev/oauth-agent* |
 | <span style={{color:'green'}}>**Authorization Server**</span> | *https://login.authsamples.com* |
 
-The current post summarises the main web behaviours, and the next post explains how to run the SPA locally.
+### OAuth Client
 
-### OAuth Clients
-
-In AWS Cognito the deployed SPA is registered as follows, to point to an AWS CloudFront web origin. The SPA is now registered as a confidential client, and its backend for frontend uses a client credential in grant requests for tokens:
+In AWS Cognito the deployed SPA registration points to an AWS CloudFront web origin. The SPA is upgraded to a confidential client, and its backend for frontend uses a client credential in grant requests for tokens:
 
 ![oauth client production](/images/220/oauth-client-production.jpg?v=20240713)
 
-A second entry exists for running the SPA during development, which is configured equivalently, except that in this case the configured web URLs use a development web origin, configured in the local computer’s hosts file.
+A second entry exists to run the SPA during development, which has an equivalent registration except that the configured web URLs use a local development web origin.
 
 ![oauth client development](/images/220/oauth-client-development.jpg?v=20240713)
 
 ### React Code
 
-The SPA’s code has been updated to use React as a web framework, to enable better features during coding of views. A tree of views is rendered, which leads to concurrent API requests. Both login and token renewal operations will need to be synchronized, when tokens expire.
+The SPA’s code has been updated to use React as a web framework, to enable better features during coding of views. The SPA renders a tree of views which leads to concurrent API requests. The SPA synchronises both token renewal and login operations when tokens expire.
 
 ```jsx
 return (
@@ -82,11 +80,9 @@ return (
 );
 ```
 
-React code is built to its own JavaScript bundle file, separate to other dependencies in the *node_modules* folder. This demonstrates a way to split the overall app’s code into multiple, roughly evenly sized, modules.
-
 ### Path Based Routing
 
-Earlier SPAs in this blog used hash based routing, and the final SPA has been updated to use React’s support for path based routes. The main demo SPA continues to use a base path expressed in the index.html file:
+Earlier SPAs in this blog used hash based routing. The final SPA instead uses React’s support for path-based routes. The SPA continues to use a *base* path expressed in the index.html file:
 
 ```html
 <!DOCTYPE html>
@@ -111,52 +107,44 @@ Earlier SPAs in this blog used hash based routing, and the final SPA has been up
 </html>
 ```
 
-The React application then reads the base path from the index.html file when the app loads, and supplies it to the React router. The app then uses relative routes, within the */spa/* base path.
+When the app loads, the React application reads the base path from the *index.html* file and supplies it to the React router. The app then uses relative routes within the */spa/* base path.
 
 ### Mobile First
 
-Since the SPA is now deployed to the AWS cloud, we would expect it to be accessed on small mobile devices, so the final SPA has been made more presentable on smaller screens:
+Since the SPA is now cloud-deployed, you can access it on small mobile devices, so I made the final SPA more presentable on smaller screens:
 
 <div className="smallimage">
 ![mobile view](/images/220/mobile-view.jpg?v=20240713)
 </div>
 
-### Web Performance
+### Web Performance Behaviors
 
-A strong separation of concerns and clean code should lead to high performance, as long as frontend views and API endpoints are also designed intelligently. The following technical factors also impact performance, and there are trade offs between performance and other qualities:
+It is common to add undue complexity to web applications in efforts to achieve fast page loads. In some cases, foundations such as deployment are suboptimal. Remote users, who may be located thousands of miles from the web host, then get poor performance.
+
+I prefer to have an awareness of web performance factors but only follow mainstream practices and avoid most optimizations. A strong separation of concerns and clean code should then perform well enough. You should also keep views and API operations simple, especially for your first page. The final SPA uses the following performance-related behaviors.
 
 | Aspect | Responsibilities |
 | ------ | ---------------- |
-| <span style={{color:'green'}}>**Content Delivery**</span> | Web latency is roughly equal for all global users, since a CDN ensures that all web downloads are fairly local |
-| <span style={{color:'green'}}>**Static Content Caching**</span> | Cache control headers are used for web assets, so that future requests are served from the browser cache |
-| <span style={{color:'green'}}>**API Response Caching**</span> | The SPA also caches API responses, to prevent redundant API requests, such as during back navigation |
-| <span style={{color:'green'}}>**Bundle Splitting**</span> | As the SPA grows there should be a way to modularize downloads of JavaScript and CSS |
+| <span style={{color:'green'}}>**Content Delivery**</span> | Web latency is roughly equal for all global users, since a CDN ensures that all web downloads are fairly local. |
+| <span style={{color:'green'}}>**Static Content Caching**</span> | The SPA uses cache control headers for web assets, to serve future requests from the browser cache. |
+| <span style={{color:'green'}}>**API Response Caching**</span> | The SPA caches HTTP GET responses to prevent redundant API requests, such as during back navigation. |
+| <span style={{color:'green'}}>**Download Sizes**</span> | As the SPA's code grows I could use micro-frontends to modularize downloads of JavaScript and CSS. |
 
-Requests to APIs use CORS, which adversely impacts performance a little. Pre-flight OPTIONS requests are sent when a user first accesses an API endpoint. Then, no further OPTIONS requests are required for that user and endpoint for 24 hours.
+Requests from the SPA to APIs use CORS, which is standard in any pure SPA architecture, but adds a small performance overhead. The browser sends preflight OPTIONS requests when a user first accesses an API endpoint, after which the browser caches the CORS response for 24 hours.
 
-This blog’s final SPA connects by default to serverless APIs, which have suboptimal performance in a few areas, due to slow startup and an inability to perform memory caching. The SPA performs best when run against cloud-native APIs and using a high performance cloud-native API gateway.
-
-### Time to First Render
-
-The real time to first render in a secured web application is not immediate and requires the following steps. Multiple static content and HTTP requests are involved. Modern networks and the latest HTTP/2 functionality help to ensure good performance:
+The real time to first render in a secured web application is not immediate and requires the following steps. The browser makes multiple static content and HTTP requests. Modern networks and the latest HTTP/2 functionality help to manage the steps efficiently:
 
 | Step | Description |
 | ---- | ----------- |
-| <span style={{color:'green'}}>**Unauthenticated Access**</span> | The time to download HTML resources and run code to detect whether the user is authenticated |
-| <span style={{color:'green'}}>**OAuth Login**</span> | The time to redirect to the authorization server and present login screens, then return to the SPA |
-| <span style={{color:'green'}}>**Secure SPA Access**</span> | The application reload, followed by API requests to get secured data specific to the user |
-
-I aim to have a good awareness of factors that impact performance, but avoid optimizations that add complexity to the architecture. Instead, I aim for the best separation of concerns, so that code can grow effectively.
-
-### Web Code Scalability
-
-The final web code sample is hosted at an */spa* path to show that other apps with the same business privileges could be added alongside it, and share the same cookies. This would enable the code for a large app to be split at development time, then recomposed at deployment time. Each frontend would call APIs using shared cookies, and it would be possible to seamlessly navigate across apps without OpenID Connect redirects.
+| <span style={{color:'green'}}>**Unauthenticated Access**</span> | The time to download HTML resources and run code to detect the user's authentication status. |
+| <span style={{color:'green'}}>**OAuth Login**</span> | The time to redirect to the authorization server and present login screens, then return to the SPA. |
+| <span style={{color:'green'}}>**Secure SPA Access**</span> | The application reload, followed by API requests to get secured data specific to the user. |
 
 ### Where Are We?
 
-We have summarised the behaviour of the final SPA, to complete the web architecture’s foundational security work. We have updated to a modern web framework, and the architecture enables both URLs and code to be scaled effectively as the web code base grows.
+I summarised the behaviour of the final SPA's web architecture. Development uses a modern web framework and there is an early focus on deployment and performance. You can scale both URLs and code as the web code base grows.
 
 ### Next
 
-- Next we will explain <Link href='/posts/how-to-run-the-react-js-spa'>How to Run the React SPA</Link>
-- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>
+- I explain <Link href='/posts/how-to-run-the-react-js-spa'>How to Run the React SPA</Link>.
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.
