@@ -306,7 +306,7 @@ The Filebeat configuration ensures that there is a separate index per day. This 
 
 ### Step 10: Understand Log Ingestion
 
-By default, Filebeat adds some fields to each log entry on the outbound side of processing, and Elasticsearch adds fields during inbound processing. The init container customizes the [ingestion pipeline](https://www.elastic.co/guide/en/elasticsearch/reference/current/ingest.html) to ensure that logs contain clean data. 
+By default, Filebeat adds some fields to each log entry on the outbound side of processing, and Elasticsearch adds fields during inbound processing. The init container customises the [ingestion pipeline](https://www.elastic.co/guide/en/elasticsearch/reference/current/ingest.html) to ensure that logs contain clean data. 
 
 ```json
 {

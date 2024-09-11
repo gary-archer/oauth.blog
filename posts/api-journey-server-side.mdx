@@ -1,6 +1,6 @@
 # API Journey – Server Side
 
-Previously we summarised this blog’s <Link href='/posts/api-platform-design'>API Platform Overview</Link>. Next we will take a closer look into some desired technical behaviours for APIs, as implemented by this blog’s final API code samples:
+Previously I summarised this blog’s <Link href='/posts/api-platform-design'>API Platform Overview</Link> to express some essential high-level ingredients. Next I take a closer look into end-to-end technical behaviors for APIs. I implement them in this blog’s final API code samples, in multiple technology stacks:
 
 - <Link href='/posts/api-architecture-node/'>Final Node.js API</Link>
 - <Link href='/posts/net-core-code-sample-overview'>Final .NET API</Link>
@@ -8,7 +8,7 @@ Previously we summarised this blog’s <Link href='/posts/api-platform-design'>A
 
 ### Configuration
 
-APIs start by loading their configuration, which includes OAuth settings needed to ensure JWT security best practices when validating access tokens:
+APIs start by loading their configuration, which includes OAuth settings needed to follow JWT validation best practices:
 
 ```json
 {
@@ -24,7 +24,7 @@ APIs start by loading their configuration, which includes OAuth settings needed 
 
 ### Dependencies
 
-APIs often follow a dependency injection based model and register instances and lifetimes when the API starts up:
+APIs often follow a dependency injection based model and register object instances and lifetimes when the API starts up:
 
 ```typescript
 public static registerDependencies(container: Container): void {
@@ -45,11 +45,11 @@ public static registerDependencies(container: Container): void {
 }
 ```
 
-When working with small dependency graphs I prefer request scoped lifetimes for controller classes, or transient lifetimes for non HTTP classes. This ensures that requests cannot interfere with each other, if for example one of these classes is coded in a non-thread-safe manner.
+When working with small dependency graphs I use request-scoped lifetimes for HTTP-based objects like controllers, or transient lifetimes for non-HTTP objects like services. This helps to ensure that concurrent requests cannot adversely affect each other.
 
 ### Middleware
 
-Singleton middleware classes are also created, for tasks such as OAuth authorization, logging and exception handling:
+I use singleton middleware objects for tasks such as OAuth authorization, logging and exception handling:
 
 ```typescript
 export class UnhandledExceptionHandler {
@@ -62,7 +62,7 @@ export class UnhandledExceptionHandler {
 
 ### Entry Points
 
-Entry points to API operations are usually expressed declaratively, such as defining the path and method for a REST API:
+I express entry points to API operations declaratively, using the HTTP path and method:
 
 ```typescript
 @controller('/companies')
@@ -83,14 +83,7 @@ export class CompanyController extends BaseHttpController {
 ```
 ### Async for High Throughput
 
-Most APIs spend the vast majority of the time for an API request  waiting on completion of asynchronous I/O events, most commonly:
-
-- Database access
-- Calls to other APIs
-
-This blog’s APIs use modern and standard *async await* code to ensure that each thread can process additional API calls during the first request’s I/O completion. In multi threaded languages this looks like this:
-
-![throughput](/images/260/throughput.jpg)
+Most APIs spend the vast majority of their execution time for an API request waiting on completion of asynchronous I/O events. Most commonly this involves database access or calls to an upstream API. This blog’s APIs use modern and standard *async await* code in all technologies, to avoid blocking, so that each thread can process additional API requests during the I/O completion of other requests.
 
 ### Zero Trust API Security
 
@@ -108,7 +101,7 @@ This blog’s API code samples receive the following format of access token, whi
 }
 ```
 
-The API validates a JWT access token on every request, after which the token claims can be trusted:
+The API validates a JWT access token on every request, after which the API trusts the token claims. The API's then implements its business authorization, using *scopes* and *claims* from the access token's payload.
 
 ```typescript
 public async validateAccessToken(accessToken: string): JwtClaims {
@@ -126,7 +119,7 @@ public async validateAccessToken(accessToken: string): JwtClaims {
 
 ### Portable OAuth Implementation
 
-The OAuth behaviour in APIs is portable and does not depend on any specific authorization server. I ensure this by using a JOSE library, which provides the best options for working with JWTs and their signing keys:
+I implement portable API security without depending on API frameworks in particualar technology stacks. Instead, I use JavaScript Object Signing and Encryption (JOSE) libraries with up-to-date options for working with JWTs and their signing keys. I believe that a library-based approach enables the best understanding and control over the important behaviors.
 
 | Technology | JOSE Library |
 | ---------- | ------------ |
@@ -136,9 +129,7 @@ The OAuth behaviour in APIs is portable and does not depend on any specific auth
 
 ### APIs Use Extensible Claims
 
-The API must then collect claims used for business authorization. This code often requires more data than just the token claims, in order to enforce  finer grained business permissions.
-
-There are various ways in which this can be managed. In this blog I do so by extending the OAuth middleware to handle looking up extra authorization values, as described in the <Link href='/posts/api-authorization-design'>API Authorization Behaviour</Link> blog post.
+APIs must collect values for their business authorization. This code often requires more data than just the token claims, to enforce fine-grained business permissions. There are various ways in which you could manage this requirement. In this blog I show how to extend OAuth middleware to build a useful claims object. You can read more about the approach in the <Link href='/posts/api-authorization-design'>API Authorization Behaviour</Link> blog post.
 
 ```typescript
 export class ClaimsPrincipal {
@@ -147,20 +138,20 @@ export class ClaimsPrincipal {
 }
 ```
 
-The API uses the following user attributes:
+This blog's APIs and clients work with the following user attributes, which are either issued to the access token or derived from token claims. Values in access tokens are JWT claims in the claims principal and my APIs consider other values to be extra claims.
 
 | User Attribute | Represents |
 | -------------- | ---------- |
-| <span style={{color:'green'}}>**Scope**</span> | The main scope in the client’s access token is called ‘investments‘ to represent the app’s business area. |
-| <span style={{color:'green'}}>**Manager ID**</span> | The API receives its business user identity in access tokens sent by the client, though the UI does not use this value. |
-| <span style={{color:'green'}}>**Role**</span> | This is used for API authorization, and grants the admin role access to all regions. The role is stored in identity data and is issued to access tokens. |
-| <span style={{color:'green'}}>**Regions**</span> | This is used for API authorization, and only allows other users access to their region(s). It is meant to represent a finer grained business permission not issued to the access token. |
-| <span style={{color:'green'}}>**Name**</span> | The UI downloads data from the OAuth user info endpoint, then displays the *given_name* and *family_name* fields. |
-| <span style={{color:'green'}}>**Title**</span> | In the example, the user title is also stored outside the identity data. The UI displays this and the user’s regions in a tooltip. Both are downloaded from an API user info endpoint. |
+| <span style={{color:'green'}}>**Scope**</span> | The main scope in the client’s access token is called *investments* to represent a business area. |
+| <span style={{color:'green'}}>**Manager ID**</span> | The API receives a useful business user identity in access tokens sent by the client. |
+| <span style={{color:'green'}}>**Role**</span> | The authorization server stores a role claim for each user, with values of *admin* or *user*, and issues it to access tokens. |
+| <span style={{color:'green'}}>**Regions**</span> | APIs use an array of allowed regions as an example of fine-grained business permissions not issued to access tokens. |
+| <span style={{color:'green'}}>**Name**</span> | Clients download data from the OpenID Connect userinfo endpoint, then display the *given_name* and *family_name* fields. |
+| <span style={{color:'green'}}>**Title**</span> | The title is an example product-specific user attribute which clients display in a tooltip. |
 
 ### APIs Authorize Access to Data
 
-Once all authorization data is available, it is injected into logic classes. Again there are multiple ways in which this might be done. The data needed to support correct API authorization should be readily available.
+I inject the claims object produced by OAuth middleware into business logic classes that need it. The example APIs authorize access to *company* and *transaction* resources. The data needed to enable correct API authorization is readily available:
 
 ```typescript
 @injectable()
@@ -190,11 +181,11 @@ export class CompanyService {
 }
 ```
 
-Note that the claims principal is a natural request scoped object, so there could be other ways to inject it, though I think constructor injection results in the cleanest code. This is one of my motivations for avoiding singletons for service logic classes.
+The authorization logic could be written in various other ways. The claims principal is a natural request-scoped object, so there could be other ways to inject it. My personal preference is to use constructor injection.
 
 ### Testable OAuth Implementation
 
-OAuth API security should be tested frequently as part of a secure API development lifecycle. This blog’s API tests <Link href='/posts/api-automated-tests'>mock the authorization server</Link>, to enable the following type of test to be run on a development computer. The same JWT library is used during testing, to issue mock access tokens:
+You should test OAuth API security frequently as part of a secure API development lifecycle. This blog’s final APIs use tests that <Link href='/posts/api-automated-tests'>mock the authorization server</Link>. This technique enables you to easily control access tokens when you write integration tests on a development computer. I use the same JOSE library for both API access token validation and test code that produces JWTs.
 
 ```typescript
 describe('OAuth API Tests', () => {
@@ -225,7 +216,7 @@ describe('OAuth API Tests', () => {
 
 ### API Returns Friendly Errors to Clients
 
-One of the reasons why I use a JOSE library is to take finer control of error responses for clients. For most API errors I return a `code` and `message`, and use the same format for OAuth errors:
+One of the reasons why I use a JOSE library is to take finer control of OAuth error responses for clients. For most API errors I return a client-friendly object containing a *code* and *message*. When APIs serve frontend clients, I use the same response format for OAuth errors:
 
 ```json
 {
@@ -234,7 +225,7 @@ One of the reasons why I use a JOSE library is to take finer control of error re
 }
 ```
 
-For 500 errors where there has been a server error, the API returns additional information to support error displays. This helps to enable fast problem resolution by support engineers:
+When there is a server error, the API returns additional information to support client error displays. This helps to enable fast problem resolution by support engineers:
 
 ```json
 {
@@ -247,7 +238,7 @@ For 500 errors where there has been a server error, the API returns additional i
 
 ### API Writes Queryable Logs
 
-API logs are structured and designed to be queried, so that the first error above would result in a log entry similar to this:
+I design API request logs to be easy for people to query. When there is a client error I write a log entry similar to this:
 
 ```json
 {
@@ -277,7 +268,7 @@ API logs are structured and designed to be queried, so that the first error abov
 }
 ```
 
-The second error above would write a log entry that includes the client error ID, representing the exact error occurrence. This enables fast error lookup, where the cause should be captured by the stack trace and other details. Developers should rehearse such incidents to ensure that this works well.
+When there is a server error I write a log entry that includes a unique *Error ID* to represent the exact error occurrence. This enables fast error lookup where the cause is captured by the stack trace and other details.
 
 ```json
 {
@@ -327,39 +318,27 @@ The second error above would write a log entry that includes the client error ID
 }
 ```
 
-The logs enable many useful <Link href='/posts/api-technical-support-analysis'>technical support queries for people</Link>, to measure errors or slowness. For example, a breakdown of errors by their type is easily produced, for the last 2 weeks of activity in a test system. This enables any reliability issues to be ironed out, as part of quality processes.
+The logs enable <Link href='/posts/api-technical-support-analysis'>people-focused technical support queries</Link> to measure errors or slowness. For example, you can produce a breakdown of errors by type and frequency for a time period. You can then iron out any reliability issues as part of your quality processes.
 
 ### API Responsibilities are Separated
 
-This blog’s final APIs are coded in multiple technologies. The code is largely identical regardless of programming language, since all implementations provide the same API:
-
-- <Link href='/posts/api-architecture-node'>Node.js Final API</Link>
-- <Link href='/posts/net-core-code-sample-overview'>.NET Final API</Link>
-- <Link href='/posts/java-spring-boot-api-overview'>Java Final API</Link>
-
-In order to provide the behaviours articulated on this page, some plumbing code is needed. A folder structure is used that starts by classifying each class as *host*, *logic* or *plumbing*:
+To provide the behaviours that I articulate, this blog's API require some plumbing code. A folder structure classifies each class as *host*, *logic* or *plumbing*. In real APIs you might externalise some of the plumbing to one or more shared libraries. The goal in a real organization would be to use clean, scalable code for the valuable business logic.
 
 <div className="smallimage">
 ![api code layout](/images/260/api-code-layout.jpg)
 </div>
 
-The goal in a real company would be to grow the API logic. It should be possible to externalize some of the plumbing to one or more shared libraries, so that the API’s code is mostly business focused.
-
 ### Developers Run a Productive Setup
 
-The API development setup enables the developer to work on the API in isolation, which is the option that works best most of the time. When required, end-to-end setups are also supported, which can include running other components, such as a web client and API gateway.
+This blog's API development setup enables the developer to work on API code in isolation, which is the option that works best most of the time. When required, you can also run more advanced end-to-end setups with this blog's clients and APIs. When integrating with clients, this blog's API development URLs use SSL and domain names. This best enables deployment related thinking during development.
 
-![spa and api](/images/260/spa-and-api.jpg)
-
-The API development URLs use SSL with realistic domain names. This best enables deployment related thinking during development. I avoid URLs such as *http://localhost:3000* for most development.
+![spa and api](/images/260/spa-and-api.jpg?v=20240911)
 
 ### Where Are We?
 
-This post has summarised a non-functional journey for APIs whose complexity is not caused by OAuth. The same intricacies would exist if any other security framework was used.
-
-In this blog,  the difficult areas are dealt with as early as possible in the software pipeline, on a development computer. Doing so should improve quality and result in more predictable business delivery.
+I summarised a non-functional journey for APIs, where OAuth does not create the complexity. The same intricacies would exist with any other security framework. In this blog, I deal with foundational areas as early as possible in the software pipeline, on a development computer. Doing so should improve quality and result in more predictable business delivery.
 
 ### Next
 
-- Next we will take an equivalent look at <Link href='/posts/api-journey-client-side'>API Journey – Client Side</Link>
-- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>
+- Next I take an equivalent look at the <Link href='/posts/api-journey-client-side'>API Journey – Client Side</Link>.
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.

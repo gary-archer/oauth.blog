@@ -34,7 +34,7 @@ I then activated Cognito advanced features, which did not add any noticeable inc
 
 ![advanced](/images/600/advanced.jpg)
 
-My only motivation for activating advanced features is to enable *Access Token Customization* and issue fields from the user schema as claims. This is an essential OAuth behaviour for protecting data in APIs.
+My only motivation for activating advanced features is to enable *Access Token Customisation* and issue fields from the user schema as claims. This is an essential OAuth behaviour for protecting data in APIs.
 
 ### Define Custom API Scopes
 
@@ -42,9 +42,9 @@ To define custom API scopes in AWS Cognito you must configure a *Resource Server
 
 ![scope](/images/600/scope.jpg)
 
-### Configure Token Customization
+### Configure Token Customisation
 
-I then created a [Pre-Token-Generation Lambda Trigger](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html), using the version 2 schema that supports access token customization:
+I then created a [Pre-Token-Generation Lambda Trigger](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html), using the version 2 schema that supports access token customisation:
 
 ![token lambda](/images/600/token-lambda.jpg)
 
@@ -85,7 +85,7 @@ export const handler = function(event, context) {
 
 The *claimsToSuppress* section is used to remove personal data from ID tokens, since my code samples instead get personal data from the Cognito user info endpoint.
 
-The *claimsToAddOrOverride* section is used to customize access tokens. Claims are issued based on the client's scope so that different custom claims can be issued to different clients.
+The *claimsToAddOrOverride* section is used to customise access tokens. Claims are issued based on the client's scope so that different custom claims can be issued to different clients.
 
 These claims provide convenient fields for APIs and produce a more complete access token. In many cases this helps to lock down the access token and reduce its privileges. This blog’s use of claims is further explained in the blog post on <Link href='/posts/api-authorization-design'>API Authorization Behavior</Link>.
 

@@ -22,7 +22,7 @@ The API flows in this blog serve web and mobile clients and consist of the follo
 | <span style={{color:'green'}}>**Single Page Application**</span> | Clients that follow browser best practices and use cookies to transport access tokens to APIs. |
 | <span style={{color:'green'}}>**Native Application**</span> | Desktop and mobile clients that follow native best practices and call APIs with access tokens. |
 | <span style={{color:'green'}}>**API**</span> | APIs receive secure values in in JWT access tokens and use them for business authorizion. |
-| <span style={{color:'green'}}>**API Gateway**</span> | The API gateway handles client-specific security differences. It translates from cookies to JWT access tokens. |
+| <span style={{color:'green'}}>**API Gateway**</span> | The API gateway handles client-specific security differences, to handle concerns like cookies, CORS and CSRF for web clients. |
 | <span style={{color:'green'}}>**Authorization Server**</span> | The main security component that issues access tokens and implements user authentication. |
 | <span style={{color:'green'}}>**Log Aggregation System**</span> | Captures API logs and enables people to make sense of API activity under load. |
 
@@ -63,6 +63,8 @@ I provide 3 final REST APIs whose code is almost identical. Each API uses both *
 - <Link href='/posts/net-core-code-sample-overview'>.NET API</Link>
 - <Link href='/posts/java-spring-boot-api-overview'>Java API</Link>
 
+
+
 ### Cloud Hosting
 
 This blog uses portable design patterns that work for any type of deployment. I use <Link href='/posts/cloud-hosting'>Serverless Hosting</Link> for some deployed API components, to minimise my personal hosting costs. Yet the final APIs are cloud native and can run in platforms like Kubernetes, where you can use best-of-breed supporting components for APIs.
@@ -75,5 +77,5 @@ I have summarised some foundations to aim for when designing a modern API platfo
 
 ### Next
 
-- I summarize an <Link href='/posts/api-journey-server-side'>API Journey – Server Side</Link>.
+- I describe an <Link href='/posts/api-journey-server-side'>API Journey – Server Side</Link>.
 - For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.

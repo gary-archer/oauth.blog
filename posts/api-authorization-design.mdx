@@ -2,7 +2,7 @@
 
 In <Link href='/posts/user-data'>User Data Management</Link> I explained how any moderately complex real-world system typically stores *core user attributes* separately to *volatile business user attributes*. You also need to deal with both types of data when you authorize requests in your API code.
 
-In this post I suggest how to use access tokens for authorization in APIs. I summarize a few OAuth mechanisms, which you can read more about in many other OAuth resources. This post's main focus is manageability when you implement API authorization.
+In this post I suggest how to use access tokens for authorization in APIs. I summarise a few OAuth mechanisms, which you can read more about in many other OAuth resources. This post's main focus is manageability when you implement API authorization.
 
 ### Real-World API Authorization
 
@@ -99,7 +99,7 @@ In many real-world systems, claims in access tokens do not provide every data va
 
 You should not manage volatile business permissions in your authorization server, since that can lead to the same productivity problems that you get with poorly designed scopes. You usually only need to issue a few custom claims to access tokens. These values should be stable and should not change within a user's authenticated session. When your API authorizes requests it can look up volatile business permissions from other claims in the access token, which is the approach used by this blog's final APIs.
 
-### Customizing the Claims Principal
+### Customising the Claims Principal
 
 In your API code, you may therefore need to combine access token claims with extra values. You can do this in multiple ways, according to your coding preferences. When I first wrote this blog, the AWS Cognito authorization server did not support issuing custom claims to access tokens, yet I still wanted a useful and expressive claims principal that demonstrated my design intent. I did not want my code to be dictated by the limitations of an authorization server implementation.
 
@@ -112,7 +112,7 @@ export class ClaimsPrincipal {
 }
 ```
 
-My API code samples continue to use this technique, since it is useful to know how to customize OAuth processing in API technology stacks and to be in control of your own objects. The APIs perform JWT validation on every request and then look up extra values from a trusted source - like the API's database - before creating the claims principal. The business logic classes then receive a useful object with which to implement their authorization:
+My API code samples continue to use this technique, since it is useful to know how to customise OAuth processing in API technology stacks and to be in control of your own objects. The APIs perform JWT validation on every request and then look up extra values from a trusted source - like the API's database - before creating the claims principal. The business logic classes then receive a useful object with which to implement their authorization:
 
 ![token to claims](/images/130/token-to-claims.jpg)
 
