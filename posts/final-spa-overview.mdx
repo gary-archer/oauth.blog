@@ -117,11 +117,17 @@ Since the SPA is now cloud-deployed, you can access it on small mobile devices, 
 ![mobile view](/images/220/mobile-view.jpg?v=20240713)
 </div>
 
-### Web Performance Behaviors
+### Web Performance
 
-Developers sometimes add undue complexity to web applications in efforts to optimize and achieve fast page loads. In some cases remote users, who may be located thousands of miles from the web host and therefore experience poor performance. The best way to resolve this type of problem is to get foundations right using standard solutions.
+The time to first render in a secured web application is not immediate and requires the following steps. The browser makes multiple static content and HTTP requests. Modern networks and the latest HTTP/2 functionality help to manage the steps efficiently:
 
-I prefer to have an awareness of web performance factors but only follow mainstream practices and avoid most optimizations. A strong separation of concerns and clean code should then perform well enough. You should also keep views and API operations simple, especially for your first page. The final SPA uses the following performance-related behaviors.
+| Step | Description |
+| ---- | ----------- |
+| <span style={{color:'green'}}>**Unauthenticated Access**</span> | The time to download HTML resources and run code to detect the user's authentication status. |
+| <span style={{color:'green'}}>**OAuth Login**</span> | The time to redirect to the authorization server and present login screens, then return to the SPA. |
+| <span style={{color:'green'}}>**Secure SPA Access**</span> | The application reload, followed by API requests to get secured data specific to the user. |
+
+The final SPA uses the following mainstream techniques to ensure good performance:
 
 | Aspect | Responsibilities |
 | ------ | ---------------- |
@@ -130,19 +136,15 @@ I prefer to have an awareness of web performance factors but only follow mainstr
 | <span style={{color:'green'}}>**API Response Caching**</span> | The SPA caches HTTP GET responses to prevent redundant API requests, such as during back navigation. |
 | <span style={{color:'green'}}>**Download Sizes**</span> | As the SPA's code grows I would aim for medium-sized downloads using bundle splitting techniques and micro-frontends. |
 
-Requests from the SPA to APIs use CORS, which is standard in any pure SPA architecture, but adds a small performance overhead. The browser sends preflight OPTIONS requests when a user first accesses an API endpoint, after which the browser caches the CORS response for 24 hours.
+The final SPA's has a simple initial page to display a login button. Once rendered, all future SPA operations and page reloads use HTML resources from the browser's local cache.
 
-The real time to first render in a secured web application is not immediate and requires the following steps. The browser makes multiple static content and HTTP requests. Modern networks and the latest HTTP/2 functionality help to manage the steps efficiently:
+![first render](/images/220/first-render.jpg)
 
-| Step | Description |
-| ---- | ----------- |
-| <span style={{color:'green'}}>**Unauthenticated Access**</span> | The time to download HTML resources and run code to detect the user's authentication status. |
-| <span style={{color:'green'}}>**OAuth Login**</span> | The time to redirect to the authorization server and present login screens, then return to the SPA. |
-| <span style={{color:'green'}}>**Secure SPA Access**</span> | The application reload, followed by API requests to get secured data specific to the user. |
+The SPA uses CORS when it calls APIs, which is standard in any pure SPA architecture, but adds a small performance overhead. When a user first accesses an API endpoint, the browser sends preflight OPTIONS requests and then caches the CORS response for 24 hours.
 
 ### Where Are We?
 
-I summarised the behaviour of the final SPA's web architecture. Development uses a modern web framework and there is an early focus on deployment and performance. You can scale both URLs and code as the web code base grows.
+I summarised the behaviour of the final SPA's web architecture. Development uses a modern web framework and there is an early focus on security, deployment, performance and reliability. You can scale both URLs and code as the web code base grows.
 
 ### Next
 

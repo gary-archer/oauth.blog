@@ -1,6 +1,6 @@
 # API Platform Overview
 
-Previously I completed this blog’s SPA theme with a <Link href='/posts/reactjs-codingkeypoints'>Final SPA Code Overview</Link>. Next, I summarise a handful of the most important technical behaviours for a platform of many APIs in an OAuth architecture.
+Previously I completed this blog’s SPA theme with a <Link href='/posts/reactjs-codingkeypoints'>Final SPA Code Overview</Link>. Next, I summarise what I consider to be the most essential technical behaviours for a platform of many APIs in an OAuth architecture.
 
 ### API Technical Goals
 
@@ -13,13 +13,18 @@ There are many technical goals you might articulate for an API platform. In this
 | <span style={{color:'green'}}>**Supportable**</span> | Errors or slowness can be diagnosed quickly in most cases, due to solid logging and error handling designs. |
 | <span style={{color:'green'}}>**Scalable**</span> | Design patterns can scale across many APIs, clients and development teams. |
 
-### Key Components
+### Components
 
-The application-level flows in this blog use the following main components. Web and mobile clients call APIs, which are hosted behind an API gateway:
+The API flows in this blog serve web and mobile clients and consist of the following components. This type of separation externalizes most security behaviors from application code and also provides applications with the best security features:
 
-![api platform](/images/250/platform.jpg)
-
-A gateway is used to handle any client specific security differences. This blog’s final SPA calls a gateway entry point that handles web-specific security, including [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), [CSRF](https://owasp.org/www-community/attacks/csrf) and converting from secure cookies to JWT access tokens. This keeps such code out of APIs, so that APIs only ever need to implement JWT validation and claims-based authorization.  This reduces complexity and scales well.
+| Component Type | Key Behaviour |
+| -------------- | ------------- |
+| <span style={{color:'green'}}>**Single Page Application**</span> | Clients that follow browser best practices and use cookies to transport access tokens to APIs. |
+| <span style={{color:'green'}}>**Native Application**</span> | Desktop and mobile clients that follow native best practices and call APIs with access tokens. |
+| <span style={{color:'green'}}>**API**</span> | APIs receive secure values in in JWT access tokens and use them for business authorizion. |
+| <span style={{color:'green'}}>**API Gateway**</span> | The API gateway handles client-specific security differences. It translates from cookies to JWT access tokens. |
+| <span style={{color:'green'}}>**Authorization Server**</span> | The main security component that issues access tokens and implements user authentication. |
+| <span style={{color:'green'}}>**Log Aggregation System**</span> | Captures API logs and enables people to make sense of API activity under load. |
 
 ### Scalable API Security
 
@@ -38,9 +43,9 @@ This is the key security component, and you should choose one that provides the 
 
 | Capabilities | Description |
 | ------------ | ----------- |
-| <span style={{color:'green'}}>**Support for Standards**</span> | There should be up-to-date support for many security standards, which map to your use cases. This includes many authentication methods. |
+| <span style={{color:'green'}}>**Support for Standards**</span> | There should be up-to-date support for many security standards, which map to your use cases. This includes recent authentication methods. |
 | <span style={{color:'green'}}>**Extensibility**</span> | It must be possible to take control over core behaviours and user attributes, so that you can authenticate users in your preferred ways and then issue your preferred access tokens. |
-| <span style={{color:'green'}}>**Reliability**</span> | The authorization server is a critical component. It should therefore align with your API deployments and have good troubleshooting support to enable fast incident resolution. |
+| <span style={{color:'green'}}>**Reliability**</span> | The authorization server is a critical component. It should therefore align with your API deployments and have good troubleshooting support, to enable fast incident resolution. |
 
 ### Observability
 
