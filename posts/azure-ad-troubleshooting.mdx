@@ -160,8 +160,8 @@ private async _getGraphAccessToken(accessToken: string): Promise<string> {
 
 The SPA uses almost identical code to the previous code sample, which used AWS Cognito as the default authorization server. The oidc-client-ts library continues to perform the security work in a portable manner, as described in these earlier blog posts:
 
-- <Link href='/posts/basicspa-codingkeypoints'>SPA 1 – Code Overview</Link>
-- <Link href='/posts/basicapi-codingkeypoints'>SPA 2 – Code Overview</Link>
+- <Link href='/posts/basicspa-codingkeypoints'>SPA 1 – Code Details</Link>
+- <Link href='/posts/basicapi-codingkeypoints'>SPA 2 – Code Details</Link>
 
 A point of interest is that Entra ID correctly supports the traditional iframe-based silent token renewal solution for SPAs. It does so by issuing SSO cookies with the *SameSite=none* property, and correctly handles the OpenID Connect *prompt=none* request parameter.
 
@@ -181,7 +181,7 @@ Entra ID supports RP-initiated logout in the standard way, so oidc-client-ts imp
 
 ### 11. Extensible API Claims
 
-The API follows this blog’s <Link href='/posts/api-authorization-design'>API Authorization Behaviour</Link> and uses some values for authorization that are not contained in the Entra ID access token. These are included in the *ClaimsPrincipal* object injected into the API's business logic. The earlier <Link href='/posts/updated-api-coding-key-points'>API Code Overview</Link> blog post explained the techniques.
+The API follows this blog’s <Link href='/posts/api-authorization-design'>API Authorization Behaviour</Link> and uses some values for authorization that are not contained in the Entra ID access token. These are included in the *ClaimsPrincipal* object injected into the API's business logic. The earlier <Link href='/posts/updated-api-coding-key-points'>API Code Details</Link> blog post explained the techniques.
 
 ![extensible claims](/images/200/extensible-claims.jpg)
 
