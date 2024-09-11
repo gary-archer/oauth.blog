@@ -1,6 +1,6 @@
 # API Journey – Client Side
 
-Previously I summarised some backend technical behaviours in <Link href='/posts/api-journey-server-side'>API Journey – Server Side</Link>. Next I take a look at the API journey for frontend applications, which this blog’s final frontend code samples implement in multiple technologies:
+Previously I summarised some backend technical behaviours in <Link href='/posts/api-journey-server-side'>API Journey – Server Side</Link>. Next I summarize some end-to-end technical behaviours for OAuth-secured applications, which this blog’s final frontend code samples implement in multiple technologies:
 
 - <Link href='/posts/final-spa-overview'>Final React SPA</Link>
 - <Link href='/posts/final-desktop-sample-overview'>Final Electron Desktop App</Link>
@@ -70,15 +70,15 @@ The shell then lays out a tree of views, some of which call APIs when they load.
 
 This blog’s frontend code samples are fictional apps based on a theme of protecting money-based data. The business area is *investments*, where *company* and *transaction* resources are administered by some kind of *manager*. There are two users, where the first has business permissions to one region:
 
-![guest user](/images/270/guest-user.jpg)
+![guest user](/images/270/guest-user.jpg?v=20240911)
 
 The second user has higher privileges, for multiple regions:
 
-![guest admin](/images/270/guest-admin.jpg)
+![guest admin](/images/270/guest-admin.jpg?v=20240911)
 
-The first view displays a collection of *company* resources that APIs filter to only return authorized items for the user. The second view shows *transactions* for an individual *company*, as represented by the ID in the browser's URL. The user is denied access if the browser URL is changed to an unauthorized resource:
+The first view displays a collection of *company* resources that APIs filter to only return authorized items for the user. The second view shows *transactions* for an individual *company*, as represented by the ID in the browser's URL. A user who changes the browser URL to an unauthorized resource is denied access:
 
-![transactions](/images/270/transactions.jpg)
+![transactions](/images/270/transactions.jpg?v=20240911)
 
 The API uses the following user attributes and frontend views visualise the use of claims:
 
@@ -191,17 +191,17 @@ I wrap the use of libraries in an *Authenticator* interface that is useful to th
 
 User logins appear slightly differently for web, desktop and mobile platforms and in all cases I only demonstrate simple password-based logins. For a web client I redirect the entire browser window.
 
-![web login](/images/270/web-login.jpg)
+![web login](/images/270/web-login.jpg?v=20240911)
 
 For mobile clients an integrated browser overlays the views, which wait on the response:
 
 <div className="smallimage">
-![mobile login](/images/270/mobile-login.jpg)
+![mobile login](/images/270/mobile-login.jpg?v=20240911)
 </div>
 
 For a desktop client, the app renders a *login in progress* window, while the user signs in with a disconnected system browser:
 
-![desktop login](/images/270/desktop-login.jpg)
+![desktop login](/images/270/desktop-login.jpg?v=20240911)
 
 After login, the frontend client has an API message credential and can make API requests. The final SPA transports access tokens using cookies that expire when the user closes all browser windows. Native apps instead save tokens using operating system secure storage, to avoid a re-login on every application restart.
 
@@ -211,7 +211,7 @@ Although I only demonstrate password logins, use of a code flow means that all o
 
 This blog's final clients send an API request to get the current main view’s data, as well as two small API requests to get user info for the upper right view:
 
-![concurrent api requests](/images/270/concurrent-api-requests.jpg)
+![concurrent api requests](/images/270/concurrent-api-requests.jpg?v=20240911)
 
 The user can then navigate around views to trigger further API calls, if that view’s data is not yet loaded. A forced reload of data is possible by clicking the reload button, which re-runs the 3 API requests concurrently.
 
@@ -219,7 +219,7 @@ The user can then navigate around views to trigger further API calls, if that vi
 
 At some point the access token sent to APIs expires. You can rehearse this by clicking *Expire Access Token* followed by *Reload Data*. This triggers three concurrent API requests that fail with a 401 error, followed by a single synchronized token refresh request. The client then retries all API requests with its new access token:
 
-![synchronized refresh](/images/270/synchronized-refresh.jpg)
+![synchronized refresh](/images/270/synchronized-refresh.jpg?v=20240911)
 
 Any resilient client should support this behaviour, since there could be multiple reasons why APIs reject access tokens with a 401 error. When multiple views call APIs concurrently you must also synchronize token refresh to prevent race conditions with single-use refresh tokens. This blog's clients do so using a concurrency handler utility object:
 
@@ -291,11 +291,11 @@ These commands initiate views which in turn initiate API requests. APIs return 4
 
 Clients and APIs follow this blog’s approach to <Link href='/posts/error-handling-and-supportability'>Error Handling and Supportability</Link>. API or OAuth requests could fail, in which case the view renders an *Error Summary* link. You can rehearse API 500 errors by long-pressing the *Reload Data* button for a few seconds:
 
-![error summary](/images/270/error-summary.jpg)
+![error summary](/images/270/error-summary.jpg?v=20240911)
 
 Clicking an *Error Summary* link invokes an *Error Details* dialog that provides hints to technical support staff on the cause. When API exceptions occur, clients receive an *Error ID* in the response, which references an entry in API logs. The client renders this value to help enable fast incident resolution:
 
-![error detail](/images/270/error-detail.jpg)
+![error detail](/images/270/error-detail.jpg?v=20240911)
 
 The *API Session ID* shown in the browser is nothing to do with OAuth or security. Instead, it enables a technical user of the SPA to query the API logs their session generates. See the <Link href='/posts/api-technical-support-analysis'>Technical Support Analysis</Link> post for details.
 
