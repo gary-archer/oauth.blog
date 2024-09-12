@@ -15,11 +15,11 @@ Our Android sample uses 2 online domains, which were configured as part of our <
 
 Our web pages are first uploaded to an AWS S3 bucket:
 
-![s3 bucket](/images/520/s3-bucket.jpg)
+![s3 bucket](/images/520/s3-bucket.jpg?v=20240912)
 
 They are then included in one of this blog’s <Link href='/posts/cdn-static-content-delivery'>CloudFront Distributions</Link>, so that the pages are served over an HTTPS URL:
 
-![cloudfront distro](/images/520/cloudfront-distro.jpg)
+![cloudfront distro](/images/520/cloudfront-distro.jpg?v=20240912)
 
 Pages are then available at these URLs:
 
@@ -69,7 +69,7 @@ I uploaded the assets file to run at the below HTTPS URL, in a similar manner to
 
 The *mobile.authsamples.com* S3 bucket has a *.well-known* folder containing the assets files for both Android and iOS:
 
-![asset hosting](/images/520/asset-hosting.jpg)
+![asset hosting](/images/520/asset-hosting.jpg?v=20240912)
 
 ### Deep Linking Online Verification
 
@@ -79,13 +79,13 @@ We can verify the assets file via a test site that Google provides, and check th
 https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://mobile.authsamples.com&relation=delegate_permission/common.handle_all_urls
 ```
 
-![deep linking verification](/images/520/deep-linking-verification.jpg)
+![deep linking verification](/images/520/deep-linking-verification.jpg?v=20240912)
 
 ### Deep Linking Registration Process
 
 When our app is installed, deep linking registration is done via system components. To get some visibility into how this works, uninstall the app, then re-run it while viewing the logcat window. Filter on the word *Verification* and ensure that the *No Filters* option is selected:
 
-![verification success](/images/520/verification-success.jpg)
+![verification success](/images/520/verification-success.jpg?v=20240912)
 
 Once we have run the app we can execute the following command to query its deep linking verification status:
 
@@ -107,7 +107,7 @@ com.authsamples.finalmobileapp:
 
 Deep linking registration can fail, and one way to reproduce this is to configure the mobile device to connect to the internet via an <Link href='/posts/android-https-debugging'>HTTP Proxy</Link>. The system’s *Intent Filter Verifier* will not trust the HTTP proxy’s man in the middle certificate, and the result is that the app installs successfully but the claimed HTTPS scheme is not correctly configured:
 
-![verification failure](/images/520/verification-failure.jpg)
+![verification failure](/images/520/verification-failure.jpg?v=20240912)
 
 We can then re-run the command to query the status of our app and the result will now show a non-verified domain verification state:
 
@@ -128,7 +128,7 @@ adb shell am start -a android.intent.action.VIEW -d https://mobile.authsamples.c
 This will result in the following undesired behaviour, where the system browser attempts to open the URL, rather than the mobile app:
 
 <div className="smallimage">
-![deep link failure](/images/520/deep-link-failure.jpg)
+![deep link failure](/images/520/deep-link-failure.jpg?v=20240912)
 </div>
 
 ### Fix Deep Linking Registration Failures
@@ -178,7 +178,7 @@ To finish off our discussion on deep linking, let’s look at how I generated th
 
 I then chose *Add Extensions / Use Standard Template / Code Signing* and included the *Subject Key Identifier* extension. I then used some naming to fit with this blog, and copied the below *SHA256 Fingerprint* to the mobile assets file:
 
-![fingerprint](/images/520/fingerprint.jpg)
+![fingerprint](/images/520/fingerprint.jpg?v=20240912)
 
 Finally, the app’s gradle file references our Android keystore file, which is used to digitally sign our app when it is built.
 
