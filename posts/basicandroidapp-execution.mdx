@@ -23,11 +23,11 @@ git clone https://github.com/gary-archer/oauth.mobilesample.android
 
 Shortly we will describe the code, where we implement OAuth integration in an unobtrusive manner, so that Android views only need to make API calls and other classes deal with OAuth plumbing:
 
-![project](/images/510/project.jpg)
+![project](/images/510/project.jpg?v=20240912)
 
 When the project is loaded there will be a *Gradle Sync* to download third party libraries. Ensure that this completes successfully, and also that Java 17 is configured under *Preferences / Build,Execution,Deployment / Build Tools / Gradle / Gradle JDK*:
 
-![gradle settings](/images/510/gradle-settings.jpg)
+![gradle settings](/images/510/gradle-settings.jpg?v=20240912)
 
 ### Step 3: Run the App on an Emulator
 
@@ -39,7 +39,7 @@ You can now run our demo app via the Run Icon in the Android Studio toolbar. You
 Next save the password when prompted, then navigate between views by clicking an item in the companies view or using the *Home* button:
 
 <div className="smallimage">
-![running app](/images/510/running-app.jpg)
+![running app](/images/510/running-app.jpg?v=20240912)
 </div>
 
 ### Step 4: View Library Dependencies
@@ -134,18 +134,18 @@ When our app runs it uses the API and OAuth settings from an embedded JSON confi
 
 By using AppAuth libraries the standard *Authorization Code Flow (PKCE)* message is sent:
 
-![authorization request](/images/510/authorization-request.jpg)
+![authorization request](/images/510/authorization-request.jpg?v=20240912)
 
 Our AWS Cognito authorization server accepts the request because the *Client ID*, *Redirect URI* and *Scope* of the request match those configured in a Cognito OAuth client. After user login an authorization code is returned to the app:
 
-![oauth client 1](/images/510/oauth-client1.jpg)
-![oauth client 2](/images/510/oauth-client2.jpg)
+![oauth client 1](/images/510/oauth-client1.jpg?v=20240912)
+![oauth client 2](/images/510/oauth-client2.jpg?v=20240912)
 
 ### Step 8: Understand Redirect Response Handling
 
 The result of successful authorization is the following message, and note that this is sent to an internet hosted web page rather than directly to our Android app:
 
-![authorization response](/images/510/authorization-response.jpg)
+![authorization response](/images/510/authorization-response.jpg?v=20240912)
 
 Two interstitial web pages are used with our Android sample, hosted at the following URLs:
 
@@ -154,7 +154,7 @@ Two interstitial web pages are used with our Android sample, hosted at the follo
 
 If we use the *View Source* option in a desktop browser for one of the above URLs, we can see that they just forward query parameters from the login response using a deep linking URL:
 
-![view source](/images/510/view-source.jpg)
+![view source](/images/510/view-source.jpg?v=20240912)
 
 The *Deep Linking HTTPS Scheme* for login responses is associated to the app via the below Android manifest entry, which overrides the default AppAuth behaviour of using a private URI scheme:
 
@@ -181,19 +181,13 @@ Note that if the interstitial page is left for a couple of minutes before the us
 
 Once the authorization code is received by the app, it sends an *Authorization Code Grant* request to Cognito’s token endpoint, which returns OAuth tokens in the response:
 
-![authorization code grant](/images/510/authorization-code-grant.jpg)
+![authorization code grant](/images/510/authorization-code-grant.jpg?v=20240912)
 
 The token data is then stored in *Android Shared Preferences*, and the operating system ensures that other apps cannot access the tokens.
 
 ### Step 10: Test Login Actions
 
-It is worth performing certain tests while the Chrome custom tab window is active, to ensure that the app does not throw exceptions or recreate views unnecessarily:
-
-<div className="smallimage">
-![login](/images/510/login.jpg)
-</div>
-
-The first of these is to switch away from the app and then reactivate it from its shortcut:
+It is worth performing certain tests while the Chrome custom tab window is active, to ensure that the app does not throw exceptions or recreate views unnecessarily. The first of these is to switch away from the app and then reactivate it from its shortcut:
 
 <div className="smallimage">
 ![shortcut](/images/510/shortcut.jpg)
@@ -207,9 +201,7 @@ adb shell am start -n com.authsamples.finalmobileapp/com.authsamples.finalmobile
 
 Similarly I would recommend changing the screen orientation half way through login and then completing the sign in.
 
-<div className="smallimage">
-![landscape](/images/510/landscape.jpg)
-</div>
+![landscape](/images/510/landscape.jpg?v=20240912)
 
 The app’s *MainActivity* is configured with *launchMode=singleTop* and  *configChanges=orientation|screenSize*. It is therefore redrawn but not recreated when the orientation changes.
 
@@ -253,19 +245,19 @@ This enables us to ignore any deep linking requests when our activity is not top
 We can use the *Expire Access Token* and *Reload Data* buttons to cause an invalid token to be sent to the API, resulting in a 401 response:
 
 <div className="smallimage">
-![access token expiry](/images/510/access-token-expiry.jpg)
+![access token expiry](/images/510/access-token-expiry.jpg?v=20240912)
 </div>
 
 After every API call the UI checks for 401 responses, and handles them by getting a new access token. The API request is then retried once with the new token, so that the user session is silently extended. Note that a mobile app is a public client and the refresh token is not protected with a client credential:
 
-![concurrent refresh](/images/510/concurrent-refresh.jpg)
+![concurrent refresh](/images/510/concurrent-refresh.jpg?v=20240912)
 
 ### Step 14: Test Refresh Token Expiry
 
 We can use *Expire Refresh Token* followed by *Reload Data* to simulate the end of a user session, which might occur if a user left the app running overnight:
 
 <div className="smallimage">
-![refresh token expiry](/images/510/refresh-token-expiry.jpg)
+![refresh token expiry](/images/510/refresh-token-expiry.jpg?v=20240912)
 </div>
 
 On the next request for data the attempt to renew the access token will fail, and the result of the refresh token grant message will be an *Invalid Grant* response:
@@ -297,12 +289,12 @@ To implement logout, a *LogoutRedirectUriReceiverActivity* was added, to map the
 
 AWS Cognito also uses a vendor specific logout solution and the logout request requires *client_id* and *logout_url* parameters:
 
-![logout request](/images/510/logout-request.jpg)
+![logout request](/images/510/logout-request.jpg?v=20240912)
 
 When logout completes we are returned to the below post logout view within our app. In a real world app you could then test logging in as another user with different settings or permissions.
 
 <div className="smallimage">
-![new user login](/images/510/new-user-login.jpg)
+![new user login](/images/510/new-user-login.jpg?v=20240912)
 </div>
 
 ### Step 16: Test Failure Scenarios
@@ -317,22 +309,18 @@ Our mobile app runs multiple views which could fail concurrently, so we implemen
 Our error display looks as follows after concurrent view failures. The user can click a hyperlink to see details, or press the Home button to retry:
 
 <div className="smallimage">
-![error summary](/images/510/error-summary.jpg)
+![error summary](/images/510/error-summary.jpg?v=20240912)
 </div>
 
 The summary view uses an Android modal dialog to display a view with error details, which would help to enable fast problem resolution:
 
 <div className="smallimage">
-![error details](/images/510/error-details.jpg)
+![error details](/images/510/error-details.jpg?v=20240912)
 </div>
 
 ### Step 17: Test Back Navigation
 
-The user can use the highlighted button to return to previously loaded views. It is worth testing that this behaves correctly for your own apps:
-
-<div className="smallimage">
-![back navigation](/images/510/back-navigation.jpg)
-</div>
+The user can navigate backwards to return to previously loaded views. It is worth testing that this behaves correctly for your own apps, and avoid taking the user back to a login screen.
 
 ### Where Are We?
 

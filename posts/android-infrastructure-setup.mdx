@@ -38,7 +38,7 @@ In order for claimed HTTPS scheme logins to work you must configure [Android app
       "namespace": "android_app",
       "package_name": "com.authsamples.finalmobileapp",
       "sha256_cert_fingerprints":
-      ["62:7D:06:B1:01:C6:2F:04:9A:D4:5D:17:DF:FF:AB:65:13:8E:E0:CC:F6:60:2A:F6:3A:DA:1D:19:0A:F9:DF:15"]
+      ["DA:C6:0C:FD:EB:84:04:4D:F3:2F:D4:30:15:91:08:94:51:33:6B:8D:34:68:50:01:BC:E4:C7:53:F6:36:D9:41"]
     }
   }
 ]
@@ -76,20 +76,16 @@ The *mobile.authsamples.com* S3 bucket has a *.well-known* folder containing the
 We can verify the assets file via a test site that Google provides, and check that results do not contain any errors:
 
 ```markdown
-https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://mobile.authsamples.com&relation=delegate_permission/common.handle_all_urls1
+https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://mobile.authsamples.com&relation=delegate_permission/common.handle_all_urls
 ```
 
 ![deep linking verification](/images/520/deep-linking-verification.jpg)
 
 ### Deep Linking Registration Process
 
-When our app is installed, deep linking registration is done via system components, as described via this article on [Android App Links](https://chris.orr.me.uk/android-app-linking-how-it-works).
+When our app is installed, deep linking registration is done via system components. To get some visibility into how this works, uninstall the app, then re-run it while viewing the logcat window. Filter on the word *Verification* and ensure that the *No Filters* option is selected:
 
-![verification process](/images/520/verification-process.jpg)
-
-To understand how this works, uninstall the app, then re-run it while viewing the logcat window. Filter on the word *Verification* and ensure that the *No Filters* option is selected:
-
-![verification debug](/images/520/verification-debug.jpg)
+![verification success](/images/520/verification-success.jpg)
 
 Once we have run the app we can execute the following command to query its deep linking verification status:
 
@@ -101,32 +97,26 @@ This should return a domain verification state of *verified*:
 
 ```markdown
 com.authsamples.finalmobileapp:
-    ID: 241b4727-f96d-40ad-8459-8238c0fb8747
-    Signatures: [62:7D:06:B1:01:C6:2F:04:9A:D4:5D:17:DF:FF:AB:65:13:8E:E0:CC:F6:60:2A:F6:3A:DA:1D:19:0A:F9:DF:15]
-    Domain verification state:
-      mobile.authsamples.com: verified
+  ID: a8d77973-3078-40e2-a860-76761575d29f
+  Signatures: [DA:C6:0C:FD:EB:84:04:4D:F3:2F:D4:30:15:91:08:94:51:33:6B:8D:34:68:50:01:BC:E4:C7:53:F6:36:D9:41]
+  Domain verification state:
+    mobile.authsamples.com: verified
 ```
 
 ### Deep Linking Registration Failures
 
-Deep linking registration can fail, and one way to reproduce this is to configure the mobile device to connect to the internet via an <Link href='/posts/android-https-debugging'>HTTP Proxy</Link>:
+Deep linking registration can fail, and one way to reproduce this is to configure the mobile device to connect to the internet via an <Link href='/posts/android-https-debugging'>HTTP Proxy</Link>. The system’s *Intent Filter Verifier* will not trust the HTTP proxy’s man in the middle certificate, and the result is that the app installs successfully but the claimed HTTPS scheme is not correctly configured:
 
-<div className="smallimage">
-![http proxy](/images/520/http-proxy.jpg)
-</div>
+![verification failure](/images/520/verification-failure.jpg)
 
-The system’s *Intent Filter Verifier* will not trust the HTTP proxy’s man in the middle certificate, and the result is that the app installs successfully but the claimed HTTPS scheme is not correctly configured:
-
-![android studio debug](/images/520/android-studio-debug.jpg)
-
-We can then re-run the command to query the status of our app and the result will now use a domain verification state of *none*:
+We can then re-run the command to query the status of our app and the result will now show a non-verified domain verification state:
 
 ```markdown
-com.authsamples.finalmobileapp:
-    ID: 241b4727-f96d-40ad-8459-8238c0fb8747
-    Signatures: [62:7D:06:B1:01:C6:2F:04:9A:D4:5D:17:DF:FF:AB:65:13:8E:E0:CC:F6:60:2A:F6:3A:DA:1D:19:0A:F9:DF:15]
+ com.authsamples.finalmobileapp:
+    ID: d94b156e-150c-4d1c-9b6a-98d9758cda8e
+    Signatures: [DA:C6:0C:FD:EB:84:04:4D:F3:2F:D4:30:15:91:08:94:51:33:6B:8D:34:68:50:01:BC:E4:C7:53:F6:36:D9:41]
     Domain verification state:
-      mobile.authsamples.com: none
+      mobile.authsamples.com: 1024
 ```
 
 We can then run a deep link to our app on an emulator, via a command such as this:
@@ -184,50 +174,41 @@ During development, I use an HTTP proxy as follows when I want to view OAuth or 
 
 ### Android App Code Signing
 
-To finish off our discussion on deep linking, let’s look at how I generated the signature from the assets file. Install the [Java KeyStore Explorer](https://keystore-explorer.org/downloads.html) and open our keyStore file, which has a password of *android*:
+To finish off our discussion on deep linking, let’s look at how I generated the signature from the assets file. Install the [Java KeyStore Explorer](https://keystore-explorer.org/downloads.html) and open our keyStore file, which has a password of *android*. For educational purposes I have included the keystore file with my source code, though of course you should not do this for a real app. I then used the *Tools / Generate Key Pair* option to create an ECDSA key with default options and a 10 year validity.
 
-<div className="smallimage">
-![keystore](/images/520/keystore.jpg)
-</div>
-
-For educational purposes I have included the keystore file with my source code, though of course you should not do this for a real app. I then used the *Tools / Generate Key Pair* option to create an RSA key with default options and a 10 year validity:
-
-![key details](/images/520/key-details.jpg)
-
-I then chose *Add Extensions / Use Standard Template / Code Signing* and included the *Subject Key Identifier* extension:
-
-![key extensions](/images/520/key-extensions.jpg)
-
-I then used some naming to fit with this blog, and copied the below *SHA256 Fingerprint* to the mobile assets file:
+I then chose *Add Extensions / Use Standard Template / Code Signing* and included the *Subject Key Identifier* extension. I then used some naming to fit with this blog, and copied the below *SHA256 Fingerprint* to the mobile assets file:
 
 ![fingerprint](/images/520/fingerprint.jpg)
 
 Finally, the app’s gradle file references our Android keystore file, which is used to digitally sign our app when it is built.
 
-```groovy
+```kotlin
 signingConfigs {
-    release {
-        storeFile file("${rootDir}/security/app-keystore.jks")
-        storePassword "android"
-        keyAlias "com.authsamples.finalmobileapp"
-        keyPassword "android"
+    create("release") {
+        storeFile = file("${rootDir}/security/app-keystore.jks")
+        storePassword = "android"
+        keyAlias = "com.authsamples.finalmobileapp"
+        keyPassword = "android"
     }
 }
 
 buildTypes {
-    debug {
-        signingConfig signingConfigs.release
-        debuggable true
+    getByName("debug") {
+        signingConfig = signingConfigs.getByName("release")
+        isDebuggable = true
     }
-    release {
-        signingConfig signingConfigs.release
-        minifyEnabled false
-        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+    getByName("release") {
+        signingConfig = signingConfigs.getByName("release")
+        isMinifyEnabled = false
+        proguardFiles(
+            getDefaultProguardFile("proguard-android-optimize.txt"),
+            "proguard-rules.pro"
+        )
     }
 }
 ```
 
-When the app is deployed to a device, the *Intent Filter Verifier* can verify that the public key in the mobile assets JSON document matches the private key that was used to digitally sign the mobile app.
+When the app is deployed to a device, the Android system can verify that the public key in the mobile assets JSON document matches the private key that was used to digitally sign the mobile app.
 
 ### Where Are We?
 
