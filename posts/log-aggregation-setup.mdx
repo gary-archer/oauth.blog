@@ -7,9 +7,9 @@ Previously we ran some <Link href='/posts/api-automated-tests'>API Automated Tes
 At this point we have completed our API coding and the log data contains useful fields that are written to text files, one line per entry:
 
 ```json
-{"id":"f1c38406-6d1e-212f-ee8b-e100a4219b28","utcTime":"2022-07-15T17:34:28.631Z","apiName":"FinalApi","operationName":"getCompanyList","hostName":"MACSTATION.local","method":"GET","path":"/investments/companies","statusCode":401,"errorCode":"unauthorized","millisecondsTaken":10,"millisecondsThreshold":500,"correlationId":"b868385c-e8fa-9496-9d5b-492158e3d555","errorData":{"statusCode":401,"clientError":{"code":"unauthorized","message":"Missing, invalid or expired access token"},"context":"No access token was supplied in the bearer header"}}
-{"id":"c997e4f0-e7a3-ed9c-253f-fd25110a4a33","utcTime":"2022-07-15T17:34:37.065Z","apiName":"FinalApi","operationName":"getCompanyTransactions","hostName":"MACSTATION.local","method":"GET","path":"/investments/companies/2/transactions","resourceId":"2","clientApplicationName":"LoadTest","userId":"a6b404b1-98af-41a2-8e7f-e4061dc0bf86","statusCode":200,"millisecondsTaken":124,"millisecondsThreshold":500,"correlationId":"bd845c50-8995-92eb-fb2f-bc81a4405fef","sessionId":"50f7bbae-04a2-8ba1-1cde-6a44916ab4aa"}
-{"id":"8e41a54c-1d40-8269-c8f4-12b1bf54ad74","utcTime":"2022-07-15T17:34:37.046Z","apiName":"FinalApi","operationName":"getUserInfo","hostName":"MACSTATION.local","method":"GET","path":"/investments/userinfo","clientApplicationName":"LoadTest","userId":"a6b404b1-98af-41a2-8e7f-e4061dc0bf86","statusCode":200,"millisecondsTaken":162,"millisecondsThreshold":500,"correlationId":"5ec0eedf-0dcf-aa8d-f64c-1522e8a65a32","sessionId":"50f7bbae-04a2-8ba1-1cde-6a44916ab4aa"}
+{"id":"f1c38406-6d1e-212f-ee8b-e100a4219b28","utcTime":"2022-07-15T17:34:28.631Z","apiName":"FinalApi","operationName":"getCompanyList","hostName":"MACSTATION.local","method":"GET","path":"/investments/companies","statusCode":401,"errorCode":"unauthorized","millisecondsTaken":10,"correlationId":"b868385c-e8fa-9496-9d5b-492158e3d555","errorData":{"statusCode":401,"clientError":{"code":"unauthorized","message":"Missing, invalid or expired access token"},"context":"No access token was supplied in the bearer header"}}
+{"id":"c997e4f0-e7a3-ed9c-253f-fd25110a4a33","utcTime":"2022-07-15T17:34:37.065Z","apiName":"FinalApi","operationName":"getCompanyTransactions","hostName":"MACSTATION.local","method":"GET","path":"/investments/companies/2/transactions","resourceId":"2","clientApplicationName":"LoadTest","userId":"a6b404b1-98af-41a2-8e7f-e4061dc0bf86","statusCode":200,"millisecondsTaken":124,"correlationId":"bd845c50-8995-92eb-fb2f-bc81a4405fef","sessionId":"50f7bbae-04a2-8ba1-1cde-6a44916ab4aa"}
+{"id":"8e41a54c-1d40-8269-c8f4-12b1bf54ad74","utcTime":"2022-07-15T17:34:37.046Z","apiName":"FinalApi","operationName":"getUserInfo","hostName":"MACSTATION.local","method":"GET","path":"/investments/userinfo","clientApplicationName":"LoadTest","userId":"a6b404b1-98af-41a2-8e7f-e4061dc0bf86","statusCode":200,"millisecondsTaken":162,"correlationId":"5ec0eedf-0dcf-aa8d-f64c-1522e8a65a32","sessionId":"50f7bbae-04a2-8ba1-1cde-6a44916ab4aa"}
 ```
 
 Of course these raw logs are not easy to read, and the next step is to import them into a *Queryable Data Store*. This will not require any coding, but we will need to understand how to configure open source logging tools.
@@ -254,7 +254,6 @@ Each log entry will be received as a JSON document within an *apilogs* index. Qu
   "sessionId": "9553ffcb-f295-41e5-8b6e-5f9e068c7e2f",
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "@timestamp": "2022-07-16T08:06:00.262Z",
-  "millisecondsThreshold": 500,
   "statusCode": 500
 }
 ```

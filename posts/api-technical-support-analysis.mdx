@@ -78,7 +78,6 @@ This is a *Lucene* query whose response is zero or more documents. A DevOps user
     "@timestamp": "2023-03-26T10:57:28.482Z",
     "name": "total",
     "utcTime": "2023-03-26T10:57:28.482Z",
-    "millisecondsThreshold": 500,
     "correlationId": "fa20ca8e-8506-c4f0-9217-1cac1a83a2c8",
     "errorId": 48649,
     "id": "17580a1c-1631-f80f-e32e-9e237d47cbab",
@@ -293,7 +292,7 @@ POST apilogs*/_search
           "range": {"utcTime": {"gte": "2019-08-01"}}
         },
         {
-          "script": {"script": "doc['millisecondsTaken'].value > doc['millisecondsThreshold'].value"}
+          "script": {"script": "doc['millisecondsTaken'].value > 500"}
         },
         {
           "term": {"operationName": "getCompanyTransactions"}

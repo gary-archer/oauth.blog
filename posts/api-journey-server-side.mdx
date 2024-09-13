@@ -254,7 +254,6 @@ I design API request logs to be easy for people to query. When there is a client
   "statusCode": 401,
   "errorCode": "invalid_token",
   "millisecondsTaken": 2,
-  "millisecondsThreshold": 500,
   "correlationId": "15b030a2-c67d-01ae-7c3f-237b9a70dbba",
   "sessionId": "77136323-ec8c-dce2-147a-bc52f34cb7cd",
   "errorData": {
@@ -286,7 +285,6 @@ When there is a server error I write a log entry that includes a unique *Error I
   "errorCode": "exception_simulation",
   "errorId": 79072,
   "millisecondsTaken": 9,
-  "millisecondsThreshold": 500,
   "correlationId": "5f1f1bcb-79c4-00ee-a1fe-be5e4262eb75",
   "sessionId": "77136323-ec8c-dce2-147a-bc52f34cb7cd",
   "errorData": {
@@ -332,7 +330,7 @@ To provide the behaviours that I articulate, this blog's API require some plumbi
 
 This blog's API development setup enables the developer to work on API code in isolation, which is the option that works best most of the time. When required, you can also run more advanced end-to-end setups with this blog's clients and APIs. When integrating with clients, this blog's API development URLs use SSL and domain names. This best enables deployment related thinking during development.
 
-![spa and api](/images/260/spa-and-api.jpg?v=20240911)
+![spa and api](/images/260/spa-and-api.jpg?v=20240913)
 
 ### Where Are We?
 

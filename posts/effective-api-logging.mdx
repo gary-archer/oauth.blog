@@ -78,7 +78,6 @@ An example log entry is shown below, and is similar conceptually to a *HTTP Serv
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 200,
   "millisecondsTaken": 7,
-  "millisecondsThreshold": 500,
   "correlationId": "3e4ac756-11c7-e60f-c564-ad4f203d5742",
   "sessionId": "a601559a-0c90-c899-8099-8a9f63a30be8"
 }
@@ -98,11 +97,10 @@ This blog's API logs use a schema with the following top level fields. Users of 
 | <span style={{color:'green'}}>**HTTP Method**</span> | Whether a GET, POST etc. |
 | <span style={{color:'green'}}>**Path**</span> | The URL path and query string. |
 | <span style={{color:'green'}}>**Resource ID**</span> | The REST URL runtime path segments that identify the resource. |
-| <span style={{color:'green'}}>**Client Application Name**</span> | A readable value for the application that called the API. |
+| <span style={{color:'green'}}>**Client Name**</span> | A readable value for the application that called the API. |
 | <span style={{color:'green'}}>**User ID**</span> | The subject claim from the OAuth access token. |
 | <span style={{color:'green'}}>**Status Code**</span> | The response status code. |
 | <span style={{color:'green'}}>**Milliseconds Taken**</span> | The number of milliseconds that the API code took to execute. |
-| <span style={{color:'green'}}>**Milliseconds Threshold**</span> | The performance threshold beyond which you consider the API operation slow. |
 | <span style={{color:'green'}}>**Error Code**</span> | When an error occurs this field contains a text code to identify the cause of the error. |
 | <span style={{color:'green'}}>**Error ID**</span> | When an API 500 error occurs this field contains a generated number to track the exact error occurrence. |
 | <span style={{color:'green'}}>**Correlation ID**</span> | An identifier either supplied via a request header or which the API generates. |
@@ -253,7 +251,6 @@ When APIs return an HTTP 400 related status, they log the client response error 
   "statusCode": 401,
   "errorCode": "invalid_token",
   "millisecondsTaken": 2,
-  "millisecondsThreshold": 500,
   "correlationId": "15b030a2-c67d-01ae-7c3f-237b9a70dbba",
   "sessionId": "77136323-ec8c-dce2-147a-bc52f34cb7cd",
   "errorData": {
@@ -285,7 +282,6 @@ When API requests return an HTTP 500 related status, the error logged includes b
   "errorCode": "exception_simulation",
   "errorId": 79072,
   "millisecondsTaken": 9,
-  "millisecondsThreshold": 500,
   "correlationId": "5f1f1bcb-79c4-00ee-a1fe-be5e4262eb75",
   "sessionId": "77136323-ec8c-dce2-147a-bc52f34cb7cd",
   "errorData": {
@@ -367,7 +363,6 @@ The logging then contains a number of performance items to provide a breakdown o
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 200,
   "millisecondsTaken": 383,
-  "millisecondsThreshold": 0,
   "correlationId": "b4b1f41c-abcb-f99f-e8fd-0193ff7c2099",
   "sessionId": "77136323-ec8c-dce2-147a-bc52f34cb7cd",
   "performance": {
@@ -411,7 +406,7 @@ Any API client can supply the following three custom HTTP headers in API request
 
 - A *Correlation ID* for the exact request.
 - A *Session ID* for all requests in the same authenticated user session.
-- A *Client Application Name* to easily identify the client.
+- A *Client Name* to easily identify the client.
 
 This *Client Context* helps to satisfy <Link href='/posts/api-technical-support-analysis'>query use cases</Link>, including the ability to quickly filter logs for your own session ID:
 
@@ -448,7 +443,6 @@ APIs often also implement non REST operations, such as processing event messages
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 200,
   "millisecondsTaken": 7,
-  "millisecondsThreshold": 500,
   "correlationId": "3e4ac756-11c7-e60f-c564-ad4f203d5742",
   "sessionId": "a601559a-0c90-c899-8099-8a9f63a30be8"
 }
