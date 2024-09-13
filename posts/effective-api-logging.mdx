@@ -55,14 +55,14 @@ To build your preferred logging, you can still use a logging framework, but you 
 
 | Logger Type | Output |
 | ----------- | ------ |
-| <span style={{color:'green'}}>**Request Logger**</span> | A production logger that outputs a single JSON object per API request and is easy to query |
-| <span style={{color:'green'}}>**Logger per Class**</span> | A development logger that outputs free text which can be useful for developers, but is difficult to query |
+| <span style={{color:'green'}}>**Request Logger**</span> | A production logger that outputs a single JSON object per API request and is easy to query. |
+| <span style={{color:'green'}}>**Logger per Class**</span> | A development logger that outputs free text which can be useful for developers, but is difficult to query. |
 
-In more complex APIs, the logger per class data at an INFO level may also be useful in production. In this case an alternative approach is to aggregate both types of log data and ensure that you can join data with a *Request ID*.
+In more complex APIs, the logger per class data at an INFO level may also be useful in production. In this case an alternative approach is to aggregate both types of log data and ensure that you can join data using a *Correlation ID*.
 
 ### Production Logs
 
-An example log entry is shown below, and is similar conceptually to a *Web Server HTTP Request Log Entry*. However, you design the fields to enable log queries, rather than being purely HTTP server values.
+An example log entry is shown below, and is similar conceptually to a *HTTP Server Log Entry*. However, you design the fields to contain useful fields rather than only HTTP-related values.
 
 ```json
 {
@@ -84,7 +84,7 @@ An example log entry is shown below, and is similar conceptually to a *Web Serve
 }
 ```
 
-### Production Log Schema
+### Log Schema
 
 This blog's API logs use a schema with the following top level fields. Users of the logging system can filter logs by any of these fields:
 
@@ -103,28 +103,26 @@ This blog's API logs use a schema with the following top level fields. Users of 
 | <span style={{color:'green'}}>**Status Code**</span> | The response status code. |
 | <span style={{color:'green'}}>**Milliseconds Taken**</span> | The number of milliseconds that the API code took to execute. |
 | <span style={{color:'green'}}>**Milliseconds Threshold**</span> | The performance threshold beyond which you consider the API operation slow. |
-| <span style={{color:'green'}}>**Error Code**</span> | When an error occurs, this contains a text code to identify the cause of the error. |
-| <span style={{color:'green'}}>**Error ID**</span> | When an API 500 error occurs, this contains a generated number to track the exact error occurrence. |
-| <span style={{color:'green'}}>**Correlation ID**</span> | An identifier either supplied via a caller header or which the API generates. |
-| <span style={{color:'green'}}>**Session ID**</span> | Used to partition multiple related calls to the API together, such as those for a UI session or load test. |
+| <span style={{color:'green'}}>**Error Code**</span> | When an error occurs this field contains a text code to identify the cause of the error. |
+| <span style={{color:'green'}}>**Error ID**</span> | When an API 500 error occurs this field contains a generated number to track the exact error occurrence. |
+| <span style={{color:'green'}}>**Correlation ID**</span> | An identifier either supplied via a request header or which the API generates. |
+| <span style={{color:'green'}}>**Session ID**</span> | Used to partition multiple related calls to the API together, such as those for a frontend user session or load test. |
 
-In addition, these child objects can be logged but not queried directly. They are retrieved by getting documents using the top level fields.
+In addition, logs include these child objects which you cannot query directly. Instead, you use top level fields to get documents that contain these objects.
 
 | Field | Description |
 | ----- | ----------- |
 | <span style={{color:'green'}}>**Performance**</span> | Provides instrumentation on expensive subtasks to help understand where time is spent. |
 | <span style={{color:'green'}}>**Error**</span> | When the API returns a 400 or 500 response, this contains the client error response, along with context and exception details where applicable. |
-| <span style={{color:'green'}}>**Info**</span> | Additional arbitrary data can be added here, though I use this field sparingly. |
+| <span style={{color:'green'}}>**Info**</span> | Additional arbitrary data can be added here, though I use this object sparingly. |
 
 ### Users and Privacy
 
-The *User ID* requires a special mention, since these days you should not record personally identifiable information such as names and emails in logs. I use an anonymous identifier for the OAuth subject claim, and log that as a stable value.
-
-You also need to avoid inadvertent user tracking. The log data should only ever be available to technical support staff and should be truncated every month or so. In some setups it may be safer to omit user IDs from logs.
+The *User ID* requires a special mention, since these days you should not record personally identifiable information such as names and emails in logs. I use an anonymous identifier for the OAuth subject claim, and log that as a stable value. You also need to avoid inadvertent user tracking. The log data should only ever be available to technical support staff and should be truncated every month or so. In some setups it may be safer to omit user IDs from logs.
 
 ### API Logging Configuration
 
-This blog’s final APIs are written in Node.js, .NET and Java and each of them defines its logging behaviour in its configuration file. Production logs always use JSON output, to either the console or a file, and I configure JSON pretty printing on a development computer.
+This blog’s final APIs use Node.js, .NET and Java. Each API defines its logging behaviour in its configuration file. Production logs always use JSON output, to either the console or a file, and I configure JSON pretty printing on a development computer.
 
 ```json
 {
@@ -164,13 +162,13 @@ This blog’s final APIs are written in Node.js, .NET and Java and each of them 
 }
 ```
 
-In your own APIs it may make sense to instead use the built-in logging configuration, such as that from [log4j2](https://logging.apache.org/log4j/2.x/manual/configuration.html), for best flexibility. In this blog I avoided doing so since I wanted the logging configuration to look the same for all three API technologies.
+In your own APIs it may make sense to instead use the built-in logging configuration, such as that from [log4j2](https://logging.apache.org/log4j/2.x/manual/configuration.html), for best flexibility. In this blog I avoided doing so since I wanted the logging configuration to be expressed the same for all three API technologies.
 
 By default, this blog’s APIs output production JSON logs at all stages of the pipeline, including development computers. When required, developers can temporarily change to a logger per class configuration.
 
 ### Logging Framework Customisation
 
-Logging frameworks typically implement JSON logging by first adding their own fields, then encoding the JSON payload into a *message* field. This blog instead uses pure JSON, for best readability on development computers. In the API implementations, there is quite a bit of plumbing code to enable my exact preferred behaviour. It can be worth the effort though, to enable the best readability for users of logs.
+Logging frameworks typically implement JSON logging by first adding their own fields, then encoding the JSON payload into a *message* field. This blog instead uses pure JSON, for best readability on development computers. In API code there is some plumbing code to enable my preferred logging output. It can be worth the effort though, to enable the best readability for users of logs.
 
 ### JSON Output
 
@@ -180,7 +178,7 @@ When using pretty printing, you write multi-line JSON to *stdout* by default. Wh
 
 ### Logger per Class Output
 
-To enable development output, you can use the following type of configuration. This disables JSON request logging and uses a *debug* level for the logger for the *ClaimsCache* class:
+To enable development output, you can use the following type of configuration in this blog's final APIs. This example disables JSON request logging and uses a *debug* level for the logger for the *ClaimsCache* class:
 
 ```json
 {
@@ -221,7 +219,7 @@ traceLogger.debug(`Token to be cached will expire in
                    ${secondsToCache} seconds (hash: ${accessTokenHash})`);
 ```
 
-With the above configuration, request logs use file logging and the console shows developer logging:
+With the above configuration, structured logs output to files and the console shows developer logging:
 
 ```markdown
 debug: 2022-07-24T09:31:09.219Z : ClaimsCache : Token to be cached will expire in 1656996443945 seconds (hash: 4185d7218f55d0a14314ee473c64f0a01b66b567f601d32d3b070dd654532da7)
@@ -239,7 +237,7 @@ debug: 2022-07-24T09:31:09.300Z : ClaimsCache : Found existing token in claims c
 
 ### Error Logs
 
-When APIs return an HTTP 400 related status, they log the client response error along with additional context. The API code throws an exception, but no call stack is logged, since nothing has failed on the server:
+When APIs return an HTTP 400 related status, they log the client response error along with additional context to explain the technical cause. The API code throws an exception, but no call stack is logged, since nothing has failed on the server:
 
 ```json
 {
@@ -269,7 +267,7 @@ When APIs return an HTTP 400 related status, they log the client response error 
 }
 ```
 
-When API requests return an HTTP 500 related status, the error logged includes both the client and service errors, including the call stack. In this case, you need the technical information to resolve the problem:
+When API requests return an HTTP 500 related status, the error logged includes both the client and service errors. In this case, technical information, including a call stack, represent the problem cause:
 
 ```json
 {
@@ -354,7 +352,7 @@ To see this output in the final APIs, change the logging configuration to use a 
 }
 ```
 
-The logging then contains performance instrumentation:
+The logging then contains a number of performance items to provide a breakdown of time spent:
 
 ```json
 {
@@ -405,34 +403,32 @@ Each performance section also has a *details* field, which can store additional 
 
 ### Arbitrary Data
 
-The *Info* object can be used to handle other use cases. One option might be to temporarily log request input under particular error conditions. This might help to resolve a particularly tricky bug caused by input data, that you can’t reproduce in any other way.
+You could use the *Info* object to handle other use cases. One option might be to temporarily log request input under particular error conditions. This might help to resolve a particularly tricky data-related bug that you can’t reproduce in any other way.
 
 ### Client Context
 
 Any API client can supply the following three custom HTTP headers in API requests:
 
-- A *Correlation ID* for the exact request
-- A *Session ID* for all requests in the same session
-- A *Client Application Name* to easily identify the client
+- A *Correlation ID* for the exact request.
+- A *Session ID* for all requests in the same authenticated user session.
+- A *Client Application Name* to easily identify the client.
 
-This *Client Context* helps to satisfy <Link href='/posts/api-technical-support-analysis'>query use cases</Link> for log users, including the ability to quickly filter logs for your own session ID:
+This *Client Context* helps to satisfy <Link href='/posts/api-technical-support-analysis'>query use cases</Link>, including the ability to quickly filter logs for your own session ID:
 
 ![application session](/images/280/application-session.jpg)
 
-When an API calls upstream APIs they should include the client context in forwarded headers, so that each API includes these identifiers in its own log entry.
+When an API calls an upstream API it should forward the client context in request headers, so that the upstream API includes these identifiers in its own log entry.
 
 ### Request Logging Implementation
 
 An implementation needs to populate a *LogEntry* object stored in-memory during the lifetime of the API request, then output its data when the request ends. This is trickier to code than when using a logger per class:
 
-- You may need to capture identity details in an *Authentication Filter*.
+- You may need to capture identity details in an *OAuth Filter*.
 - You may need to capture HTTP request details in a *Logging Filter*.
 - You may need to capture error or exception details in an *Error Filter*.
 - Business logic may sometimes need to use the log entry and contribute data to logs.
 
-The log entry is a natural request scoped object, and it may be needed in a number of other classes. This log’s final APIs use dependency injection to inject the log entry where needed, while ensuring that it works correctly when switching threads after async await calls:
-
-![log entry injection](/images/280/log-entry-injection.jpg)
+The log entry is a natural request scoped object, and you may need to use it in a number of other classes. This log’s final APIs use dependency injection to inject the request-scoped log entry into objects that need it. I also ensure that this works correctly when API code resumes on a different thread after async await requests complete.
 
 ### Non REST API Operations
 
@@ -462,9 +458,7 @@ Although there is no physical HTTP request, assigning failures a status code is 
 
 ### Tracing Standardization
 
-I could update this blog's API logging to output performance details as [OpenTelemetry Traces](https://opentelemetry.io/). The *Correlation ID* in the log schema would then store the OpenTelemetry *Trace ID*. I would record performance breakdowns as *spans* in the standardized trace format.
-
-Logs and traces are closely related, so you should be able to query both in the same observability system. Logging solutions like the Elastic Stack might enable this, but the ability to ask your desired questions of log data is always the area of highest value.
+I could update this blog's API logging to output performance details as [OpenTelemetry Traces](https://opentelemetry.io/). The *Correlation ID* in the log schema would then change to an OpenTelemetry *Trace ID*. I would record performance breakdowns as *spans* in the standardized trace format. Logs and traces are closely related, so you should be able to query both in the same observability system. Logging solutions like the Elastic Stack might enable this, but the ability to ask your desired questions of log data will always be the area of highest value.
 
 ### Where Are We?
 
