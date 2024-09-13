@@ -1,31 +1,29 @@
 # Error Handling and Supportability
 
-In the previous post we scientifically drilled into designing useful <Link href='/posts/effective-api-logging'>API Logs</Link>. This post covers error design patterns for APIs and UIs, with a focus on *API Responses*, *Logs*, *Presentation* and *Lookup*.
+In the previous post I explained this blog's <Link href='/posts/effective-api-logging'>Effective API Logging</Link> design. This post covers some error design patterns for APIs and clients, with a focus on *API Responses*, *API Logs*, *Error Presentation* and *Incident Resolution*.
 
 ### Fast Problem Resolution
 
 An early focus on failures reduces stress and improves productivity. In production it can make the difference between these two outcomes, where the latter causes <span style={{color:'red'}}>reputational damage</span> for your company:
 
-- A problem for a high profile user takes *10 minutes* to resolve
-- A problem for a high profile user takes *12 hours* to resolve
+- A problem for a high profile user takes *10 minutes* to resolve.
+- A problem for a high profile user takes *12 hours* to resolve.
 
 ### Fast Time to Market
 
 Even more important is the <span style={{color:'red'}}>hidden cost</span> when software and people do not have good processes for handling failures. Companies are rarely able to measure or quantify these costs:
 
-- Cryptic failures can block developers or testers
-- Production incidents can waste time for senior engineers
-- Delivery of other critical projects is frequently impacted
+- Cryptic failures can block developers or testers.
+- Production incidents can waste time for senior engineers.
+- Delivery of in-progress business deliverables takes longer.
 
 ### Design for Failure Scenarios
 
-To meet these goals, companies must build software that expects failure. It is common these days to read about this approach when using platforms such as Kubernetes, but there is usually insufficient focus on coding.
-
-The following sections of this post will describe some common failure scenarios and desired outcomes, along with design thinking to achieve them. The coding techniques are used in this blog’s code samples.
+To meet these goals, you should build software that expects failure. It is common these days to read about this approach in cloud-native deployments, but there is usually insufficient focus on coding. The following sections of this post describe some common failure scenarios and desired outcomes, along with design thinking to achieve them. I use the coding techniques in this blog’s code samples.
 
 ### 401 Error Responses
 
-The first error case we will  consider is calling our OAuth secured API without an access token. Our APIs return a secure error object with a code and message. The HTTP 401 status is also included in the response:
+The first error case I consider is calling an OAuth secured API without an access token. This blog's APIs return an error object with a code and message. The HTTP 401 status is also included in the response:
 
 ```json
 {   
@@ -34,13 +32,13 @@ The first error case we will  consider is calling our OAuth secured API without 
 }
 ```
 
-The API logs the error, along with some context to include the cause, in case the 401 occurred for an unexpected reason, such as a misconfigured audience. Note that no call stack is logged for 4xx errors:
+The API logs the error along with some context in case the 401 is unexpected. For example, the authorization server could issue a client an access token with an *aud* claim that does not match the API's expected audience. Note that no call stack is logged for 4xx errors:
 
 ```json
 {
   "id": "39c9350e-b056-38e0-2bed-636a50ead25d",
   "utcTime": "2022-12-22T09:37:51.821Z",
-  "apiName": "SampleApi",
+  "apiName": "FinalApi",
   "operationName": "getCompanyTransactions",
   "hostName": "WORK",
   "method": "GET",
@@ -64,15 +62,15 @@ The API logs the error, along with some context to include the cause, in case th
 }
 ```
 
+For API 401s, you can also include the error details in a [www-authenticate header](https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2). For most APIs I prefer to design my own error model that uses a consistent wire format for all types of error. If you also want to align with OAuth recommendations you can consider returning error details in both a *www-authenticate* response header and an error object.
+
 ### 4xx Error Responses due to Invalid Input
 
-In real world APIs you will want to validate all input early, to prevent deeper problems such as data corruption. This blog’s apps use a couple of basic input validation cases to cover the concept.
+In real world APIs you will want to validate all input early, to prevent deeper problems such as data corruption. This blog’s apps use a couple of basic input validation cases to cover the concept. The API returns a *Not Found for User* response if the user tries to access data they are not entitled to, by editing the browser location. In the below screenshot, the user is unauthorized to access company 3:
 
-The API returns a *Not Found for User* response if the user tries to access data they are not entitled to, by editing the browser location. In the below screenshot, the user is not authorized to access company 3:
+![unauthorized resource](/images/290/unauthorized-resource.jpg?v=20240913)
 
-![unauthorized resource](/images/290/unauthorized-resource.jpg)
-
-The error response returned from the API has a 404 status code, and the following response body:
+The API returns an error response with a 404 status code, and the following response body:
 
 ```json
 {   
@@ -81,7 +79,7 @@ The error response returned from the API has a 404 status code, and the followin
 }
 ```
 
-Similarly if a syntactically invalid ID such as *abc* is provided, then the API return a 400 error to indicate a malformed request:
+Similarly, if you use a syntactically invalid ID such as *abc*, the API returns a 400 error to indicate a malformed request:
 
 ```json
 {
@@ -92,7 +90,7 @@ Similarly if a syntactically invalid ID such as *abc* is provided, then the API 
 
 ### Using Error Codes in Clients
 
-The *Transactions View* in our UIs is able to handle these known API error codes gracefully, by redirecting the user back to the home page. More generally, useful error codes put clients in control:
+The *Transactions View* in this blog's frontends can handle these known API error codes gracefully and redirect the user back to the home page. More generally, useful error codes put clients in control:
 
 ```typescript
 private _isExpectedApiError(error: UIError): boolean {
@@ -109,9 +107,9 @@ private _isExpectedApiError(error: UIError): boolean {
 }
 ```
 
-### Error Codes per Component
+### Error Codes List
 
-For each of this blog’s UI and API code samples, an *Error Codes* module lists all of the known error codes. This provides a full list of error codes and can be published to interested parties when required.
+For each of this blog’s frontend and API code samples, an *ErrorCodes* object represents error causes. It provides a full list of error codes that you can publish it to interested parties when required, such as those who integrate with your API.
 
 ```typescript
 export class ErrorCodes {
@@ -129,7 +127,7 @@ You can start small, where for example any server exception returns a generic co
 
 ### Unexpected API 4xx Responses
 
-Most 4xx errors should only occur during initial integration and not during production usage. However, UIs need a default action if a 4xx error ever occurs unexpectedly. This can be simulated in APIs by throwing an error:
+Most 4xx errors should only occur during initial integration and not during production usage. However, clients need a default action if a 4xx error ever occurs unexpectedly. You can simulate this in APIs by manually throwing an error:
 
 ```typescript
 throw ErrorFactory.createClientError(
@@ -140,19 +138,19 @@ throw ErrorFactory.createClientError(
 
 ### Client 4xx Error Displays
 
-At this point the client is broken and usually needs to present an error response to the end user. Think through how you will manage this from both a support and usability viewpoint. When online sites present an error such as this, the experience is poor in both areas:
+When a client receives an unexpected API 4xx error response and cannot continue, the client must present an error display to the user. Think through how you will manage this from both a support and usability viewpoint. When online sites present an error such as the following, the experience is poor in both areas:
 
 - *Oops – something has gone wrong*
 
-This blog’s apps present an *Error Summary Link* for the view that failed. The end user can either view details or perform a *Navigation Action* by clicking the home button, to try to recover:
+This blog’s apps present an *Error Summary Link* for the failing view. The user can either view details or perform a *Navigation Action* by clicking the home button, to try to recover:
 
-![error summary](/images/290/error-summary.jpg)
+![error summary](/images/290/error-summary.jpg?v=20240913)
 
-If the red link is clicked, an *Error Details View* is presented. In some types of app this screen can be hidden away, as a last resort option. Aim to keep the user informed though, and also provide hints for support staff on the underlying cause:
+If an error summary link is clicked, an *Error Details View* is presented. This blog's frontends render details that both inform the user and might be useful to technical support staff:
 
-![400 error details](/images/290/400-error-details.jpg)
+![400 error details](/images/290/400-error-details.jpg?v=20240913)
 
-The client should model errors as a first class object. You can then decide which properties to display. Secure properties should also be collected, but may be used differently, such as sending to an error service:
+The client should model errors as a first class object. You can then decide which properties to display and where. Your error models can include secure values that you do not display and instead send to an error service:
 
 ```typescript
 export class UIError extends Error {
@@ -170,7 +168,7 @@ export class UIError extends Error {
 
 ### Custom API 4xx Error Responses
 
-There is not always a one size fits all solution for 4xx errors. Sometimes error responses need to be domain specific and contain more complex payloads, as in this example, which returns a collection of errors, each of which indicates which item failed:
+There is not always a one-size-fits-all solution for 4xx errors. Sometimes error responses need to be domain-specific and contain more complex payloads. The following example contains a collection of errors, each of which indicates an item that failed processing:
 
 ```json
 [
@@ -187,7 +185,7 @@ There is not always a one size fits all solution for 4xx errors. Sometimes error
 ]
 ```
 
-You should still be able to design a loose abstraction that all client errors can fit into. Custom errors can then translate to the response and log formats in custom ways when required:
+You should still be able to design a loose abstraction that all client errors satisfy. Any type of custom error can then render itself to an error response or error log entry that extends your API's standard formats:
 
 ```typescript
 export abstract class ClientError extends Error {
@@ -206,30 +204,27 @@ export abstract class ClientError extends Error {
 
 ### Aim to Fail on First Error
 
-Unless there is a good reason, I avoid returning API composite errors and use a *Fail on First Error* approach. A single error item is usually much easier for clients to code against, and also easier for the API to implement reliably.
-
-This approach can also work well in cases where a form submits multiple values, since client side validation should deal with failures such as missing or malformed input, to ensure that multiple invalid fields submitted to the server is rare.
+Unless there is a good reason, I avoid returning API composite errors and use a *Fail on First Error* approach. A single error item is usually easier for clients to code against, and also easier for API code to implement reliably. This approach can also work well in cases where a form submits multiple values, since client side validation should deal with failures such as missing or malformed input, to avoid the need for APIs to return multiple server side validation failures.
 
 ### API Validation Frameworks
 
-Developers are often attracted to vendor solutions that validate fields via declarative annotations. This is fine, but first ensure that the framework fits into your wider plan, and check requirements such as these:
+Developers are often attracted to vendor solutions that validate fields using declarative annotations. This is fine, but first ensure that the framework fits into your wider error model rather than forcing you to use an unsupportable error model. I look for requirements like these:
 
 | Requirement | Description |
 | ----------- | ----------- |
-| <span style={{color:'green'}}>**Controllable Format**</span> | It must be possible to override default error responses to fit your error model |
-| <span style={{color:'green'}}>**Reliable**</span> | Rules must handle nuances such as leading and trailing white space |
-| <span style={{color:'green'}}>**Extensible**</span> | It must be possible to create custom validators in code when required |
-| <span style={{color:'green'}}>**Complex Validation**</span> | Complex rules must be supported, that operate on multiple input fields, yet use the same response format |
+| <span style={{color:'green'}}>**Formats**</span> | It must be possible to override the error formats written to API responses and API logs, to match your error models. |
+| <span style={{color:'green'}}>**Configurable**</span> | Rules must handle your particular reliability requirements such as trimming or rejecting leading and trailing white space. |
+| <span style={{color:'green'}}>**Extensible**</span> | You must be able to create custom validators, which might operate on multiple fields, in addition to built-in declarative validators. |
 
 ### API 5xx Error Response Formats
 
-API 500 errors most commonly occur due to either bugs, misconfiguration or temporary infrastructure problems. You will then require extra fields to help with fast problem resolution. This blog’s APIs return an extended error response in this case:
+API 500 errors most commonly occur due to either bugs, misconfiguration or temporary infrastructure problems. You should consider additional fields to help with fast problem resolution. This blog’s APIs return an extended error response for server errors with the following format:
 
 ```json
 {
-	"code": "decryption_error",
+	"code": "exception_simulation",
 	"message": "An unexpected exception occurred in the API",
-	"area": "BasicApi",
+	"area": "FinalApi",
 	"id": 88146,
 	"utcTime": "2019-05-06T12:42:30.357Z"
 }
@@ -239,9 +234,9 @@ The three extra fields provide the *Where*, *Which* and *When* of the failure, t
 
 | Field | Meaning |
 | ----- | ------- |
-| <span style={{color:'green'}}>**area**</span> | Where in your API platform to look for the root cause |
-| <span style={{color:'green'}}>**id**</span> | Which log entry in that API’s logs contains the error details |
-| <span style={{color:'green'}}>**utcTime**</span> | When the error occurred |
+| <span style={{color:'green'}}>**area**</span> | Where in your API platform to look for the root cause. |
+| <span style={{color:'green'}}>**id**</span> | Which log entry in that API’s logs contains the error details. |
+| <span style={{color:'green'}}>**utcTime**</span> | When the error occurred. |
 
 Note also that the *root cause of the error* may have been in an upstream API rather than the API that returned the error to the caller.
 
@@ -249,7 +244,7 @@ Note also that the *root cause of the error* may have been in an upstream API ra
 
 For API 5xx errors, the key difference is that this blog’s apps render the extra fields in the API response. This includes an *Error ID* to represent a particular occurrence of the error:
 
-![500 error details](/images/290/500-error-details.jpg)
+![500 error details](/images/290/500-error-details.jpg?v=20240913)
 
 ### API 5xx Error Logs
 
@@ -258,17 +253,17 @@ For 5xx errors, this blog’s APIs log the error details in the following format
 ```json
 
   "id": "efa6217b-7be1-f393-773d-6d8aa9a464b3",
-  "utcTime": "2023-03-26T11:14:32.154Z",
-  "apiName": "SampleApi",
+  "utcTime": "2024-09-03T10:08:39.154Z"
+  "apiName": "FinalApi",
   "operationName": "getCompanyList",
-  "hostName": "WORK",
+  "hostName": "UBUNTU",
   "method": "GET",
   "path": "/investments/companies",
   "clientApplicationName": "FinalSPA",
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 500,
   "errorCode": "exception_simulation",
-  "errorId": 76236,
+  "errorId": 88490,
   "millisecondsTaken": 1,
   "millisecondsThreshold": 500,
   "correlationId": "b95f6800-b236-863a-1f6f-23e7a12cf474",
@@ -278,9 +273,9 @@ For 5xx errors, this blog’s APIs log the error details in the following format
     "clientError": {
       "code": "exception_simulation",
       "message": "An unexpected exception occurred in the API",
-      "id": 76236,
-      "area": "SampleApi",
-      "utcTime": "2023-03-26T11:14:32.154Z"
+      "id": 88490,
+      "area": "FinalApi",
+      "utcTime": "2024-09-03T10:08:39.154Z"
     },
     "serviceError": {
       "details": "",
@@ -304,12 +299,9 @@ For 5xx errors, this blog’s APIs log the error details in the following format
 
 ### Error Communication
 
-In some types of app, end users will communicate problems back to the software producing company, via one of these methods:
+In some types of app, users will communicate problems back to the software-producing organization, such as by phoning or sending an email to a helpdesk. I use a *fairly unique error idenitifier* that is easy for a user to communicate by phone, even if they are not a strong English speaker. 
 
-- User sends a screenshot to a help desk email address
-- User phones a help desk person and reads out the red error number
-
-The *fairly unique error ID* is a 5 digit number that is easy for a user to communicate by phone, even if they are not a strong English speaker. The error ID is then used by support staff to quickly look up the error in the log aggregation system, via the following type of query.
+The *errorID* could be used by support staff to quickly look up the error cause in the log aggregation system, using the following type of query. Occasionally, multiple log entries could exist with the same *errorID*. In this case, other details, such as the time, enable you to quickly identify the most relevant entry.
 
 ```json
 GET apilogs*/_search
@@ -324,30 +316,28 @@ GET apilogs*/_search
 }
 ```
 
-Occasionally, multiple log entries will exist with the same error ID. In this case, other details, such as the time, will enable the most relevant entry to be quickly identified.
-
 ### Error Chaining
 
-Often, the root cause of an error is in an upstream API. In all cases you must ensure that the log entry reference returned to clients points to the root cause. For example, a client that called an entry point API might receive an error response with these fields:
+In some cases, a client calls an entry point API which calls an upstream API. The root cause of an error might occur in the upstream API. In such cases you must ensure that error references returned to clients point to the root cause. For example, a client that called an entry point API might receive an error response with these fields:
 
 - *Area = Customers API*
 - *ID = 97264*
 
-An implementation might write an error entry for both the entry point and the upstream API. When the log aggregation query is run, the entry in the upstream API should explain the cause.
+I would write error log entries for both the entry point API and the upstream API with the same *errorID*. The log aggregation query on the *errorID* would return both entries and the one for the upstream API would explain the cause.
 
 ### Error Rehearsal
 
-Typically 500 errors are the most difficult to reproduce or test, but the ability to do so has considerable business value, and ensures that:
+Typically 500 errors are the most difficult to reproduce or test, but the ability to do so ensures that:
 
-- The API 500 error handling code is behaving as designed
-- The right people have access to production logs
-- People are trained on the incident resolution process
+- The API 500 error handling code behaves correctly.
+- The right people have access to production logs.
+- People understand how the incident resolution process works.
 
-All of this blog’s Final UIs support rehearsing a backend 500 error by long pressing the Reload Data button for a few seconds:
+All of this blog’s final frontend code samples enable rehearsal of an API 500 error. To cause an API exception you long-press the *Reload Data* button for a few seconds, which results in the frontend sending a custom header to the API:
 
-![error rehearsal](/images/290/error-rehearsal.jpg)
+![error rehearsal](/images/290/error-rehearsal.jpg?v=20240913)
 
-To support error rehearsal, this blog’s APIs use a very small middleware class, which checks for a *Custom Header* and throws an exception when the header value matches the name of the API:
+This blog’s final APIs use a small middleware class to checks for a custom header and throws an exception when the header value matches the name of the API. This enables a basic form of chaos testing, where a client can choose which API to break.
 
 ```typescript
 export class CustomHeaderMiddleware {
@@ -369,39 +359,35 @@ export class CustomHeaderMiddleware {
 }
 ```
 
-For demo purposes, this blog’s apps send the custom header to the API after a long press of the Reload Data button. This enables a basic form of chaos testing, to choose an API to break.
-
 ### Reliability Over Time
 
-Not all errors are so deterministic. Occasionally your software will have deeper bugs, that occur intermittently. The best way to deal with these is to assign them an error code, then measure them.
-
-The <Link href='/posts/api-technical-support-analysis'>Technical Support Analysis</Link> post explains how you should be able to produce a report with a breakdown of API errors by type with frequencies. Once you have visibility you can plan actions for any error occurrences that are not expected, such as adding extra details to logs.
+Not all errors are so deterministic and occasionally software has deeper bugs that occur intermittently. The best way to deal with these is to assign them an error code, then measure them. The <Link href='/posts/api-technical-support-analysis'>Technical Support Analysis</Link> post explains how structured logs can enable a report with a breakdown of API errors by type and frequency. Once you have visibility you can plan actions for any unexpected error occurrences, such as by adding extra details to logs.
 
 ```markdown
 clientApplicationName|    apiName    |    operationName     |  statusCode   |     errorCode      |   frequency   
 ---------------------+---------------+----------------------+---------------+--------------------+---------------
-FinalSPA             |SampleApi      |getCompanyTransactions|404            |company_not_found   |6              
-FinalSPA             |SampleApi      |getCompanyList        |500            |exception_simulation|2              
-FinalSPA             |SampleApi      |getCompanyList        |500            |server_error        |7              
-BasicIosApp          |SampleApi      |getCompanyTransactions|500            |file_read_error     |1              
-BasicAndroidApp      |SampleApi      |getCompanyTransactions|400            |invalid_company_id  |1              
-BasicDesktopApp      |SampleApi      |getUserInfo           |500            |server_error        |2              
+FinalSPA             |FinalApi      |getCompanyTransactions|404            |company_not_found   |6              
+FinalSPA             |FinalApi      |getCompanyList        |500            |exception_simulation|2              
+FinalSPA             |FinalApi      |getCompanyList        |500            |server_error        |7              
+BasicIosApp          |FinalApi      |getCompanyTransactions|500            |file_read_error     |1              
+BasicAndroidApp      |FinalApi      |getCompanyTransactions|400            |invalid_company_id  |1              
+BasicDesktopApp      |FinalApi      |getUserInfo           |500            |server_error        |2              
 ```
 
-### Error Coding Design
+### Error Coding Steps
 
-Error coding can usually be classified into steps, similar to the following. These steps are used by all of this blog’s code samples:
+You can reason about error handling as the following main steps, which I use in this blog’s code samples:
 
 | Step | Description |
 | ---- | ----------- |
-| <span style={{color:'green'}}>**Error Translation**</span> | Catching an error at the earliest point, to include exception specific context in error models |
-| <span style={{color:'green'}}>**Error Throwing**</span> | Throwing a different exception after error translation, while keeping the stack trace of the original error |
-| <span style={{color:'green'}}>**Error Logging**</span> | Logging the error information in a structured format, that is easy to query later |
-| <span style={{color:'green'}}>**Error Responses**</span> | Returning the error details to an API client or displaying them to an end user |
+| <span style={{color:'green'}}>**Error Catching**</span> | Catching an error when it occurs, to include exception-specific context in error models. |
+| <span style={{color:'green'}}>**Error Throwing**</span> | Throwing an exception with error fields that you control, while keeping the stack trace of the original error. |
+| <span style={{color:'green'}}>**Error Logging**</span> | Logging the error information in a structured format, that is easy to query later. |
+| <span style={{color:'green'}}>**Error Responses**</span> | Returning the error details to an API client or displaying them to a user. |
 
-### Error Translation and Throwing
+### Error Catching and Throwing
 
-When there is an exception, both our UI and API collect exception related data into their error models. APIs use both *ClientError* and *ServerError* objects, both of which contain fields focused on supportability:
+When there is an exception, both clients and APIs collect exception-related data into their error models. APIs use both *ClientError* and *ServerError* objects, both of which contain fields used for supportability:
 
 ```typescript
 export class ServerErrorImpl extends ServerError {
@@ -429,7 +415,7 @@ export class ServerErrorImpl extends ServerError {
 }
 ```
 
-Catching is done both when we want to assign a specific error code, or when we want to capture third party details. These concerns are best managed close to the source exception. Catching is only needed when dealing with infrastructure, and the code base should not contain many catch blocks:
+Catch errors when you when we want to assign a specific error code or capture third-party details. These concerns are best managed close to the source exception. You should usually only need a few catch blocks, when you deal with infrastructure:
 
 ```typescript
 public async validateToken(accessToken: string): Promise<JWTPayload> {
@@ -437,7 +423,7 @@ public async validateToken(accessToken: string): Promise<JWTPayload> {
     try {
 
         const options = {
-            algorithms: ['RS256'],
+            algorithms: [this._configuration.algorithm],
             issuer: this._configuration.issuer,
             audience: this._configuration.audience,
         };
@@ -461,39 +447,11 @@ public async validateToken(accessToken: string): Promise<JWTPayload> {
 }
 ```
 
-Another example is shown here, where a file read problem includes the library’s call stack, and the rethrown error includes the file path that failed:
-
-```typescript
-public async readData<T>(filePath: string): Promise<T> {
-
-    try {
-
-        const buffer = await fs.readFile(filePath);
-        return JSON.parse(buffer.toString()) as T;
-
-    } catch (e: any) {
-
-        const error = ErrorFactory.createServerError(
-            ErrorCodes.fileReadError,
-            'Problem encountered reading data',
-            e.stack);
-
-        if (e instanceof Error) {
-            error.setDetails(`File: ${filePath}, ${e.message}`);
-        } else {
-            error.setDetails(`File: ${filePath}, ${e}`);
-        }
-
-        throw error;
-    }
-}
-```
-
-The API code is able to indicate a 4xx condition by throwing a *ClientError*, or a 5xx condition by throwing a *ServerError*. It can assign an error code in both cases. The thrown error also contains a useful stack trace, from the third party library that does the lower level work.
+The API code is able to indicate a 4xx condition by throwing a *ClientError*, or a 5xx condition by throwing a *ServerError*. It can assign an error code in both cases. The thrown error also contains a useful stack trace, which can originate from a third-party library.
 
 ### Error Logging and Responses
 
-Results are returned from APIs to clients via an exception middleware class. At this point the operations for *toLogFormat* and *toResponseFormat* are called:
+This blog's APIs do their final error handling in an exception middleware class, which adds exception details to API logs and calls the *toResponseFormat* method to get the error object returned over the wire to clients:
 
 ```typescript
 export class UnhandledExceptionHandler {
@@ -522,7 +480,7 @@ export class UnhandledExceptionHandler {
 }
 ```
 
-The app then receives the API error and renders the error to the end user. Both the API and client are therefore consumer focused:
+The client then receives the API error and displays its own error model to the user when required. Both the API and client therefore implement consumer-focused error handling:
 
 ```typescript
 export class ErrorFormatter {
@@ -563,15 +521,12 @@ export class ErrorFormatter {
 }
 ```
 
-### Portable Design
-
-Technology stacks often provide only basic error handling. You usually need to design error handling based on your company’s requirements. The above examples showed some commonly desired behaviour, which can be coded in any language.
-
 ### Where Are We?
 
-We have discussed some techniques to enable software companies to deal with errors in both backend and frontend code, in a scalable manner. This behaviour is implemented in all of this blog’s code samples.
+I explained some scalable techniques that I use in this blog when working with errors in both backend and frontend code. Technology stacks often provide only basic error handling, so for best results you should clarify your requirements. You can then build a solution that meets them in any programming language.
+
 
 ### Next
 
-- We will describe the behaviour of this blog’s <Link href='/posts/api-architecture-node'>Final Node.js API</Link>
-- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>
+- I summarise the behaviour of this blog’s <Link href='/posts/api-architecture-node'>Final Node.js API</Link>.
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.

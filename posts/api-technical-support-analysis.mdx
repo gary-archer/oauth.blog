@@ -41,7 +41,7 @@ This is a *Lucene* query whose response is zero or more documents. A DevOps user
     "_source": {
     "hostName": "finalapi-544cf4b557-ntvrg",
     "resourceId": "2",
-    "apiName": "SampleApi",
+    "apiName": "FinalApi",
     "method": "GET",
     "errorCode": "exception_simulation",
     "millisecondsTaken": 4,
@@ -66,7 +66,7 @@ This is a *Lucene* query whose response is zero or more documents. A DevOps user
             "details": ""
         },
         "clientError": {
-            "area": "SampleApi",
+            "area": "FinalApi",
             "code": "exception_simulation",
             "utcTime": "2023-03-26T10:57:28.482Z",
             "id": 54308,
@@ -115,7 +115,7 @@ For this type of query, the output format in the Kibana frontend is a tabular li
 ```markdown
 |   apiName    |    operationName     |clientApplicationName|  statusCode   |     errorCode      |                userId             |
 ---------------+----------------------+---------------------+---------------+--------------------+------------------------------------
-SampleApi      |getCompanyTransactions|FinalSPA             |500            |exception_simulation|a6b404b1-98af-41a2-8e7f-e4061dc0bf86
+FinalApi      |getCompanyTransactions|FinalSPA             |500            |exception_simulation|a6b404b1-98af-41a2-8e7f-e4061dc0bf86
 ```
 
 Support staff can also query *what else the user was doing* around this time, to identify usage patterns that led to the incident:
@@ -145,14 +145,14 @@ This query returns results similar to the following and provides a clear picture
 ```markdown
 |   apiName    |    method     |            path                      |clientApplicationName|  statusCode   |     errorCode      |
 |--------------+---------------+--------------------------------------+---------------------+---------------+--------------------|
-|SampleApi     |GET            |/investments/companies                |FinalSPA             |200            |null                |
-|SampleApi     |GET            |/investments/userinfo                 |FinalSPA             |200            |null                |
-|SampleApi     |GET            |/investments/companies/2/transactions |FinalSPA             |200            |null                |
-|SampleApi     |GET            |/investments/userinfo                 |FinalSPA             |401            |invalid_token       |
-|SampleApi     |GET            |/investments/companies/2/transactions |FinalSPA             |401            |invalid_token       |
-|SampleApi     |GET            |/investments/companies/2/transactions |FinalSPA             |200            |null                |
-|SampleApi     |GET            |/investments/userinfo                 |FinalSPA             |200            |null                |
-|SampleApi     |GET            |/investments/companies/2/transactions |FinalSPA             |500            |exception_simulation|
+|FinalApi     |GET            |/investments/companies                |FinalSPA             |200            |null                |
+|FinalApi     |GET            |/investments/userinfo                 |FinalSPA             |200            |null                |
+|FinalApi     |GET            |/investments/companies/2/transactions |FinalSPA             |200            |null                |
+|FinalApi     |GET            |/investments/userinfo                 |FinalSPA             |401            |invalid_token       |
+|FinalApi     |GET            |/investments/companies/2/transactions |FinalSPA             |401            |invalid_token       |
+|FinalApi     |GET            |/investments/companies/2/transactions |FinalSPA             |200            |null                |
+|FinalApi     |GET            |/investments/userinfo                 |FinalSPA             |200            |null                |
+|FinalApi     |GET            |/investments/companies/2/transactions |FinalSPA             |500            |exception_simulation|
 ```
 
 This can provides powerful ways to enable DevOps staff to resolve code-level problems, and enable qualities like DevOps resolving <span style={{color:'red'}}>80% of production incidents</span> without the need to involve a specialist developer.
@@ -212,12 +212,12 @@ You might issue production reliability reports for APIs every two weeks. Each ty
 ```markdown
 |clientApplicationName|    apiName    |    operationName     |  statusCode   |     errorCode      |   frequency   |
 |---------------------+---------------+----------------------+---------------+--------------------+---------------|
-|FinalSPA             |SampleApi      |getCompanyTransactions|404            |company_not_found   |6              |
-|FinalSPA             |SampleApi      |getCompanyList        |500            |exception_simulation|2              |
-|FinalSPA             |SampleApi      |getCompanyList        |500            |server_error        |7              |
-|BasicIosApp          |SampleApi      |getCompanyTransactions|500            |file_read_error     |1              |
-|BasicAndroidApp      |SampleApi      |getCompanyTransactions|400            |invalid_company_id  |1              |
-|BasicDesktopApp      |SampleApi      |getUserInfo           |500            |server_error        |2              |
+|FinalSPA             |FinalApi      |getCompanyTransactions|404            |company_not_found   |6              |
+|FinalSPA             |FinalApi      |getCompanyList        |500            |exception_simulation|2              |
+|FinalSPA             |FinalApi      |getCompanyList        |500            |server_error        |7              |
+|BasicIosApp          |FinalApi      |getCompanyTransactions|500            |file_read_error     |1              |
+|BasicAndroidApp      |FinalApi      |getCompanyTransactions|400            |invalid_company_id  |1              |
+|BasicDesktopApp      |FinalApi      |getUserInfo           |500            |server_error        |2              |
 ```
 
 Note that some 400 errors are part of normal application flows or just indicate early errors when you get integrated. You can ignore these occurrences, whereas others might point to a bug. For example, incorrect handling of Unicode characters might cause some 400 errors.

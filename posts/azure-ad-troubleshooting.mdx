@@ -165,7 +165,7 @@ The SPA uses almost identical code to the previous code sample, which used AWS C
 
 A point of interest is that Entra ID correctly supports the traditional iframe-based silent token renewal solution for SPAs. It does so by issuing SSO cookies with the *SameSite=none* property, and correctly handles the OpenID Connect *prompt=none* request parameter.
 
-In the SPA you can click *Expire Access Token* followed by *Reload Data* to force the API to return a 401 response. The SPA then runs an iframe redirect to refresh access tokens. Doing so avoids redirecting the whole window and impacting the end user, after which the SPA receives a new access token.
+In the SPA you can click *Expire Access Token* followed by *Reload Data* to force the API to return a 401 response. The SPA then runs an iframe redirect to refresh access tokens. Doing so avoids redirecting the whole window and impacting the user, after which the SPA receives a new access token.
 
 ![iframe token renewal](/images/200/iframe-token-renewal.jpg?v=20240822)
 

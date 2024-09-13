@@ -68,7 +68,7 @@ An example log entry is shown below, and is similar conceptually to a *HTTP Serv
 {
   "id": "c4939e2c-9f71-4f4b-bbca-dda287b48385",
   "utcTime": "2022-07-24T08:41:05.069Z",
-  "apiName": "SampleApi",
+  "apiName": "FinalApi",
   "operationName": "getCompanyTransactions",
   "hostName": "MACSTATION.local",
   "method": "GET",
@@ -126,7 +126,7 @@ This blog’s final APIs use Node.js, .NET and Java. Each API defines its loggin
 
 ```json
 {
-    "apiName": "SampleApi",
+    "apiName": "FinalApi",
     "production": {
         "level": "info",
         "performanceThresholdMilliseconds": 500,
@@ -182,7 +182,7 @@ To enable development output, you can use the following type of configuration in
 
 ```json
 {
-    "apiName": "SampleApi",
+    "apiName": "FinalApi",
     "production": {
         "level": "info",
         "performanceThresholdMilliseconds": 500,
@@ -243,7 +243,7 @@ When APIs return an HTTP 400 related status, they log the client response error 
 {
   "id": "7af62b06-8c04-41b0-c428-de332436d52a",
   "utcTime": "2022-07-24T10:27:33.468Z",
-  "apiName": "SampleApi",
+  "apiName": "FinalApi",
   "operationName": "getCompanyTransactions",
   "hostName": "MACSTATION.local",
   "method": "GET",
@@ -273,7 +273,7 @@ When API requests return an HTTP 500 related status, the error logged includes b
 {
   "id": "b36701c9-ddf2-d7da-df48-4dfcc918009b",
   "utcTime": "2022-07-24T10:28:00.435Z",
-  "apiName": "SampleApi",
+  "apiName": "FinalApi",
   "operationName": "getCompanyTransactions",
   "hostName": "MACSTATION.local",
   "method": "GET",
@@ -294,7 +294,7 @@ When API requests return an HTTP 500 related status, the error logged includes b
       "code": "exception_simulation",
       "message": "An unexpected exception occurred in the API",
       "id": 79072,
-      "area": "SampleApi",
+      "area": "FinalApi",
       "utcTime": "2022-07-24T10:28:00.438Z"
     },
     "serviceError": {
@@ -343,7 +343,7 @@ To see this output in the final APIs, change the logging configuration to use a 
 
 ```json
 {
-    "apiName": "SampleApi",
+    "apiName": "FinalApi",
     "production": {
         "level": "info",
         "performanceThresholdMilliseconds": 0,
@@ -358,7 +358,7 @@ The logging then contains a number of performance items to provide a breakdown o
 {
   "id": "baf31c4c-6bf3-5ba3-2863-169a088b4776",
   "utcTime": "2022-07-24T10:30:10.697Z",
-  "apiName": "SampleApi",
+  "apiName": "FinalApi",
   "operationName": "getCompanyList",
   "hostName": "MACSTATION.local",
   "method": "GET",
@@ -415,7 +415,7 @@ Any API client can supply the following three custom HTTP headers in API request
 
 This *Client Context* helps to satisfy <Link href='/posts/api-technical-support-analysis'>query use cases</Link>, including the ability to quickly filter logs for your own session ID:
 
-![application session](/images/280/application-session.jpg)
+![application session](/images/280/application-session.jpg?v=20240913)
 
 When an API calls an upstream API it should forward the client context in request headers, so that the upstream API includes these identifiers in its own log entry.
 
@@ -438,7 +438,7 @@ APIs often also implement non REST operations, such as processing event messages
 {
   "id": "c4939e2c-9f71-4f4b-bbca-dda287b48385",
   "utcTime": "2022-07-24T08:41:05.069Z",
-  "apiName": "SampleApi",
+  "apiName": "FinalApi",
   "operationName": "OrderCreated",
   "hostName": "MACSTATION.local",
   "method": "POST",
