@@ -15,11 +15,11 @@ Our iOS sample uses 2 online domains, which we configured previously as part of 
 
 Our web pages are first uploaded to an AWS S3 bucket:
 
-![s3 bucket](/images/560/s3-bucket.jpg)
+![s3 bucket](/images/560/s3-bucket.jpg?v=20240914)
 
 They are then included in one of this blog’s <Link href='/posts/cdn-static-content-delivery'>CloudFront Distributions</Link>, so that the pages are served over an HTTPS URL:
 
-![cloudfront distro](/images/560/cloudfront-distro.jpg)
+![cloudfront distro](/images/560/cloudfront-distro.jpg?v=20240914)
 
 Pages are then available at these URLs:
 
@@ -61,7 +61,7 @@ The deep linking domains allowed by the app are configured as *Associated Domain
 
 I uploaded the assets file to run at the below HTTPS URL, in a similar manner to the interstitial pages. We use a second S3 bucket and CloudFront distribution for the root domain:
 
-- https://mobile.authsamples.com/.well-known/apple-app-site-association
+- [https://mobile.authsamples.com/.well-known/apple-app-site-association](https://mobile.authsamples.com/.well-known/apple-app-site-association)
 
 The *mobile.authsamples.com* S3 bucket has a *.well-known* folder containing the assets files for both Android and iOS:
 
@@ -75,15 +75,15 @@ The Apple file needs to be configured to return a content type of *application/j
 
 You can verify the configuration via the following test site:
 
-- https://branch.io/resources/aasa-validator
+- [https://branch.io/resources/aasa-validator](https://branch.io/resources/aasa-validator)
 
 The details for our demo app can be provided to the site as follows:
 
-![verification settings](/images/560/verification-settings.jpg)
+![verification settings](/images/560/verification-settings.jpg?v=20240914)
 
 The site then shows the following validated results:
 
-![deep linking verification](/images/560/deep-linking-verification.jpg)
+![deep linking verification](/images/560/deep-linking-verification.jpg?v=20240914)
 
 ### Deep Linking Registration Process
 
@@ -132,7 +132,7 @@ You can study the script to see how it creates an SSL certificate and key, regis
 
 Finally, configure Xcode to use the same Apple Team ID to sign the app. Then re-run the app on the simulator:
 
-![code signing](/images/560/code-signing.jpg?v=20240713)
+![code signing](/images/560/code-signing.jpg?v=20240914)
 
 Since we are using [mode=developer](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_associated-domains) the app should now run successfully. This technique will only work for simulators, and for more complete testing you would instead need to provide your own iOS infrastructure.
 
