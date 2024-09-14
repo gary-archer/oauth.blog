@@ -58,13 +58,13 @@ This prevents a fake app from receiving a login result, since the attacker would
 AppAuth user logins will be via an [ASWebAuthenticationSession](https://dev.to/robotsquidward/quick-guide-to-aswebauthenticationsession-api-changes-in-ios-13-4m8i) window, which first presents the below system window to inform the user which app and login domain are being signed into:
 
 <div className="smallimage">
-![aswebauthenticationsession start](/images/540/aswebauthenticationsession-start.jpg?v=20240713)
+![aswebauthenticationsession start](/images/540/aswebauthenticationsession-start.jpg?v=20240914)
 </div>
 
 The user is then presented with the main login window, which is external to the app and acts as a secure sandbox, so that the app itself never has access to the user’s password:
 
 <div className="smallimage">
-![aswebauthenticationsession login](/images/540/aswebauthenticationsession-login.jpg?v=20240713)
+![aswebauthenticationsession login](/images/540/aswebauthenticationsession-login.jpg?v=20240914)
 </div>
 
 Use of the system browser provides some useful login usability options. The result is that cookies and passwords can often be shared between apps, to improve usability:
@@ -84,20 +84,14 @@ The following problems exist if you perform login redirects on a normal mobile w
 
 ### Our Sample’s Login Usability Features
 
-Using an ASWebAuthenticationSession window will provide the best chance of password autofill working, so that the user does not need to continually remember their password:
-
-<div className="smallimage">
-![password autofill](/images/540/password-autofill.jpg?v=20240713)
-</div>
-
-After login we will store the *OAuth Refresh Token* on the device, using secure operating system storage private to the app. This ensures that, on subsequent application restarts, the first thing the user sees is the app.
+Using an ASWebAuthenticationSession window will provide the best chance of password autofill working, so that the user does not need to continually remember their password. After login we will store the *OAuth Refresh Token* on the device, using secure operating system storage private to the app. This ensures that, on subsequent application restarts, the first thing the user sees is the app.
 
 ### Secured Device Prerequisite
 
 We need to ensure that the above usability features cannot be abused if the mobile device is stolen, so we require the device to have a *Secured Lock Screen*, and the user will see the below screen if this is not the case:
 
 <div className="smallimage">
-![prerequisite screen](/images/540/prerequisite-screen.jpg?v=20240713)
+![prerequisite screen](/images/540/prerequisite-screen.jpg?v=20240914)
 </div>
 
 The user must then set a *passcode* or *fingerprint* in order to resume using the app. These security features are not available on iOS simulators.
@@ -106,13 +100,7 @@ The user must then set a *passcode* or *fingerprint* in order to resume using th
 
 ### Password Autofill Details
 
-To use password autofill it must first be enabled in system settings on the iOS device.
-
-<div className="smallimage">
-![enable password autofill](/images/540/enable-password-autofill.jpg?v=20240713)
-</div>
-
-On the initial login the user will need to type in their credentials. By default the ASWebAuthenticationSession window will immediately disappear after login and the user will be unable to use the system’s *Save Password* feature. We will resolve this problem by presenting a *Post Login Page* after authentication but before the browser window is closed.
+To use password autofill it must first be enabled in system settings on the iOS device. On the initial login the user will need to type in their credentials. By default the ASWebAuthenticationSession window will immediately disappear after login and the user will be unable to use the system’s *Save Password* feature. We will resolve this problem by presenting a *Post Login Page* after authentication but before the browser window is closed.
 
 <div className="smallimage">
 ![save password prompt](/images/540/save-password-prompt.jpg)
@@ -143,7 +131,7 @@ The session buttons help to ensure that navigation is reliable within the app as
 The sample also implements <Link href='/posts/logout'>Open ID Connect RP-Initiated Logout</Link>, to remove the authorization server’s session cookie. In a real-world app a logout capability enables you to test data access for different users with different settings or permissions. One annoyance is that the ASWebAuthenticationSession indicates *Sign In* during the logout redirect, rather then *Sign Out*:
 
 <div className="smallimage">
-![logout prompt](/images/540/logout-prompt.jpg?v=20240713)
+![logout prompt](/images/540/aswebauthenticationsession-start.jpg?v=20240914)
 </div>
 
 The usual way to resolve it is to avoid the logout redirect and instead simply drop tokens. Then use the *prompt=login* OpenID Connect request parameter on the next login. At the time of writing though, AWS Cognito does not yet support the *prompt* parameter.
