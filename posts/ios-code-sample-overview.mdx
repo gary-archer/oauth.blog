@@ -119,7 +119,7 @@ Logins can be cancelled by closing the system browser instead of successfully co
 The demo app also has buttons to enable *Rehearsal of Expiry Events*, in order to verify that these do not cause any user problems:
 
 <div className="smallimage">
-![expiry testing](/images/540/expiry-testing.jpg?v=20240713)
+![expiry testing](/images/540/expiry-testing.jpg?v=20240914)
 </div>
 
 ### Navigation with Expired Tokens
@@ -165,7 +165,7 @@ In both cases our API will deny access gracefully by returning known error codes
 A common issue when first using AppAuth libraries is that the system browser may not return the deep link containing the authorization response to the app, and fall back to processing it as a web request in the browser, typically with a 404 not found error.
 
 <div className="smallimage">
-![not found login response](/images/540/not-found-login-response.jpg?v=20240713)
+![not found login response](/images/540/not-found-login-response.jpg?v=20240914)
 </div>
 
 This is due to a browser security requirement that there must be a [user gesture](https://forums.developer.apple.com/forums/thread/26760) before a deep link can be processed. Invoking a deep link immediately after a redirect can be unreliable.
@@ -192,11 +192,11 @@ In each case, there needs to be a screen before invoking the deep link. You may 
 This blog uses the following custom *AWS Hosted Web Pages* that are returned to after login / logout redirects. A real company could present its own branded pages instead.
 
 <div className="smallimage">
-![login interstitial page](/images/540/login-interstitial-page.jpg?v=20240713)
+![login interstitial page](/images/540/login-interstitial-page.jpg?v=20240914)
 </div>
 
 <div className="smallimage">
-![logout interstitial page](/images/540/logout-interstitial-page.jpg?v=20240713)
+![logout interstitial page](/images/540/logout-interstitial-page.jpg?v=20240914)
 </div>
 
 ### Test Cases
