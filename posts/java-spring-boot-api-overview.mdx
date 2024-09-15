@@ -1,18 +1,16 @@
 # Java API – Overview
 
-Previously we described the <Link href='/posts/final-nodeapi-coding-key-points'>Code Details</Link> that included some behaviours from this blog’s <Link href='/posts/api-journey-server-side'>API Journey – Server Side</Link> blog post. Next we will provide an equivalent API in Java and Spring.
+Previously I explained the <Link href='/posts/final-nodeapi-coding-key-points'>Final .NET API Code Details</Link>, including some behaviours from this blog’s <Link href='/posts/api-journey-server-side'>API Journey – Server Side</Link> blog post. Next I provide an equivalent API in Java and Spring.
 
 ### Final API Code Sample Overview
 
-As for other code samples on this blog, the API has a money based theme of investments. It provides only a couple of endpoints that return fictional hard coded data.
-
-The API aims to be visual and can serve this blog’s apps, such as the <Link href='/posts/how-to-run-the-react-js-spa'>Final SPA</Link> below. Running both together is a good way to ensure that the API is client focused. API logs are then generated via requests from the client:
+This blog's API has a couple of simple endpoints that return mock data for a money-based theme of investments. The API aims to be visual and serves this blog’s apps, such as the <Link href='/posts/how-to-run-the-react-js-spa'>Final SPA</Link> below. Running both together ensures that the API is client-focused and enables you to focus on API logs that the client generates.
 
 ![spa and api](/images/350/spa-and-api.jpg?v=20240915)
 
 ### API URLs
 
-During development the API is run as a standalone component. Either JUnit tests or a load test can be used as API clients. These tests can get user level access token to call the API and verify its OAuth security. This is done by pointing the API to a mock authorization server:
+During development the API runs as a standalone component. You can use either JUnit tests or a load test as the API client. These tests get user-level access tokens to call the API and verify some OAuth security use cases. The API accepts mock access tokens when you point it to a mock authorization server:
 
 | Component | Base URL |
 | --------- | -------- |
@@ -21,7 +19,7 @@ During development the API is run as a standalone component. Either JUnit tests 
 
 ### Prerequisite 1: Domain Setup
 
-First update the hosts file to create domains for local development. Include the web domain and backend for frontend domain if running the SPA and API together:
+First update your computer's hosts file to create domains for local development. Include the web domain and local backend-for-frontend domain if you run the SPA and API together:
 
 ```markdown
 127.0.0.1 api.authsamples-dev.com login.authsamples-dev.com www.authsamples-dev.com bfflocal.authsamples-dev.com
@@ -29,7 +27,7 @@ First update the hosts file to create domains for local development. Include the
 
 ### Prerequisite 2: Install Java
 
-We will use the latest long term support version of Java that Spring Boot and the libraries we depend upon support, which is [Java 21](https://www.azul.com/downloads/?version=java-21-lts) at the time of writing. This blog uses the open source Azul Java SDK.
+I use the latest long term support version of Java that Spring Boot supports, which is [Java 21](https://www.azul.com/downloads/?version=java-21-lts) at the time of writing. I use the open source Azul Java SDK and create a *JAVA_HOME* environment variable at a location such as */usr/lib/jvm/zulu-21-amd64*.
 
 ![java](/images/350/java.jpg)
 
@@ -39,31 +37,31 @@ I use the free community edition of [Intellj Idea](https://www.jetbrains.com/ide
 
 ![java-ide](/images/350/java-ide.jpg)
 
-Then wait for the gradle sync to complete, which will take a couple of minutes. Then you can run the FinalApiApplication.java file, to run the API and listen for requests at an HTTPS URL.
+When I load the project I wait for the gradle sync to complete. Then I run the *FinalApiApplication.java* source file to start listening for requests over HTTPS.
 
 ### Prerequisite 4: Optionally Install Node.js
 
-If you want to run the SPA as well as the API, install [Node.js](https://nodejs.org/en/download) for your operating system, which is used to build the SPA’s JavaScript bundles.
+If you want to run the SPA as well as the API, install [Node.js](https://nodejs.org/en/download) to build the SPA’s JavaScript bundles.
 
 ### Prerequisite 5: Install Docker
 
-To run API tests, or to run the full SPA and API solution, utility components are run in docker. Therefore ensure that a local docker engine, such as [Docker Desktop](https://www.docker.com/products/docker-desktop) is installed.
+To run API tests, or the full SPA and API solution, you use Docker utility components, so install a local engine such as [Docker Desktop](https:/www/.docker.com/products/docker-desktop).
 
 ### Step 1: Build and Run the API
 
-The API sample is available [here](https://github.com/gary-archer/oauth.apisample.javaspringboot) and can be be downloaded / cloned to your local computer:
+Close the GitHub repository with the following command:
 
 ```bash
 git clone https://github.com/gary-archer/oauth.apisample.javaspringboot
 ```
 
-Next run the following script, which downloads some OpenSSL generated development certificates, then uses gradle to run the API on port 446:
+Run the following command, which downloads some OpenSSL development certificates, then runs the API on HTTPS using port 446:
 
 ```bash
 ./start.sh
 ```
 
-![running api](/images/350/running-api.jpg)
+![running api](/images/350/running-api.jpg?v=20240915)
 
 ### Step 2: Configure SSL Trust
 
@@ -73,19 +71,13 @@ The API runs over SSL and when you run it for the first time it downloads some d
 certs/authsamples-dev.ca.crt
 ```
 
-Tests make HTTPS requests to the Java API, and scripts require a *JAVA_HOME* environment variable to be configured, which will be a value similar to the following, depending on your operating system:
-
-```markdown
-/usr/lib/jvm/zulu-21-amd64
-```
-
-The root certificate used in HTTPS requests must be trusted by the Java runtime. This is done via the following command:
+Use the following command to trust the root certificate that issues the API's SSL certificate:
 
 ```bash
 sudo "$JAVA_HOME/bin/keytool" -import -alias authsamples.ca -cacerts -file ./certs/authsamples-dev.ca.crt -storepass changeit -noprompt
 ```
 
-You can revoke trust for the root CA later if required, using this command:
+You can revoke trust for the root certificate later if required, using the following command:
 
 ```bash
 sudo "$JAVA_HOME/bin/keytool" -delete -alias authsamples.ca -cacerts -storepass changeit -noprompt
@@ -99,48 +91,54 @@ To run JUnit tests, the API must be pointed to a mock authorization server, so m
 ./testsetup.sh
 ```
 
-Next run JUnit tests with the following command:
+Next run tests with the following command:
 
 ```bash
 ./gradlew test
 ```
 
-This will spin up a mock JWKS URI hosted at HTTPS endpoints provided by the Wiremock utility. A number of tests are then run, which make HTTP requests to the API. These tests focus on the API’s key security behaviour:
+This spins up a JWKS URI with an HTTPS endpoint that the Wiremock utility provides. A number of tests then make OAuth-secured API requests. These tests focus on the API’s main security behaviours:
 
-![test results](/images/350/test-results.jpg)
+![test results](/images/350/test-results.jpg?v=20240915)
 
 ### Step 4: Run a Basic Load Test
 
-While the API is running with a test configuration, you can also run a basic load test. This test ensures that the API code has no multi-threading bugs, by firing concurrent API requests:
+While the API runs with a test configuration you can also run a basic load test that sends parallel API requests. This helps to ensure that the API code has no concurrency bugs:
 
 ```bash
 ./gradlew loadtest
 ```
 
-The test fires 100 HTTP requests to the API, in batches of 5 concurrent requests at a time. This intentionally rehearses certain types of error, and the expected result is 3 errors from a total of 100 requests:
+The test fires batches of 5 concurrent requests at a time and also intentionally rehearses certain types of error. The expected result is 3 errors from a total of 100 requests:
 
-![load test](/images/350/load-test.jpg)
+![load test](/images/350/load-test.jpg?v=20240915)
 
-For further details on testing the API with user level tokens but without running a full user login flow, see the <Link href='/posts/api-automated-tests'>API Automated Tests</Link> blog post.
+The <Link href='/post/api-automated-tests'>API Automated Tests</Link> post explains how tests get user level tokens without running a full authorization code flow.
 
 ### Step 5: Run the SPA Client
 
-If required, run the <Link href='/posts/how-to-run-the-react-js-spa'>Final SPA</Link> using the following commands, where SPA resources are downloaded to a parallel folder:
+You can run any of this blog's final frontend clients against the API:
+
+- <Link href='/posts/final-spa-overview'>Final SPA</Link>
+- <Link href='/posts/final-desktop-sample-overview'>Final Desktop App</Link>
+- <Link href='/posts/android-code-sample-overview'>Final Android App</Link>
+- <Link href='/posts/ios-code-sample-overview'>Final iOS App</Link>
+
+To run the final SPA as an API client, start in the API's folder, then run the SPA from a parallel folder:
 
 ```bash
 cd ..
 git clone https://github.com/gary-archer/oauth.websample.final
 cd oauth.websample.final
-./build.sh LOCALAPI
-./run.sh LOCALAPI
+export LOCALAPI='true'
+./build.sh
+./run.sh
 ```
 
-The *run.sh* script executes a number of commands in child terminals, to run the default browser at *https://www.authsamples-dev.com/spa*. You can then sign into the SPA using this blog’s test credential:
+The *run.sh* script invokes the default browser at *https://www.authsamples-dev.com/spa* and you can sign in using this blog’s test credential:
 
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
-
-The SPA will then make OAuth secured requests to the API, which will result in the API’s code writing JSON logs.
 
 ### Main Feature 1: Extensible Authorization
 
@@ -149,7 +147,7 @@ The API implements its security according to these two blog posts, using a JOSE 
 - <Link href='/posts/jwt-access-token-validation'>JWT Access Token Validation</Link>
 - <Link href='/posts/api-authorization-design'>API Authorization Design</Link>
 
-The overall behaviour should be to deal with OAuth security in the correct ways, while setting up the API’s business logic with the authorization values it needs. These values may originate from multiple data sources and may not always be issued to access tokens:
+The overall behaviour manages OAuth security correctly while setting up the API’s business logic with the authorization values it needs. These values may originate from multiple data sources and may not always be issued to tokens:
 
 ```java
 @Service
@@ -189,15 +187,15 @@ The other main objective of the API code sample will be JSON logging of API requ
 }
 ```
 
-Meanwhile, logs are also written to files in a bare JSON format, ready for log shipping:
+Meanwhile, the API also writes text files to its *logs* folder in a bare JSON format, ready for log shipping:
 
 ![bare logs](/images/350/bare-logs.jpg)
 
-The <Link href='/posts/log-aggregation-setup'>Elasticsearch Log Aggregation Setup</Link> can also be followed, to enable <Link href='/posts/api-technical-support-analysis'>Technical Support Queries</Link> against the API. This would be useful in a production system, where there would be many API requests per day.
+Optionally, you can follow the <Link href='/posts/log-aggregation-setup'>Log Aggregation Setup</Link> to run a Docker-based deployment of the Elastic Stack. You can then run <Link href='/posts/api-technical-support-analysis'>Technical Support Queries</Link> against the API's logs. This would be useful in a production system, to make sense of large volumes of API requests.
 
 ### Cloud Native Deployment
 
-The API would typically be deployed as a container in a cloud native environment. The API includes some Docker and Kubernetes deployment resources. A basic Docker deployment can be run with these commands:
+The API is cloud-native and includes some Docker and Kubernetes deployment resources. A basic deployment can be run with these commands:
 
 ```bash
 ./deployment/docker-local/build.sh
@@ -207,9 +205,9 @@ The API would typically be deployed as a container in a cloud native environment
 
 ### Where Are We?
 
-We have described the key behaviour of our final Java API. In the next post we will take a closer look at how this has been coded.
+I summarised the key productivity behaviours of this blog's final APIs. This starts with modern code setup and a clean separation of concerns that sets up business logic for future growth. Next, APIs have a unified security model that works the same for any type of API client. Finally, APIs have an early focus on reliability.
 
 ### Next
 
-- Next we will drill into <Link href='/posts/spring-boot-api-oauth-integration'>OAuth Integration</Link> for our Java API
-- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>
+- I explain this blog's <Link href='/posts/spring-boot-api-oauth-integration'>Java API OAuth Integration</Link>.
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.

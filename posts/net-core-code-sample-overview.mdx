@@ -10,7 +10,7 @@ This blog's API has a couple of simple endpoints that return mock data for a mon
 
 ### API URLs
 
-During development the API runs as a standalone component. For integration tests, you can use either xUnit tests or a load test as the API client. These tests get user-level access tokens to call the API and verify some OAuth security use cases. The API accepts mock access tokens when you point it to a mock authorization server:
+During development the API runs as a standalone component. You can use either xUnit tests or a load test as the API client. These tests get user-level access tokens to call the API and verify some OAuth security use cases. The API accepts mock access tokens when you point it to a mock authorization server:
 
 | Component | Base URL |
 | --------- | -------- |
@@ -140,7 +140,7 @@ The API implements its security according to these two blog posts, using a JOSE 
 - <Link href='/posts/jwt-access-token-validation'>JWT Access Token Validation</Link>
 - <Link href='/posts/api-authorization-design'>API Authorization Design</Link>
 
-The other main objective of the API code sample is JSON logging of API requests, to include useful technical support fields. Logging console output looks like this on a development computer:
+The overall behaviour manages OAuth security correctly while setting up the API’s business logic with the authorization values it needs. These values may originate from multiple data sources and may not always be issued to tokens:
 
 ```csharp
 public class CompanyService
