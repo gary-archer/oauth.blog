@@ -59,7 +59,7 @@ To prevent SSL trust problems from tests or the browser you should <Link href='/
 certs/authsamples-dev.ca.crt
 ```
 
-You will then be able to navigate to the following URL in a browser without any SSL trust warnings:
+You can then navigate to the following URL in a browser without any SSL trust warnings:
 
 ```markdown
 https://api.authsamples-dev.com:446/investments/companies
@@ -101,7 +101,7 @@ The <Link href='/post/api-automated-tests'>API Automated Tests</Link> post expla
 
 ### Step 5: Run the SPA Client
 
-You can run any of this blog's final frontend clients against the Node.js API:
+You can run any of this blog's final frontend clients against the API:
 
 - <Link href='/posts/final-spa-overview'>Final SPA</Link>
 - <Link href='/posts/final-desktop-sample-overview'>Final Desktop App</Link>
@@ -131,7 +131,7 @@ The API implements its security according to these two blog posts, using a JOSE 
 - <Link href='/posts/jwt-access-token-validation'>JWT Access Token Validation</Link>
 - <Link href='/posts/api-authorization-design'>API Authorization Design</Link>
 
-The overall behaviour should be to deal with access tokens correctly and then set up the API's business logic with the values it needs for its business authorization. These values may originate from multiple sources and not just the access token:
+The overall behaviour manages OAuth security correctly while setting up the API’s business logic with the authorization values it needs. These values may originate from multiple data sources and may not always be issued to tokens:
 
 ```typescript
 @injectable()
@@ -182,7 +182,7 @@ Optionally, you can follow the <Link href='/posts/log-aggregation-setup'>Log Agg
 
 ### Cloud Native Deployment
 
-The API uses cloud-native environment and includes some Docker and Kubernetes deployment resources. A basic deployment can be run with these commands:
+The API is cloud-native and includes some Docker and Kubernetes deployment resources. A basic deployment can be run with these commands:
 
 ```bash
 ./deployment/docker-local/build.sh
