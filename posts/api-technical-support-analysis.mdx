@@ -81,7 +81,7 @@ This is a *Lucene* query whose response is zero or more documents. A DevOps user
     "correlationId": "fa20ca8e-8506-c4f0-9217-1cac1a83a2c8",
     "errorId": 48649,
     "id": "17580a1c-1631-f80f-e32e-9e237d47cbab",
-    "clientApplicationName": "FinalSPA",
+    "clientName": "FinalSPA",
     "statusCode": 500
 }
 ```
@@ -94,7 +94,7 @@ POST _sql?format=txt
 SELECT
   utcTime,
   operationName,
-  clientApplicationName,
+  clientName,
   sessionId,
   statusCode,
   userId 
@@ -112,7 +112,7 @@ ORDER BY
 For this type of query, the output format in the Kibana frontend is a tabular list of columns that shows *how often* this type of error has occurred and for *which users*:
 
 ```markdown
-|   apiName    |    operationName     |clientApplicationName|  statusCode   |     errorCode      |                userId             |
+|   apiName    |    operationName     |clientName|  statusCode   |     errorCode      |                userId             |
 ---------------+----------------------+---------------------+---------------+--------------------+------------------------------------
 FinalApi      |getCompanyTransactions|FinalSPA             |500            |exception_simulation|a6b404b1-98af-41a2-8e7f-e4061dc0bf86
 ```
@@ -126,7 +126,7 @@ SELECT
   apiName,
   method,
   path,
-  clientApplicationName,
+  clientName,
   statusCode,
   errorCode
 FROM
@@ -142,7 +142,7 @@ LIMIT 100
 This query returns results similar to the following and provides a clear picture of the user’s technical activity against APIs:
 
 ```markdown
-|   apiName    |    method     |            path                      |clientApplicationName|  statusCode   |     errorCode      |
+|   apiName    |    method     |            path                      |clientName|  statusCode   |     errorCode      |
 |--------------+---------------+--------------------------------------+---------------------+---------------+--------------------|
 |FinalApi     |GET            |/investments/companies                |FinalSPA             |200            |null                |
 |FinalApi     |GET            |/investments/userinfo                 |FinalSPA             |200            |null                |
@@ -183,7 +183,7 @@ It can be common in software for there to be intermittent problems which people 
 POST _sql?format=txt
 {"query": """
 SELECT
-  clientApplicationName,
+  clientName,
   apiName,
   operationName,
   statusCode,
@@ -198,7 +198,7 @@ AND
 AND
   utcTime > '2019-08-01' 
 GROUP BY
-  clientApplicationName,
+  clientName,
   apiName,
   operationName,
   statusCode,
@@ -209,7 +209,7 @@ GROUP BY
 You might issue production reliability reports for APIs every two weeks. Each type of issue should be understood, and you could plan actions such as adding more log detail when needed.
 
 ```markdown
-|clientApplicationName|    apiName    |    operationName     |  statusCode   |     errorCode      |   frequency   |
+|clientName|    apiName    |    operationName     |  statusCode   |     errorCode      |   frequency   |
 |---------------------+---------------+----------------------+---------------+--------------------+---------------|
 |FinalSPA             |FinalApi      |getCompanyTransactions|404            |company_not_found   |6              |
 |FinalSPA             |FinalApi      |getCompanyList        |500            |exception_simulation|2              |
@@ -248,7 +248,7 @@ You can use logs to monitor all errors that occur in test systems. Those that ar
 POST _sql?format=txt
 {"query": """
 SELECT
-  clientApplicationName,
+  clientName,
   apiName,
   operationName,
   statusCode,
@@ -263,7 +263,7 @@ AND
 AND
   utcTime > '2019-08-01' 
 GROUP BY
-  clientApplicationName,
+  clientName,
   apiName,
   operationName,
   statusCode,

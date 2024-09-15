@@ -1,18 +1,16 @@
 # Node.js API – Overview
 
-Previously we drilled into this blog’s <Link href='/posts/error-handling-and-supportability'>Error Handling and Supportability</Link> design. Next we will explain this blog’s final Node.js API. See also the <Link href='/posts/api-journey-server-side'>API Journey – Server Side</Link> blog post for the API’s main behaviours.
+Previously I explained this blog’s <Link href='/posts/error-handling-and-supportability'>Error Handling and Supportability</Link> design. Next I summarise the main behaviours of this blog’s final Node.js API. See also the <Link href='/posts/api-journey-server-side'>API Journey – Server Side</Link> blog post for the requirements being met.
 
 ### Final API Code Sample Overview
 
-As for other code samples on this blog, the API has a money based theme of investments. It provides only a couple of endpoints that return fictional hard coded data.
+This blog's API has a couple of simple endpoints that return mock data for a money-based theme of investments. The API aims to be visual and serves this blog’s apps, such as the <Link href='/posts/how-to-run-the-react-js-spa'>Final SPA</Link> below. Running both together ensures that the API is client-focused and enables you to focus on API logs that the client generates.
 
-The API aims to be visual and can serve this blog’s apps, such as the <Link href='/posts/how-to-run-the-react-js-spa'>Final SPA</Link> below. Running both together is a good way to ensure that the API is client focused. API logs are then generated via requests from the client:
-
-![spa and api](/images/300/spa-and-api.jpg?v=20240913)
+![spa and api](/images/300/spa-and-api.jpg?v=20240915)
 
 ### API URLs
 
-During development the API is run as a standalone component. Either mocha tests or a load test can be used as API clients. These tests can get user level access token to call the API and verify its OAuth security. This is done by pointing the API to a mock authorization server:
+During development the API runs as a standalone component. For integration tests, you can use either mocha tests or a load test as the API client. These tests get user-level access tokens to call the API and verify some OAuth security use cases. The API accepts mock access tokens when you point it to a mock authorization server:
 
 | Component | Base URL |
 | --------- | -------- |
@@ -21,7 +19,7 @@ During development the API is run as a standalone component. Either mocha tests 
 
 ### Prerequisite 1: Domain Setup
 
-First update the hosts file to create domains for local development. Include the web domain and local backend for frontend domain if running the SPA and API together:
+First update your computer's hosts file to create domains for local development. Include the web domain and local backend-for-frontend domain if you run the SPA and API together:
 
 ```markdown
 127.0.0.1 api.authsamples-dev.com login.authsamples-dev.com www.authsamples-dev.com bfflocal.authsamples-dev.com
@@ -29,15 +27,15 @@ First update the hosts file to create domains for local development. Include the
 
 ### Prerequisite 2: Install Node.js
 
-Download [Node.js](https://nodejs.org/en/download) for your operating system, which will be used to run the API and also to build and host the SPA’s JavaScript bundles.
+Download [Node.js](https://nodejs.org/en/download) for your operating system, which runs the API and also builds the SPA’s JavaScript bundles.
 
 ### Prerequisite 3: Install Docker
 
-To run API tests, or to run the full SPA and API solution, utility components are run in docker. Therefore ensure that a local docker engine such as [Docker Desktop](https:/www/.docker.com/products/docker-desktop) is installed.
+To run API tests, or the full SPA and API solution, you use Docker utility components, so install a local engine such as [Docker Desktop](https:/www/.docker.com/products/docker-desktop).
 
 ### Step 1: Build and Run the API
 
-The API sample is available [here](https://github.com/gary-archer/oauth.apisample.nodejs) and can be be downloaded / cloned to your local computer:
+Close the GitHub repository with the following command:
 
 ```bash
 git clone https://github.com/gary-archer/oauth.apisample.nodejs
@@ -45,29 +43,33 @@ git clone https://github.com/gary-archer/oauth.apisample.nodejs
 
 ![repo](/images/300/repo.jpg)
 
-Next run the following command, which downloads some OpenSSL generated development certificates, then runs the API on port 446:
+Run the following command, which downloads some OpenSSL development certificates, then runs the API on HTTPS using port 446:
 
 ```bash
 ./start.sh
 ```
 
-![running api](/images/300/running-api.jpg)
+![running api](/images/300/running-api.jpg?v=20240915)
 
 ### Step 2: Configure SSL Trust
 
-The API runs over SSL and when you run it for the first time it downloads some development certificates. To prevent SSL trust problems from tests or the browser you may need to <Link href='/posts/developer-ssl-setup'>Configure Node.js and Browser Trust</Link> for the root certificate at the following location. 
+To prevent SSL trust problems from tests or the browser you should <Link href='/posts/developer-ssl-setup'>Configure Node.js and Browser Trust</Link> for the root certificate at the following location. 
 
 ```markdown
 certs/authsamples-dev.ca.crt
 ```
 
-You will then be able to navigate to the API URL in a browser without any SSL warnings:
+You will then be able to navigate to the following URL in a browser without any SSL trust warnings:
 
-![browse to api](/images/300/browse-to-api.jpg)
+```markdown
+https://api.authsamples-dev.com:446/investments/companies
+```
+
+![browse to api](/images/300/browse-to-api.jpg?v=20240915)
 
 ### Step 3: Run Integration Tests
 
-To run mocha tests, the API must be pointed to a mock authorization server, so must run with a test configuration. Stop the API if it is running, then re-run it via this command:
+To run mocha tests, you must run the API with a configuration that points to a mock authorization server. Stop the API if it is running, then re-run it via this command:
 
 ```bash
 npm run testsetup
@@ -79,42 +81,48 @@ Then run tests with the following command:
 npm test
 ```
 
-This will spin up a mock JWKS URI hosted at HTTPS endpoints provided by the Wiremock utility. A number of tests are then run, which make HTTP requests to the API. These tests focus on the API’s key security behaviour:
+This spins up a JWKS URI with an HTTPS endpoint that the Wiremock utility provides. A number of tests then make OAuth-secured API requests. These tests focus on the API’s main security behaviours:
 
 ![test results](/images/300/test-results.jpg)
 
 ### Step 4: Run a Basic Load Test
 
-While the API is running with a test configuration, you can also run a basic load test. This test ensures that the API code has no concurrency bugs, by firing parallel API requests:
+While the API runs with a test configuration you can also run a basic load test that sends parallel API requests. This helps to ensure that the API code has no concurrency bugs:
 
 ```bash
 npm run loadtest
 ```
 
-The test fires 100 HTTP requests to the API, in batches of 5 concurrent requests at a time. This intentionally rehearses certain types of error, and the expected result is 3 errors from a total of 100 requests:
+The test fires batches of 5 concurrent requests at a time and also intentionally rehearses certain types of error. The expected result is 3 errors from a total of 100 requests:
 
 ![load test](/images/300/load-test.jpg)
 
-For further details on testing the API with user level tokens but without running a full user login flow, see the  <Link href='/post/api-automated-tests'>API Automated Tests</Link> blog post.
+The <Link href='/post/api-automated-tests'>API Automated Tests</Link> post explains how tests get user level tokens without running a full authorization code flow.
 
 ### Step 5: Run the SPA Client
 
-You can also run the <Link href='/posts/how-to-run-the-react-js-spa'>Final SPA</Link> as a client of the API, using the following commands, where SPA resources are downloaded to a parallel folder:
+You can run any of this blog's final frontend clients against the Node.js API:
+
+- <Link href='/posts/final-spa-overview'>Final SPA</Link>
+- <Link href='/posts/final-desktop-sample-overview'>Final Desktop App</Link>
+- <Link href='/posts/android-code-sample-overview'>Final Android App</Link>
+- <Link href='/posts/ios-code-sample-overview'>Final iOS App</Link>
+
+To run the final SPA as an API client, start in the API's folder, then run the SPA from a parallel folder:
 
 ```bash
 cd ..
 git clone https://github.com/gary-archer/oauth.websample.final
 cd oauth.websample.final
-./build.sh LOCALAPI
-./run.sh LOCALAPI
+export LOCALAPI='true'
+./build.sh
+./run.sh
 ```
 
-The *run.sh* script executes a number of commands in child terminals, to run the default browser at *https://www.authsamples-dev.com/spa*. You can then sign into the SPA using this blog’s test credential:
+The *run.sh* script invokes the default browser at *https://www.authsamples-dev.com/spa* and you can sign in using this blog’s test credential:
 
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
-
-The SPA will then make OAuth secured requests to the API, which will result in the API’s code writing JSON logs.
 
 ### Main Feature 1: Extensible Authorization
 
@@ -123,7 +131,7 @@ The API implements its security according to these two blog posts, using a JOSE 
 - <Link href='/posts/jwt-access-token-validation'>JWT Access Token Validation</Link>
 - <Link href='/posts/api-authorization-design'>API Authorization Design</Link>
 
-The overall behaviour should be to deal with OAuth security in the correct ways, while setting up the API’s business logic with the authorization values it needs. These values may originate from multiple data sources and may not always be issued to tokens:
+The overall behaviour should be to deal with access tokens correctly and then set up the API's business logic with the values it needs for its business authorization. These values may originate from multiple sources and not just the access token:
 
 ```typescript
 @injectable()
@@ -142,11 +150,11 @@ export class CompanyService {
 }
 ```
 
-The OAuth integration and its claims handling uses exactly the same techniques as the second code sample, summarised earlier in its <Link href='/posts/updated-api-coding-key-points'>API Code Details</Link>. Therefore I will not repeat them, and these posts will instead only focus only on newer features.
+The API uses the same OAuth integration and claims handling techniques as this blog's second code sample, explained earlier in the <Link href='/posts/updated-api-coding-key-points'>Updated API Code Details</Link> blog post.
 
 ### Main Feature 2: Production Supportability
 
-The other main objective of the API code sample will be JSON logging of API requests, to include useful technical support fields. Logging console output looks like this on a development computer:
+The other main objective of the API code sample is JSON logging of API requests, to include useful technical support fields. Logging console output looks like this on a development computer:
 
 ```json
 {
@@ -157,7 +165,7 @@ The other main objective of the API code sample will be JSON logging of API requ
   "hostName": "UBUNTU",
   "method": "GET",
   "path": "/investments/userinfo",
-  "clientApplicationName": "FinalSPA",
+  "clientName": "FinalSPA",
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 200,
   "millisecondsTaken": 372,
@@ -166,15 +174,15 @@ The other main objective of the API code sample will be JSON logging of API requ
 }
 ```
 
-Meanwhile, logs are also written to files in a bare JSON format, ready for log shipping:
+Meanwhile, the API also writes text files to its *logs* folder in a bare JSON format, ready for log shipping:
 
 ![bare logs](/images/300/bare-logs.jpg)
 
-The <Link href='/posts/log-aggregation-setup'>Elasticsearch Log Aggregation Setup</Link> can also be followed, to enable <Link href='/posts/api-technical-support-analysis'>Technical Support Queries</Link> against the API. This would be useful in a production system, where there would be many API requests per day.
+Optionally, you can follow the <Link href='/posts/log-aggregation-setup'>Log Aggregation Setup</Link> to run a Docker-based deployment of the Elastic Stack. You can then run <Link href='/posts/api-technical-support-analysis'>Technical Support Queries</Link> against the API's logs. This would be useful in a production system, to make sense of large volumes of API requests.
 
 ### Cloud Native Deployment
 
-The API would typically be deployed as a container in a cloud native environment. The API includes some Docker and Kubernetes deployment resources. A basic deployment can be run with these commands:
+The API uses cloud-native environment and includes some Docker and Kubernetes deployment resources. A basic deployment can be run with these commands:
 
 ```bash
 ./deployment/docker-local/build.sh
@@ -184,9 +192,9 @@ The API would typically be deployed as a container in a cloud native environment
 
 ### Where Are We?
 
-We have described the key behaviour of our final Node.js API. In the next post we will take a closer look at how this has been coded.
+I summarised the key productivity behaviours of this blog's final APIs. This starts with modern code setup and a clean separation of concerns that sets up business logic for future growth. Next, APIs have a unified security model that works the same for any type of API client. Finally, APIs have an early focus on reliability.
 
 ### Next
 
-- Next we will take a look at the <Link href='/posts/final-nodeapi-coding-key-points'>Node.js API Code Details</Link>
-- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>
+- I explain some <Link href='/posts/final-nodeapi-coding-key-points'>Node.js API Code Details</Link>.
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.

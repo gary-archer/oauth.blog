@@ -250,7 +250,7 @@ I design API request logs to be easy for people to query. When there is a client
   "method": "GET",
   "path": "/investments/companies/2/transactions",
   "resourceId": "2",
-  "clientApplicationName": "FinalSPA",
+  "clientName": "FinalSPA",
   "statusCode": 401,
   "errorCode": "invalid_token",
   "millisecondsTaken": 2,
@@ -279,7 +279,7 @@ When there is a server error I write a log entry that includes a unique *Error I
   "method": "GET",
   "path": "/investments/companies/2/transactions",
   "resourceId": "2",
-  "clientApplicationName": "FinalSPA",
+  "clientName": "FinalSPA",
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 500,
   "errorCode": "exception_simulation",
@@ -330,7 +330,7 @@ To provide the behaviours that I articulate, this blog's API require some plumbi
 
 This blog's API development setup enables the developer to work on API code in isolation, which is the option that works best most of the time. When required, you can also run more advanced end-to-end setups with this blog's clients and APIs. When integrating with clients, this blog's API development URLs use SSL and domain names. This best enables deployment related thinking during development.
 
-![spa and api](/images/260/spa-and-api.jpg?v=20240913)
+![spa and api](/images/260/spa-and-api.jpg?v=20240915)
 
 ### Where Are We?
 

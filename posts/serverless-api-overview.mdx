@@ -18,7 +18,7 @@ The main behaviour to aim for is summarised below, where code is identical to th
 
 Ideally we would like an equivalent setup to our earlier APIs, where we listen for HTTP requests on a development computer, and can run a frontend client against the API:
 
-![spa and api](/images/620/spa-and-api.jpg)
+![spa and api](/images/620/spa-and-api.jpg?v=20240915)
 
 Technologies such as [Serverless Offline](https://github.com/dherault/serverless-offline) do not yet support this reliably though, so we are limited to local execution of lambda functions and will only be able to run an integrated setup after deployment to AWS.
 
@@ -135,7 +135,7 @@ The API uses our <Link href='/posts/effective-api-logging'>Effective API Logging
   "method": "GET",
   "path": "/investments/companies/2/transactions",
   "resourceId": "2",
-  "clientApplicationName": "ServerlessTest",
+  "clientName": "ServerlessTest",
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 200,
   "millisecondsTaken": 21,
@@ -162,7 +162,7 @@ The final test exercises this behaviour, and results in the following log entry.
   "method": "GET",
   "path": "/investments/companies/4/transactions",
   "resourceId": "4",
-  "clientApplicationName": "ServerlessTest",
+  "clientName": "ServerlessTest",
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 500,
   "errorCode": "exception_simulation",
