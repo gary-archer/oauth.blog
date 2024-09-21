@@ -1,10 +1,6 @@
 # Introduction
 
-This blog is a getting started guide for developing modern APIs, browser based apps and mobile apps. With modern technology stacks this seems straightforward at first sight, but end-to-end flows require technical foundations before such solutions are production-ready. Therefore, I focus on productive ways to enable them when running a distributed architecture.
-
-
-
-
+This blog is a getting started guide for developing modern APIs, browser based apps and mobile apps. The main focus is the development setup when you run a distributed architecture. With the latest technology stacks this seems straightforward at first sight, but end-to-end flows require technical foundations before such solutions are production-ready.
 
 ### API Foundations
 
@@ -12,20 +8,20 @@ Before most APIs and clients can be run in production, they need a number of tec
 
 | Quality | Description |
 | ------- | ----------- | 
-| <span style={{color:'green'}}>**Secure**</span> | Dealing with user authentication and API message credentials, to secure access to data. |
-| <span style={{color:'green'}}>**Reliable**</span> | Ensuring that the moving parts of the overall implementation provide a reliable solution. |
-| <span style={{color:'green'}}>**Productive**</span> | Engineering teams should understood the setup and it should not adversely affect how they run their components. |
-| <span style={{color:'green'}}>**Scalable**</span> | It must be possible to extend the architecture to many components, without a major increase in complexity. |
+| <span style={{color:'green'}}>**Secure**</span> | Client call APIs securely using API message credentials that contain a user identity. |
+| <span style={{color:'green'}}>**Reliable**</span> | Clients and APIs handle error, expiry and concurrency conditions correctly. |
+| <span style={{color:'green'}}>**Productive**</span> | Code is readable and cleanly separated so that people understand it and which you can easily grow the code base. |
+| <span style={{color:'green'}}>**Scalable**</span> | Once integrated you can extend the architecture to many APIs and clients without extra complexity. |
 
 ### The OAuth 2.0 Authorization Framework
 
-To enable future-proof security, this blog will use OAuth 2.0 to secure APIs and clients. OAuth is a [family of specifications](https://datatracker.ietf.org/doc/html/rfc6749) for protecting data. Solutions are JSON-based and work well in all API, web and mobile technologies, to provide modern security capabilities. OAuth is designed to scale across many components in a software platform.
+To enable future-proof security, this blog uses OAuth 2.0 to secure APIs and clients. OAuth is a [family of specifications](https://datatracker.ietf.org/doc/html/rfc6749) for protecting data. Solutions are JSON-based and work well in all API, web and mobile technologies, to provide modern security capabilities. An OAuth setup empowers developers with modern and extensible security capabilities.
 
 Yet I have often seen people struggle to implement OAuth and realise its benefits, since it is a distributed architecture with many moving parts. An organization needs to introduce an intricate new component called the *Authorization Server* that outsources the deeper security from applications. You also need to make design choices that require insight, at both an architecture level and a code level.
 
 ### Blog Goals
 
-This blog first shows developers how to get secure end-to-end API and client flows working. This blog’s security only covers the use of JWT access tokens in APIs and externalising user authentication from clients using an OpenID Connect code flow. It then dives deeper to explain some lessons I’ve learned related to resilient API and client journeys:
+I explain a setup that enables you to run secure end-to-end API and client flows. I only use basic OAuth security, but once you have the right setup and separation you are well-placed to implement more advanced use cases. In addition to OAuth integration I explain some lessons I’ve learned to enable resilient API and client journeys:
 
 - Designing for <span style={{color:'green'}}>**manageability**</span> to avoid pain points.
 - Coding with <span style={{color:'green'}}>**portability**</span> to keep future options open.
@@ -34,15 +30,15 @@ This blog first shows developers how to get secure end-to-end API and client flo
 
 ### Code Samples
 
-This blog is code-centric with a focus on clean code, with security and other plumbing kept external from the business logic. There are a number of [Standards Based Code Samples](https://github.com/gary-archer) which I use to stay up to date with mainstream technology stacks.
+This blog is code-centric with a focus on modern code that uses a separation of concerns. I keep security and other plumbing external to the valuable business logic. I provide a number of [Standards Based Code Samples](https://github.com/gary-archer) which I use to stay up to date with mainstream technology stacks.
 
 ![repos](/images/1/repos.jpg)
 
-The samples cover a journey that starts with ensuring a good developer setup. Next, OAuth is used to secure clients and APIs. Finally, reliability conditions are handled, as you would need in any production system. Any reader can run the code samples as working solutions and borrow ideas from the code. By default they point to my lost cost cloud authorization server, or you can repoint them to your own.
+The samples cover a developer journey that starts with a security-first setup. Next, I use OAuth to secure APIs and clients using standards-based, portable code. During integration I rehearse error, expiry and concurrency conditions, to ensure reliability. Any reader can run the code samples as working solutions and borrow ideas from the code. By default, I configure the example APIs and clients to use my personal cloud-hosted authorization server, or you can repoint them to your own.
 
 ### Where Are We?
 
-I summarised blog goals and the first objective is to deliver an initial SPA and API code sample, where both of these components interact with an authorization server.
+I summarised blog goals and the first objective is a code sample that integrates a single page application (SPA) and API code sample with an authorization server.
 
 ### Next
 
