@@ -1,6 +1,6 @@
 # Introduction
 
-This blog is a getting started guide for developing modern APIs, browser based apps and mobile apps. The main focus is the development setup when you run a distributed architecture. With the latest technology stacks this seems straightforward at first sight, but end-to-end flows require technical foundations before such solutions are production-ready.
+This blog is a getting started guide for developing modern APIs, browser based apps and mobile apps. The main focus is development setups in a distributed architecture. With the latest technology stacks this seems straightforward at first sight, but end-to-end flows require technical foundations before such solutions are production-ready.
 
 ### API Foundations
 
@@ -8,14 +8,14 @@ Before most APIs and clients can be run in production, they need a number of tec
 
 | Quality | Description |
 | ------- | ----------- | 
-| <span style={{color:'green'}}>**Secure**</span> | Client call APIs securely using API message credentials that contain a user identity. |
+| <span style={{color:'green'}}>**Secure**</span> | Client call APIs using message credentials containing user attributes that APIs use to protect business data. |
 | <span style={{color:'green'}}>**Reliable**</span> | Clients and APIs handle error, expiry and concurrency conditions correctly. |
 | <span style={{color:'green'}}>**Productive**</span> | Code is readable and cleanly separated so that people understand it and which you can easily grow the code base. |
 | <span style={{color:'green'}}>**Scalable**</span> | Once integrated you can extend the architecture to many APIs and clients without extra complexity. |
 
 ### The OAuth 2.0 Authorization Framework
 
-To enable future-proof security, this blog uses OAuth 2.0 to secure APIs and clients. OAuth is a [family of specifications](https://datatracker.ietf.org/doc/html/rfc6749) for protecting data. Solutions are JSON-based and work well in all API, web and mobile technologies, to provide modern security capabilities. A solid OAuth setup empowers developers with modern and extensible security.
+To enable future-proof security, this blog uses OAuth 2.0 to secure APIs and clients. OAuth is a [family of specifications](https://datatracker.ietf.org/doc/html/rfc6749) for protecting data. Solutions are JSON-based and enable you to use the latest and most productive API, web and mobile technologies. A solid OAuth setup empowers developers with modern and extensible security capabilities.
 
 Yet I have often seen people struggle to implement OAuth and realise its benefits, since it is a distributed architecture with many moving parts. An organization needs to introduce an intricate new component called the *Authorization Server* that outsources the deeper security from applications. You also need to make design choices that require insight, at both an architecture level and a code level.
 
@@ -30,7 +30,7 @@ I explain a setup that enables you to run secure end-to-end API and client flows
 
 ### Code Samples
 
-This blog is code-centric with a focus on modern code that uses a separation of concerns. I keep security and other plumbing external to the valuable business logic. I provide a number of [Standards Based Code Samples](https://github.com/gary-archer) which I use to stay up to date with mainstream technology stacks.
+This blog is code-centric with a focus on modern code that uses a separation of concerns. I keep security and other plumbing external to the valuable business logic. I provide a number of [Code Samples](https://github.com/gary-archer) which I use to stay up to date with mainstream technology stacks.
 
 ![repos](/images/1/repos.jpg)
 
