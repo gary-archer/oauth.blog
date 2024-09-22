@@ -4,33 +4,26 @@ Previously I summarised some test behavior in <Link href='/posts/desktop-apps-ov
 
 ### Code Layout
 
-The desktop app uses the exact same views that were used in one of this blog’s earlier code samples, for the <Link href='/posts/improved-spa-code-sample-overview'>Updated SPA</Link>. In Electron, the OAuth login flow is implemented using Node.js rather than browser code.
+Electron apps have two processes, [Main and Renderer](https://www.electronjs.org/docs/latest/tutorial/process-model) where the renderer process is an SPA frontend and the main process is a backend that uses Node.js. The folder structure of the desktop app reflects this, with *main*, *renderer* and *shared* folders. The views within the renderer process use plain JavaScript and are the same as those from this blog's <Link href=''>Second SPA</Link>.
 
-<div className="smallimage">
-![code layout](/images/430/code-layout.jpg)
-</div>
+![code layout](/images/430/code-layout.jpg?v=20240922)
 
 ### Electron Main Entry Point
 
-Electron apps have two processes, [Main and Renderer](https://www.electronjs.org/docs/latest/tutorial/process-model). The main process loads the HTML page, which creates a renderer process when it loads.
+The main process creates the window for the frontend when it starts:
 
 ```typescript
 class Main {
 
+    private _configuration: Configuration;
+    private _ipcEvents: IpcMainEvents;
     private _window: BrowserWindow | null;
 
     public constructor() {
+        this._configuration = ConfigurationLoader.load(`${app.getAppPath()}/desktop.config.json`);
+        this._ipcEvents = new IpcMainEvents(this._configuration);
         this._window = null;
         this._setupCallbacks();
-    }
-
-    public execute(): void {
-
-        app.on('ready', this._createMainWindow);
-
-        app.on('activate', this._onActivate);
-
-        app.on('window-all-closed', this._onAllWindowsClosed);
     }
 
     private _createMainWindow(): void {
@@ -41,118 +34,338 @@ class Main {
             minWidth: 800,
             minHeight: 600,
             webPreferences: {
-                nodeIntegration: true,
-                contextIsolation: false,
+                nodeIntegration: false,
+                contextIsolation: true,
+                sandbox: true,
+                preload: path.join(app.getAppPath(), './preload.js'),
             },
         });
 
-       ...
+        this._ipcEvents.register(this._window);
+        this._window.loadFile('./index.html');
+        this._initialiseHttpHeaders();
+        this._window.on('closed', this._onClosed);
     }
-}
+    ...
+}    
 ```
-
-Using node integration is against Electron’s [Security Best Practices](https://www.electronjs.org/docs/latest/tutorial/security) and is used only as a shortcut, to reduce the amount of code. In the next post we will introduce the final desktop app, which will be security hardened.
 
 ### Electron Renderer Entry Point
 
-The renderer process runs in the Chromium browser host and renders the *index.html* page.For the initial code sample, JavaScript code is imported using a Node.js integration and a *require* statement:
+The renderer process runs an SPA in the Chromium browser host, with the following *index.html* page:
 
 ```html
 <!DOCTYPE html>
 <html lang='en'>
     <head>
         <meta charset='utf-8'>
-        <meta http-equiv='Content-Security-Policy' content="script-src 'self' 'unsafe-inline'">
         <title>OAuth Demo App</title>
 
-        <link rel='stylesheet' href='css/bootstrap.min.css'>
-        <link rel='stylesheet' href='css/app.css'>
+        <link rel='stylesheet' href='bootstrap.min.css'>
+        <link rel='stylesheet' href='app.css'>
     </head>
     <body>
-        <span class="pl-kos"><</span><span class="pl-ent">div</span> <span class="pl-c1">id</span>='<span class="pl-s">root</span>' <span class="pl-c1">class</span>='<span class="pl-s">container</span>'<span class="pl-kos">></span><span class="pl-kos"></</span><span class="pl-ent">div</span><span class="pl-kos">></span>
-        
-        <script type='text/javascript'>
-            require('./built/renderer');
-        </script>
+        <div id='root' class='container'></div>
+
+        <script type='module' src='vendor.bundle.js'></script>
+        <script type='module' src='app.bundle.js'></script>
     </body>
 </html>
 ```
 
-The code for the renderer process begins by creating an *App* class, which acts as the application shell. This creates some global objects for API calls and OAuth operations, in the same manner as earlier SPAs:
+### Electron Builds
+
+The desktop app uses TypeScript and builds to ECMAScript modules, which is a little tricky to get working. Two webpack builds run, to produce the following bundle files from the code layout and the *node_modules* folder:
+
+<div className="smallimage">
+![bundles](/images/430/bundles.jpg)
+</div>
+
+The main and renderer processes use independent webpack builds and independent *tsconfig.json* files. Therefore, the main bundle does not contain any view-specific code and the renderer bundles does not contain any of the desktop app's backend code. The main process uses the following webpack configuration:
+
+```typescript
+import path from 'path';
+import webpack from 'webpack';
+
+const dirname = process.cwd();
+const config: webpack.Configuration = {
+    mode: 'development',
+    target: ['electron-main'],
+    experiments: {
+        outputModule: true,
+    },
+    devtool: 'source-map',
+    context: path.resolve(dirname, './src'),
+    entry: {
+        app: ['./main.ts']
+    },
+    module: {
+        rules: [
+            {
+                test: /\.ts$/,
+                use: [{
+                    loader: 'ts-loader',
+                    options: {
+                        onlyCompileBundledFiles: true,
+                        configFile: '../tsconfig-main.json',
+                    },
+                }],
+                exclude: /node_modules/,
+            }
+        ]
+    },
+    resolve: {
+        extensions: ['.ts', '.js']
+    },
+    output: {
+        path: path.resolve(dirname, './dist'),
+        filename: 'main.bundle.js',
+        chunkFormat: 'module',
+    }
+};
+
+export default config;
+```
+
+### Inter Process Communication
+
+The Electron app follows Electron's [Security Best Practices](https://www.electronjs.org/docs/latest/tutorial/security) so that the renderer process runs with least privilege. It therefore does not have permissions to perform operations like running an HTTP server or opening the system browser. Instead, to initiate this type of operation, the desktop app uses Electron's [Inter-Process Communication](https://www.electronjs.org/docs/latest/tutorial/ipc). I also proxy API requests via the backend to keep tokens out of the Chromium browser. The IPC code starts with registering some event names in the shared code:
+
+```typescript
+export class IpcEventNames {
+    public static readonly ON_GET_COMPANIES = 'api_companies';
+    public static readonly ON_GET_TRANSACTIONS = 'api_transactions';
+    public static readonly ON_GET_OAUTH_USER_INFO = 'api_oauthuserinfo';
+    public static readonly ON_GET_API_USER_INFO = 'api_userinfo';
+    public static readonly ON_IS_LOGGED_IN = 'oauth_isloggedin';
+    public static readonly ON_LOGIN = 'oauth_login';
+    public static readonly ON_LOGIN_REACTIVATE = 'login_reactivate';
+    public static readonly ON_LOGOUT = 'oauth_logout';
+    public static readonly ON_TOKEN_REFRESH = 'oauth_tokenrefresh';
+    public static readonly ON_EXPIRE_ACCESS_TOKEN = 'oauth_expireaccesstoken';
+    public static readonly ON_EXPIRE_REFRESH_TOKEN = 'oauth_expirerefreshtoken';
+}
+```
+
+A *preload.js* script defines an API where the renderer process can request the main process to perform a higher security operation. This makes a *window.api* object available to the frontend's JavaScript code.
+
+```typescript
+const {contextBridge, ipcRenderer} = require('electron');
+
+contextBridge.exposeInMainWorld('api', {
+    sendMessage: async function(name, requestData) {
+        return await ipcRenderer.invoke(name, requestData);
+    },
+});
+
+```
+
+The frontend uses a *RendererIpcEvents* entry point for sending IPC events. OAuth and API operations are forwarded to the main process:
+
+
+```typescript
+export class RendererIpcEvents {
+
+    public async getCompanyTransactions(id: string) : Promise<any> {
+        return await this._sendMessage(IpcEventNames.ON_GET_TRANSACTIONS, {id});
+    }
+
+    public async login(): Promise<void> {
+        await this._sendMessage(IpcEventNames.ON_LOGIN, {});
+    }
+
+    public async tokenRefresh(): Promise<void> {
+        await this._sendMessage(IpcEventNames.ON_TOKEN_REFRESH, {});
+    }
+    ...
+}
+```
+
+In the main process, an *IpcMainEvents* object is the entry point for higher privilege operations. Most code on the main side of the app gets initiated when the renderer calls these events:
+
+```typescript
+export class MainIpcEvents {
+
+    public register(): void {
+
+        ipcMain.handle(IpcEventNames.ON_GET_TRANSACTIONS, this._onGetCompanyTransactions);
+        ipcMain.handle(IpcEventNames.ON_LOGIN, this._onLogin);
+        ipcMain.handle(IpcEventNames.ON_TOKEN_REFRESH, this._onTokenRefresh);
+        ...
+    }
+
+    private async _onGetCompanyTransactions(event: IpcMainInvokeEvent, args: any): Promise<[any, string]> {
+
+        return this._handleAsyncOperation(
+            event,
+            IpcEventNames.ON_GET_TRANSACTIONS,
+            () => this._apiService.getCompanyTransactions(args.id));
+    }
+
+    private async _onLogin(event: IpcMainInvokeEvent): Promise<[any, string]> {
+
+        return this._handleAsyncOperation(
+            event,
+            IpcEventNames.ON_LOGIN,
+            () => this._authenticatorService.login());
+    }
+
+    private async _onTokenRefresh(event: IpcMainInvokeEvent): Promise<[any, string]> {
+
+        return this._handleAsyncOperation(
+            event,
+            IpcEventNames.ON_TOKEN_REFRESH,
+            () => this._authenticatorService.refreshAccessToken());
+    }
+    ...
+}
+```
+
+The main and renderer process can send JavaScript objects to each other. I wrote some custom serialization to return errors from the main process, so that the renderer process correctly receives error objects thrown by code in the main process.
+
+### OAuth and API Classes
+
+The following main classes are used to handle OAuth and API logic. The strategy is to drive behaviour from the renderer process so that the frontend is in control. The interplay is a little intricate, since the app also handles many error conditions. Since the frontend only uses forwarders, this post only explains the backend classes.
+
+| Class | Responsibilities |
+| ----- | ---------------- |
+| <span style={{color:'green'}}>**ApClient**</span> | A forwarder to initiate API operations. |
+| <span style={{color:'green'}}>**ApiService**</span> | Does the main work to send API requests with access tokens to the remote API endpoints. |
+| <span style={{color:'green'}}>**AuthenticatorClient**</span> | A forwarder to initiate login and token-related operations. |
+| <span style={{color:'green'}}>**AuthenticatorService**</span> | Does the main work to integrate with the AppAuth-JS library to trigger login and token requests, then handle responses. |
+
+### Debugging HTTP Requests
+
+One consequence of this design is that you cannot easily view HTTP requests initiated by the renderer process. To do so, you can use an <Link href='/posts/http-debugging-setup'>HTTP proxy Tool</Link>. The easiest option is to run the tool and change your network settings, then edit the *desktop.config.json* file to activate the proxy, then run the desktop app with the following commands:
+
+```bash
+export NODE_TLS_REJECT_UNAUTHORIZED=0
+./start.sh
+```
+
+You will then see that the desktop app sends requests with tokens and acts as a public client, as is standard for a desktop app.
+
+![traced messages](/images/430/traced-messages.jpg?v=20240922)
+
+### Frontend Objects
+
+The code for the renderer process begins by creating an *App* class, which acts as the application shell. This creates some global forwarder objects that drive API calls and OAuth operations, in the same manner as earlier SPAs:
 
 ```typescript
 private async _initialiseApp(): Promise<void> {
 
-    this._configuration = await ConfigurationLoader.load('desktop.config.json');
-
-    this._authenticator = new AuthenticatorImpl(this._configuration.oauth);
-
-    this._apiClient = new ApiClient(this._configuration, this._authenticator);
-
+    this._ipcEvents = new IpcRendererEvents(window);
+    this._authenticatorClient = new AuthenticatorClientImpl(this._ipcEvents);
+    this._apiClient = new ApiClient(this._ipcEvents, this._authenticatorClient);
     this._router = new Router(this._apiClient);
+    this._isInitialised = true;
 }
 ```
 
-### Desktop Authenticator Class
+### Backend Objects
 
-For our SPA we used an *authenticator* abstraction to deal with OAuth login and token operations, and this is the main code that is different to the SPA.
+The backend creates the objects that do the real OAuth and API work, to call remote endpoints. As for earlier code samples, the app first loads a configuration file and passes settings to each object:
 
 ```typescript
-export interface Authenticator {
+this._configuration = configuration;
 
-    isLoggedIn: boolean;
+this._httpProxy = new HttpProxy(
+    this._configuration.app.useProxy,
+    this._configuration.app.proxyUrl);
 
-    getAccessToken(): Promise<string>;
+this._authenticatorService = new AuthenticatorServiceImpl(
+    this._configuration.oauth,
+    this._httpProxy);
 
-    refreshAccessToken(): Promise<string>;
+this._apiService = new ApiService(
+    this._configuration,
+    this._authenticatorService,
+    this._httpProxy);
+```
 
-    getUserInfoEndpoint(): string;
+### OAuth Operations
 
+The main process exposes the following OAuth operations in its *AuthenticatorService* interface:
+
+```typescript
+export interface AuthenticatorService {
+    isLoggedIn(): boolean;
+    getUserInfoEndpoint(): Promise<string | null>;
+    getAccessToken(): Promise<string | null>;
+    refreshAccessToken(): Promise<string | null>;
     login(): Promise<void>;
-
     logout(): void;
-
-    expireAccessToken(): Promise<void>;
-
-    expireRefreshToken(): Promise<void>;
+    expireAccessToken(): void;
+    expireRefreshToken(): void;
 }
 ```
 
-As we shall see, the authentication code is tricky, since it needs to manage a  browser that runs as a disconnected process.
+### API Operations
 
-### Triggering a Login Prompt
-
-As for our SPA, our desktop app’s *ApiClient* class will handle 401 responses from the API by getting a new token and retrying the API call:
+The main process's *ApiService* uses the following shared function to manage API requests:
 
 ```typescript
-private async _callApi(url: string, method: Method, dataToSend?: any): Promise<any> {
-
-    let token = await this._authenticator.getAccessToken();
-    if (!token) {
-        throw ErrorFactory.getFromLoginRequired();
-    }
+private async _callApi(
+    method: Method,
+    url: string,
+    dataToSend: any = null): Promise<any> {
 
     try {
 
-        return await this._callApiWithToken(url, method, dataToSend, token);
+        const accessToken = await this._authenticatorService.getAccessToken();
+        if (!accessToken) {
+            throw ErrorFactory.fromLoginRequired();
+        }
+
+        const headers: any = {
+            'Authorization': `Bearer ${accessToken}`,
+        };
+
+        const requestOptions = {
+            url,
+            method,
+            data: dataToSend,
+            headers,
+        } as AxiosRequestConfig;
+
+        if (this._httpProxy.agent) {
+            requestOptions.httpsAgent = this._httpProxy.agent;
+        }
+
+        const response = await axios.request(requestOptions);
+        AxiosUtils.checkJson(response.data);
+        return response.data;
 
     } catch (e: any) {
 
-        if (e.statusCode !== 401) {
-            throw ErrorFactory.getFromHttpError(e, url, 'web API');
-        }
-
-        token = await this._authenticator.refreshAccessToken();
-        if (!token) {
-            throw ErrorFactory.getFromLoginRequired();
-        }
-
-        return await this._callApiWithToken(url, method, dataToSend, token);
+        throw ErrorFactory.fromHttpError(e, url, 'API');
     }
 }
 ```
 
-If a refresh isn’t possible the code throws a *login_required* error, which terminates the requested API calls in a controlled manner. This error code is treated specially and results in a redirect to the *Login Required View*, which is given a return location to use once login completes:
+Meanwhile the renderer's *ApiClient* manages token refresh when an API request fails with a 401 error:
+
+```typescript
+private async _getDataFromApi(callback: () => Promise<any>): Promise<any> {
+
+    try {
+
+        return await callback();
+
+    } catch (e1: any) {
+
+        const error1 = ErrorFactory.fromException(e1);
+        if (error1.statusCode !== 401) {
+            throw error1;
+        }
+
+        await this._authenticatorClient.refreshAccessToken();
+        return await callback();
+    }
+}
+```
+
+When there is no token yet or token refresh fails with an *invalid_grant* error, views receive a *login_required* error and terminate API requests in a controlled manner. This error code is treated specially and results in a redirect to the *Login Required View*, which is given a return location to use once login completes:
 
 ```typescript
 export class LoginNavigation {
@@ -166,18 +379,18 @@ export class LoginNavigation {
 }
 ```
 
-### The Authorization Redirect
+### Managing Login Redirects
 
-The code to redirect the user to login on the system browser is laid out as follows. The browser is redirected and the app receives the result:
+The main process uses code to spin up an HTTP server to receive the authorization response, and to send the authorization request on the system browser.
 
 ```typescript
-private async _startLogin(): Promise<void> {
+private async _startLogin(): Promise<LoginRedirectResult> {
 
     try {
 
         const server = new LoopbackWebServer(this._configuration, this._loginState);
         const runtimePort = await server.start();
-        const redirectUri = `http://localhost:${runtimePort}`;
+        const redirectUri = `http://${this._configuration.loopbackHostname}:${runtimePort}`;
 
         await this._loadMetadata();
 
@@ -185,98 +398,36 @@ private async _startLogin(): Promise<void> {
             this._configuration,
             this._metadata!,
             this._loginState);
+
         return await adapter.login(redirectUri);
 
     } catch (e: any) {
 
-        throw ErrorFactory.getFromLoginOperation(e, ErrorCodes.loginRequestFailed);
+        throw ErrorFactory.fromLoginOperation(e, ErrorCodes.loginRequestFailed);
     }
 }
 ```
 
-AppAuth-JS classes are useful but written in an old Node.js callback style. A *LoginAsyncAdapter* class is therefore used to translate to a modern async-await syntax:
+If not already started, the loopback HTTP server finds a free port in the app’s configured range, then starts listening:
 
 ```typescript
-public async login(redirectUri: string): Promise<LoginRedirectResult> {
+private async _startServer(): Promise<void> {
 
-    const requestJson = {
-        response_type: AuthorizationRequest.RESPONSE_TYPE_CODE,
-        client_id: this._configuration.clientId,
-        redirect_uri: redirectUri,
-        scope: this._configuration.scope,
+    const options = {
+        port: portNumbers(
+            this._configuration.loopbackMinPort,
+            this._configuration.loopbackMaxPort),
+        host: this._configuration.loopbackHostname,
     };
-    const authorizationRequest = new AuthorizationRequest(requestJson, new DefaultCrypto(), true);
+    LoopbackWebServer._runtimePort = await getPort(options);
 
-    await authorizationRequest.setupCodeVerifier();
+    LoopbackWebServer._server = Http.createServer(this._handleBrowserRequest);
 
-    return new Promise((resolve, reject) => {
-
-        const notifier = new AuthorizationNotifier();
-        notifier.setAuthorizationListener(async (
-            request: AuthorizationRequest,
-            response: AuthorizationResponse | null,
-            error: AuthorizationError | null) => {
-
-            try {
-                resolve({request, response, error});
-
-            } catch (e: any) {
-                reject(e);
-            }
-        });
-
-        const browserLoginRequestHandler = new BrowserLoginRequestHandler(this._state);
-        browserLoginRequestHandler.setAuthorizationNotifier(notifier);
-        browserLoginRequestHandler.performAuthorizationRequest(this._metadata, authorizationRequest);
-    });
+    LoopbackWebServer._server.listen(LoopbackWebServer._runtimePort);
 }
 ```
 
-### Customising the Authorization Handler
-
-AppAuth-JS provides the following concrete class for managing authorization redirects:
-
-```typescript
-export class NodeBasedHandler extends AuthorizationRequestHandler {
-  authorizationPromise: Promise<AuthorizationRequestResponse|null>|null = null;
-
-  constructor(
-      public httpServerPort = 8000,
-      utils: QueryStringUtils = new BasicQueryStringUtils(),
-      crypto: Crypto = new NodeCrypto()) {
-    super(utils, crypto);
-  }
-}
-```
-
-It is also possible to override the base *AuthorizationRequestHandler* class, which I chose to do in a *BrowserLoginRequestHandler* class. This is used to deal with the user starting multiple logins at once, and to control the post login browser display.
-
-### Invoking the System Browser
-
-The system browser is invoked via a library called [opener](https://github.com/domenic/opener), which abstracts operating system differences when launching the user’s default browser:
-
-```typescript
-public performAuthorizationRequest(
-    metadata: AuthorizationServiceConfiguration,
-    request: AuthorizationRequest): void {
-
-    this._authorizationPromise = new Promise<AuthorizationRequestResponse>((resolve) => {
-
-        const callback = (queryParams: any) => {
-
-            const response = this._handleBrowserLoginResponse(queryParams, request);
-            resolve(response);
-
-            this.completeAuthorizationRequestIfPossible();
-        };
-
-        this._state.storeLoginCallback(request.state, callback);
-    });
-
-    const loginUrl = this.buildRequestUrl(metadata, request);
-    Opener(loginUrl);
-}
-```
+The *LoginAsyncAdapter* translates from the older callback syntax that AppAuth-JS uses to a modern async-await syntax. I use some other utility classes, including a *BrowserLoginRequestHandler*, which receives the authorization response, so that I have best control over technical behaviors, including error handling and the post-login browser display.
 
 ### The Authorization Code Grant
 
@@ -302,10 +453,9 @@ private async _endLogin(result: LoginRedirectResult): Promise<void> {
         };
         const tokenRequest = new TokenRequest(requestJson);
 
-        const requestor = new CustomRequestor();
-        const tokenHandler = new BaseTokenRequestHandler(requestor);
+        const tokenRequestHandler = new BaseTokenRequestHandler(this._customRequestor);
 
-        const tokenResponse = await tokenHandler.performTokenRequest(this._metadata!, tokenRequest);
+        const tokenResponse = await tokenRequestHandler.performTokenRequest(this._metadata!, tokenRequest);
 
         const newTokenData = {
             accessToken: tokenResponse.accessToken,
@@ -317,59 +467,21 @@ private async _endLogin(result: LoginRedirectResult): Promise<void> {
 
     } catch (e: any) {
 
-        ErrorFactory.getFromTokenError(e, ErrorCodes.authorizationCodeGrantFailed);
+        throw ErrorFactory.fromTokenError(e, ErrorCodes.authorizationCodeGrantFailed);
     }
 }
 ```
 
-The initial desktop app simply stores the tokens in-memory. Every time the app is restarted, the user is prompted to re-login. We will show how to improve this user experience in the final desktop code sample.
-
-### Loopback Web Server
-
-If not already started, the loopback web server finds a free port in the app’s configured range, then starts listening:
-
-```typescript
-private async _startServer(): Promise<void> {
-
-    LoopbackWebServer._runtimePort = await this._getRuntimeLoopbackPort();
-
-    LoopbackWebServer._server = Http.createServer(this._handleBrowserRequest);
-
-    LoopbackWebServer._server.listen(LoopbackWebServer._runtimePort);
-}
-
-private async _getRuntimeLoopbackPort(): Promise<number> {
-
-    return new Promise<number>((resolve, reject) => {
-
-        const finderCallback = (err: any, freePort: number) => {
-
-            if (err) {
-                return reject(err);
-            }
-
-            return resolve(freePort);
-        };
-
-        FindFreePort(
-            this._oauthConfig.loopbackMinPort,
-            this._oauthConfig.loopbackMaxPort,
-            'localhost',
-            1,
-            finderCallback,
-        );
-    });
-}
-```
+The initial desktop app simply stores the tokens in-memory. Every time the app is restarted, the user is prompted to re-login. I show how to improve this user experience in the final desktop code sample.
 
 ### Handling Re-Entrancy
 
 For a reliable solution we need to handle multiple login attempts:
 
-- A user starts a sign in, generating a PKCE code challenge
-- The user accidentally closes the browser tab
-- The user retries signing in, with different PKCE details
-- We must resume the login response with the correct PKCE code verifier
+- A user starts a sign in, generating a state and code verifier parameters.
+- The user accidentally closes the browser tab.
+- The user retries signing in, with different PKCE details.
+- We must resume the login response with the correct state and code verifier.
 
 The *LoginState* class manages this by storing a map of the OAuth state parameter to the corresponding callback:
 
@@ -401,17 +513,11 @@ export class LoginState {
 }
 ```
 
-### Reliability is Not Perfect
-
-It is probably logically impossible to solve all re-entrancy cases in a perfect manner. If the user clicks the option to sign in twice, then completes 2 logins, on the second response the web server will be stopped and the user will see this:
-
-![login error](/images/430/login-error.jpg)
-
-This should usually be OK, since the alternative is to keep a web server running indefinitely and leak resources. We’ve achieved the main reliability goal of preventing users from getting stuck and being unable to retry.
+It is probably not logically possible to solve all re-entrancy cases perfectly. If the user clicks the option to sign in twice, then completes two logins, the HTTP server is stopped on the second response, resulting in an error. This should usually be OK, since the alternative is to keep an HTTP server running indefinitely and leak resources. The main reliability goal is to enable users to retry failed logins.
 
 ### Refreshing Access Tokens
 
-After 15 minutes the desktop app’s access token expires, and the AppAuth *TokenRequest* object is used again, to send a token refresh token request, then update tokens stored in-memory:
+Every 15 minutes the desktop app’s access token expires, and the desktop app uses the AppAuth *TokenRequest* object again, to send a token refresh token request, then update tokens stored in-memory:
 
 ```typescript
 private async _performTokenRefresh(): Promise<void> {
@@ -433,9 +539,8 @@ private async _performTokenRefresh(): Promise<void> {
         };
         const tokenRequest = new TokenRequest(requestJson);
 
-        const requestor = new CustomRequestor();
-        const tokenHandler = new BaseTokenRequestHandler(requestor);
-        const tokenResponse = await tokenHandler.performTokenRequest(this._metadata!, tokenRequest);
+        const tokenRequestHandler = new BaseTokenRequestHandler(this._customRequestor);
+        const tokenResponse = await tokenRequestHandler.performTokenRequest(this._metadata!, tokenRequest);
 
         const newTokenData = {
             accessToken: tokenResponse.accessToken,
@@ -470,7 +575,7 @@ When the refresh token finally expires, the app receives an error  res[pmse with
 
 ### Token Expiry Testing
 
-The *Authenticator* object also has some test methods to enable us to simulate token expiry responses. As for the earlier SPA, this is done  by simply adding text to corrupt the token values sent to the API:
+The *AuthenticatorService* also has some test methods to enable us to simulate token expiry responses. As for the earlier SPA, the desktop app simply adds text to corrupt the token values sent to the API. This mechnism helps to ensure that the app reliably handles expiry conditions.
 
 ```typescript
 public async expireAccessToken(): Promise<void> {
@@ -484,35 +589,22 @@ public async expireRefreshToken(): Promise<void> {
 
     if (this._tokens && this._tokens.refreshToken) {
         this._tokens.refreshToken = `${this._tokens.refreshToken}x`;
-        this._tokens.accessToken = null;
+        this._tokens.accessToken = `${this._tokens.accessToken}x`;
     }
 }
 ```
 
-This helps us to visualise expiry behaviour, and to ensure that our app handles the following scenarios reliably:
-
-- Expired access tokens result in a 401 response from the API
-- Expired refresh tokens result in token refresh failing
-
 ### Electron Code Debugging
 
-Our project has a *launch.json* file that enables us to debug code for both the main and renderer processes:
+The project has a *launch.json* file that enables you to use Visual Studio code to [debug both the main and renderer processes](https://github.com/microsoft/vscode-recipes/tree/master/Electron). To debug the main process, run it in debug mode. To debug the renderer process, run the main process and then attach to the frontend. You can then step through variables in either process:
 
-![electron debugging](/images/430/electron-debugging.jpg)
-
-Debugging the main process allows us to step through code related to application startup:
-
-![debugging step through](/images/430/debugging-step-through.jpg)
-
-Debugging the renderer process allows us to step through code related to other areas, including viewing properties of AppAuth-JS classes:
-
-![debugging locals](/images/430/debugging-locals.jpg)
+![electron debugging](/images/430/electron-debugging.jpg?v=20240922)
 
 ### Where Are We?
 
-We have have successfully integrated the AppAuth-JS library to implement an OpenID Connect secured cross platform desktop app. In the next code sample we will harden and complete the security implementation.
+I explained some Electron mechanics and the integration of the AppAuth-JS library, to secure the cross-platform desktop app. In the next code sample I add some missing features to complete the implementation.
 
-Next
+### Next
 
-- We will provide a <Link href='/posts/final-desktop-sample-overview'>Final Desktop Code Sample</Link> with completed features
-- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>
+- I provide a <Link href='/posts/final-desktop-sample-overview'>Final Desktop Code Sample</Link> with some additional behaviors.
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.
