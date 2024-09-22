@@ -35,21 +35,11 @@ The desktop app looks almost the same on Windows, macOS and Linux:
 
 ![linux app](/images/410/linux-app.jpg?v=20240922)
 
-### AppAuth-JS Security Library
-
-I use the [AppAuth-JS Library](https://github.com/openid/AppAuth-JS) to implement the OpenID Connect authorization code flow:
-
-![appauthjs](/images/410/appauthjs.jpg)
-
 ### Deprecated WebView Logins
 
-A few years ago it was standard for OAuth secured desktop apps to use a webview for logins. Typically logins would use a popup window hosting a webview browser control. The popup would capture the login response from the webview via an *Out of Browser Redirect URI* such as *urn:ietf:wg:oauth:2.0:oob*.
+A few years ago it was standard for OAuth secured desktop apps to use a webview for logins. Typically logins would use a popup window hosting a webview browser control. The popup would capture the login response from the webview via an *Out of Browser Redirect URI* such as *urn:ietf:wg:oauth:2.0:oob*. It is no longer recommended to use webviews, since users should only provide credentials to the authorization server.
 
-The use of webviews is no longer recommended. Webviews runs a private browser session, with usability problems like dropped cookies and password autofill not work. Authorization servers are encouraged to inspect the user agent and [block login requests from webviews](https://developers.googleblog.com/2016/08/modernizing-oauth-interactions-in-native-apps.html):
-
-![google webview](/images/410/google-webview.jpg)
-
-Instead, in 2021 it is recommended to open an external system browser  window on which the user performs their login. Doing so avoids the use of a private browser session, yet feels less integrated into the desktop app.
+Webviews use a private browser session, with usability problems like dropped cookies and password autofill not work. Authorization servers are encouraged to inspect the user agent and [block login requests from webviews](https://developers.googleblog.com/2016/08/modernizing-oauth-interactions-in-native-apps.html). Instead, in 2021 it is recommended to open an external system browser  window on which the user performs their login. Doing so avoids the use of a private browser session, yet feels less integrated into the desktop app.
 
 ### Native Authorization Responses
 
@@ -63,7 +53,7 @@ A web client runs in a browser and has an addressable URL on which to receive lo
 
 ### The AppAuth-JS Code Sample
 
-Before running this blog's desktop app, you can quickly run the AppAuth-JS Electron code sample. To do so, run the following commands:
+The app uses the [AppAuth-JS Library](https://github.com/openid/AppAuth-JS) to implement the OpenID Connect authorization code flow. Before running this blog's desktop app, you can quickly run the AppAuth-JS Electron code sample. To do so, run the following commands:
 
 ```bash
 git clone https://github.com/googlesamples/appauth-js-electron-sample
