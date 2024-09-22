@@ -17,7 +17,7 @@ The behaviour provided in our initial sample is summarised below:
 
 Our overall Desktop app has the same theme and views as this blog's earlier SPAs, though the login user experience will feel different:
 
-![desktop app](/images/410/desktop-app.jpg)
+![desktop app](/images/410/desktop-app.jpg?v=20240922)
 
 ### Desktop App Technology
 
@@ -29,11 +29,11 @@ I use [Electron](https://www.electronjs.org/), which uses web technologies for d
 
 The desktop app looks almost the same on Windows, macOS and Linux:
 
-![windows app](/images/410/windows-app.jpg)
+![windows app](/images/410/windows-app.jpg?v=20240922)
 
-![macos app](/images/410/macos-app.jpg)
+![macos app](/images/410/macos-app.jpg?v=20240922)
 
-![linux app](/images/410/linux-app.jpg)
+![linux app](/images/410/linux-app.jpg?v=20240922)
 
 ### AppAuth-JS Security Library
 
@@ -53,11 +53,7 @@ Instead, in 2021 it is recommended to open an external system browser  window on
 
 ### Native Authorization Responses
 
-A web client runs in a browser and has an addressable URL on which to receive login responses. Native apps need a different mechanism, and the [RFC 8252 standard](https://datatracker.ietf.org/doc/rfc8252) explains the 3 options that you can use:
-
-![native response options](/images/410/native-response-options.jpg)
-
-Only the first two options work for a desktop app, and I use the loopback option for this blog’s initial desktop app. The final desktop app will instead use a private URI scheme. Later, this blog’s mobile apps use claimed HTTPS schemes.
+A web client runs in a browser and has an addressable URL on which to receive login responses. Native apps need a different mechanism, and the [RFC 8252 standard](https://datatracker.ietf.org/doc/rfc8252) explains the three options that you can use. Only the first two options work for a desktop app, and I use the loopback option for this blog’s initial desktop app. The final desktop app will instead use a private URI scheme. Later, this blog’s mobile apps use claimed HTTPS schemes.
 
 | Option | Example Redirect URI | Usable By |
 | ------ | -------------------- | --------- |
