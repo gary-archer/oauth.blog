@@ -78,7 +78,7 @@ The renderer process runs an SPA in the Chromium browser host, with the followin
 The desktop app uses TypeScript and builds to ECMAScript modules, which is a little tricky to get working. Two webpack builds run, to produce the following bundle files from the code layout and the *node_modules* folder:
 
 <div className="smallimage">
-![bundles](/images/430/bundles.jpg)
+![bundles](/images/430/bundles.jpg?v=20240922)
 </div>
 
 The main and renderer processes use independent webpack builds and independent *tsconfig.json* files. Therefore, the main bundle does not contain any view-specific code and the renderer bundles does not contain any of the desktop app's backend code. The main process uses the following webpack configuration:
