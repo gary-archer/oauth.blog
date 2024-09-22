@@ -11,7 +11,6 @@ The completed desktop code sample will demonstrate these main features:
 | <span style={{color:'green'}}>**React Update**</span> | We will update from plain TypeScript to a more complete frontend technology stack |
 | <span style={{color:'green'}}>**Deep Linking**</span> | Login responses will be returned as deep links, on private URI scheme based redirect URIs |
 | <span style={{color:'green'}}>**Secure Token Storage**</span> | We will persist OAuth tokens using operating system encryption private to the app and user |
-| <span style={{color:'green'}}>**Security Improvements**</span> | We will follow Electron security best practice by removing Node integration |
 
 ### Code Download
 
@@ -31,11 +30,11 @@ The instructions are almost identical to those for the <Link href='/posts/deskto
 ./build.sh
 ```
 
-The script builds webpack bundles for the main and renderer parts of the desktop app. The renderer build runs in watch mode so that a pure frontend development model can be followed, to update React code and quickly see changes:
+The script builds webpack bundles for the main and renderer parts of the desktop app:
 
 ![webpack build](/images/440/webpack-build.jpg)
 
-To launch the app, open another terminal window and execute the following script:
+To launch the app execute the following script:
 
 ```bash
 ./run.sh
@@ -224,12 +223,6 @@ Finally, note that on macOS, startup deep links will only work if we first packa
 ![macos packaged](/images/440/macos-packaged.jpg)
 
 Desktop deep linking may not be as usable as web and mobile deep linking in practice. Email clients may consider the private URI scheme’s prefix suspect, and block this type of deep link.
-
-### Security Updates
-
-Node integration has been disabled, meaning that the *Renderer* side of the app can only perform low-privilege operations. Opening the system browser, processing deep links and dealing with secure storage are now all done of the *Main* side of the app.
-
-This adds a fair amount of complexity, and I ended up moving all logic that involves HTTP requests with tokens outside of the Chromium browser. This means all outgoing OAuth and API requests are proxied from renderer to main before being sent to the remote endpoint.
 
 ### Where Are We?
 

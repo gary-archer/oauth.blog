@@ -43,27 +43,6 @@ root.render (
 );
 ```
 
-### Electron Security Updates
-
-We have updated our app to follow [Electron Security Recommendations](https://www.electronjs.org/docs/tutorial/security) so that code running in the Chromium browser use low privileges and the best practice settings:
-
-```typescript
-this._window = new BrowserWindow({
-    width: 1280,
-    height: 720,
-    minWidth: 800,
-    minHeight: 600,
-    webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        sandbox: true,
-        preload: path.join(app.getAppPath(), './preload.js'),
-    },
-});
-```
-
-We will cover further details of security related code changes at the end of this post. First we will describe how features for *Private URI Schemes* and *Secure Token Storage* were implemented.
-
 ### Private URI Scheme Registration
 
 In our *Main* process we register our Private URI Scheme at application startup, which writes to user specific areas of the operating system:
@@ -203,69 +182,13 @@ This can lead to the following scenarios and the desktop app handles concurrency
 - One or both views may need to refresh an access token
 - One or both views may need to trigger a login redirect
 
-### Electron Browser Settings
-
-In our initial code sample we included JavaScript code in our *index.html* page via a *require* statement. This no longer works with Node integration disabled, so we now bundle the JavaScript code for the Electron renderer process, then reference bundles in the index.html file, as for the final SPA:
-
-```html
-<!DOCTYPE html>
-<html lang='en'>
-    <head>
-        <meta charset='utf-8'>
-        <title>OAuth Demo App</title>
-
-        <link rel='stylesheet' href='bootstrap.min.css'>
-        <link rel='stylesheet' href='app.css'>
-    </head>
-    <body>
-        <div id='root' class='container'></div>
-
-        <script type='module' src='vendor.bundle.js'></script>
-        <script type='module' src='app.bundle.js'></script>
-    </body>
-</html>
-```
-
-The main side of the app also implements a [Content Security Policy](https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html) for the React app:
-
-```typescript
-session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-
-    let policy = '';
-    if (this._useBasicContentSecurityPolicy) {
-
-        policy += "script-src 'self' 'unsafe-eval'";
-
-    } else {
-
-        policy += "default-src 'none';";
-        policy += " script-src 'self';";
-        policy += " connect-src 'self';";
-        policy += " child-src 'self';";
-        policy += " img-src 'self';";
-        policy += " style-src 'self';";
-        policy += " object-src 'none';";
-        policy += " frame-ancestors 'none';";
-        policy += " base-uri 'self';";
-        policy += " form-action 'self'";
-    }
-
-    callback({
-        responseHeaders: {
-            ...details.responseHeaders,
-            'Content-Security-Policy': [policy],
-        },
-    });
-});
-```
-
 ### AppAuth Libraries
 
-This blog demonstrates mobile integration using the recommendations from RFC 8252. Doing so does not mandate use of the AppAuth libraries though. If you run into any library blocking issues, the code flow could be implemented fairly easily from scratch in the app's *AuthenticatorImpl* class.
+This blog demonstrates mobile integration using the recommendations from RFC 8252. Doing so does not mandate use of the AppAuth libraries though. If you run into any library blocking issues, the code flow could be implemented fairly easily from scratch in the app's *AuthenticatorServiceImpl* class.
 
 ### Where Are We?
 
-We have updated the desktop app with new features that improve usability and security, and have now completed this blog’s desktop mini-theme. Next we will begin coverage of OAuth for mobile apps.
+We have updated the desktop app with new features that improve usability and have now completed this blog’s desktop mini-theme. Next we will begin coverage of OAuth for mobile apps.
 
 ### Next
 
