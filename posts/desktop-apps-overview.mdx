@@ -13,19 +13,15 @@ The behaviour provided in our initial sample is summarised below:
 | <span style={{color:'green'}}>**System Browser Logins**</span> | The desktop app invokes the system browser to authenticate the user, then listens for the login response. |
 | <span style={{color:'green'}}>**Reliability**</span> | The desktop app handles some re-entrancy scenarios when the app interacts with the system browser. |
 
-### Code Sample Behaviour
+### Desktop App Technology
 
-Our overall Desktop app has the same theme and views as this blog's earlier SPAs, though the login user experience will feel different:
+The desktop app has the same theme and views as this blog's earlier SPAs:
 
 ![desktop app](/images/410/desktop-app.jpg?v=20240922)
 
-### Desktop App Technology
-
-I use [Electron](https://www.electronjs.org/), which uses web technologies for desktop screen development. This enabled me to re-use most code from the <Link href='/posts/improved-spa-code-sample-overview'>Plain TypeScript SPA</Link> that I built earlier.
+I use [Electron](https://www.electronjs.org/), which enables you to develop desktop views with web technologies. I re-used the views from this blog's <Link href='/posts/improved-spa-code-sample-overview'>Second SPA</Link>:
 
 ![electronjs](/images/410/electronjs.jpg)
-
-### Platform Specific Appearance
 
 The desktop app looks almost the same on Windows, macOS and Linux:
 
@@ -35,21 +31,15 @@ The desktop app looks almost the same on Windows, macOS and Linux:
 
 ![linux app](/images/410/linux-app.jpg?v=20240922)
 
-### Deprecated WebView Logins
-
-A few years ago it was standard for OAuth secured desktop apps to use a webview for logins. Typically logins would use a popup window hosting a webview browser control. The popup would capture the login response from the webview via an *Out of Browser Redirect URI* such as *urn:ietf:wg:oauth:2.0:oob*. It is no longer recommended to use webviews, since users should only provide credentials to the authorization server.
-
-Webviews use a private browser session, with usability problems like dropped cookies and password autofill not work. Authorization servers are encouraged to inspect the user agent and [block login requests from webviews](https://developers.googleblog.com/2016/08/modernizing-oauth-interactions-in-native-apps.html). Instead, in 2021 it is recommended to open an external system browser  window on which the user performs their login. Doing so avoids the use of a private browser session, yet feels less integrated into the desktop app.
-
 ### Native Authorization Responses
 
-A web client runs in a browser and has an addressable URL on which to receive login responses. Native apps need a different mechanism, and the [RFC 8252 standard](https://datatracker.ietf.org/doc/rfc8252) explains the three options that you can use. Only the first two options work for a desktop app, and I use the loopback option for this blog’s initial desktop app. The final desktop app will instead use a private URI scheme. Later, this blog’s mobile apps use claimed HTTPS schemes.
+A web client runs in a browser and has an addressable URL on which to receive login responses. Native apps need a different mechanism, and the [RFC 8252 standard](https://datatracker.ietf.org/doc/rfc8252) explains the three options that you can use. Only the first two options work for a desktop app, and I use the loopback option for this blog’s initial desktop app. The final desktop app instead uses a private URI scheme. Later, this blog’s mobile apps use claimed HTTPS schemes.
 
 | Option | Example Redirect URI | Usable By |
 | ------ | -------------------- | --------- |
-| <span style={{color:'green'}}>**Loopback Interface**</span> | *http://127.0.0.1:8000* | Desktop apps |
+| <span style={{color:'green'}}>**Loopback Interface**</span> | *http://127.0.0.1:8000/callback* | Desktop apps |
 | <span style={{color:'green'}}>**Private URI Scheme**</span> | *x-authsamples-myapp:/callback* | Mobile or desktop apps |
-| <span style={{color:'green'}}>**Claimed HTTPS Scheme**</span> | *https://www.authsamples-dev.com/myapp* | Mobile apps |
+| <span style={{color:'green'}}>**Claimed HTTPS Scheme**</span> | *https://mobile.authsamples.com/appname/callback* | Mobile apps |
 
 ### The AppAuth-JS Code Sample
 
@@ -70,15 +60,13 @@ When the *Sign In* link is clicked, the desktop app opens the system browser, us
 
 ![appauth login](/images/410/appauth-login.jpg)
 
-The desktop app supplies a *loopback* value of *http://127.0.0.1:8000* for the OAuth redirect URI, and runs an HTTP server on this network interface and port, to listen for the response. After login, the HTTP server receives the authorization response and notifies the desktop app. The desktop app then extracts the authorization code and swaps it for tokens, after which it can call APIs.
-
-The login user experience for the desktop view is not ideal. After login there is a disconnected browser window with a blank page. I show how to render a custom page, and also how to handle retries, to ensure reliability.
+The desktop app supplies a *loopback* value of *http://127.0.0.1:8000* for the OAuth redirect URI, and runs an HTTP server on this network interface and port, to listen for the response. After login, the HTTP server receives the authorization response and notifies the desktop app. The desktop app then extracts the authorization code and swaps it for tokens, after which it can call APIs. The login user experience for the desktop view is not ideal. After login there is a disconnected browser window with a blank page.
 
 ![appauth authenticated](/images/410/appauth-authenticated.jpg)
 
 ### Where Are We?
 
-I introduced this blog's initial desktop code sample and summarised its main OAuth behaviors using a minimal code sample. Next, I show how to build and run a more intricate Electron app.
+I introduced this blog's initial desktop code sample and also explained how to run a minimal code sample. Next, I show how to build and run a more intricate Electron app.
 
 ### Next
 

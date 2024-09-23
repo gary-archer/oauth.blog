@@ -18,7 +18,7 @@ git clone https://github.com/gary-archer/oauth.desktopsample1
 
 ### Step 2: View the Code in an IDE
 
-The desktop app re-uses the view code from this blog’s <Link href='/posts/improved-spa-code-sample-overview'>second SPA</Link>, and has exactly the same views:
+The desktop app re-uses some code from this blog’s <Link href='/posts/improved-spa-code-sample-overview'>second SPA</Link> and has exactly the same views:
 
 ```typescript
 export class CompaniesView {
@@ -68,7 +68,7 @@ The app then creates an authorization request URL and opens the default system b
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
 
-If you did an earlier SPA login in the same browser and used the save password feature, you can password autofill for the desktop app. After user login, the system browser renders a post-login page, rather than showing a blank page. Alternatively, you could redirect the browser to an external site if your prefer.
+If you did an earlier SPA login in the same browser and used the save password feature, you can use password autofill for the desktop app. After user login, the system browser renders a post-login page, rather than showing a blank page. Alternatively, you could redirect the browser to an external site if you prefer.
 
 ![browser logged in](/images/420/browser-loggedin.jpg?v=20240922)
 
@@ -88,10 +88,11 @@ The desktop app has a JSON configuration file which includes its OAuth settings.
     "oauth": {
         "authority":        "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
         "clientId":         "6o4rlsod8j6phsnuf3pdjo640u",
+        "scope":            "openid profile https://api.authsamples.com/investments",
+        "redirectPath":     "",
         "loopbackHostname": "localhost",
         "loopbackMinPort":  8001,
         "loopbackMaxPort":  8003,
-        "scope":            "openid profile https://api.authsamples.com/investments",
         "postLoginPage":    "https://www.authsamples.com/apps/basicdesktopapp/postlogin.html"
     }
 }
@@ -114,15 +115,15 @@ Note that the JSON configuration also includes details related to running a *Loo
 
 ### Step 5: OAuth Client Registration
 
-The desktop app is registered as an OAuth client in AWS Cognito, with the following settings:
+The desktop app has an OAuth client registration in AWS Cognito, with the following settings:
 
 ![oauth client](/images/420/oauth-client.jpg)
 
-According to RFC 8252, it should be possible to register a redirect URI that begins with *http://127.0.0.1* and the client can then use any port at runtime. Yet some authorization servers do not support this. AWS Cognito required the *http://localhost* base URL instead of the loopback IP address, and I also had to register all possible redirect URI values.
+According to RFC 8252, it should be possible to register a redirect URI that begins with *http://127.0.0.1* and the client can then use any port at runtime. Yet some authorization servers do not support this. AWS Cognito required the *http://localhost* base URL instead of the loopback IP address, rejected a path like */callback* and I also had to register all possible redirect URI values.
 
 ### Step 6: Login Completion Page
 
-I uploaded the login completion page to an AWS S3 Bucket and deploy it at an HTTPS URL using the AWS CloudFront distribution for this blog's final SPA:
+I uploaded the login completion page to an AWS S3 Bucket and enabled an HTTPS URL using the AWS CloudFront distribution for this blog's final SPA:
 
 ![s3 page](/images/420/s3-page.jpg?v=20240922)
 
@@ -132,7 +133,7 @@ The desktop app uses the *Authorization Code Flow (PKCE)*, as is standard for na
 
 ![authorization redirect](/images/420/authorization-redirect.jpg?v=20240922)
 
-Before issing the redirect the the desktop app runs an HTTP server within its own process. The desktop app uses a low privilege hostname and port (above 1024) when doing so, to avoid users needing administrator privileges or the operating system prompting the user for permissions.
+Before issing the redirect the the desktop app runs an HTTP server within its own process. The desktop app uses a low privilege hostname and low privilege port (above 1024), to ensure that users do not require administrator privileges.
 
 ### Step 8: Authorization Code Grant
 
@@ -142,7 +143,7 @@ When the desktop app receives a login response it sends an authorization code gr
 
 ### Step 9: Test Login Re-Entrancy
 
-A busy user could fail to complete a login and close the browser window, leaving the desktop app in a *login in progress* state. Our app allows the user to retry the login, by clicking the *Sign In* button again.
+A busy user could fail to complete a login and close the browser window, leaving the desktop app in a *login in progress* state. The desktop app allows the user to retry the login, by clicking the *Sign In* button again.
 
 ### Step 10: Simulate Expiry Events
 

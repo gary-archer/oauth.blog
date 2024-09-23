@@ -81,7 +81,7 @@ The desktop app uses TypeScript and builds to ECMAScript modules, which is a lit
 ![bundles](/images/430/bundles.jpg?v=20240922)
 </div>
 
-The main and renderer processes use independent webpack builds and independent *tsconfig.json* files. Therefore, the main bundle does not contain any view-specific code and the renderer bundles does not contain any of the desktop app's backend code. The main process uses the following webpack configuration:
+The main and renderer processes use independent webpack builds and independent *tsconfig.json* files. Therefore, the main bundle does not contain any view-specific code and the renderer bundles do not contain any of the desktop app's backend code. The main process uses the following webpack configuration:
 
 ```typescript
 import path from 'path';
@@ -129,7 +129,7 @@ export default config;
 
 ### Inter Process Communication
 
-The Electron app follows Electron's [Security Best Practices](https://www.electronjs.org/docs/latest/tutorial/security) so that the renderer process runs with least privilege. It therefore does not have permissions to perform operations like running an HTTP server or opening the system browser. Instead, to initiate this type of operation, the desktop app uses Electron's [Inter-Process Communication](https://www.electronjs.org/docs/latest/tutorial/ipc). I also proxy API requests via the backend to keep tokens out of the Chromium browser. The IPC code starts with registering some event names in the shared code:
+The Electron app follows Electron's [Security Best Practices](https://www.electronjs.org/docs/latest/tutorial/security) so that the renderer process runs with least privilege. It therefore does not have permissions to perform operations like running an HTTP server or opening the system browser. Instead, to initiate this type of operation, the desktop app uses Electron's [Inter-Process Communication](https://www.electronjs.org/docs/latest/tutorial/ipc). I also proxy API requests via the backend to keep tokens out of the Chromium browser. The main process registers some IPC event handlers for the following event names:
 
 ```typescript
 export class IpcEventNames {
@@ -160,8 +160,7 @@ contextBridge.exposeInMainWorld('api', {
 
 ```
 
-The frontend uses a *RendererIpcEvents* entry point for sending IPC events. OAuth and API operations are forwarded to the main process:
-
+The frontend uses a *RendererIpcEvents* entry point for sending IPC events. The desktop app forwards all OAuth and API operations to the main process:
 
 ```typescript
 export class RendererIpcEvents {
@@ -194,7 +193,7 @@ export class MainIpcEvents {
         ...
     }
 
-    private async _onGetCompanyTransactions(event: IpcMainInvokeEvent, args: any): Promise<[any, string]> {
+    private async _onGetCompanyTransactions(event: IpcMainInvokeEvent, args: any): Promise<any> {
 
         return this._handleAsyncOperation(
             event,
@@ -202,7 +201,7 @@ export class MainIpcEvents {
             () => this._apiService.getCompanyTransactions(args.id));
     }
 
-    private async _onLogin(event: IpcMainInvokeEvent): Promise<[any, string]> {
+    private async _onLogin(event: IpcMainInvokeEvent): Promise<any> {
 
         return this._handleAsyncOperation(
             event,
@@ -210,7 +209,7 @@ export class MainIpcEvents {
             () => this._authenticatorService.login());
     }
 
-    private async _onTokenRefresh(event: IpcMainInvokeEvent): Promise<[any, string]> {
+    private async _onTokenRefresh(event: IpcMainInvokeEvent): Promise<any> {
 
         return this._handleAsyncOperation(
             event,
@@ -225,7 +224,7 @@ The main and renderer process can send JavaScript objects to each other. I wrote
 
 ### OAuth and API Classes
 
-The following main classes are used to handle OAuth and API logic. The strategy is to drive behaviour from the renderer process so that the frontend is in control. The interplay is a little intricate, since the app also handles many error conditions. Since the frontend only uses forwarders, this post only explains the backend classes.
+The following main classes are used to handle OAuth and API logic. The strategy is to drive behaviour from the renderer process so that the frontend is in control. The interplay is a little intricate, since the app also handles many error conditions. Since the frontend only uses forwarders, the following sections focus on the backend classes.
 
 | Class | Responsibilities |
 | ----- | ---------------- |
@@ -236,20 +235,20 @@ The following main classes are used to handle OAuth and API logic. The strategy 
 
 ### Debugging HTTP Requests
 
-One consequence of this design is that you cannot easily view HTTP requests initiated by the renderer process. To do so, you can use an <Link href='/posts/http-debugging-setup'>HTTP proxy Tool</Link>. The easiest option is to run the tool and change your network settings, then edit the *desktop.config.json* file to activate the proxy, then run the desktop app with the following commands:
+One consequence of this design is that you cannot easily view HTTP requests that the renderer process initiates. To view the requests you can use an <Link href='/posts/http-debugging-setup'>HTTP proxy tool</Link>. The easiest option is to run the tool and change your network settings, then edit the *desktop.config.json* file to activate the proxy, then run the desktop app with the following commands:
 
 ```bash
 export NODE_TLS_REJECT_UNAUTHORIZED=0
 ./start.sh
 ```
 
-You will then see that the desktop app sends requests with tokens and acts as a public client, as is standard for a desktop app.
+You then see that the desktop app sends requests with tokens and acts as a public client, as is standard for a desktop app.
 
 ![traced messages](/images/430/traced-messages.jpg?v=20240922)
 
 ### Frontend Objects
 
-The code for the renderer process begins by creating an *App* class, which acts as the application shell. This creates some global forwarder objects that drive API calls and OAuth operations, in the same manner as earlier SPAs:
+The renderer process begins when it creates an *App* class, which acts as the application shell. This creates some global forwarder objects that drive API calls and OAuth operations, in the same manner as earlier SPAs:
 
 ```typescript
 private async _initialiseApp(): Promise<void> {
@@ -365,7 +364,7 @@ private async _getDataFromApi(callback: () => Promise<any>): Promise<any> {
 }
 ```
 
-When there is no token yet or token refresh fails with an *invalid_grant* error, views receive a *login_required* error and terminate API requests in a controlled manner. This error code is treated specially and results in a redirect to the *Login Required View*, which is given a return location to use once login completes:
+When there is no token yet or token refresh fails with an *invalid_grant* error, views receive a *login_required* error and terminate API requests in a controlled manner. This error code is treated specially and results in a redirect to the *Login Required View*, which saves a return location to use once login completes:
 
 ```typescript
 export class LoginNavigation {
@@ -431,7 +430,7 @@ The *LoginAsyncAdapter* translates from the older callback syntax that AppAuth-J
 
 ### The Authorization Code Grant
 
-When a successful authorization response is received, the desktop app sends an authorization code grant request using the *TokenRequest* object. On success, the *TokenResponse* contains a set of OAuth tokens:
+When the app receives a successful authorization response it sends an authorization code grant request using the *TokenRequest* object. On success, the *TokenResponse* contains a set of OAuth tokens:
 
 ```typescript
 private async _endLogin(result: LoginRedirectResult): Promise<void> {
@@ -472,7 +471,7 @@ private async _endLogin(result: LoginRedirectResult): Promise<void> {
 }
 ```
 
-The initial desktop app simply stores the tokens in-memory. Every time the app is restarted, the user is prompted to re-login. I show how to improve this user experience in the final desktop code sample.
+The initial desktop app simply stores the tokens in-memory. Every time the app restarts the user is prompted to re-login. I show how to improve this user experience in the final desktop code sample.
 
 ### Handling Re-Entrancy
 
@@ -571,11 +570,11 @@ private async _performTokenRefresh(): Promise<void> {
 }
 ```
 
-When the refresh token finally expires, the app receives an error  res[pmse with an *invalid_grant* error code. This is handled by removing tokens from memory and redirecting the user back to the login required view.
+When the refresh token finally expires, the app receives an error  res[pmse with an *invalid_grant* error code. The desktop app then removes tokens from memory and redirects the user back to the login required view.
 
 ### Token Expiry Testing
 
-The *AuthenticatorService* also has some test methods to enable us to simulate token expiry responses. As for the earlier SPA, the desktop app simply adds text to corrupt the token values sent to the API. This mechnism helps to ensure that the app reliably handles expiry conditions.
+The *AuthenticatorService* also has some test methods to enable simulation of token expiry responses. As for the earlier SPA, the desktop app simply adds text to corrupt the token values sent to the API. This mechanism helps to ensure that the app reliably handles expiry conditions.
 
 ```typescript
 public async expireAccessToken(): Promise<void> {
