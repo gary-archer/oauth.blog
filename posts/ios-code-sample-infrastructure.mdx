@@ -9,9 +9,9 @@ Our iOS sample uses 2 online domains, which we configured previously as part of 
 | Domain | Usage |
 | ------ | ----- |
 | <span style={{color:'green'}}>**mobile.authsamples.com**</span> | The domain name for mobile deep linking, which points to a Cloud location that hosts deep linking assets |
-| <span style={{color:'green'}}>**www.authsamples.com**</span> | We use the web domain for ad-hoc hosting of HTML files, including interstitial post-login and post-logout web pages |
+| <span style={{color:'green'}}>**www.authsamples.com**</span> | We use the web domain for ad-hoc hosting of HTML files, including intermediate post-login and post-logout web pages |
 
-### Interstitial Web Page Hosting
+### Intermediate Web Page Hosting
 
 Our web pages are first uploaded to an AWS S3 bucket:
 
@@ -59,7 +59,7 @@ The deep linking domains allowed by the app are configured as *Associated Domain
 </plist>
 ```
 
-I uploaded the assets file to run at the below HTTPS URL, in a similar manner to the interstitial pages. We use a second S3 bucket and CloudFront distribution for the root domain:
+I uploaded the assets file to run at the below HTTPS URL, in a similar manner to the intermediate pages. We use a second S3 bucket and CloudFront distribution for the root domain:
 
 - [https://mobile.authsamples.com/.well-known/apple-app-site-association](https://mobile.authsamples.com/.well-known/apple-app-site-association)
 

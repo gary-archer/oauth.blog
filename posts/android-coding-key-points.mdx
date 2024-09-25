@@ -405,7 +405,7 @@ Our manifest file tells AppAuth’s login activity to use a claimed HTTPS scheme
 </activity>
 ```
 
-Upon return from login an interstitial page runs in the Chrome custom tab window. This screen receives the authorization code in a response query parameter. JavaScript code in the web page invokes the login receiver activity when the continue button is pressed. This forwards any received query parameters, including the authorization code, to the app:
+Upon return from login an intermediate page runs in the Chrome custom tab window. This screen receives the authorization code in a response query parameter. JavaScript code in the web page invokes the login receiver activity when the continue button is pressed. This forwards any received query parameters, including the authorization code, to the app:
 
 ```javascript
 <script>

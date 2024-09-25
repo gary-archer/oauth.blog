@@ -9,9 +9,9 @@ Our Android sample uses 2 online domains, which were configured as part of our <
 | Domain | Usage |
 | ------ | ----- |
 | <span style={{color:'green'}}>**mobile.authsamples.com**</span> | The domain name for mobile deep linking, which points to a cloud location that hosts deep linking assets |
-| <span style={{color:'green'}}>**www.authsamples.com**</span> | We use the web domain for ad-hoc hosting of basic web pages, including interstitial post-login and post-logout web pages |
+| <span style={{color:'green'}}>**www.authsamples.com**</span> | We use the web domain for ad-hoc hosting of basic web pages, including intermediate post-login and post-logout web pages |
 
-### Interstitial Web Page Hosting
+### Intermediate Web Page Hosting
 
 Our web pages are first uploaded to an AWS S3 bucket:
 
@@ -63,7 +63,7 @@ The deep linking domains allowed by the app are configured with an https scheme 
 </activity>
 ```
 
-I uploaded the assets file to run at the below HTTPS URL, in a similar manner to the interstitial pages. We use a second S3 bucket and CloudFront distribution for the root domain:
+I uploaded the assets file to run at the below HTTPS URL, in a similar manner to the intermediate pages. We use a second S3 bucket and CloudFront distribution for the root domain:
 
 - https://mobile.authsamples.com/.well-known/assetlinks.json
 

@@ -169,18 +169,18 @@ There are three scenarios where we will redirect the user on the Chrome custom t
 | <span style={{color:'green'}}>**Single Sign On**</span> | The user already has a valid session cookie and signs in automatically without a login screen |
 | <span style={{color:'green'}}>**Logout**</span> | The user’s session cookie is removed, with no prompt |
 
-In each case, there needs to be a screen before invoking the deep link. You may find using the OpenID Connect *prompt=login* parameter on every login redirect is reliable. In this blog I instead use a custom interstitial page, partly because AWS Cognito does not support the *prompt* parameter.
+In each case, there needs to be a screen before invoking the deep link. You may find using the OpenID Connect *prompt=login* parameter on every login redirect is reliable. In this blog I instead use a custom intermediate page, partly because AWS Cognito does not support the *prompt* parameter.
 
-### This Blog’s Interstitial Web Pages
+### This Blog’s Intermediate Web Pages
 
 We will use the following custom *AWS Hosted Web Pages* that are returned to after login / logout redirects. A real company could present its own branded pages instead.
 
 <div className="smallimage">
-![login interstitial page](/images/500/login-interstitial-page.jpg?v=20240912)
+![login intermediate page](/images/500/login-intermediate-page.jpg?v=20240912)
 </div>
 
 <div className="smallimage">
-![logout interstitial page](/images/500/logout-interstitial-page.jpg?v=20240912)
+![logout intermediate page](/images/500/logout-intermediate-page.jpg?v=20240912)
 </div>
 
 ### Test Cases
