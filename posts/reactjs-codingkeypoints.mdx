@@ -4,16 +4,18 @@ Previously I explained <Link href='/posts/how-to-run-the-react-js-spa'>How to Ru
 
 ### Previous Samples
 
-I provided two earlier plain TypeScript SPA and API code samples. These SPAs used access tokens in the browser, which is no longer recommended.
+I provided two earlier plain TypeScript SPA and API code samples:
 
 | Solution | Description |
 | -------- | ----------- |
 | <Link href='/posts/basicspa-codingkeypoints'>Code Sample 1</Link> | Authorization code flow with PKCE, calling APIs with access tokens and handling 401 responses. |
 | <Link href='/posts/updated-spa-coding-key-points'>Code Sample 2</Link> | Added in-memory token storage, silent token renewal and logout, to complete the SPA's session management. |
 
+These earlier SPAs used access tokens in the browser, which is no longer recommended. Therefore, the final SPA instead uses utility API components that issue cookies, so that API credentials are unavailable to JavaScript code.
+
 ### SPA Code
 
-The final SPA is a React app that runs at a */spa* path. Additional paths, for other micro-frontends, could run within the same web domain, to keep the code size manageable as it grows:
+The final SPA is a React app that runs at a */spa* path. Additional paths, for other micro-frontends, could run within the same web domain, to keep the code base manageable as it grows:
 
 <div className="smallimage">
 ![spa code](/images/240/spa-code.jpg)
@@ -374,7 +376,7 @@ public async login(currentLocation: string): Promise<void> {
 }
 ```
 
-When the login response is received, the page load handler processes the login response. The result is to issue encrypted session cookies, which contain the underlying OAuth tokens, to the browser.
+The page load handler processes the login response. The result is to issue encrypted session cookies, which contain the underlying OAuth tokens, to the browser.
 
 ```typescript
 public async handlePageLoad(): Promise<string | null> {
@@ -450,7 +452,7 @@ private async _callApiWithCredential(
 }
 ```
 
-When the current access token expires, the SPA makes a token refresh request to get new tokens, rewrite cookies and retry the original API request. It is also possible that the user could close all browser windows when the *isLoggedIn=true* flag is set. The next time the user runs the app, session cookies are no longer present and APIs return 401 responses. The SPA, and this blog's native apps, cope reliably with these conditions using the following overall algorithm for API requests:
+When the current access token expires, the SPA makes a token refresh request to get new tokens and rewrite cookies with new tokens. The SPA then retries the original API request with updated cookies. It is also possible that the user could close all browser windows when the *isLoggedIn=true* flag is set. The next time the user runs the app, session cookies are no longer present and APIs return 401 responses. The SPA, and this blog's native apps, cope reliably with these conditions using the following overall algorithm for API requests:
 
 ```typescript
 if (!this._authenticator.isLoggedIn()) {

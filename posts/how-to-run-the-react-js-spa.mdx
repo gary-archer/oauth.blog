@@ -79,7 +79,7 @@ Open a terminal and run the following command. The script builds the SPA into Ja
 ./build.sh
 ```
 
-The frontend runs in watch mode, so that you can follow a pure SPA development model. You can update the React code and quickly see changes in the browser:
+The frontend can run in watch mode, so that you follow a pure SPA development model. You can update the React code and quickly see changes in the browser:
 
 ![spa build](/images/230/spa-build.jpg?v=20240910)
 
@@ -179,7 +179,7 @@ export LOCALAPI=true
 ./run.sh
 ```
 
-This runs the utility token handler components in a small docker compose network. The SPA’s configuration then routes to the API via the local backend for frontend rather than the cloud BFF:
+This runs some utility token handler components in a small docker compose network. You can study the deployment resources to get a feel for how this works. The SPA’s configuration then routes to the API via the local backend for frontend rather than the cloud BFF:
 
 ```json
 {
@@ -193,30 +193,7 @@ When you now use the SPA it calls the local API rather than a cloud API. The API
 
 ![spa and api](/images/230/spa-and-api.jpg?v=20240915)
 
-### Step E: Understand Token Handler Deployment
-
-Study my [deployment resources](https://github.com/gary-archer/oauth-agent-node-express/blob/master/deployment/docker-local/docker-compose.yml) to understand how I deploy the OAuth agent and OAuth proxy components. I use the Kong API Gateway to expose a backend for frontend with the following configuration settings, expressed as environment variables:
-
-```bash
-PORT=8000
-TRUSTED_WEB_ORIGIN='https://www.authsamples-dev.com'
-ISSUER='https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9'
-AUTHORIZE_ENDPOINT='https://login.authsamples.com/oauth2/authorize'
-TOKEN_ENDPOINT='https://login.authsamples.com/oauth2/token'
-USERINFO_ENDPOINT='https://login.authsamples.com/oauth2/userInfo'
-LOGOUT_ENDPOINT='https://login.authsamples.com/logout'
-CLIENT_ID='7q5pope8rki7okarj2u8l4in7o'
-CLIENT_SECRET='1d18g4v05sesjkv161borl012j009l7ooktnfs10ph9p6nkbbfl9'
-REDIRECT_URI='https://www.authsamples-dev.com/spa/'
-POST_LOGOUT_REDIRECT_URI='https://www.authsamples-dev.com/spa/loggedout'
-SCOPE='openid profile https://api.authsamples.com/investments'
-COOKIE_NAME_PREFIX='authsamples'
-COOKIE_ENCRYPTION_KEY='33be02f1b76feccf2c30a4847b0ad68d01756d7a9fb7f9a533b12b5d249a9c66'
-SERVER_CERT_P12_PATH='./certs/authsamples-dev.ssl.p12'
-SERVER_CERT_P12_PASSWORD='Password1'
-```
-
-### Step F: Free Docker Resources
+### Step E: Free Docker Resources
 
 To free resources in the docker compose network, run the following command:
 
