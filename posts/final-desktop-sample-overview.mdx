@@ -31,15 +31,9 @@ After cloning the sample code, run the following commands to build and run the a
 ./run.sh
 ```
 
-Alternatively, you can build and run a packaged version of the app:
-
-```bash
-./pack.sh
-```
-
 ### Updated Login Flow
 
-Logins continue to use the system browser and the updated desktop app also implements OpenID Connect RP initiated logout.
+Logins continue to use the system browser:
 
 ![desktop login](/images/440/desktop-login.jpg?v=20240925)
 
@@ -48,18 +42,21 @@ You can use this blog’s test credential to sign in:
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
 
-Once a login or logout completes, the browser renders a completion web page:
+Once a login completes, the browser renders a completion web page:
 
 ![login web page](/images/440/login-web-page.jpg?v=20240925)
 
-When the user clicks *Return to the App*, the browser prevents a *Private URI Scheme* prompt. To understand its final appearance in the different browsers, run a packaged version of the app:
-
-
-The desktop app is then brought to the foreground and can get data from the API using its access token:
+The user clicks *Return to the App* after which the desktop app returns to the foreground. The app can then make API requests using its access token:
 
 ![logged in](/images/440/logged-in.jpg?v=20240925)
 
 After login, the app stores tokens in desktop secure storage. The user can restart the app without requiring a new user login, as long as its refresh token remains valid.
+
+### Logout
+
+The app also implements OpenID Connect RP initiated logout, which presents a similar completion page. My main motivation for a logout solution is to be able to force a new login, for a different user account, when using AWS Cognito as the authorization server.
+
+![logout web page](/images/440/logout-web-page.jpg)
 
 ### OAuth Configuration Changes
 
@@ -84,71 +81,70 @@ The final desktop app’s configuration no longer uses HTTP ports, and now uses 
 }
 ```
 
-When a deep link runs after a redirect, the browser may refuse to invoke it for security reasons, unless there is a user gesture. This is especially true if a redirect is entirely automatic, as for a single-sign-on or a logout. To prevent such issues you can use the OpenID Connect *prompt=none* parameter. However, this blog's default authorization server does not support that parameter so I instead set the app's redirect URIs to intermediate web pages.
+I created a new OAuth client for the final desktop app, which uses these updated redirect URIs:
+
+![oauth client](/images/440/oauth-client.jpg?v=20240925)
 
 ### Intermediate Web Pages
 
-The intermediate web pages run at the following internet URLs. They also improves a little on the default blank browser page that is otherwise displayed to the user after login.
+When a deep link runs after a redirect, the browser may refuse to invoke it for security reasons unless there is a user gesture. This is especially true if the redirects are entirely automatic, as for logouts or single-sign-on events. The simplest solution is to avoid logout redirects and use the OpenID Connect *prompt=none* parameter when you sign in.
+
+However, at the time of writing, this blog's default authorization server does not support the *prompt* parameter. To provide a reliable solution, I set the app's redirect URIs to intermediate web pages, at the following URLs. These pages also improve a little on the default blank browser page that the user sees after login.
 
 - [https://www.authsamples.com/apps/finaldesktopapp/postlogin.html](https://www.authsamples.com/apps/finaldesktopapp/postlogin.html)
 - [https://www.authsamples.com/apps/finaldesktopapp/postlogout.html](https://www.authsamples.com/apps/finaldesktopapp/postlogout.html)
 
-I deployed the HTML pages to an AWS S3 Bucket and then made them used this blog's final SPA's AWS CloudFront distribution to make the web pages available over HTTPS:
+I deployed the HTML pages to an AWS S3 Bucket and then used this blog's final SPA's AWS CloudFront distribution to make the web pages available over HTTPS:
 
-![s3 pages](/images/440/s3-pages.jpg)
+![s3 pages](/images/440/s3-pages.jpg?v=20240925)
 
 If you use your browser's *View Source* option you can see that the pages simply forward the login response to the app via its private URI scheme URL:
 
-![response forwarding](/images/440/response-forwarding.jpg)
+![response forwarding](/images/440/response-forwarding.jpg?v=20240925)
 
 One downside of this approach is that, if the user doesn’t click the *Return to the App* button for a couple of minutes, the authorization code could time out, resulting in a user error. The user can always retry and recover though.
 
 ### Private URI Scheme Browser Prompts
 
-All browsers recognize private URI schemes registered with the operating syastem and present a special prompt. For the final appearance, first build a packaged version of the desktop app:
+Before the desktop app can receive the login response, the browser presents a prompt to ask the user to confirm the deep link. To understand its final appearance in the different browsers you can build and run a packaged version of the app:
 
 ```bash
 ./pack.sh
 ```
 
-This results in a binary built by the [Electron Packager](https://github.com/electron/packager) to enable the built app to be tested:
+The [Electron Packager](https://github.com/electron/packager) then builds a binary that you could package further into an installation program:
 
-![built binary](/images/440/built-binary.jpg)
+![built binary](/images/440/built-binary.jpg?v=20240925)
 
+The following screenshots show the appearance of the user prompt in the four main desktop browsers. This prompt may be a usability issue, so you may prefer loopback redirect URIs, which avoids this type of prompt when used correctly.
 
 **Google Chrome**
 
-![chrome prompt](/images/440/chrome-prompt.jpg)
+![chrome prompt](/images/440/chrome-prompt.jpg?v=20240925)
 
 **Firefox**
 
-![firefox prompt](/images/440/firefox-prompt.jpg)
+![firefox prompt](/images/440/firefox-prompt.jpg?v=20240925)
 
 **Edge**
 
-![edge prompt](/images/440/edge-prompt.jpg)
+![edge prompt](/images/440/edge-prompt.jpg?v=20240925)
 
 **Safari**
 
-![safari prompt](/images/440/safari-prompt.jpg)
-
-### Final Cognito Desktop OAuth Client
-
-A new OAuth client has been created, which registers the intermediate pages for the redirect URI and the post logout redirect URI:
-
-![oauth client](/images/440/oauth-client.jpg)
+![safari prompt](/images/440/safari-prompt.jpg?v=20240925)
 
 ### Private URI Scheme Registration
 
-Our desktop app registers the Private URI Scheme as a per-user setting that does not require administrator privileges. On Windows this updates a per user registry location under *HKEY_CURRENT_USER*:
+The desktop app registers its scheme as a per-user setting that does not require administrator privileges. On Windows this updates registry settings under *HKEY_CURRENT_USER*:
 
 ![windows registration](/images/440/windows-registration.jpg)
 
-On macOS you can use the [SwiftDefaultApps](https://github.com/Lord-Kamina/SwiftDefaultApps) tool to view the scheme and the app it is registered to, which is also a per-user setting:
+On macOS you can use the [SwiftDefaultApps](https://github.com/Lord-Kamina/SwiftDefaultApps) tool to view the scheme and its associated app, which is also a per-user setting:
 
 ![macos registration](/images/440/macos-registration.jpg)
 
-In my Linux distribution, the *Gnome Desktop System* controls custom schemes. Our sample includes a *.desktop* file with registration instructions:
+In my Linux distribution, the *Gnome Desktop System* controls custom schemes. The code sample deployment includes a *linux* subfolder that includes a *.desktop* file that registers the app:
 
 ```markdown
 [Desktop Entry]
@@ -159,13 +155,9 @@ StartupNotify=false
 MimeType=x-scheme-handler/x-authsamples-desktopapp
 ```
 
-To use private URI schemes you need to be able to restrict the desktop app to a single instance. In some desktop cases, such as for a *Microsoft Excel Plugin*, this may not be possible, and you will need to use a loopback based solution.
-
 ### Secure Token Storage
 
-The desktop app stores OAuth tokens in an encrypted text file. [Electron safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage) is used to create an operating system encryption key private to the user and app, for protecting the text. The result is that users do not need to login every time they restart the app.
-
-On macOS the encryption key is saved to the Keychain. On Windows and Linux the key is less visible. Windows uses the *DPAPI* subsystem, and my Ubuntu Linux system uses the *GNOME libsecret* subsystem. Further details on the underlying security are discussed in [this online thread](https://github.com/microsoft/vscode-discussions/discussions/748).
+The desktop app stores OAuth tokens in a text file. I use [Electron safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage) to create an operating system encryption key private to the user and app, to avoid storing tokens in plain text. On macOS the encryption key is saved to the Keychain. On Windows and Linux the key is less visible. Windows uses the *DPAPI* subsystem, and my Ubuntu Linux system uses the *GNOME libsecret* subsystem. Further details on the underlying security are discussed in [this online thread](https://github.com/microsoft/vscode-discussions/discussions/748).
 
 ![encryption key](/images/440/encryption-key.jpg)
 
@@ -184,11 +176,11 @@ The login and logout response messages received by the app are a type of deep li
 - *x-authsamples-desktopapp:/callback?code=…&state=…*
 - *x-authsamples-desktopapp:/logoutcallback*
 
-We can also use deep linking to bookmark screens, by sending a user an email with a URL link such as this:
+In some use cases, you can use deep linking to bookmark screens. For example, you might send the user an email with a URL link. Note however that email clients may consider the private URI scheme’s prefix suspect, and block this type of deep link:
 
 - *x-authsamples-desktopapp:/companies/2*
 
-The easiest way to test deep linking is from a command shell, and this varies slightly for the different operating systems:
+The easiest way to test deep linking is from a command shell, and the command varies slightly for the different operating systems:
 
 | Operating System | Example Command |
 | ---------------- | --------------- |
@@ -196,19 +188,23 @@ The easiest way to test deep linking is from a command shell, and this varies sl
 | <span style={{color:'green'}}>**macOS**</span> | open x-authsamples-desktopapp:/companies/2 |
 | <span style={{color:'green'}}>**Linux (Gnome)**</span> | xdg-open  x-authsamples-desktopapp:/companies/2 |
 
-If the desktop app is running, this command will cause it to update its location to the *Transactions View* for our second company. If not then it will start up at that location:
+If the desktop app is running, this command causes it to update its current location to the *Transactions View*. Otherwise, the app is a startup deep link and the app loads at that location:
 
-![deep link](/images/440/deeplink.jpg)
+![deep link](/images/440/deeplink.jpg?v=20240925)
 
-If the user is logged in and has a valid access token, the app will move directly to the deep linking destination screen. Otherwise a token renewal or login will be triggered, followed by deep link navigation afterwards.
+If the app has a valid access token, it moves directly to the deep linking destination screen. Otherwise, a token renewal or login runs, followed by deep linking navigation afterwards. This blog’s API authorization applies business rules that mean the default test user can only access data for the USA region. Attempts to deep link to other companies fail API authorization and return a known error code. The desktop app handles this error specially, to return the user to the initial view:
 
-This blog’s APIs deny the default test user access to companies other than 2 and 4. Attempts to deep link to company 3 will fail API authorization and return a known error code. The desktop app handles this error specially, by returning the user to the list view:
+![deep link unauthorized](/images/440/deeplink-unauthorized.jpg?v=20240925)
 
-![deep link unauthorized](/images/440/deeplink-unauthorized.jpg)
+Finally, note that on macOS, startup deep links only work if you run a packaged version of the app, so that the scheme registration points to the packaged executable:
 
-Finally, note that on macOS, startup deep links will only work if we first package the app with *npm run pack*, so that the scheme registration points to the packaged executable:
+![macos packaged](/images/440/macos-packaged.jpg)
 
-![macos packaged](/images/440/macos-packaged.jpg)a
+### Where Are We?
 
-- I provide a <Link href='/posts/final-desktop-app-coding-key-points'>Final Desktop App Code Details</Link>.
+I have updated the desktop code sample with some final features and explored desktop logins using private use URI schemes. Login usability remains unnatural, due to use of the disconnected browser.
+
+### Next
+
+- I explain some <Link href='/posts/final-desktop-app-coding-key-points'>Code Details</Link> for the final desktop app.
 - For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.

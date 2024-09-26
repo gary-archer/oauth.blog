@@ -133,7 +133,7 @@ The desktop app uses the *Authorization Code Flow (PKCE)*, as is standard for na
 
 ![authorization redirect](/images/420/authorization-redirect.jpg?v=20240922)
 
-Before issing the redirect the the desktop app runs an HTTP server within its own process. The desktop app uses a low privilege hostname and low privilege port (above 1024), to ensure that users do not require administrator privileges.
+Before issing the redirect the the desktop app runs an HTTP server within its own process. The desktop app uses a low privilege hostname that does not allow remote connections and prevents the operating system from presenting prompts to the user to allow incoming HTTP connections. It also uses a low privilege port (above 1024), to ensure that users do not require administrator privileges.
 
 ### Step 8: Authorization Code Grant
 
