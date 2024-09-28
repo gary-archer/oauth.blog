@@ -165,7 +165,7 @@ The frontend uses a *RendererIpcEvents* entry point for sending IPC events. The 
 ```typescript
 export class RendererIpcEvents {
 
-    public async getCompanyTransactions(id: string) : Promise<any> {
+    public async getCompanyTransactions(id: string) : Promise<CompanyTransactions> {
         return await this._sendMessage(IpcEventNames.ON_GET_TRANSACTIONS, {id});
     }
 
@@ -193,7 +193,7 @@ export class MainIpcEvents {
         ...
     }
 
-    private async _onGetCompanyTransactions(event: IpcMainInvokeEvent, args: any): Promise<any> {
+    private async _onGetCompanyTransactions(event: IpcMainInvokeEvent, args: any): Promise<CompanyTransactions> {
 
         return this._handleAsyncOperation(
             event,
@@ -383,22 +383,23 @@ export class LoginNavigation {
 The main process uses code to spin up an HTTP server to receive the authorization response, and to send the authorization request on the system browser.
 
 ```typescript
-private async _startLogin(): Promise<LoginRedirectResult> {
+private async _startLogin(): Promise<AuthorizationRequestResponse> {
 
     try {
 
-        const server = new LoopbackWebServer(this._configuration, this._loginState);
+        const server = new LoopbackWebServer(this._configuration, this._eventEmitter);
         const runtimePort = await server.start();
-        const redirectUri = `http://${this._configuration.loopbackHostname}:${runtimePort}`;
+        const host = this._configuration.loopbackHostname;
+        const redirectUri = `http://${host}:${runtimePort}${this._configuration.redirectPath}`;
 
         await this._loadMetadata();
 
-        const adapter = new LoginAsyncAdapter(
+        const handler = new LoginRequestHandler(
             this._configuration,
             this._metadata!,
-            this._loginState);
-
-        return await adapter.login(redirectUri);
+            this._loginState,
+            this._eventEmitter);
+        return await handler.execute(redirectUri);
 
     } catch (e: any) {
 
@@ -426,7 +427,7 @@ private async _startServer(): Promise<void> {
 }
 ```
 
-The *LoginAsyncAdapter* translates from the older callback syntax that AppAuth-JS uses to a modern async-await syntax. I use some other utility classes, including a *BrowserLoginRequestHandler*, which receives the authorization response, so that I have best control over technical behaviors, including error handling and the post-login browser display.
+The *LoginRequestHandler* class manages sending the authorization request and receiving the authorization response and I use AppAuth libraries only to deal with request and response messages.
 
 ### The Authorization Code Grant
 
@@ -437,18 +438,14 @@ private async _endLogin(result: LoginRedirectResult): Promise<void> {
 
     try {
 
-        const codeVerifier = result.request.internal!['code_verifier'];
-
-        const extras: StringMap = {
-            code_verifier: codeVerifier,
-        };
-
         const requestJson = {
             grant_type: GRANT_TYPE_AUTHORIZATION_CODE,
             code: result.response!.code,
             redirect_uri: result.request.redirectUri,
             client_id: this._configuration.clientId,
-            extras,
+            extras: {
+                code_verifier: result.request.internal!['code_verifier'],
+            },
         };
         const tokenRequest = new TokenRequest(requestJson);
 
@@ -471,7 +468,7 @@ private async _endLogin(result: LoginRedirectResult): Promise<void> {
 }
 ```
 
-The initial desktop app simply stores the tokens in-memory. Every time the app restarts the user is prompted to re-login. I show how to improve this user experience in the final desktop code sample.
+The initial desktop app simply stores its tokens in-memory. Every time the app restarts the user is prompted to re-login. I show how to improve this user experience in the final desktop code sample.
 
 ### Handling Re-Entrancy
 
@@ -480,36 +477,30 @@ For a reliable solution we need to handle multiple login attempts:
 - A user starts a sign in, generating a state and code verifier parameters.
 - The user accidentally closes the browser tab.
 - The user retries signing in, with different PKCE details.
-- We must resume the login response with the correct state and code verifier.
+- The login must continue with the correct PKCE code verifier.
+- To avoid leaking resources, there should be no leftover unresolved promises.
 
-The *LoginState* class manages this by storing a map of the OAuth state parameter to the corresponding callback:
+The *LoginRequestHandler* class manages these concerns. It stores all *AuthorizationRequest* objects and receives a login response notification from the loopback web server, using Node.js events. The handler rejects authorization responses unless their *state* parameter matches one stored in memory. Any other authorization responses resolve the promise with a *login_cancelled* error code, which the frontend silently ignores:
 
 ```typescript
-export class LoginState {
+const promise = new Promise<AuthorizationRequestResponse>((resolve, reject) => {
 
-    private _callbackMap: [string, LoginResponseCallback][];
+    this._state.storeRequest(authorizationRequest);
 
-    public constructor() {
-        this._callbackMap = [];
-        this._setupCallbacks();
-    }
+    this._eventEmitter.once('LOGIN_COMPLETE', (args: URLSearchParams) => {
 
-    public storeLoginCallback(state: string, responseCallback: LoginResponseCallback): void {
-        this._callbackMap.push([state, responseCallback]);
-    }
-
-    public handleLoginResponse(queryParams: any): void {
-
-        const state = queryParams.state;
-        if (state) {
-            const callback = this._getCallbackForState(queryParams.state);
-            if (callback) {
-                callback(queryParams);
-                this._clearState(state);
-            }
+        const state = args.get('state') || '';
+        const foundRequest = this._state.getRequestForState(state);
+        if (!foundRequest) {
+            reject(ErrorFactory.fromLoginCancelled());
+            return;
         }
-    }
-}
+
+        this._state.clear();
+        resolve(this._handleBrowserLoginResponse(args, foundRequest));
+    });
+});
+
 ```
 
 It is probably not logically possible to solve all re-entrancy cases perfectly. If the user clicks the option to sign in twice, then completes two logins, the HTTP server is stopped on the second response, resulting in an error. This should usually be OK, since the alternative is to keep an HTTP server running indefinitely and leak resources. The main reliability goal is to enable users to retry failed logins.
@@ -525,16 +516,11 @@ private async _performTokenRefresh(): Promise<void> {
 
         await this._loadMetadata();
 
-        const extras: StringMap = {
-            scope: this._configuration.scope,
-        };
-
         const requestJson = {
             grant_type: GRANT_TYPE_REFRESH_TOKEN,
             client_id: this._configuration.clientId,
             refresh_token: this._tokens!.refreshToken!,
             redirect_uri: '',
-            extras,
         };
         const tokenRequest = new TokenRequest(requestJson);
 
