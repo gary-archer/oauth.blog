@@ -1,10 +1,16 @@
 # Final Desktop App – Code Details
 
-Previously we introduced our <Link href='/posts/final-desktop-sample-overview'>Final Desktop Sample</Link> and explained its key behaviour. This post summarises the main coding techniques. See also the <Link href='/posts/api-journey-client-side'>Client Side API Journey</Link> to understand the background and the requirements being met.
+Previously I summarised the behavior of the <Link href='/posts/final-desktop-sample-overview'>Final Desktop Code Sample</Link>. This post provides an overview of the app's code changes. See also the <Link href='/posts/api-journey-client-side'>Client Side API Journey</Link> to understand the background and the requirements being met.
+
+### Code Layout
+
+The app has the same code layout as the initial desktop code sample, to represent the Electron main and renderer process, along with some shared code:
+
+![code layout](/images/450/code-layout.jpg)
 
 ### React Update
 
-We have updated our Electron app to use React. This mostly involved just copying in the completed views from our earlier <Link href='/posts/final-spa-overview'>React SPA</Link>, and the desktop app uses many of the same <Link href='/posts/reactjs-codingkeypoints'>coding techniques</Link>.
+I updated the Electron app to use React. This mostly involved just copying in the completed views from this blog's <Link href='/posts/reactjs-codingkeypoints'>Final SPA</Link>:
 
 ```jsx
 return (
@@ -25,7 +31,7 @@ return (
 );
 ```
 
-The only real difference in React coding is that the *HashRouter* must be used in Electron apps. The renderer side of the app, in the renderer.tsx source file, therefore starts a Single Page Application as follows:
+The main difference to the React code for the final SPA is that the Electron app uses the *HashRouter*. The *renderer.tsx* source file is the entry point to the React app that starts an SPA as follows:
 
 ```jsx
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
@@ -45,7 +51,7 @@ root.render (
 
 ### Private URI Scheme Registration
 
-In our *Main* process we register our Private URI Scheme at application startup, which writes to user specific areas of the operating system:
+The *main.ts* source file is the entry point that receives deep link notifications. The app registers a private URI scheme at application startup, which writes entries to user specific areas of the operating system:
 
 ```typescript
 private async _registerPrivateUriScheme(): Promise<void> {
@@ -63,7 +69,7 @@ private async _registerPrivateUriScheme(): Promise<void> {
 }
 ```
 
-In order to receive private URI scheme notifications deterministically, the desktop  app restricts itself to a single running instance:
+To receive private URI scheme notifications deterministically, the desktop app restricts itself to a single running instance:
 
 ```typescript
 public execute(): void {
@@ -76,15 +82,9 @@ public execute(): void {
 }
 ```
 
-### Sending Private URI Scheme Notifications
-
-As discussed in the previous post, the response to OAuth login and logout operations originates from an *Intermediate Web Page*. The following code then invokes a deep link to return the authorization code to the app:
-
-![intermediate page](/images/450/intermediate-page.jpg)
-
 ### Receiving Deep Links
 
-When the URL is invoked, the operating system raises an event that the app subscribes to, which executes the following code:
+When the operating system invokes a deep link, the following code runs in the *main.ts* source file:
 
 ```typescript
 private _handleDeepLink(deepLinkUrl: string): void {
@@ -102,7 +102,7 @@ private _handleDeepLink(deepLinkUrl: string): void {
 }
 ```
 
-The main process first asks an OAuth class to process the deep link if it is a login or logout response. Otherwise, the notification is considered to be a general deep link and is forwarded to the React app:
+The main process first asks its authenticator service to process the deep link if it represents a login or logout response. Otherwise, the notification is a general deep link that the main process forwards to the React app:
 
 ```typescript
 public handleDeepLink(deepLinkUrl: string): boolean {
@@ -121,27 +121,37 @@ public handleDeepLink(deepLinkUrl: string): boolean {
 }
 ```
 
-### Resuming OAuth Operations
-
-As for our first desktop sample, login and logout responses are processed based on the OAuth state parameter. This enables us to find and resume the calback that was created when the system browser was opened:
+For OAuth responses, the authenticator service uses Node.js events to resume the flow:
 
 ```typescript
-public handleLoginResponse(queryParams: any): void {
+public handleDeepLink(deepLinkUrl: string): boolean {
 
-    const state = queryParams.state;
-    if (state) {
-        const callback = this._getCallbackForState(queryParams.state);
-        if (callback) {
-            callback(queryParams);
-            this._clearState(state);
+    const url = UrlParser.tryParse(deepLinkUrl);
+    if (url) {
+
+        const args = new URLSearchParams(url.search);
+        const path = url.pathname.toLowerCase();
+        if (path === '/callback') {
+
+            this._eventEmitter.emit('LOGIN_COMPLETE', args);
+            return true;
+
+        } else if (path === '/logoutcallback') {
+
+            this._eventEmitter.emit('LOGOUT_COMPLETE', args);
+            return true;
         }
     }
+
+    return false;
 }
 ```
 
+The overall behavior is similar to that of the initial desktop code sample, which resumes its flow after a response received in its loopback web server. If the user happens to click the *Sign In* button more than once, the application continues to correctly handle re-entrancy and prevent any leaked resources.
+
 ### Secure Token Storage
 
-A *TokenStorage* class is used, to wrap the use of Electron safe storage. This  object manages saving, loading and deleting tokens. These are stored in encrypted text files for the logged in user account:
+The desktop app uses a *TokenStorage* class that wraps the use of Electron safe storage. This object manages saving, loading and deleting tokens. The app uses encrypted text files to store tokens, with an operating system encryption key that is private to the current desktop user:
 
 ```typescript
 public load(): TokenData | null {
@@ -165,32 +175,32 @@ public load(): TokenData | null {
 
 The OAuth processing code calls the TokenStorage class after the following events:
 
-- When the desktop app starts, to load tokens
-- After the authorization code grant, to save tokens
-- After the refresh token grant, to update tokens
-- When the user logs out, to remove tokens
+- When the desktop app starts, to load tokens.
+- After the authorization code grant, to save tokens.
+- After the refresh token grant, to update tokens.
+- When the user signs out, to remove tokens.
 
 ### Concurrent Operations
 
-React renders our desktop app’s views in a non deterministic sequence, so the following two views can call an API in parallel:
+React renders the desktop app’s views in a non-deterministic sequence, so the following two views can call an API in parallel:
 
 ![concurrent api requests](/images/450/concurrent-api-requests.jpg)
 
-This can lead to the following scenarios and the desktop app handles concurrency correctly in all cases. This is done using the same coding techniques as the earlier React SPA:
+This can lead to the following scenarios and the desktop app handles concurrency correctly in all cases:
 
-- One or both views could experience a technical error
-- One or both views may need to refresh an access token
-- One or both views may need to trigger a login redirect
+- One or both views could experience a technical error.
+- One or both views may need to refresh an access token.
+- One or both views may need to trigger a login redirect.
 
 ### AppAuth Libraries
 
-This blog demonstrates mobile integration using the recommendations from RFC 8252. Doing so does not mandate use of the AppAuth libraries though. If you run into any library blocking issues, the code flow could be implemented fairly easily from scratch in the app's *AuthenticatorServiceImpl* class.
+This blog completes this blog's desktop integration using the recommendations from RFC 8252. Doing so does not mandate use of the AppAuth libraries though. For example, if you run into a blocking issue, you could implement the code flow messages manually in the app's *AuthenticatorServiceImpl* class.
 
 ### Where Are We?
 
-We have updated the desktop app with new features that improve usability and have now completed this blog’s desktop mini-theme. Next we will begin coverage of OAuth for mobile apps.
+I updated the desktop app with new features that improve usability, to complete this blog’s desktop mini-theme. Next I begin coverage of OAuth for mobile apps.
 
 ### Next
 
-- Next we will discuss Android Setup and run the <Link href='/posts/android-setup'>AppAuth code sample</Link>
-- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>
+- I explain an initial <Link href='/posts/android-setup'>Android Setup</Link> that includes running the AppAuth Andoid code sample.
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.
