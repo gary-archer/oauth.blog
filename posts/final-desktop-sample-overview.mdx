@@ -200,6 +200,39 @@ Finally, note that on macOS, startup deep links only work if you run a packaged 
 
 ![macos packaged](/images/440/macos-packaged.jpg)
 
+### Local API Setup
+
+If required, you can run the desktop app against a local OAuth secured API. You can do so for one of this blog’s final APIs and following its instructions to run it locally:
+
+- <Link href='/posts/api-architecture-node'>Node.js API</Link>
+- <Link href='/posts/net-core-code-sample-overview'>.Net Core API</Link>
+- <Link href='/posts/java-spring-boot-api-overview'>Java Spring Boot API</Link>
+
+To connect to local APIs, update the *apiBaseUrl* value in the desktop.config.json file to the URL of a local API:
+
+```json
+{
+    "app": {
+        "apiBaseUrl": "https://api.authsamples-dev.com:446/investments",
+        "useProxy": false,
+        "proxyUrl": "http://127.0.0.1:8888"
+    },
+    "oauth": {
+        "authority":             "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+        "clientId":              "5r463je7qeddssfqttaa8cpv91",
+        "redirectUri":           "https://www.authsamples.com/apps/finaldesktopapp/postlogin.html",
+        "postLogoutRedirectUri": "https://www.authsamples.com/apps/finaldesktopapp/postlogout.html",
+        "scope":                 "openid profile https://api.authsamples.com/investments",
+        "customLogoutEndpoint":  "https://login.authsamples.com/logout",
+        "privateSchemeName":     "x-authsamples-desktopapp"
+    }
+}
+```
+
+When you now run the desktop app it calls the local API, and you can also focus on API behaviors, like JWT access token validation, claims-based authorization and logging:
+
+![desktop app and api](/images/440/desktop-app-and-api.jpg)
+
 ### Where Are We?
 
 I have updated the desktop code sample with some final features and explored desktop logins using private use URI schemes. Login usability remains unnatural, due to use of the disconnected browser.
