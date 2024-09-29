@@ -507,7 +507,7 @@ You can then step through the actual lines of TypeScript code, while the browser
 
 ### Decompiling Code: SPA Exception Stack Traces
 
-The webpack setup uses separate development and production configurations. The development configuration includes a property that enables code debugging, and also a property to determine whether to render stack traces:
+The webpack setup uses separate development and production configurations. The development configuration includes a property that enables code debugging, and also a property to let JavaScript know whether it should run in debug mode:
 
 ```javascript
 import webpack from 'webpack';
@@ -525,18 +525,18 @@ export default merge(baseConfig, {
   
   plugins:[
     new webpack.DefinePlugin({
-      SHOW_STACK_TRACE: 'true',
+      IS_DEBUG: 'true',
     })
   ]
 });
 ```
 
-To prevent TypeScript compilation errors, I reference the stack trace variable in the SPA’s *typings.d.ts* file. The SPA's error handling code uses the variable to decide whether to render stack traces:
+To prevent TypeScript compilation errors, I reference the *IS_DEBUG* variable in the SPA’s *typings.d.ts* file. The SPA's error handling code uses the variable to decide whether to render stack traces:
 
 ```typescript
 public static getErrorStack(error: UIError): ErrorLine | null {
 
-    if (SHOW_STACK_TRACE) {
+    if (IS_DEBUG) {
         if (error.stack) {
             return ErrorFormatter._createErrorLine('Stack', error.stack);
         }
