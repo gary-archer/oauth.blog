@@ -105,7 +105,7 @@ In your API code, you may therefore need to combine access token claims with ext
 
 Therefore, I designed an object with the following structure, so that I could inject it into business logic classes and the claims that should be in the access token were readily available. In addition, there may be some main authorization values that you may prefer not to issue to access tokens for manageability reasons. These might be good candidates to represent as extra claims.
 
-```json
+```typescript
 export class ClaimsPrincipal {
     public jwtClaims: JWTPayload;
     public extraClaims: ExtraClaims;
