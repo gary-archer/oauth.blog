@@ -1,0 +1,220 @@
+# Android Code Sample – Infrastructure
+
+Previously we described <Link href='/posts/basicandroidapp-execution'>How to Run the Android Code Sample</Link>, and next we will focus further on the infrastructure used by our OAuth solution.
+
+### AWS CloudFront Domains
+
+Our Android sample uses 2 online domains, which were configured as part of our <Link href='/posts/cloud-domain-setup'>Cloud Domain Setup</Link>:
+
+| Domain | Usage |
+| ------ | ----- |
+| <span style={{color:'green'}}>**mobile.authsamples.com**</span> | The domain name for mobile deep linking, which points to a cloud location that hosts deep linking assets |
+| <span style={{color:'green'}}>**www.authsamples.com**</span> | We use the web domain for ad-hoc hosting of basic web pages, including intermediate post-login and post-logout web pages |
+
+### Intermediate Web Page Hosting
+
+Our web pages are first uploaded to an AWS S3 bucket:
+
+![s3 bucket](../images/520/s3-bucket.jpg?v=20240912)
+
+They are then included in one of this blog’s <Link href='/posts/cdn-static-content-delivery'>CloudFront Distributions</Link>, so that the pages are served over an HTTPS URL:
+
+![cloudfront distro](../images/520/cloudfront-distro.jpg?v=20240912)
+
+Pages are then available at these URLs:
+
+- [https://www.authsamples.com/apps/finalmobileapp/postlogin.html](https://www.authsamples.com/apps/finalmobileapp/postlogin.html)
+- [https://www.authsamples.com/apps/finalmobileapp/postlogout.html](https://www.authsamples.com/apps/finalmobileapp/postlogout.html)
+
+### Deep Linking Assets File
+
+In order for claimed HTTPS scheme logins to work you must configure [Android app link verification](https://developer.android.com/training/app-links/verify-android-applinks). This includes hosting a deep linking assets file, which is contained in the project at *security/assetlinks.json*. This associates our app’s signing key and package name with its hosting domain:
+
+```json
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.authsamples.finalmobileapp",
+      "sha256_cert_fingerprints":
+      ["DA:C6:0C:FD:EB:84:04:4D:F3:2F:D4:30:15:91:08:94:51:33:6B:8D:34:68:50:01:BC:E4:C7:53:F6:36:D9:41"]
+    }
+  }
+]
+```
+
+The deep linking domains allowed by the app are configured with an https scheme in the manifest file:
+
+```xml
+<activity
+    android:name=".plumbing.oauth.logout.LogoutRedirectUriReceiverActivity"
+    android:exported="true">
+
+    <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data
+            android:scheme="https"
+            android:host="mobile.authsamples.com"
+            android:path="/finalmobileapp/oauth/logoutcallback" />
+    </intent-filter>
+</activity>
+```
+
+I uploaded the assets file to run at the below HTTPS URL, in a similar manner to the intermediate pages. We use a second S3 bucket and CloudFront distribution for the root domain:
+
+- https://mobile.authsamples.com/.well-known/assetlinks.json
+
+The *mobile.authsamples.com* S3 bucket has a *.well-known* folder containing the assets files for both Android and iOS:
+
+![asset hosting](../images/520/asset-hosting.jpg?v=20240912)
+
+### Deep Linking Online Verification
+
+We can verify the assets file via a test site that Google provides, and check that results do not contain any errors:
+
+```markdown
+https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://mobile.authsamples.com&relation=delegate_permission/common.handle_all_urls
+```
+
+![deep linking verification](../images/520/deep-linking-verification.jpg?v=20240912)
+
+### Deep Linking Registration Process
+
+When our app is installed, deep linking registration is done via system components. To get some visibility into how this works, uninstall the app, then re-run it while viewing the logcat window. Filter on the word *Verification* and ensure that the *No Filters* option is selected:
+
+![verification success](../images/520/verification-success.jpg?v=20240912)
+
+Once we have run the app we can execute the following command to query its deep linking verification status:
+
+```bash
+adb shell pm get-app-links com.authsamples.finalmobileapp
+```
+
+This should return a domain verification state of *verified*:
+
+```markdown
+com.authsamples.finalmobileapp:
+  ID: a8d77973-3078-40e2-a860-76761575d29f
+  Signatures: [DA:C6:0C:FD:EB:84:04:4D:F3:2F:D4:30:15:91:08:94:51:33:6B:8D:34:68:50:01:BC:E4:C7:53:F6:36:D9:41]
+  Domain verification state:
+    mobile.authsamples.com: verified
+```
+
+### Deep Linking Registration Failures
+
+Deep linking registration can fail, and one way to reproduce this is to configure the mobile device to connect to the internet via an <Link href='/posts/android-https-debugging'>HTTP Proxy</Link>. The system’s *Intent Filter Verifier* will not trust the HTTP proxy’s man in the middle certificate, and the result is that the app installs successfully but the claimed HTTPS scheme is not correctly configured:
+
+![verification failure](../images/520/verification-failure.jpg?v=20240912)
+
+We can then re-run the command to query the status of our app and the result will now show a non-verified domain verification state:
+
+```markdown
+ com.authsamples.finalmobileapp:
+    ID: d94b156e-150c-4d1c-9b6a-98d9758cda8e
+    Signatures: [DA:C6:0C:FD:EB:84:04:4D:F3:2F:D4:30:15:91:08:94:51:33:6B:8D:34:68:50:01:BC:E4:C7:53:F6:36:D9:41]
+    Domain verification state:
+      mobile.authsamples.com: 1024
+```
+
+We can then run a deep link to our app on an emulator, via a command such as this:
+
+```bash
+adb shell am start -a android.intent.action.VIEW -d https://mobile.authsamples.com/finalmobileapp/deeplink/companies/2
+```
+
+This will result in the following undesired behaviour, where the system browser attempts to open the URL, rather than the mobile app:
+
+<div className='smallimage'>
+    <img src='../images/520/deep-link-failure.jpg?v=20240912' alt='deep link failure' />
+</div>
+
+### Fix Deep Linking Registration Failures
+
+If you experience deep linking registration failures, a quick way to get a working app is to switch to using private URI scheme based redirect URIs. Do so by updating the *mobile_config.json* file with the following settings:
+
+```json
+{
+  "app": {
+    "apiBaseUrl":             "https://api.authsamples.com/investments"
+  },
+  "oauth": {
+    "authority":              "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+    "clientId":               "2vshs4gidsbpnjmsprhh607ege",
+    "redirectUri":            "com.authsamples.finalmobileapp:/callback",
+    "postLogoutRedirectUri":  "com.authsamples.finalmobileapp:/logoutcallback",
+    "scope":                  "openid profile https://api.authsamples.com/investments",
+    "userInfoEndpoint":       "https://login.authsamples.com/oauth2/userInfo",
+    "customLogoutEndpoint":   "https://login.authsamples.com/logout",
+    "deepLinkBaseUrl":        "https://mobile.authsamples.com"
+  }
+}
+```
+
+Also update *appAuthRedirectScheme* in the *app/build.gradle.kts* file as follows:
+
+```markdown
+manifestPlaceholders["appAuthRedirectScheme"] = "com.authsamples.finalmobileapp"
+```
+
+Finally, remove the *LogoutRedirectUriReceiverActivity* entry from the *AndroidManifest.xml* file. You will then be able to sign in and sign out without a dependency on deep linking registration succeeding:
+
+### HTTP Debugging and Claimed HTTPS Schemes
+
+During development, I use an HTTP proxy as follows when I want to view OAuth or API messages for the Android app. The mobile OS only registers App Links when the app is first installed, and not when it is redeployed from Android Studio:
+
+- First install the app without running an HTTP proxy
+- Deep linking registration will then succeed
+- Start the HTTP proxy on the host computer
+- Next configure the Android emulator to use the HTTP proxy
+- Then redeploy the app from Android Studio
+- Messages from the app will then be captured successfully
+
+### Android App Code Signing
+
+To finish off our discussion on deep linking, let’s look at how I generated the signature from the assets file. Install the [Java KeyStore Explorer](https://keystore-explorer.org/downloads.html) and open our keyStore file, which has a password of *android*. For educational purposes I have included the keystore file with my source code, though of course you should not do this for a real app. I then used the *Tools / Generate Key Pair* option to create an ECDSA key with default options and a 10 year validity.
+
+I then chose *Add Extensions / Use Standard Template / Code Signing* and included the *Subject Key Identifier* extension. I then used some naming to fit with this blog, and copied the below *SHA256 Fingerprint* to the mobile assets file:
+
+![fingerprint](../images/520/fingerprint.jpg?v=20240912)
+
+Finally, the app’s gradle file references our Android keystore file, which is used to digitally sign our app when it is built.
+
+```kotlin
+signingConfigs {
+    create("release") {
+        storeFile = file("${rootDir}/security/app-keystore.jks")
+        storePassword = "android"
+        keyAlias = "com.authsamples.finalmobileapp"
+        keyPassword = "android"
+    }
+}
+
+buildTypes {
+    getByName("debug") {
+        signingConfig = signingConfigs.getByName("release")
+        isDebuggable = true
+    }
+    getByName("release") {
+        signingConfig = signingConfigs.getByName("release")
+        isMinifyEnabled = false
+        proguardFiles(
+            getDefaultProguardFile("proguard-android-optimize.txt"),
+            "proguard-rules.pro"
+        )
+    }
+}
+```
+
+When the app is deployed to a device, the Android system can verify that the public key in the mobile assets JSON document matches the private key that was used to digitally sign the mobile app.
+
+### Where Are We?
+
+We have explained some infrastructure plumbing needed for our Android code sample. Using claimed HTTPS schemes for mobile logins required some interaction between the mobile device and cloud endpoints.
+
+### Next
+
+- Next I provide some <Link href='/posts/android-coding-key-points'>Android Code Details</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>

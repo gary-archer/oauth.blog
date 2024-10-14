@@ -1,0 +1,204 @@
+# .NET API – Overview
+
+Previously I explained the <Link href='/posts/final-nodeapi-coding-key-points'>Final Node.js API Code Details</Link>, including some behaviours from this blog’s <Link href='/posts/api-journey-server-side'>API Journey – Server Side</Link> blog post. Next I provide an equivalent API in C# and .NET.
+
+### Final API Code Sample Overview
+
+This blog's API has a couple of simple endpoints that return mock data for a money-based theme of investments. The API aims to be visual and serves this blog’s apps, such as the <Link href='/posts/how-to-run-the-react-js-spa'>Final SPA</Link> below. Running both together ensures that the API is client-focused and enables you to focus on API logs that the client generates.
+
+![spa and api](../images/320/spa-and-api.jpg?v=20240915)
+
+### API URLs
+
+During development the API runs as a standalone component. You can use either xUnit tests or a load test as the API client. These tests get user-level access tokens to call the API and verify some OAuth security use cases. The API accepts mock access tokens when you point it to a mock authorization server:
+
+| Component | Base URL |
+| --------- | -------- |
+| <span style={{color:'green'}}>**API**</span> | *https://api.authsamples-dev.com:446* |
+| <span style={{color:'green'}}>**Mock Authorization Server**</span> | *https://login.authsamples-dev.com:447* |
+
+### Prerequisite 1: Domain Setup
+
+First update your computer's hosts file to create domains for local development. Include the web domain and local backend-for-frontend domain if you run the SPA and API together:
+
+```markdown
+127.0.0.1 api.authsamples-dev.com login.authsamples-dev.com www.authsamples-dev.com bfflocal.authsamples-dev.com
+```
+
+### Prerequisite 2: Install .NET
+
+Download and install the latest cross platform [.NET SDK](https://dotnet.microsoft.com/download):
+
+![dotnet](../images/320/dotnet.jpg)
+
+### Prerequisite 3: Optionally Install a .NET IDE
+
+I use [Visual Studio Code](https://code.visualstudio.com/download) for C# development.
+
+### Prerequisite 4: Optionally Install Node.js
+
+If you want to run the SPA as well as the API, install [Node.js](https://nodejs.org/en/download) to build the SPA’s JavaScript bundles.
+
+### Prerequisite 5: Install Docker
+
+To run API tests, or the full SPA and API solution, you use Docker utility components, so install a local engine such as [Docker Desktop](https:/www/.docker.com/products/docker-desktop).
+
+### Step 1: Build and Run the API
+
+Close the GitHub repository with the following command:
+
+```bash
+git clone https://github.com/gary-archer/oauth.apisample.netcore
+```
+
+![repo](../images/320/repo.jpg)
+
+Run the following command, which downloads some OpenSSL development certificates, then runs the API on HTTPS using port 446:
+
+```bash
+./start.sh
+```
+
+![running api](../images/320/running-api.jpg?v=20240915)
+
+### Step 2: Configure SSL Trust
+
+To prevent SSL trust problems from tests or the browser you should <Link href='/posts/developer-ssl-setup'>Configure .NET and Browser Trust</Link> for the root certificate at the following location. 
+
+```markdown
+certs/authsamples-dev.ca.crt
+```
+
+You can then navigate to the following URL in a browser without any SSL trust warnings:
+
+```markdown
+https://api.authsamples-dev.com:446/investments/companies
+```
+
+![browse to api](../images/320/browse-to-api.jpg?v=20240915)
+
+### Step 3: Run Integration Tests
+
+To run XUnit tests, the API must be pointed to a mock authorization server, so must run with a test configuration. Stop the API if it is running, then re-run it via this command:
+
+```bash
+./testsetup.sh
+```
+
+Next run tests with the following command:
+
+```bash
+./integration_tests.sh
+```
+
+This spins up a JWKS URI with an HTTPS endpoint that the Wiremock utility provides. A number of tests then make OAuth-secured API requests. These tests focus on the API’s main security behaviours:
+![test results](../images/320/test-results.jpg?v=20240915)
+
+### Step 4: Run a Basic Load Test
+
+While the API runs with a test configuration you can also run a basic load test that sends parallel API requests. This helps to ensure that the API code has no concurrency bugs:
+
+```bash
+./load_test.sh
+```
+
+The test fires batches of 5 concurrent requests at a time and also intentionally rehearses certain types of error. The expected result is 3 errors from a total of 100 requests:
+
+![load test](../images/320/load-test.jpg?v=20240915)
+
+The <Link href='/post/api-automated-tests'>API Automated Tests</Link> post explains how tests get user level tokens without running a full authorization code flow.
+
+### Step 5: Run the SPA Client
+
+You can run any of this blog's final frontend clients against the API:
+
+- <Link href='/posts/final-spa-overview'>Final SPA</Link>
+- <Link href='/posts/final-desktop-sample-overview'>Final Desktop App</Link>
+- <Link href='/posts/android-code-sample-overview'>Final Android App</Link>
+- <Link href='/posts/ios-code-sample-overview'>Final iOS App</Link>
+
+To run the final SPA as an API client, start in the API's folder, then run the SPA from a parallel folder:
+
+```bash
+cd ..
+git clone https://github.com/gary-archer/oauth.websample.final
+cd oauth.websample.final
+export LOCALAPI='true'
+./build.sh
+./run.sh
+```
+
+The *run.sh* script invokes the default browser at *https://www.authsamples-dev.com/spa* and you can sign in using this blog’s test credential:
+
+- User: *guestuser@example.com*
+- Password: *GuestPassword1*
+
+### Main Feature 1: Extensible Authorization
+
+The API implements its security according to these two blog posts, using a JOSE library and some custom claims handling:
+
+- <Link href='/posts/jwt-access-token-validation'>JWT Access Token Validation</Link>
+- <Link href='/posts/api-authorization-design'>API Authorization Design</Link>
+
+The overall behaviour manages OAuth security correctly while setting up the API’s business logic with the authorization values it needs. These values may originate from multiple data sources and may not always be issued to tokens:
+
+```csharp
+public class CompanyService
+{
+    private readonly CompanyRepository repository;
+    private readonly CustomClaimsPrincipal claims;
+
+    public CompanyService(CompanyRepository repository, CustomClaimsPrincipal claims)
+    {
+        this.repository = repository;
+        this.claims = claims;
+    }
+}
+```
+
+### Main Feature 2: Production Supportability
+
+The other main objective of the API code sample will be JSON logging of API requests, to include useful technical support fields. Logging console output looks like this on a development computer:
+
+```json
+{
+  "id": "57b5b054-55bc-2515-65f9-cd7f66919788",
+  "utcTime": "2022-12-10T12:57:52.451Z",
+  "apiName": "FinalApi",
+  "operationName": "getUserInfo",
+  "hostName": "UBUNTU",
+  "method": "GET",
+  "path": "/investments/userinfo",
+  "clientName": "FinalSPA",
+  "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "statusCode": 200,
+  "millisecondsTaken": 372,
+  "correlationId": "8debe475-41bb-6c9f-7fc6-7395d79a4b67",
+  "sessionId": "f54f1734-aeba-d9a5-550c-e8c74ad3fbf9"
+}
+```
+
+Meanwhile, the API also writes text files to its *logs* folder in a bare JSON format, ready for log shipping:
+
+![bare logs](../images/320/bare-logs.jpg)
+
+Optionally, you can follow the <Link href='/posts/log-aggregation-setup'>Log Aggregation Setup</Link> to run a Docker-based deployment of the Elastic Stack. You can then run <Link href='/posts/api-technical-support-analysis'>Technical Support Queries</Link> against the API's logs. This would be useful in a production system, to make sense of large volumes of API requests.
+
+### Cloud Native Deployment
+
+The API is cloud-native and includes some Docker and Kubernetes deployment resources. A basic deployment can be run with these commands:
+
+```bash
+./deployment/docker-local/build.sh
+./deployment/docker-local/deploy.sh
+./deployment/docker-local/teardown.sh
+```
+
+### Where Are We?
+
+I summarised the key productivity behaviours of this blog's final APIs. This starts with modern code setup and a clean separation of concerns that sets up business logic for future growth. Next, APIs have a unified security model that works the same for any type of API client. Finally, APIs have an early focus on reliability.
+
+### Next
+
+- I explain this blog's <Link href='/posts/net-core-api-oauth-integration'>.NET API OAuth Integration</Link>.
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.

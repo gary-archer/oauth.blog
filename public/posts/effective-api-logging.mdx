@@ -1,0 +1,464 @@
+# Effective API Logging
+
+In the previous post I explained an <Link href='/posts/api-journey-client-side'>API Journey – Client Side</Link>, to describe technical behaviours OAuth clients may need to implement. This post explains a way to design API technical support logs to meet people requirements, so that they can run useful <Link href="/posts/api-technical-support-analysis">technical support queries</Link>.
+
+### Logging Frameworks
+
+Most online documents on API logging describe a widely used development approach, with the following generic capabilities. These behaviours are typically provided by a logging framework:
+
+- Enable a *logger per class*.
+- Enable *logging levels*, such as DEBUG, INFO, WARN and ERROR.
+- Output log data to various locations via *appenders* or *transports*.
+- Enable logging behaviour to be changed via *configuration*.
+
+Results can be useful for local development, with a single user and a low volume of API requests. Yet it may not scale effectively when you need to manage a large volume of logs.
+
+### Common Logging Limitations
+
+The following table summarises some common limitations you may run into with your API logs:
+
+| Problem Area | Description |
+| ------------ | ----------- |
+| <span style={{color:'red'}}>Difficult to Query</span> | Logger per class output may use free text and as a result only support text find operations. |
+| <span style={{color:'red'}}>Does not Scale</span> | Under load it may be difficult to answer basic questions such as how many errors of a particular type there have been today. |
+| <span style={{color:'red'}}>Not Configurable</span> | In some setups it can be impossible to get stakeholders to change the production log level when there is a problem, for fear they will make conditions worse. |
+
+### Technical Support Logging Requirements
+
+In such cases, starting with your requirements can work better than following a technology-first approach. This blog uses the following people requirements:
+
+| Requirement | Behaviour |
+| ----------- | --------- |
+| <span style={{color:'green'}}>**Logs are Centralized**</span> | Technical support users go to a single known location to find API logs for all API instances. |
+| <span style={{color:'green'}}>**Logs are Structured**</span> | Logs contain data you want to query by, and each log entry can consist of both known and unknown fields. |
+| <span style={{color:'green'}}>**Logs are Easy to Use**</span> | Any semi-technical person can issue basic queries against the log data, with a small learning curve. |
+| <span style={{color:'green'}}>**Logs are Lightweight**</span> | Logging avoids redundant noise, so that logs are readable and do not impact performance. |
+| <span style={{color:'green'}}>**Logs are Secure**</span> | Logs do not include confidential data, such as emails or request bodies. As a result it should be possible to grant engineers access to production logs. |
+| <span style={{color:'green'}}>**Logging is Always On**</span> | Incidents are always in the past and changing the log level after the event is too late. |
+| <span style={{color:'green'}}>**Logging is the Same Everywhere**</span> | Logging works the same on a development computer as in production. |
+
+The primary goal of reliability logging is a system that is easy for the following people to use. It must be able to deal with busy production systems, with hundreds of concurrent users, or a million API calls per day.
+
+| Role | Usage |
+| ---- | ----- |
+| <span style={{color:'green'}}>**Developer**</span> | Looks at logs while coding. |
+| <span style={{color:'green'}}>**Tester**</span> | Looks at logs during various types of testing. |
+| <span style={{color:'green'}}>**DevOps**</span> | Looks at production logs to investigate incidents. |
+
+### Log Aggregation
+
+This blog’s final APIs do immediate logging of structured logs to a text file, which is a fast operation. In most API deployments the platform creates these files by redirecting *stdout* to a file. A log shipper component reads log files and sends the log data to a data store from where logs can be queried. Log aggregation is very standard these days, and this blog uses the free open source [Elastic Stack](https://www.elastic.co/elastic-stack), deployed using containers. The essential part of the solution is for API logs to contain good quality data.
+
+### Multiple Logger Types
+
+To build your preferred logging, you can still use a logging framework, but you may need to adapt its default behaviour. Frameworks use loggers to represent a type of output data.  In this blog's final APIs I use the following loggers and only aggregate the first of these:
+
+| Logger Type | Output |
+| ----------- | ------ |
+| <span style={{color:'green'}}>**Request Logger**</span> | A production logger that outputs a single JSON object per API request and is easy to query. |
+| <span style={{color:'green'}}>**Logger per Class**</span> | A development logger that outputs free text which can be useful for developers, but is difficult to query. |
+
+In more complex APIs, the logger per class data at an INFO level may also be useful in production. In this case an alternative approach is to aggregate both types of log data and ensure that you can join data using a *Correlation ID*.
+
+### Production Logs
+
+An example log entry is shown below, and is similar conceptually to a *HTTP Server Log Entry*. However, you design the fields to contain useful fields rather than only HTTP-related values.
+
+```json
+{
+  "id": "c4939e2c-9f71-4f4b-bbca-dda287b48385",
+  "utcTime": "2022-07-24T08:41:05.069Z",
+  "apiName": "FinalApi",
+  "operationName": "getCompanyTransactions",
+  "hostName": "MACSTATION.local",
+  "method": "GET",
+  "path": "/investments/companies/2/transactions",
+  "resourceId": "2",
+  "clientName": "LoadTest",
+  "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "statusCode": 200,
+  "millisecondsTaken": 7,
+  "correlationId": "3e4ac756-11c7-e60f-c564-ad4f203d5742",
+  "sessionId": "a601559a-0c90-c899-8099-8a9f63a30be8"
+}
+```
+
+### Log Schema
+
+This blog's API logs use a schema with the following top level fields. Users of the logging system can filter logs by any of these fields:
+
+| Field | Description |
+| ----- | ----------- |
+| <span style={{color:'green'}}>**ID**</span> | A globally unique identifier for the log entry. |
+| <span style={{color:'green'}}>**UTC Time**</span> | The time when the API code received the request. |
+| <span style={{color:'green'}}>**API Name**</span> | The name of the API within the platform. |
+| <span style={{color:'green'}}>**Operation Name**</span> | The name of the operation within the API. |
+| <span style={{color:'green'}}>**Host Name**</span> | The name of the server that hosts this API instance. |
+| <span style={{color:'green'}}>**HTTP Method**</span> | Whether a GET, POST etc. |
+| <span style={{color:'green'}}>**Path**</span> | The URL path and query string. |
+| <span style={{color:'green'}}>**Resource ID**</span> | The REST URL runtime path segments that identify the resource. |
+| <span style={{color:'green'}}>**Client Name**</span> | A readable value for the application that called the API. |
+| <span style={{color:'green'}}>**User ID**</span> | The subject claim from the OAuth access token. |
+| <span style={{color:'green'}}>**Status Code**</span> | The response status code. |
+| <span style={{color:'green'}}>**Milliseconds Taken**</span> | The number of milliseconds that the API code took to execute. |
+| <span style={{color:'green'}}>**Error Code**</span> | When an error occurs this field contains a text code to identify the cause of the error. |
+| <span style={{color:'green'}}>**Error ID**</span> | When an API 500 error occurs this field contains a generated number to track the exact error occurrence. |
+| <span style={{color:'green'}}>**Correlation ID**</span> | An identifier either supplied via a request header or which the API generates. |
+| <span style={{color:'green'}}>**Session ID**</span> | Used to partition multiple related calls to the API together, such as those for a frontend user session or load test. |
+
+In addition, logs include these child objects which you cannot query directly. Instead, you use top level fields to get documents that contain these objects.
+
+| Field | Description |
+| ----- | ----------- |
+| <span style={{color:'green'}}>**Performance**</span> | Provides instrumentation on expensive subtasks to help understand where time is spent. |
+| <span style={{color:'green'}}>**Error**</span> | When the API returns a 400 or 500 response, this contains the client error response, along with context and exception details where applicable. |
+| <span style={{color:'green'}}>**Info**</span> | Additional arbitrary data can be added here, though I use this object sparingly. |
+
+### Users and Privacy
+
+The *User ID* requires a special mention, since these days you should not record personally identifiable information such as names and emails in logs. I use an anonymous identifier for the OAuth subject claim, and log that as a stable value. You also need to avoid inadvertent user tracking. The log data should only ever be available to technical support staff and should be truncated every month or so. In some setups it may be safer to omit user IDs from logs.
+
+### API Logging Configuration
+
+This blog’s final APIs use Node.js, .NET and Java. Each API defines its logging behaviour in its configuration file. Production logs always use JSON output, to either the console or a file, and I configure JSON pretty printing on a development computer.
+
+```json
+{
+    "apiName": "FinalApi",
+    "production": {
+        "level": "info",
+        "performanceThresholdMilliseconds": 500,
+        "transports": [
+            {
+                "type": "console",
+                "prettyPrint": true
+            },
+            {
+                "type": "file",
+                "filePrefix": "api",
+                "dirname": "./logs",
+                "maxSize": "10m",
+                "maxFiles": "7d"
+            }
+        ]
+    },
+    "development": {
+        "level": "info",
+        "overrideLevels": {
+            "ClaimsCache": "info"
+        },
+        "transports": [
+            {
+                "type": "file",
+                "filePrefix": "trace",
+                "dirname": "./logs",
+                "maxSize": "10m",
+                "maxFiles": "7d"
+            }
+        ]
+    }
+}
+```
+
+In your own APIs it may make sense to instead use the built-in logging configuration, such as that from [log4j2](https://logging.apache.org/log4j/2.x/manual/configuration.html), for best flexibility. In this blog I avoided doing so since I wanted the logging configuration to be expressed the same for all three API technologies.
+
+By default, this blog’s APIs output production JSON logs at all stages of the pipeline, including development computers. When required, developers can temporarily change to a logger per class configuration.
+
+### Logging Framework Customisation
+
+Logging frameworks typically implement JSON logging by first adding their own fields, then encoding the JSON payload into a *message* field. This blog instead uses pure JSON, for best readability on development computers. In API code there is some plumbing code to enable my preferred logging output. It can be worth the effort though, to enable the best readability for users of logs.
+
+### JSON Output
+
+When using pretty printing, you write multi-line JSON to *stdout* by default. When log aggregation is used, log shipper components require immediate output to instead be bare JSON, on a single line. To enable log aggregation from a development computer, output logs to local log files in addition to *stdout*. You also need to learn how to write log files if you aggregate more than one type of log data.
+
+![bare logs](../images/280/bare-logs.jpg)
+
+### Logger per Class Output
+
+To enable development output, you can use the following type of configuration in this blog's final APIs. This example disables JSON request logging and uses a *debug* level for the logger for the *ClaimsCache* class:
+
+```json
+{
+    "apiName": "FinalApi",
+    "production": {
+        "level": "info",
+        "performanceThresholdMilliseconds": 500,
+        "transports": [
+            {
+                "type": "file",
+                "filePrefix": "api",
+                "dirname": "./logs",
+                "maxSize": "10m",
+                "maxFiles": "7d"
+            }
+        ]
+    },
+    "development": {
+        "level": "info",
+        "overrideLevels": {
+            "ClaimsCache": "debug"
+        },
+        "transports": [
+            {
+                "type": "console",
+                "prettyPrint": true
+            }
+        ]
+    }
+}
+```
+
+The API code can then continue to write *logger per class* output in addition to outputting structured JSON logs:
+
+```typescript
+const traceLogger = loggerFactory.getDevelopmentLogger(ClaimsCache.name);
+traceLogger.debug(`Token to be cached will expire in 
+                   ${secondsToCache} seconds (hash: ${accessTokenHash})`);
+```
+
+With the above configuration, structured logs output to files and the console shows developer logging:
+
+```markdown
+debug: 2022-07-24T09:31:09.219Z : ClaimsCache : Token to be cached will expire in 1656996443945 seconds (hash: 4185d7218f55d0a14314ee473c64f0a01b66b567f601d32d3b070dd654532da7)
+debug: 2022-07-24T09:31:09.219Z : ClaimsCache : Adding token to claims cache for 1800 seconds (hash: 4185d7218f55d0a14314ee473c64f0a01b66b567f601d32d3b070dd654532da7)
+debug: 2022-07-24T09:31:09.222Z : ClaimsCache : Token to be cached will expire in 1656996443944 seconds (hash: 46a5f14270fbff05d31310cf49bb1243076dec4f3d51fab562af7640dae2cd24)
+debug: 2022-07-24T09:31:09.222Z : ClaimsCache : Adding token to claims cache for 1800 seconds (hash: 46a5f14270fbff05d31310cf49bb1243076dec4f3d51fab562af7640dae2cd24)
+debug: 2022-07-24T09:31:09.223Z : ClaimsCache : Token to be cached will expire in 1656996443943 seconds (hash: 9fa995f769351cbccd8cd67b41e2a74636e8fb7db9c1cbf7702db29f5c231053)
+debug: 2022-07-24T09:31:09.223Z : ClaimsCache : Adding token to claims cache for 1800 seconds (hash: 9fa995f769351cbccd8cd67b41e2a74636e8fb7db9c1cbf7702db29f5c231053)
+debug: 2022-07-24T09:31:09.296Z : ClaimsCache : Found existing token in claims cache (hash: db090981096137579adba5a032aa386f443d78a31b5d755ba5a482fc29dd4fd1)
+debug: 2022-07-24T09:31:09.297Z : ClaimsCache : Found existing token in claims cache (hash: 9fa995f769351cbccd8cd67b41e2a74636e8fb7db9c1cbf7702db29f5c231053)
+debug: 2022-07-24T09:31:09.298Z : ClaimsCache : Found existing token in claims cache (hash: 46a5f14270fbff05d31310cf49bb1243076dec4f3d51fab562af7640dae2cd24)
+debug: 2022-07-24T09:31:09.298Z : ClaimsCache : Found existing token in claims cache (hash: 84bae745760578309cfeea9f2e7cdae73aceea9b0565b4bef832875fd74d6150)
+debug: 2022-07-24T09:31:09.300Z : ClaimsCache : Found existing token in claims cache (hash: 4185d7218f55d0a14314ee473c64f0a01b66b567f601d32d3b070dd654532da7)
+```
+
+### Error Logs
+
+When APIs return an HTTP 400 related status, they log the client response error along with additional context to explain the technical cause. The API code throws an exception, but no call stack is logged, since nothing has failed on the server:
+
+```json
+{
+  "id": "7af62b06-8c04-41b0-c428-de332436d52a",
+  "utcTime": "2022-07-24T10:27:33.468Z",
+  "apiName": "FinalApi",
+  "operationName": "getCompanyTransactions",
+  "hostName": "MACSTATION.local",
+  "method": "GET",
+  "path": "/investments/companies/2/transactions",
+  "resourceId": "2",
+  "clientName": "FinalSPA",
+  "statusCode": 401,
+  "errorCode": "invalid_token",
+  "millisecondsTaken": 2,
+  "correlationId": "15b030a2-c67d-01ae-7c3f-237b9a70dbba",
+  "sessionId": "77136323-ec8c-dce2-147a-bc52f34cb7cd",
+  "errorData": {
+    "statusCode": 401,
+    "clientError": {
+      "code": "invalid_token",
+      "message": "Missing, invalid or expired access token"
+    },
+    "context": "JWT verification failed : signature verification failed"
+  }
+}
+```
+
+When API requests return an HTTP 500 related status, the error logged includes both the client and service errors. In this case, technical information, including a call stack, represent the problem cause:
+
+```json
+{
+  "id": "b36701c9-ddf2-d7da-df48-4dfcc918009b",
+  "utcTime": "2022-07-24T10:28:00.435Z",
+  "apiName": "FinalApi",
+  "operationName": "getCompanyTransactions",
+  "hostName": "MACSTATION.local",
+  "method": "GET",
+  "path": "/investments/companies/2/transactions",
+  "resourceId": "2",
+  "clientName": "FinalSPA",
+  "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "statusCode": 500,
+  "errorCode": "exception_simulation",
+  "errorId": 79072,
+  "millisecondsTaken": 9,
+  "correlationId": "5f1f1bcb-79c4-00ee-a1fe-be5e4262eb75",
+  "sessionId": "77136323-ec8c-dce2-147a-bc52f34cb7cd",
+  "errorData": {
+    "statusCode": 500,
+    "clientError": {
+      "code": "exception_simulation",
+      "message": "An unexpected exception occurred in the API",
+      "id": 79072,
+      "area": "FinalApi",
+      "utcTime": "2022-07-24T10:28:00.438Z"
+    },
+    "serviceError": {
+      "details": "",
+      "stack": [
+        "Error: An unexpected exception occurred in the API",
+        "at Function.createServerError (/Users/gary/dev/oauth.apisample.nodejs/src/plumbing/errors/errorFactory.ts:16:16)",
+        "at CustomHeaderMiddleware.processHeaders (/Users/gary/dev/oauth.apisample.nodejs/src/plumbing/middleware/customHeaderMiddleware.ts:27:36)",
+        "at Layer.handle [as handle_request] (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/layer.js:95:5)",
+        "at trim_prefix (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:328:13)",
+        "at /Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:286:9",
+        "at param (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:365:14)",
+        "at param (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:376:14)",
+        "at Function.process_params (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:421:3)",
+        "at next (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:280:10)",
+        "at ClaimsCachingAuthorizer.authorizeRequestAndGetClaims (/Users/gary/dev/oauth.apisample.nodejs/src/plumbing/security/baseAuthorizer.ts:62:13)"
+      ]
+    }
+  }
+}
+```
+
+### Performance Instrumentation
+
+In places the API code contains statements to measure the performance of a particular routine. The time taken may need to include one or more *async await* operations:
+
+```typescript
+public async getUserInfo(accessToken: string): Promise<UserInfoClaims> {
+
+    return using(this._logEntry.createPerformanceBreakdown('userInfoLookup'), async () => {
+
+        try {
+
+            const response = await axios.request(options as AxiosRequestConfig);
+            return ClaimsReader.userInfoClaims(response.data);
+
+        } catch (e: any) {
+
+            throw ErrorUtils.fromUserInfoError(e, this._configuration.userInfoEndpoint);
+        }
+    });
+}
+```
+
+To see this output in the final APIs, change the logging configuration to use a zero performance threshold:
+
+```json
+{
+    "apiName": "FinalApi",
+    "production": {
+        "level": "info",
+        "performanceThresholdMilliseconds": 0,
+        ...
+    }
+}
+```
+
+The logging then contains a number of performance items to provide a breakdown of time spent:
+
+```json
+{
+  "id": "baf31c4c-6bf3-5ba3-2863-169a088b4776",
+  "utcTime": "2022-07-24T10:30:10.697Z",
+  "apiName": "FinalApi",
+  "operationName": "getCompanyList",
+  "hostName": "MACSTATION.local",
+  "method": "GET",
+  "path": "/investments/companies",
+  "clientName": "FinalSPA",
+  "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "statusCode": 200,
+  "millisecondsTaken": 383,
+  "correlationId": "b4b1f41c-abcb-f99f-e8fd-0193ff7c2099",
+  "sessionId": "77136323-ec8c-dce2-147a-bc52f34cb7cd",
+  "performance": {
+    "name": "total",
+    "millisecondsTaken": 383,
+    "children": [
+      {
+        "name": "validateToken",
+        "millisecondsTaken": 84
+      },
+      {
+        "name": "userInfoLookup",
+        "millisecondsTaken": 292
+      },
+      {
+        "name": "selectCompanyListData",
+        "millisecondsTaken": 1
+      }
+    ]
+  }
+}
+```
+
+Each performance section also has a *details* field, which can store additional information. For example, you could extend logging code to record sanitized SQL and parameters when there is a database error or SQL performance is slower than a threshold that you configure:
+
+```json
+{ 
+    "name": "selectCompanyTransactions",
+    "detail": "select * from transactions where companyId=@p0; @p0=2"
+    "millisecondsTaken": 2011
+}
+```
+
+### Arbitrary Data
+
+You could use the *Info* object to handle other use cases. One option might be to temporarily log request input under particular error conditions. This might help to resolve a particularly tricky data-related bug that you can’t reproduce in any other way.
+
+### Client Context
+
+Any API client can supply the following three custom HTTP headers in API requests:
+
+- A *Correlation ID* for the exact request.
+- A *Session ID* for all requests in the same authenticated user session.
+- A *Client Name* to easily identify the client.
+
+This *Client Context* helps to satisfy <Link href='/posts/api-technical-support-analysis'>query use cases</Link>, including the ability to quickly filter logs for your own session ID:
+
+![application session](../images/280/application-session.jpg?v=20240913)
+
+When an API calls an upstream API it should forward the client context in request headers, so that the upstream API includes these identifiers in its own log entry.
+
+### Request Logging Implementation
+
+An implementation needs to populate a *LogEntry* object stored in-memory during the lifetime of the API request, then output its data when the request ends. This is trickier to code than when using a logger per class:
+
+- You may need to capture identity details in an *OAuth Filter*.
+- You may need to capture HTTP request details in a *Logging Filter*.
+- You may need to capture error or exception details in an *Error Filter*.
+- Business logic may sometimes need to use the log entry and contribute data to logs.
+
+The log entry is a natural request scoped object, and you may need to use it in a number of other classes. This log’s final APIs use dependency injection to inject the request-scoped log entry into objects that need it. I also ensure that this works correctly when API code resumes on a different thread after async await requests complete.
+
+### Non REST API Operations
+
+APIs often also implement non REST operations, such as processing event messages from a message broker or running a scheduled job. Each of these represents a unit of work, similar to a REST API call. For example, if a *Billing API* subscribes to an event called *OrderCreated* and creates an invoice, that unit of work could log to the same schema, with similar coding techniques. I would write the following type of log entry, as a logical REST operation rather that a physical one:
+
+```json
+{
+  "id": "c4939e2c-9f71-4f4b-bbca-dda287b48385",
+  "utcTime": "2022-07-24T08:41:05.069Z",
+  "apiName": "FinalApi",
+  "operationName": "OrderCreated",
+  "hostName": "MACSTATION.local",
+  "method": "POST",
+  "path": "/invoices/777",
+  "resourceId": "777",
+  "clientName": "MessageBroker",
+  "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "statusCode": 200,
+  "millisecondsTaken": 7,
+  "correlationId": "3e4ac756-11c7-e60f-c564-ad4f203d5742",
+  "sessionId": "a601559a-0c90-c899-8099-8a9f63a30be8"
+}
+```
+
+Although there is no physical HTTP request, assigning failures a status code is a widely understood way to convey a high level result to people. Separating the client and service parts of an error also remains a good practice, in case you need to notify a recipient of failures without disclosing the full exception details.
+
+### Tracing Standardization
+
+I could update this blog's API logging to output performance details as [OpenTelemetry Traces](https://opentelemetry.io/). The *Correlation ID* in the log schema would then change to an OpenTelemetry *Trace ID*. I would record performance breakdowns as *spans* in the standardized trace format. Logs and traces are closely related, so you should be able to query both in the same observability system. Logging solutions like the Elastic Stack might enable this, but the ability to ask your desired questions of log data will always be the area of highest value.
+
+### Where Are We?
+
+I articulated how this blog’s logging would behave in a platform of APIs. Next, I explain this blog’s approach to handling errors and enabling fast problem resolution, both during and after development.
+
+### Next
+
+- I take a detailed look at <Link href='/posts/error-handling-and-supportability'>Error Handling and Supportability</Link>.
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.

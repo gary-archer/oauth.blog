@@ -1,0 +1,530 @@
+# Error Handling and Supportability
+
+In the previous post I explained this blog's <Link href='/posts/effective-api-logging'>Effective API Logging</Link> design. This post covers some error design patterns for APIs and clients, with a focus on *API Responses*, *API Logs*, *Error Presentation* and *Incident Resolution*.
+
+### Fast Problem Resolution
+
+An early focus on failures reduces stress and improves productivity. In production it can make the difference between these two outcomes, where the latter causes <span style={{color:'red'}}>reputational damage</span> for your company:
+
+- A problem for a high profile user takes *10 minutes* to resolve.
+- A problem for a high profile user takes *12 hours* to resolve.
+
+### Fast Time to Market
+
+Even more important is the <span style={{color:'red'}}>hidden cost</span> when software and people do not have good processes for handling failures. Companies are rarely able to measure or quantify these costs:
+
+- Cryptic failures can block developers or testers.
+- Production incidents can waste time for senior engineers.
+- Delivery of in-progress business deliverables takes longer.
+
+### Design for Failure Scenarios
+
+To meet these goals, you should build software that expects failure. It is common these days to read about this approach in cloud-native deployments, but there is usually insufficient focus on coding. The following sections of this post describe some common failure scenarios and desired outcomes, along with design thinking to achieve them. I use the coding techniques in this blog’s code samples.
+
+### 401 Error Responses
+
+The first error case I consider is calling an OAuth secured API without an access token. This blog's APIs return an error object with a code and message. The HTTP 401 status is also included in the response:
+
+```json
+{   
+  "code": "invalid_token",
+  "message": "Missing, invalid or expired access token"
+}
+```
+
+The API logs the error along with some context in case the 401 is unexpected. For example, the authorization server could issue a client an access token with an *aud* claim that does not match the API's expected audience. Note that no call stack is logged for 4xx errors:
+
+```json
+{
+  "id": "39c9350e-b056-38e0-2bed-636a50ead25d",
+  "utcTime": "2022-12-22T09:37:51.821Z",
+  "apiName": "FinalApi",
+  "operationName": "getCompanyTransactions",
+  "hostName": "WORK",
+  "method": "GET",
+  "path": "/investments/companies/4/transactions",
+  "resourceId": "4",
+  "clientName": "FinalSPA",
+  "statusCode": 401,
+  "errorCode": "invalid_token",
+  "millisecondsTaken": 4,
+  "correlationId": "4b32057f-e204-db1f-5781-aa054c840e86",
+  "sessionId": "832fd8c3-5fc2-e980-2f32-f88ae284f4e1",
+  "errorData": {
+    "statusCode": 401,
+    "clientError": {
+      "code": "invalid_token",
+      "message": "Missing, invalid or expired access token"
+    },
+    "context": "JWT verification failed : signature verification failed"
+  }
+}
+```
+
+For API 401s, you can also include the error details in a [www-authenticate header](https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2). For most APIs I prefer to design my own error model that uses a consistent wire format for all types of error. If you also want to align with OAuth recommendations you can consider returning error details in both a *www-authenticate* response header and an error object.
+
+### 4xx Error Responses due to Invalid Input
+
+In real world APIs you will want to validate all input early, to prevent deeper problems such as data corruption. This blog’s apps use a couple of basic input validation cases to cover the concept. The API returns a *Not Found for User* response if the user tries to access data they are not entitled to, by editing the browser location. In the below screenshot, the user is unauthorized to access company 3:
+
+![unauthorized resource](../images/290/unauthorized-resource.jpg?v=20240913)
+
+The API returns an error response with a 404 status code, and the following response body:
+
+```json
+{   
+  "code": "company_not_found",
+  "message": "Company 3 was not found for this user"
+}
+```
+
+Similarly, if you use a syntactically invalid ID such as *abc*, the API returns a 400 error to indicate a malformed request:
+
+```json
+{
+  "code": "invalid_company_id",
+  "message": "The company id must be a positive numeric integer"
+}
+```
+
+### Using Error Codes in Clients
+
+The *Transactions View* in this blog's frontends can handle these known API error codes gracefully and redirect the user back to the home page. More generally, useful error codes put clients in control:
+
+```typescript
+private _isExpectedApiError(error: UIError): boolean {
+
+    if (error.statusCode === 404 && error.errorCode === ErrorCodes.companyNotFound) {
+        return true;
+    }
+
+    if (error.statusCode === 400 && error.errorCode === ErrorCodes.invalidCompanyId) {
+        return true;
+    }
+
+    return false;
+}
+```
+
+### Error Codes List
+
+For each of this blog’s frontend and API code samples, an *ErrorCodes* object represents error causes. It provides a full list of error codes that you can publish it to interested parties when required, such as those who integrate with your API.
+
+```typescript
+export class ErrorCodes {
+    public static readonly serverError = 'server_error';
+    public static readonly invalidToken = 'invalid_token';
+    public static readonly tokenSigningKeysDownloadError = 'jwks_download_failure';
+    public static readonly insufficientScope = 'insufficient_scope';
+    public static readonly userinfoFailure = 'userinfo_failure';
+    public static readonly userInfoInvalidToken = 'invalid_token';
+    public static readonly exceptionSimulation = 'exception_simulation';
+}
+```
+
+You can start small, where for example any server exception returns a generic code such as *server_error*. Then enhance your error processing over time, based on specific failures encountered.
+
+### Unexpected API 4xx Responses
+
+Most 4xx errors should only occur during initial integration and not during production usage. However, clients need a default action if a 4xx error ever occurs unexpectedly. You can simulate this in APIs by manually throwing an error:
+
+```typescript
+throw ErrorFactory.createClientError(
+    400,
+    'invalid_text_data', 
+    'Unsupported characters were encountered');
+```
+
+### Client 4xx Error Displays
+
+When a client receives an unexpected API 4xx error response and cannot continue, the client must present an error display to the user. Think through how you will manage this from both a support and usability viewpoint. When online sites present an error such as the following, the experience is poor in both areas:
+
+- *Oops – something has gone wrong*
+
+This blog’s apps present an *Error Summary Link* for the failing view. The user can either view details or perform a *Navigation Action* by clicking the home button, to try to recover:
+
+![error summary](../images/290/error-summary.jpg?v=20240913)
+
+If an error summary link is clicked, an *Error Details View* is presented. This blog's frontends render details that both inform the user and might be useful to technical support staff:
+
+![400 error details](../images/290/400-error-details.jpg?v=20240913)
+
+The client should model errors as a first class object. You can then decide which properties to display and where. Your error models can include secure values that you do not display and instead send to an error service:
+
+```typescript
+export class UIError extends Error {
+
+    private _area: string;
+    private _errorCode: string;
+    private _userAction: string;
+    private _utcTime: string;
+    private _statusCode: number;
+    private _instanceId: number;
+    private _details: any;
+    private _url: string;
+}
+```
+
+### Custom API 4xx Error Responses
+
+There is not always a one-size-fits-all solution for 4xx errors. Sometimes error responses need to be domain-specific and contain more complex payloads. The following example contains a collection of errors, each of which indicates an item that failed processing:
+
+```json
+[
+    {   
+        "code": "invalid_stock_item_id",
+        "message": "The stock item supplied was not found",
+        "key": 2
+    },
+    {
+        "code": "invalid_quantity",
+        "message": "The quantity must be a positive integer",
+        "key": 5
+    }
+]
+```
+
+You should still be able to design a loose abstraction that all client errors satisfy. Any type of custom error can then render itself to an error response or error log entry that extends your API's standard formats:
+
+```typescript
+export abstract class ClientError extends Error {
+
+    public constructor(statusCode: number, errorCode: string, message: string);
+    
+    public abstract getStatusCode(): number;
+
+    public abstract getErrorCode(): string;
+
+    public abstract toResponseFormat(): any;
+
+    public abstract toLogFormat(): any;
+}
+```
+
+### Aim to Fail on First Error
+
+Unless there is a good reason, I avoid returning API composite errors and use a *Fail on First Error* approach. A single error item is usually easier for clients to code against, and also easier for API code to implement reliably. This approach can also work well in cases where a form submits multiple values, since client side validation should deal with failures such as missing or malformed input, to avoid the need for APIs to return multiple server side validation failures.
+
+### API Validation Frameworks
+
+Developers are often attracted to vendor solutions that validate fields using declarative annotations. This is fine, but first ensure that the framework fits into your wider error model rather than forcing you to use an unsupportable error model. I look for requirements like these:
+
+| Requirement | Description |
+| ----------- | ----------- |
+| <span style={{color:'green'}}>**Formats**</span> | It must be possible to override the error formats written to API responses and API logs, to match your error models. |
+| <span style={{color:'green'}}>**Configurable**</span> | Rules must handle your particular reliability requirements such as trimming or rejecting leading and trailing white space. |
+| <span style={{color:'green'}}>**Extensible**</span> | You must be able to create custom validators, which might operate on multiple fields, in addition to built-in declarative validators. |
+
+### API 5xx Error Response Formats
+
+API 500 errors most commonly occur due to either bugs, misconfiguration or temporary infrastructure problems. You should consider additional fields to help with fast problem resolution. This blog’s APIs return an extended error response for server errors with the following format:
+
+```json
+{
+	"code": "exception_simulation",
+	"message": "An unexpected exception occurred in the API",
+	"area": "FinalApi",
+	"id": 88146,
+	"utcTime": "2019-05-06T12:42:30.357Z"
+}
+```
+
+The three extra fields provide the *Where*, *Which* and *When* of the failure, to help enable fast error lookup:
+
+| Field | Meaning |
+| ----- | ------- |
+| <span style={{color:'green'}}>**area**</span> | Where in your API platform to look for the root cause. |
+| <span style={{color:'green'}}>**id**</span> | Which log entry in that API’s logs contains the error details. |
+| <span style={{color:'green'}}>**utcTime**</span> | When the error occurred. |
+
+Note also that the *root cause of the error* may have been in an upstream API rather than the API that returned the error to the caller.
+
+### Client 5xx Error Displays
+
+For API 5xx errors, the key difference is that this blog’s apps render the extra fields in the API response. This includes an *Error ID* to represent a particular occurrence of the error:
+
+![500 error details](../images/290/500-error-details.jpg?v=20240913)
+
+### API 5xx Error Logs
+
+For 5xx errors, this blog’s APIs log the error details in the following format. This includes client and service error details. The service details including a call stack and any other useful information that could explain the cause. Some error fields are denormalized, to support error queries:
+
+```json
+
+  "id": "efa6217b-7be1-f393-773d-6d8aa9a464b3",
+  "utcTime": "2024-09-03T10:08:39.154Z"
+  "apiName": "FinalApi",
+  "operationName": "getCompanyList",
+  "hostName": "UBUNTU",
+  "method": "GET",
+  "path": "/investments/companies",
+  "clientName": "FinalSPA",
+  "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "statusCode": 500,
+  "errorCode": "exception_simulation",
+  "errorId": 88490,
+  "millisecondsTaken": 1,
+  "correlationId": "b95f6800-b236-863a-1f6f-23e7a12cf474",
+  "sessionId": "832fd8c3-5fc2-e980-2f32-f88ae284f4e1",
+  "errorData": {
+    "statusCode": 500,
+    "clientError": {
+      "code": "exception_simulation",
+      "message": "An unexpected exception occurred in the API",
+      "id": 88490,
+      "area": "FinalApi",
+      "utcTime": "2024-09-03T10:08:39.154Z"
+    },
+    "serviceError": {
+      "details": "",
+      "stack": [
+        "Error: An unexpected exception occurred in the API",
+        "at Function.createServerError (/home/gary/dev/oauth.apisample.nodejs/src/plumbing/errors/errorFactory.ts:16:16)",
+        "at CustomHeaderMiddleware.processHeaders (/home/gary/dev/oauth.apisample.nodejs/src/plumbing/middleware/customHeaderMiddleware.ts:27:36)",
+        "at Layer.handle [as handle_request] (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/layer.js:95:5)",
+        "at trim_prefix (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:328:13)",
+        "at /home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:286:9",
+        "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:365:14)",
+        "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:376:14)",
+        "at Function.process_params (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:421:3)",
+        "at next (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:280:10)",
+        "at ClaimsCachingAuthorizer.authorizeRequestAndGetClaims (/home/gary/dev/oauth.apisample.nodejs/src/plumbing/security/baseAuthorizer.ts:62:13)"
+      ]
+    }
+  }
+}
+```
+
+### Error Communication
+
+In some types of app, users will communicate problems back to the software-producing organization, such as by phoning or sending an email to a helpdesk. I use a *fairly unique error idenitifier* that is easy for a user to communicate by phone, even if they are not a strong English speaker. 
+
+The *errorID* could be used by support staff to quickly look up the error cause in the log aggregation system, using the following type of query. Occasionally, multiple log entries could exist with the same *errorID*. In this case, other details, such as the time, enable you to quickly identify the most relevant entry.
+
+```json
+GET apilogs*/_search
+{ 
+  "query":
+  {
+    "match":
+    {
+      "errorId": 76236
+    }
+  }
+}
+```
+
+### Error Chaining
+
+In some cases, a client calls an entry point API which calls an upstream API. The root cause of an error might occur in the upstream API. In such cases you must ensure that error references returned to clients point to the root cause. For example, a client that called an entry point API might receive an error response with these fields:
+
+- *Area = Customers API*
+- *ID = 97264*
+
+I would write error log entries for both the entry point API and the upstream API with the same *errorID*. The log aggregation query on the *errorID* would return both entries and the one for the upstream API would explain the cause.
+
+### Error Rehearsal
+
+Typically 500 errors are the most difficult to reproduce or test, but the ability to do so ensures that:
+
+- The API 500 error handling code behaves correctly.
+- The right people have access to production logs.
+- People understand how the incident resolution process works.
+
+All of this blog’s final frontend code samples enable rehearsal of an API 500 error. To cause an API exception you long-press the *Reload Data* button for a few seconds, which results in the frontend sending a custom header to the API:
+
+![error rehearsal](../images/290/error-rehearsal.jpg?v=20240913)
+
+This blog’s final APIs use a small middleware class to checks for a custom header and throws an exception when the header value matches the name of the API. This enables a basic form of chaos testing, where a client can choose which API to break.
+
+```typescript
+export class CustomHeaderMiddleware {
+
+    public processHeaders(request: Request, response: Response, next: NextFunction): void {
+
+        const apiToBreak = request.header('x-authsamples-test-exception');
+        if (apiToBreak) {
+            if (apiToBreak.toLowerCase() === this._apiName.toLowerCase()) {
+
+                throw ErrorFactory.createServerError(
+                    BaseErrorCodes.exceptionSimulation,
+                    'An unexpected exception occurred in the API');
+            }
+        }
+
+        next();
+    }
+}
+```
+
+### Reliability Over Time
+
+Not all errors are so deterministic and occasionally software has deeper bugs that occur intermittently. The best way to deal with these is to assign them an error code, then measure them. The <Link href='/posts/api-technical-support-analysis'>Technical Support Analysis</Link> post explains how structured logs can enable a report with a breakdown of API errors by type and frequency. Once you have visibility you can plan actions for any unexpected error occurrences, such as by adding extra details to logs.
+
+```markdown
+clientName|    apiName    |    operationName     |  statusCode   |     errorCode      |   frequency   
+---------------------+---------------+----------------------+---------------+--------------------+---------------
+FinalSPA             |FinalApi      |getCompanyTransactions|404            |company_not_found   |6              
+FinalSPA             |FinalApi      |getCompanyList        |500            |exception_simulation|2              
+FinalSPA             |FinalApi      |getCompanyList        |500            |server_error        |7              
+BasicIosApp          |FinalApi      |getCompanyTransactions|500            |file_read_error     |1              
+BasicAndroidApp      |FinalApi      |getCompanyTransactions|400            |invalid_company_id  |1              
+BasicDesktopApp      |FinalApi      |getUserInfo           |500            |server_error        |2              
+```
+
+### Error Coding Steps
+
+You can reason about error handling as the following main steps, which I use in this blog’s code samples:
+
+| Step | Description |
+| ---- | ----------- |
+| <span style={{color:'green'}}>**Error Catching**</span> | Catching an error when it occurs, to include exception-specific context in error models. |
+| <span style={{color:'green'}}>**Error Throwing**</span> | Throwing an exception with error fields that you control, while keeping the stack trace of the original error. |
+| <span style={{color:'green'}}>**Error Logging**</span> | Logging the error information in a structured format, that is easy to query later. |
+| <span style={{color:'green'}}>**Error Responses**</span> | Returning the error details to an API client or displaying them to a user. |
+
+### Error Catching and Throwing
+
+When there is an exception, both clients and APIs collect exception-related data into their error models. APIs use both *ClientError* and *ServerError* objects, both of which contain fields used for supportability:
+
+```typescript
+export class ServerErrorImpl extends ServerError {
+
+    private readonly _statusCode: number;
+    private readonly _errorCode: string;
+    private readonly _instanceId: number;
+    private readonly _utcTime: string;
+    private _details: any;
+
+    public constructor(errorCode: string, userMessage: string, stack?: string | undefined) {
+
+        super(userMessage);
+
+        this._statusCode = 500;
+        this._errorCode = errorCode;
+        this._instanceId = Math.floor(Math.random() * (MAX_ERROR_ID - MIN_ERROR_ID + 1) + MIN_ERROR_ID);
+        this._utcTime = new Date().toISOString();
+        this._details = '';
+
+        if (stack) {
+            this.stack = stack;
+        }
+   }
+}
+```
+
+Catch errors when you when we want to assign a specific error code or capture third-party details. These concerns are best managed close to the source exception. You should usually only need a few catch blocks, when you deal with infrastructure:
+
+```typescript
+public async validateToken(accessToken: string): Promise<JWTPayload> {
+
+    try {
+
+        const options = {
+            algorithms: [this._configuration.algorithm],
+            issuer: this._configuration.issuer,
+            audience: this._configuration.audience,
+        };
+        const result = await jwtVerify(accessToken, this._jwksRetriever.remoteJWKSet, options);
+
+        return result.payload;
+
+    } catch (e: any) {
+
+        if (e.code === 'ERR_JOSE_GENERIC') {
+            throw ErrorUtils.fromSigningKeyDownloadError(e, this._configuration.jwksEndpoint);
+        }
+
+        let details = 'JWT verification failed';
+        if (e.message) {
+            details += ` : ${e.message}`;
+        }
+
+        throw ErrorFactory.createClient401Error(details);
+    }
+}
+```
+
+The API code is able to indicate a 4xx condition by throwing a *ClientError*, or a 5xx condition by throwing a *ServerError*. It can assign an error code in both cases. The thrown error also contains a useful stack trace, which can originate from a third-party library.
+
+### Error Logging and Responses
+
+This blog's APIs do their final error handling in an exception middleware class, which adds exception details to API logs and calls the *toResponseFormat* method to get the error object returned over the wire to clients:
+
+```typescript
+export class UnhandledExceptionHandler {
+
+    public handleException(exception: any, request: Request, response: Response, next: NextFunction): void {
+
+        const perRequestContainer = ChildContainerHelper.resolve(request);
+        const logEntry = perRequestContainer.get<LogEntryImpl>(BASETYPES.LogEntry);
+        const error = ErrorUtils.fromException(exception);
+
+        let clientError;
+        if (error instanceof ServerError) {
+            
+            logEntry.setServerError(error);
+            clientError = error.toClientError(this._configuration.apiName);
+
+        } else {
+
+            logEntry.setClientError(error);
+            clientError = error;
+        }
+
+        const writer = new ResponseWriter();
+        writer.writeObjectResponse(response, clientError.getStatusCode(), clientError.toResponseFormat());
+    }
+}
+```
+
+The client then receives the API error and displays its own error model to the user when required. Both the API and client therefore implement consumer-focused error handling:
+
+```typescript
+export class ErrorFormatter {
+
+    public getErrorLines(error: UIError): ErrorLine[] {
+
+        const lines: ErrorLine[] = [];
+
+        lines.push(this._createErrorLine('User Action', error.userAction, 'highlightcolor'));
+
+        if (error.message.length > 0) {
+            lines.push(this._createErrorLine('Info', error.message));
+        }
+
+        if (error.utcTime.length > 0) {
+            const displayTime = moment(error.utcTime).format('DD MMM YYYY HH:mm:ss');
+            lines.push(this._createErrorLine('UTC Time', displayTime));
+        }
+
+        if (error.area.length > 0) {
+            lines.push(this._createErrorLine('Area', error.area));
+        }
+
+        if (error.errorCode.length > 0) {
+            lines.push(this._createErrorLine('Error Code', error.errorCode));
+        }
+
+        if (error.instanceId > 0) {
+            lines.push(this._createErrorLine('Instance Id', error.instanceId.toString(), 'errorcolor'));
+        }
+
+        if (error.statusCode > 0) {
+            lines.push(this._createErrorLine('Status Code', error.statusCode.toString()));
+        }
+
+        return lines;
+    }
+}
+```
+
+### Where Are We?
+
+I explained some scalable techniques that I use in this blog when working with errors in both backend and frontend code. Technology stacks often provide only basic error handling, so for best results you should clarify your requirements. You can then build a solution that meets them in any programming language.
+
+
+### Next
+
+- I summarise the behaviour of this blog’s <Link href='/posts/api-architecture-node'>Final Node.js API</Link>.
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.
