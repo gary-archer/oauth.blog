@@ -1,0 +1,206 @@
+# JWT Access Token Validation
+
+The previous post provided some <Link href='/posts/basicapi-codingkeypoints'>API Code Details</Link> for the initial code sample. Next I explain the most mainstream way in which APIs validate JWT access tokens. These techniques are covered in many other OAuth resources. This post summarises a few security best practices, but focuses primarily on a productive development setup when working with JWTs.
+
+### Common Requirements
+
+When designing token validation in APIs there are a few factors to consider:
+
+| Factor | Description |
+| ------ | ----------- |
+| <span style={{color:'green'}}>**Straightforward Code**</span> | Validating a JWT should not require a great amount of code or complicate your API. |
+| <span style={{color:'green'}}>**Enable API Authorization**</span> | The output from JWT validation should provide the main values the API needs for authorization. |
+| <span style={{color:'green'}}>**Best Security Capabilities**</span> | Aim to use modern, secure and efficient JWT algorithms. |
+| <span style={{color:'green'}}>**Developer Understanding**</span> | You should understand how the validation works, so that you can ensure it is doing the right things. |
+| <span style={{color:'green'}}>**Useful Errors**</span> | You must ensure that API clients receive useful error responses when access tokens fail validation. |
+
+### Libraries v Frameworks
+
+Some technology stacks provide a *Resource Server Framework* that operates like a black box and hides the details from developers. This blog instead uses a library approach, for best control and understanding of the important behaviours.
+
+### JOSE Libraries
+
+This blog provides APIs developed in the following languages and in each case a *JSON Object Signing and Encryption (JOSE)* library is used, to enable up-to-date security options when needed:
+
+| Technology | JOSE Library |
+| ---------- | ------------ |
+| <span style={{color:'green'}}>**Node.js**</span> | [jose](https://github.com/panva/jose) |
+| <span style={{color:'green'}}>**.NET**</span> | [jose-jwt](https://github.com/dvsekhvalnov/jose-jwt) |
+| <span style={{color:'green'}}>**Java**</span> | [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) |
+
+JOSE libraries support a number of OAuth-related security specifications. The specification documents can be read by developers to strengthen their OAuth knowledge. JOSE libraries are also useful for <Link href='/posts/api-automated-tests'>issuing mock access tokens</Link> in API tests.
+
+![jose specs](../images/70/jose-specs.jpg?v=20240826)
+
+### JWT Validation Code
+
+The JWT validation in the API uses very little code. First, when the application starts, an object was created that downloads and caches the authorization server's token signing public keys:
+
+```typescript
+export class JwksRetriever {
+
+    public constructor(configuration: OAuthConfiguration, httpProxy: HttpProxy) {
+
+        const jwksOptions = {
+            agent: httpProxy.agent,
+        } as RemoteJWKSetOptions;
+
+        this._remoteJWKSet = createRemoteJWKSet(new URL(configuration.jwksEndpoint), jwksOptions);
+    }
+}
+```
+
+In the access token validator class, the following code runs on every API request:
+
+```typescript
+const accessToken = this._readAccessToken(request);
+if (!accessToken) {
+    throw ErrorFactory.fromMissingTokenError();
+}
+
+const options = {
+    algorithms: [this._configuration.algorithm],
+    issuer: this._configuration.issuer,
+    audience: this._configuration.audience
+} as JWTVerifyOptions;
+
+const result = await jwtVerify(accessToken, this._jwksRetriever.remoteJWKSet, options);
+
+const userId = this._getClaim(result.payload.sub, 'sub');
+const scope = this._getClaim(result.payload['scope'], 'scope');
+return new ClaimsPrincipal(userId, scope.split(' '));
+```
+
+### Viewing JWT Access Tokens
+
+A normal JWT access tokens consists of three parts:
+
+- *Header*
+- *Payload*
+- *Signature*
+
+The authorization server uses an asymmetric private key to create the digital signature, and the public key can be made available to any party that needs to cryptographically verify it. Here is an example AWS Cognito JWT access token from this blog’s first code sample:
+
+```markdown
+eyJraWQiOiIyV01TWGcwekEydVFlTjE0ZWlma0o5Nk5TTURpUmdtSXNGcE9yNHNJVWRvPSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJhNmI0MDRiMS05OGFmLTQxYTItOGU3Zi1lNDA2MWRjMGJmODYiLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAuZXUtd2VzdC0yLmFtYXpvbmF3cy5jb21cL2V1LXdlc3QtMl9xcUpnVmV1VG4iLCJ2ZXJzaW9uIjoyLCJjbGllbnRfaWQiOiI2dGcwcWdsZGRwdnFoNzRrM2piZjFtbWo2NCIsIm9yaWdpbl9qdGkiOiI0NDNmNGMzNS1iNmRiLTQzYzktODgzYS0wMThmOWM5NzMzOGMiLCJldmVudF9pZCI6ImMyMGViMGI1LWJhODQtNDMzNC04M2NhLWI3NWExMGQ1ZmY0NyIsInRva2VuX3VzZSI6ImFjY2VzcyIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUiLCJhdXRoX3RpbWUiOjE2MzQ5NzgwNDQsImV4cCI6MTYzNDk4MTY0NCwiaWF0IjoxNjM0OTc4MDQ0LCJqdGkiOiI3Zjk0YzJhNC0zNWE3LTQ2NGItODFkMC05MDQ4YmUzODBhODkiLCJ1c2VybmFtZSI6ImE2YjQwNGIxLTk4YWYtNDFhMi04ZTdmLWU0MDYxZGMwYmY4NiJ9.CM5j3AXOGNL77AjW1-QImb6uwR8JE6ZojWOfKI-nZJhkCsDlSmG2qMpq6Ntkm-Pve6zA9TkWbCWSA1MHKwgQPMXobz5UDQSJSGwiEIa4L9Q6eCGIEDs5153DkXRD4KLYu-SGLOgSurzRuc-EUINDA7zyErNDKGbaFf8qPV5QuMTCQGO-h1SkvLU85yc8Xp6Q8MYv9ydf1oWukjCJdDSzlUdjP6Vsb3V5xKaTBWFvHpwoo5cwyD51Pu8Lsu7p7B-vQAfzXjfgPjnc5EQY_fNYZoh9MaB6b3EnGgZz0oY9gCZHhlr_cRxgZlR_-J9KeUIYcW5Mna-J5GYFe6eRcEePxw
+```
+
+You can paste this into an [Online JWT Viewer](https://jwt.io) to view the details, and note the *Key Identifier (kid)* field in the JWT header:
+
+![jwt access token](../images/70/jwt-access-token.jpg)
+
+### API Validation Steps
+
+OAuth-secured APIs must validate JWT access tokens on every request. This is a fast and scalable operation. The API must provide correct inputs to the security library to validate the JWT correctly:
+
+| Check | Description |
+| ----- | ----------- |
+| <span style={{color:'green'}}>**Algorithm**</span> | The API configures the algorithm(s) which which it expects JWTs to be signed. |
+| <span style={{color:'green'}}>**Signature**</span> | The API provides the token signing public key to the library. The most common way to do so is to configure a trusted JWKS URI. |
+| <span style={{color:'green'}}>**Issuer**</span> | The API configures its expected issuer to be the identity of the authorization server. |
+| <span style={{color:'green'}}>**Audience**</span> | The API configures its expected audience to be a logical identifier that represents its own identity. |
+| <span style={{color:'green'}}>**Time**</span> | The API only accepts JWTs that are valid for use at the current time and rejects expired JWTs. |
+
+### API OAuth Configuration
+
+The API expresses its serttings in its configuration file. At the time of writing, AWS Cognito does not allow me to issue an audience claim that contains the API's identity, so the value used for validation is left blank.
+
+```json
+{
+    "api": {
+        "port": 80,
+        "trustedOrigins": [
+            "http://localhost"
+        ],
+        "useProxy": false,
+        "proxyUrl": "http://127.0.0.1:8888"
+    },
+    "oauth": {
+        "jwksEndpoint": "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json",
+        "algorithm": "RS256",
+        "issuer": "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+        "audience": ""
+    }
+}
+```
+
+### Failed Token Validation
+
+When any token validation checks fail, the API should return an error response with a 401 HTTP status code. Traditionally, you return error details in *www-authenticate* response headers. This is the preferred option when a third-party integrates with your API. This blog instead returns a JSON object that is easier for frontend clients to process:
+
+```json
+{
+  "code": "invalid_token",
+  "message": "Missing, invalid or expired access token"
+}
+```
+
+In production systems, this type of error occurs frequently, since clients use short-lived access tokens. When a client receives a response with a 401 status code it attempts a token refresh operation. On success, the client retries its API request.
+
+### Token Signing Public Keys
+
+The API provides the JOSE library with the authorization server's JWKS URI, from which the library downloads token signing public keys. It is critical that the API configures this value to correctly point to its authorization server, so that malicious tokens are always rejected. This is the AWS Cognito JWKS URI:
+
+- [https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json](https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json)
+
+This endpoint returns multiple public keys in a JSON Web Key Set and each of these has a key identifier. The security library uses the entry whose kid value matches that in the access token’s JWT header to verify the token:
+
+```json
+{
+  "keys": [
+    {
+      "alg": "RS256",
+      "e": "AQAB",
+      "kid": "SNdU6pNlC2hZFj/LtbqQroR9dSkK+P4xp2OYC1P4h4s=",
+      "kty": "RSA",
+      "n": "2XS8bYFTWYr_yy6V3KUI8dq5GqBy4hbZGLL9_eDEiYRdktBEJKOu1R3gsSQxJ7hznp4DZSei9BPwLRCBK51xfAE55fVhUEhRLBRBwRGpraObCIz3gNWaEUkhcupBP1hWniDpGcIkcGBxiVL3Yti5Ns0PY4k3Z_JP1VFsXQO_-mle2o2q2ZzKXNbioyymbVBRIgiPJYQwJpmYUmEEYWcjz0-Y4OyBW_QrPTYGSESvJRqo3j7cF0Q-ADLmHdHKApFVG3EBQq8VZ_v5bmxHxCKZHa4OxI-oHJ80zsIjgaLxx1N8IgFpsqNJj1Nw5LCSgrsDOnGumFJ2NFA6y0zYElkCWw",
+      "use": "sig"
+    },
+    {
+      "alg": "RS256",
+      "e": "AQAB",
+      "kid": "QdDJdF0FVH9bamM7SoBhMShUmiP8tcfuhtNImYwRzOg=",
+      "kty": "RSA",
+      "n": "r9iOi5jCK2eWIA0PYv6P_BenV5P5oaGCWXFjt0u33FZKrJiFYSzFILZTtIozhfKyp9yVa29aNatub4gsjwz8zjW5Qo2maWjzOMqDSGYFpfTOgbT105B-VfXGQJkkoDuhj5fd7SMTtv4kF4fuOj7CO17vVm7Yei87CdrXPpOqp1olblT82hYrotMxbhklmT9r7ZzwfPCvxWqPK53DTLGfiJGZ1BbSFizFKw1BZWJlkZVPCX6YUBbjPtHkH3UFoWTdmXYj-Ja2etZY4fGeGXXO2nbVWNfzlOpAGI7sWQWDeHWbxgXI52yAEi3ZIaBWA8zQlTSJvHvy_uh2MSVJdRcj3Q",
+      "use": "sig"
+    }
+  ]
+}
+```
+
+### JWT Signature Verification
+
+JWT viewer websites allows you to manually paste in the expected public JSON Web Key. If you paste in a value from the JWKS endpoint whose kid does not match that in the JWT header you get a verification failure:
+
+![jwt-verification-failure](../images/70/jwt-verification-failure.jpg)
+
+If a malicious party issues a JWT access token with their own private key and sends it to the API, or tampers with a JWT and alters its contents, the API rejects the JWT.
+
+### JSON Web Key Set Caching
+
+Ideally, the JOSE library should also cache the JSON Web Key Set details in-memory, for best performance and reliability. On future API requests, you get the following behaviours:
+
+
+| Input | Library Action |
+| ----- | -------------- |
+| <span style={{color:'green'}}>**Same Key Identifier**</span> | The security library uses the cached JSON Web Key, to prevent further calls to the authorization server’s JWKS URI. |
+| <span style={{color:'green'}}>**New key identifier**</span> | The security library makes a new call to the JWKS URI to get updated JSON Web Keys, including that for the new key identifier. |
+
+### Token Signing Key Renewal
+
+The authorization server rotates its cryptographic keys occasionally. It then uses a new private key to sign future JWTs and adds a new public key to the JSON Web Key Set. For a while the JSON Web Key Set contains both old and new public keys, until you remove the old one.
+
+APIs therefore cope seamlessly with token signing key renewal. When you use OAuth, the key management and renewal is externalized from applications and APIs. This significantly reduces complexity, especially as the number of components grows.
+
+### API Authorization
+
+After JWT access token validation completes, the API trusts claims in the JWT payload and uses them in its business authorization. I say more about the use of claims in this blog’s <Link href='/posts/api-authorization-design'>Authorization Behaviour</Link> post.
+
+### Where Are We?
+
+I explained how developers can validate JWTs in APIs, with very little code. Next, let's switch back to some setup related topics, starting with getting up and running with your own authorization server.
+
+### Next
+
+- I explain this blog's <Link href='/posts/oauth-infrastructure-setup'>OAuth Infrastructure Setup</Link>
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.

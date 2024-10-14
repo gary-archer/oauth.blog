@@ -1,0 +1,80 @@
+# User Data Management
+
+In the previous post I explained <Link href='/posts/developer-ssl-setup'>SSL Trust Configuration</Link> for a development computer. Next, I summarise some practicalities of user management in an OAuth Architecture. In many setups identity data and business data need to work together.
+
+ ### User Attributes in Business Data
+
+In many mature backend systems, users have a *Data History* that includes an existing user identity. This typically involves hard or soft foreign keys from some kind of users table to resources owned by or associated to each user. This blog uses an example business data setup where *investment information* is associated to *managers*. An initial data schema before OAuth integration might use relationships that map business users to business resources:
+
+![user resources](../images/120/user-resources.jpg)
+
+### User Attributes in Identity Data
+
+When planning a migration to OAuth, first design your user account schema in the authorization server. The first four fields in the below table are likely to be standard user attributes built into your authorization server, whereas the last two fields are custom values. The <Link href='/posts/oauth-infrastructure-setup'>OAuth Infrastructure Setup</Link> post explained how I added these values to this blog's default authorization server.
+
+| Attribute | Description |
+| --------- | ----------- |
+| <span style={{color:'green'}}>**Subject**</span> | A generated identifier for the user. |
+| <span style={{color:'green'}}>**Email**</span> | The user’s email address. |
+| <span style={{color:'green'}}>**Given Name**</span> | The first name(s) for the user. |
+| <span style={{color:'green'}}>**Family Name**</span> | The surname(s) for the user. |
+| <span style={{color:'green'}}>**Manager ID**</span> | A business identifier for the user. |
+| <span style={{color:'green'}}>**Role**</span> | Categorizes the type of user. |
+
+The values chosen should be fairly stable and not change often. The *Manager ID* links the identity data to the business data. The *Role* is a value used in the API's authorization logic.
+
+### User Migrations
+
+You typically populate user accounts with a small program that makes requests to the authorization server’s user management APIs. Such a program populates identity data from business data. You then manage core identity values such as *name* and *email* in the identity data. Applications receive these values in tokens. You then remove these values from business data, or make them read-only.
+
+### Volatile User Attributes
+
+It is common to keep some user attributes in the business data, where they are easier to manage. These are often not core to a user’s identity. In some cases, roles and associated business permissions may change often or have different meanings across product areas. When that is the case, the data is usually easier to manage outside your authorization server.
+
+As a simplified version of this concept, this blog’s example setup stores the following user fields in the API’s own data. In this blog the *Manager ID* is stored in both sources of user data, to link them together:
+
+| Attribute | Description |
+| --------- | ----------- |
+| <span style={{color:'green'}}>**Manager ID**</span> | The business user identity. |
+| <span style={{color:'green'}}>**Title**</span> | An informational title for the user. |
+| <span style={{color:'green'}}>**Regions**</span> | Regions for which the user has access to data. |
+
+### Identifying Users to APIs
+
+After an OAuth migration, APIs will by default receive access tokens containing only the generated subject claim. This might be a UUID such as *9a7a33fe-e3f6-47c7-aef9-1ff96df9aa1b* and may not be useful to APIs that operate on business data. Instead, you typically need to provide a more useful user identity in access tokens. This blog’s API code samples therefore include the *manager_id* claim in access tokens:
+
+![token claims](../images/120/token-claims.jpg)
+
+Any authorization server should enable you to issue access token claims stored against user accounts. More complete authorization servers can make API requests to retrieve claims stored in your business data and issue them to access tokens. Therefore you should be able to store user attributes wherever you like and still issue those values to access tokens.
+
+### User Management Operations
+
+You may also need to call the authorization server’s user management APIs for other use cases, as summarised in the following table. In at least some cases, you may need to design how to save attributes to both the identity data and to business data:
+
+| Use Case | Description |
+| -------- | ----------- |
+| <span style={{color:'green'}}>**Existing User Migration**</span> | A migration process reads existing users in bulk from an existing data source and imports them into the authorization server. |
+| <span style={{color:'green'}}>**Administrator User Creation**</span> | An administrator creates users and assigns attributes across both data sources. |
+| <span style={{color:'green'}}>**Self-Sign-Up**</span> | A user signs up and provides proof of their identity, after which attributes save to both data sources. |
+| <span style={{color:'green'}}>**Profile Edits**</span> | A user edits their profile in an application form and data is saved to both data sources. |
+
+When using OAuth, you decide whether you want to use self-sign-up during an authorization code flow. If you enable self-sign-up, the authorization server presents account creation forms. An advanced authorization server may be able to call an API that your provide, to create a business user identity for the new user. When the authorization code flow completes, your APIs receive all of the correct token claims for the new user.
+
+### Clients and User Info
+
+Frontend apps often need to get identity data for the current user, such as the name for display. This is done by sending the access token to the authorization server’s user info endpoint. In this blog’s code samples the following fields are returned:
+
+![oauth userinfo](../images/120/oauth-userinfo.jpg?v=20240822)
+
+It is also common for clients to need to get user attributes from business data, so that they can show and hide certain UI elements. This blog’s final APIs provide a separate endpoint that returns business user attributes, for display in the frontend:
+
+![api userinfo](../images/120/api-userinfo.jpg?v=20240822)
+
+### Where Are We?
+
+I explained the main design choices when storing user attributes in an OAuth architecture. A clean separation between core identity and business-specific attributes can provide the best manageability for APIs and clients.
+
+### Next
+
+- I explain this blog’s <Link href='/posts/api-authorization-design'>API Authorization Behaviour</Link>.
+- For a list of all blog posts see the <Link href='/posts/index'>Index Page</Link>.
