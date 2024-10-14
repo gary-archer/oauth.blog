@@ -37,8 +37,8 @@ cd oauth.websample.final/deployment/cloudfront
 
 The build script for the SPA produces a *dist* folder containing files to deploy. Release builds of webpack produce minified JavaScript bundles. This includes source map files that are not deployed but could be used to resolve production stack traces. Bootstrap CSS is also minified, using the [purgecss](https://github.com/FullHuman/purgecss) command line tool.
 
-<div className="smallimage">
-![release bundles](../images/610/release-bundles.jpg)
+<div className='smallimage'>
+    <img src='../images/610/release-bundles.jpg' alt='release bundles' />
 </div>
 
 A final *index.html* file is then produced, adding cache busting timestamps to asset references, to ensure that the browser’s cache never serves old files after an upgrade.

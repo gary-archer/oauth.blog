@@ -10,8 +10,8 @@ Our advanced Node.js API consists of three main areas:
 - API Business Logic
 - Common Code (plumbing)
 
-<div className="smallimage">
-![code layout](../images/310/code-layout.jpg)
+<div className='smallimage'>
+    <img src='../images/310/code-layout.jpg' alt='code layout' />
 </div>
 
 In a real API platform, much of the plumbing folder could be extracted into one or more shared library references and there would be far less code.
@@ -207,8 +207,8 @@ public static registerDependencies(container: Container): void {
 
 API logging is also implemented via plumbing code, and the end goal is to enable <Link href='/posts/api-technical-support-analysis'>platform wide technical support queries by people</Link>.
 
-<div className="smallimage">
-![logging classes](../images/310/logging-classes.jpg)
+<div className='smallimage'>
+    <img src='../images/310/logging-classes.jpg' alt='logging classes' />
 </div>
 
 The log entry is a natural request scoped object and is created in the *LoggerMiddleware*, which does most of the logging work:

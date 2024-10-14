@@ -18,13 +18,13 @@ ifconfig | grep inet
 
 When running on a WiFi network, select *Settings / Network & Internet / Internet*, then choose the in-use network connection. Then click the pencil icon to edit it. In the following screenshot I am connecting a real device to a proxy running on the host computer, using the host computer's IP address:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![network proxy](../images/470/network-proxy.jpg?v=20240804)
 </div>
 
 Android emulators may alternate connectivity between WiFi and cellular. This can cause confusion when getting an HTTP proxy working, so I usually disable *Mobile Data* so that only WiFi is used:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![cellular off](../images/470/cellular-off.jpg?v=20240804)
 </div>
 
@@ -32,7 +32,7 @@ Android emulators may alternate connectivity between WiFi and cellular. This can
 
 If you do need to capture cellular traffic then browse to *Settings / Network & Internet / Internet* and edit the cellular network's properties. Under *Access Point Names / APNs* click the plus icon and add a new entry with the connection details. In the following screenshot I connect an emulator to a proxy running on the host computer, using the emulator's special IP address for the host:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![cellular apn settings](../images/470/cellular-apn-settings.jpg?v=20240804)
 </div>
 
@@ -40,13 +40,13 @@ If you do need to capture cellular traffic then browse to *Settings / Network & 
 
 If we now run the system browser or a mobile app on the Android device, any SSL requests will result in trust errors:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![ssl trust error](../images/470/ssl-trust-error.jpg?v=20240804)
 </div>
 
 This is because the HTTP proxy is intercepting SSL requests at runtime and replacing the root certificate authority. To fix this we need to configure emulators and devices to trust the HTTP proxy’s root certificate.
 
-<div className="smallimage">
+<div className='smallimage'>
 ![proxy root ca](../images/470/proxy-root-ca.jpg?v=20240804)
 </div>
 
@@ -68,7 +68,7 @@ docker run -it --rm -p 80:80 -v ./fileshare:/var/lib/nginx/html:ro dceoy/nginx-a
 
 From an emulator or device you can open Chrome and type the IP address of the host. Click a certificate file and save it to the device’s *Downloads* folder:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![get proxy root ca](../images/470/get-proxy-root-ca.jpg?v=20240804)
 </div>
 
@@ -76,7 +76,7 @@ From an emulator or device you can open Chrome and type the IP address of the ho
 
 Next, navigate to *Settings / Security & privacy / Encryption & credentials / Install a certificate / CA certificate*, then select the *Install Anyway* option. Navigate to the *Downloads* folder and select the certificate. You will then see the certificate under *Settings / Security & privacy / Encryption & credentials / User credentials*:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![user credentials](../images/470/user-credentials.jpg?v=20240804)
 </div>
 

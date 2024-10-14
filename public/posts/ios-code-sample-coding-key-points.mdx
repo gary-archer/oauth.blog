@@ -6,7 +6,7 @@ Previously we described our <Link href='/posts/ios-code-sample-infrastructure'>i
 
 One of this blog’s coding goals is to use the same classes across multiple platforms. Our iOS App uses the same logical separation of responsibilities into classes as the earlier <Link href='/posts/reactjs-codingkeypoints'>React SPA</Link>:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![code layout](../images/570/code-layout.jpg?v=20240914)
 </div>
 
@@ -14,7 +14,7 @@ One of this blog’s coding goals is to use the same classes across multiple pla
 
 The view and view model classes below call our OAuth-secured API, and need to deal with *triggering login redirects* and *refreshing access tokens*. This can also involve concurrency, which we will explore shortly.
 
-<div className="smallimage">
+<div className='smallimage'>
 ![view classes](../images/570/view-classes.jpg)
 </div>
 
@@ -329,7 +329,7 @@ protocol Authenticator {
 
 Our app has two views that load concurrently and fire three concurrent API requests. The main view data is retrieved and there are also two additional API requests to get user info. OAuth user info is retrieved from the authorization server and additional user attributes are retrieved from the API.
 
-<div className="smallimage">
+<div className='smallimage'>
 ![concurrent views](../images/570/concurrent-views.jpg?v=20240914)
 </div>
 
@@ -704,7 +704,7 @@ typedef NS_ENUM(NSInteger, OIDErrorCodeOAuthToken) {
 
 The app’s error handling is diligent about capturing these runtime details, to help with OAuth problem resolution:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![appauth error](../images/570/appauth-error.jpg?v=20240914)
 </div>
 

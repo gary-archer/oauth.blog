@@ -32,13 +32,13 @@ If you need to capture cellular traffic you need to first select *Settings / Mob
 
 If we now run the system browser or a mobile app on the iOS device, any SSL requests will result in trust errors:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![ssl trust error](../images/490/ssl-trust-error.jpg?v=20240804)
 </div>
 
 This is because the HTTP proxy is intercepting SSL requests at runtime and replacing the root certificate authority. To fix this we need to configure simulators and devices to trust the HTTP Proxy’s root certificate.
 
-<div className="smallimage">
+<div className='smallimage'>
 ![proxy root ca](../images/490/proxy-root-ca.jpg?v=20240804)
 </div>
 
@@ -54,7 +54,7 @@ docker run -it --rm -p 80:80 -v ./fileshare:/var/lib/nginx/html:ro dceoy/nginx-a
 
 From a simulator or device you can open Safari and type the IP address of the host. Click a certificate file and, when prompted, allow the download of a configuration profile.
 
-<div className="smallimage">
+<div className='smallimage'>
 ![get proxy root ca](../images/490/get-proxy-root-ca.jpg?v=20240804)
 </div>
 
@@ -62,13 +62,13 @@ From a simulator or device you can open Safari and type the IP address of the ho
 
 Under *Settings / General / VPN & Device Management* there will now be a *Profile* option, and when opened you will see the root certificate:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![installing cert](../images/490/installing-cert.jpg?v=20240804)
 </div>
 
 Select the *Install* option and follow the prompts. Finally switch to *Settings / General / About / Certificate Trust Settings* and activate the certificate:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![activated cert](../images/490/activated-cert.jpg?v=20240804)
 </div>
 

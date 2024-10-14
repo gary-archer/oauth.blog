@@ -69,7 +69,7 @@ Some authorization servers may return logout error responses if you attempt to l
 
 An SSO cookie in a user agent is a pointer to authorization server state, and can represent sessions for multiple clients and users. When a logout is triggered for one application, it may impact other apps, and you may not always be able to achieve your desired usability. There may be other logout annoyances on particular platforms. An example is on iOS, where an *ASWebAuthenticationSession* window is used during logout but always indicates a *Sign In* operation, and you cannot override the text:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![ios logout](../images/160/ios-logout.jpg)
 </div>
 

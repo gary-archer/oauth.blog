@@ -23,14 +23,14 @@ The code for our mobile app can be downloaded from [here](https://github.com/gar
 
 Our Mobile UI will provide the same <Link href='/posts/api-journey-client-side'>API Client Journey</Link> as earlier Web UIs, with a list view as the home page:
 
-<div className="smallimage">
-![home view](../images/500/home-view.jpg?v=20240912)
+<div className='smallimage'>
+    <img src='../images/500/home-view.jpg?v=20240912' alt='home view' />
 </div>
 
 There will also be a details view, which exists primarily to demonstrate navigation and deep linking:
 
-<div className="smallimage">
-![details view](../images/500/details-view.jpg?v=20240912)
+<div className='smallimage'>
+    <img src='../images/500/details-view.jpg?v=20240912' alt='details view' />
 </div>
 
 ### Single Activity / View Application
@@ -57,8 +57,8 @@ This prevents a fake app from receiving a login result, since the attacker would
 
 AppAuth user logins will be via a [Chrome Custom Tab](https://developer.chrome.com/docs/android/custom-tabs) window, which overlays the app’s mobile views and acts as a secure sandbox, so that the app itself never has access to the user’s credentials.
 
-<div className="smallimage">
-![custom tab login](../images/500/custom-tab-login.jpg?v=20240912)
+<div className='smallimage'>
+    <img src='../images/500/custom-tab-login.jpg?v=20240912' alt='custom tab login' />
 </div>
 
 AppAuth Android libraries deal with selecting the window for us at runtime. The result is that cookies and passwords can often be shared between web apps and mobile apps, to improve usability:
@@ -84,8 +84,8 @@ Using Chrome custom tabs will provide the best chance of password autofill worki
 
 We need to ensure that the above usability features cannot be abused if the mobile device is stolen, so we require the device to have a *Secured Lock Screen*, and the user will see the below screen if this is not the case:
 
-<div className="smallimage">
-![prerequisite screen](../images/500/prerequisite-screen.jpg?v=20240912)
+<div className='smallimage'>
+    <img src='../images/500/prerequisite-screen.jpg?v=20240912' alt='prerequisite screen' />
 </div>
 
 The user must then set a minimum security level of *Pattern*, *PIN* or *Password* and the app will then resume normally.
@@ -94,24 +94,24 @@ The user must then set a minimum security level of *Pattern*, *PIN* or *Password
 
 On the initial login the user will need to type in their email and password. By default the Chrome custom tab will immediately disappear after login and the user will be unable to use Chrome’s *Save Password* feature. We will resolve this problem by presenting a *Post Login Page* after authentication but before the browser window is closed.
 
-<div className="smallimage">
-![save password prompt](../images/500/save-password-prompt.jpg?v=20240912)
+<div className='smallimage'>
+    <img src='../images/500/save-password-prompt.jpg?v=20240912' alt='save password prompt' />
 </div>
 
 ### Reliable Login Cancellation
 
 Logins can be cancelled by closing the Chrome custom tab instead of successfully completing a login. We will handle this reliably and allow the user to retry:
 
-<div className="smallimage">
-![cancelled login](../images/500/cancelled-login.jpg?v=20240912)
+<div className='smallimage'>
+    <img src='../images/500/cancelled-login.jpg?v=20240912' alt='cancelled login' />
 </div>
 
 ### Reliable Session Management
 
 Our app has buttons to enable *Rehearsal of Expiry Events*, in order to verify that these do not cause any user problems:
 
-<div className="smallimage">
-![expiry testing](../images/500/expiry-testing.jpg?v=20240912)
+<div className='smallimage'>
+    <img src='../images/500/expiry-testing.jpg?v=20240912' alt='expiry testing' />
 </div>
 
 ### Navigation with Expired Tokens
@@ -150,8 +150,8 @@ In both cases our API will deny access gracefully by returning known error codes
 
 A common issue when first using OAuth in a mobile app is that the system browser may not return the deep link containing the authorization response to the app, and fall back to processing it as a web request in the browser, typically with a 404 not found error.
 
-<div className="smallimage">
-![not found login response](../images/500/not-found-login-response.jpg?v=20240912)
+<div className='smallimage'>
+    <img src='../images/500/not-found-login-response.jpg?v=20240912' alt='not found login response' />
 </div>
 
 This is due to a browser security requirement that there must be a user gesture before a deep link can be processed. Invoking a deep link immediately after a redirect can be unreliable. Therefore, when websites run on mobile devices, they often present the user with options like these when invoking the app. So when receiving the login response you may also need to present a continue button:
@@ -175,12 +175,12 @@ In each case, there needs to be a screen before invoking the deep link. You may 
 
 We will use the following custom *AWS Hosted Web Pages* that are returned to after login / logout redirects. A real company could present its own branded pages instead.
 
-<div className="smallimage">
-![login intermediate page](../images/500/login-intermediate-page.jpg?v=20240912)
+<div className='smallimage'>
+    <img src='../images/500/login-intermediate-page.jpg?v=20240912' alt='login intermediate page' />
 </div>
 
-<div className="smallimage">
-![logout intermediate page](../images/500/logout-intermediate-page.jpg?v=20240912)
+<div className='smallimage'>
+    <img src='../images/500/logout-intermediate-page.jpg?v=20240912' alt='logout intermediate page' />
 </div>
 
 ### Test Cases

@@ -23,13 +23,13 @@ The code for the mobile app can be downloaded from [here](https://github.com/gar
 
 The Mobile UI will provide the same <Link href='/posts/api-journey-client-side'>API Client Journey</Link> as for earlier Web UIs, with a list view as the home page:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![home view](../images/540/home-view.jpg?v=20240713)
 </div>
 
 There will also be a details view, which exists primarily  to demonstrate navigation and deep linking:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![details view](../images/540/details-view.jpg?v=20240713)
 </div>
 
@@ -57,13 +57,13 @@ This prevents a fake app from receiving a login result, since the attacker would
 
 AppAuth user logins will be via an [ASWebAuthenticationSession](https://dev.to/robotsquidward/quick-guide-to-aswebauthenticationsession-api-changes-in-ios-13-4m8i) window, which first presents the below system window to inform the user which app and login domain are being signed into:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![aswebauthenticationsession start](../images/540/aswebauthenticationsession-start.jpg?v=20240914)
 </div>
 
 The user is then presented with the main login window, which is external to the app and acts as a secure sandbox, so that the app itself never has access to the user’s password:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![aswebauthenticationsession login](../images/540/aswebauthenticationsession-login.jpg?v=20240914)
 </div>
 
@@ -90,8 +90,8 @@ Using an ASWebAuthenticationSession window will provide the best chance of passw
 
 We need to ensure that the above usability features cannot be abused if the mobile device is stolen, so we require the device to have a *Secured Lock Screen*, and the user will see the below screen if this is not the case:
 
-<div className="smallimage">
-![prerequisite screen](../images/540/prerequisite-screen.jpg?v=20240914)
+<div className='smallimage'>
+    <img src='../images/540/prerequisite-screen.jpg?v=20240914' alt='prerequisite screen' />
 </div>
 
 The user must then set a *passcode* or *fingerprint* in order to resume using the app. These security features are not available on iOS simulators.
@@ -102,24 +102,24 @@ The user must then set a *passcode* or *fingerprint* in order to resume using th
 
 To use password autofill it must first be enabled in system settings on the iOS device. On the initial login the user will need to type in their credentials. By default the ASWebAuthenticationSession window will immediately disappear after login and the user will be unable to use the system’s *Save Password* feature. We will resolve this problem by presenting a *Post Login Page* after authentication but before the browser window is closed.
 
-<div className="smallimage">
-![save password prompt](../images/540/save-password-prompt.jpg)
+<div className='smallimage'>
+    <img src='../images/540/save-password-prompt.jpg' alt='save password prompt' />
 </div>
 
 ### Reliable Login Cancellation
 
 Logins can be cancelled by closing the system browser instead of successfully completing a login. We will handle this reliably and allow the user to retry:
 
-<div className="smallimage">
-![cancelled login](../images/540/cancelled-login.jpg?v=20240713)
+<div className='smallimage'>
+    <img src='../images/540/cancelled-login.jpg?v=20240713' alt='cancelled login' />
 </div>
 
 ### Reliable Session Management
 
 The demo app also has buttons to enable *Rehearsal of Expiry Events*, in order to verify that these do not cause any user problems:
 
-<div className="smallimage">
-![expiry testing](../images/540/expiry-testing.jpg?v=20240914)
+<div className='smallimage'>
+    <img src='../images/540/expiry-testing.jpg?v=20240914' alt='expiry testing' />
 </div>
 
 ### Navigation with Expired Tokens
@@ -130,8 +130,8 @@ The session buttons help to ensure that navigation is reliable within the app as
 
 The sample also implements <Link href='/posts/logout'>Open ID Connect RP-Initiated Logout</Link>, to remove the authorization server’s session cookie. In a real-world app a logout capability enables you to test data access for different users with different settings or permissions. One annoyance is that the ASWebAuthenticationSession indicates *Sign In* during the logout redirect, rather then *Sign Out*:
 
-<div className="smallimage">
-![logout prompt](../images/540/aswebauthenticationsession-start.jpg?v=20240914)
+<div className='smallimage'>
+    <img src='../images/540/aswebauthenticationsession-start.jpg?v=20240914' alt='logout prompt' />
 </div>
 
 The usual way to resolve it is to avoid the logout redirect and instead simply drop tokens. Then use the *prompt=login* OpenID Connect request parameter on the next login. At the time of writing though, AWS Cognito does not yet support the *prompt* parameter.
@@ -164,8 +164,8 @@ In both cases our API will deny access gracefully by returning known error codes
 
 A common issue when first using AppAuth libraries is that the system browser may not return the deep link containing the authorization response to the app, and fall back to processing it as a web request in the browser, typically with a 404 not found error.
 
-<div className="smallimage">
-![not found login response](../images/540/not-found-login-response.jpg?v=20240914)
+<div className='smallimage'>
+    <img src='../images/540/not-found-login-response.jpg?v=20240914' alt='not found login response' />
 </div>
 
 This is due to a browser security requirement that there must be a [user gesture](https://forums.developer.apple.com/forums/thread/26760) before a deep link can be processed. Invoking a deep link immediately after a redirect can be unreliable.
@@ -191,12 +191,12 @@ In each case, there needs to be a screen before invoking the deep link. You may 
 
 This blog uses the following custom *AWS Hosted Web Pages* that are returned to after login / logout redirects. A real company could present its own branded pages instead.
 
-<div className="smallimage">
-![login intermediate page](../images/540/login-intermediate-page.jpg?v=20240914)
+<div className='smallimage'>
+    <img src='../images/540/login-intermediate-page.jpg?v=20240914' alt='login intermediate page' />
 </div>
 
-<div className="smallimage">
-![logout intermediate page](../images/540/logout-intermediate-page.jpg?v=20240914)
+<div className='smallimage'>
+    <img src='../images/540/logout-intermediate-page.jpg?v=20240914' alt='logout intermediate page' />
 </div>
 
 ### Test Cases

@@ -90,13 +90,13 @@ We can run the app using Xcode’s build and run option in the top left of the I
 
 This renders the following view. You can click *Auto* to run an entire OpenID Connect authorization redirect. Alternatively, do it in two stages, by using *Manual*, where step 1(A) is the front channel redirect, and step 1(B) is the back channel operation to swap the authorization code for tokens:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![unauthenticated app](../images/480/unauthenticated-app.jpg)
 </div>
 
 Next an [ASWebAuthenticationSession](https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsession) window is shown, which first involves informing the user which app they are logging into:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![app login](../images/480/app-login.jpg)
 </div>
 
@@ -107,13 +107,13 @@ You can then sign in to the app using this blog’s cloud test credential:
 
 The login is done using the system browser, which overlays the mobile view and prevents the sample app from having direct access to the password:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![aswebauthenticationsession](../images/480/aswebauthenticationsession.jpg?v=20240804)
 </div>
 
 After login, control returns to the mobile app, which has an ID token, an access token and a refresh token. You can then test OAuth lifecycle operations, including refreshing the access token:
 
-<div className="smallimage">
+<div className='smallimage'>
 ![authenticated app](../images/480/authenticated-app.jpg)
 </div>
 
