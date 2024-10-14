@@ -33,7 +33,7 @@ This post will describe the Node.js API’s test code, though the behaviour and 
 This test setup then becomes one of the API’s deployment scenarios, and is represented by the below environment file. Only the configuration is different for the API, and it runs the same code as in real environments:
 
 <div className='smallimage'>
-![environment configurations](../images/380/environment-configurations.jpg)
+    <img src='../images/380/environment-configurations.jpg' alt='environment configurations' />
 </div>
 
 The primary configuration difference is that the API has been updated to use a JWKS URI that points to an instance of Wiremock, rather than a real authorization server.
@@ -57,7 +57,7 @@ The primary configuration difference is that the API has been updated to use a J
 The final API integration tests consist of a number of code and script resources, to manage setup and execution. Each test will act as an API client and make HTTPS requests with a JWT access token:
 
 <div className='smallimage'>
-![test layout](../images/380/test-layout.jpg)
+    <img src='../images/380/test-layout.jpg' alt='test layout' />
 </div>
 
 When using the Node.js API, tests are run via the *npm run testsetup* and *npm test* commands, to execute a number of Mocha tests. In .NET and Java, slightly different commands are used, but the behaviour is the same:

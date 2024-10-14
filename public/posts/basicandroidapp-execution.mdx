@@ -39,7 +39,7 @@ You can now run our demo app via the Run Icon in the Android Studio toolbar. You
 Next save the password when prompted, then navigate between views by clicking an item in the companies view or using the *Home* button:
 
 <div className='smallimage'>
-![running app](../images/510/running-app.jpg?v=20240912)
+    <img src='../images/510/running-app.jpg?v=20240912' alt='running app' />
 </div>
 
 ### Step 4: View Library Dependencies
@@ -190,7 +190,7 @@ The token data is then stored in *Android Shared Preferences*, and the operating
 It is worth performing certain tests while the Chrome custom tab window is active, to ensure that the app does not throw exceptions or recreate views unnecessarily. The first of these is to switch away from the app and then reactivate it from its shortcut:
 
 <div className='smallimage'>
-![shortcut](../images/510/shortcut.jpg)
+    <img src='../images/510/shortcut.jpg' alt='shortcut' />
 </div>
 
 Technically, when the app is invoked via a shortcut, the launcher action is used, which is a command similar to the following, and it can potentially cause the single activity to be recreated. If this occurs there should be no adverse effects on the login process.
@@ -245,7 +245,7 @@ This enables us to ignore any deep linking requests when our activity is not top
 We can use the *Expire Access Token* and *Reload Data* buttons to cause an invalid token to be sent to the API, resulting in a 401 response:
 
 <div className='smallimage'>
-![access token expiry](../images/510/access-token-expiry.jpg?v=20240912)
+    <img src='../images/510/access-token-expiry.jpg?v=20240912' alt='access token expiry' />
 </div>
 
 After every API call the UI checks for 401 responses, and handles them by getting a new access token. The API request is then retried once with the new token, so that the user session is silently extended. Note that a mobile app is a public client and the refresh token is not protected with a client credential:
@@ -257,7 +257,7 @@ After every API call the UI checks for 401 responses, and handles them by gettin
 We can use *Expire Refresh Token* followed by *Reload Data* to simulate the end of a user session, which might occur if a user left the app running overnight:
 
 <div className='smallimage'>
-![refresh token expiry](../images/510/refresh-token-expiry.jpg?v=20240912)
+    <img src='../images/510/refresh-token-expiry.jpg?v=20240912' alt='refresh token expiry' />
 </div>
 
 On the next request for data the attempt to renew the access token will fail, and the result of the refresh token grant message will be an *Invalid Grant* response:
@@ -294,7 +294,7 @@ AWS Cognito also uses a vendor specific logout solution and the logout request r
 When logout completes we are returned to the below post logout view within our app. In a real world app you could then test logging in as another user with different settings or permissions.
 
 <div className='smallimage'>
-![new user login](../images/510/new-user-login.jpg?v=20240912)
+    <img src='../images/510/new-user-login.jpg?v=20240912' alt='new user login' />
 </div>
 
 ### Step 16: Test Failure Scenarios
@@ -309,13 +309,13 @@ Our mobile app runs multiple views which could fail concurrently, so we implemen
 Our error display looks as follows after concurrent view failures. The user can click a hyperlink to see details, or press the Home button to retry:
 
 <div className='smallimage'>
-![error summary](../images/510/error-summary.jpg?v=20240912)
+    <img src='../images/510/error-summary.jpg?v=20240912' alt='error summary' />
 </div>
 
 The summary view uses an Android modal dialog to display a view with error details, which would help to enable fast problem resolution:
 
 <div className='smallimage'>
-![error details](../images/510/error-details.jpg?v=20240912)
+    <img src='../images/510/error-details.jpg?v=20240912' alt='error details' />
 </div>
 
 ### Step 17: Test Back Navigation
