@@ -70,7 +70,7 @@ Some authorization servers may return logout error responses if you attempt to l
 An SSO cookie in a user agent is a pointer to authorization server state, and can represent sessions for multiple clients and users. When a logout is triggered for one application, it may impact other apps, and you may not always be able to achieve your desired usability. There may be other logout annoyances on particular platforms. An example is on iOS, where an *ASWebAuthenticationSession* window is used during logout but always indicates a *Sign In* operation, and you cannot override the text:
 
 <div className='smallimage'>
-![ios logout](../images/160/ios-logout.jpg)
+    <img src='../images/160/ios-logout.jpg' alt='ios logout' />
 </div>
 
 When you run into this type of problem, a better choice can be for the app to avoid using RP initiated logout. Instead, the app can simply remove its tokens and move the user to a logged out page. By default though, the next login performs an automatic login with no user prompts. To prevent this you can control behaviour using [OpenID Connect request parameters](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest). In particular the *prompt=login* parameter can force a new login.

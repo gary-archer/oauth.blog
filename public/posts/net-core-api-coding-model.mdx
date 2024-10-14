@@ -11,7 +11,7 @@ Our advanced C# API consists of three main areas:
 - Common Code (plumbing)
 
 <div className='smallimage'>
-![code layout](../images/340/code-layout.jpg)
+    <img src='../images/340/code-layout.jpg' alt='code layout' />
 </div>
 
 In a real API platform, much of the plumbing folder could be extracted into one or more shared library references and there would be far less code.
@@ -131,7 +131,7 @@ public async Task<T> ReadDataAsync<T>(string filePath)
 API logging is also implemented via plumbing code, and the end goal is to enable <Link href='/posts/api-technical-support-analysis'>platform wide technical support queries by people</Link>.
 
 <div className='smallimage'>
-![logging classes](../images/340/logging-classes.jpg)
+    <img src='../images/340/logging-classes.jpg' alt='logging classes' />
 </div>
 
 The log entry is a natural request scoped object so we use the following factory method to create it when another class first accesses it during the lifetime of an API request, then make it injectable:

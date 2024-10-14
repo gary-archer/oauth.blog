@@ -18,7 +18,7 @@ These earlier SPAs used access tokens in the browser, which is no longer recomme
 The final SPA is a React app that runs at a */spa* path. Additional paths, for other micro-frontends, could run within the same web domain, to keep the code base manageable as it grows:
 
 <div className='smallimage'>
-![spa code](../images/240/spa-code.jpg)
+    <img src='../images/240/spa-code.jpg' alt='spa code' />
 </div>
 
 From a security viewpoint, any additional apps added to the web domain should be for the same business area. All apps then share each other’s API cookies and also each other’s cross site scripting threats.
@@ -169,7 +169,7 @@ I deploy the demo SPA’s static content to the AWS content delivery network. Si
 The transactions mobile view therefore shows a single card per transaction in mobile resolutions:
 
 <div className='smallimage'>
-![mobile transactions](../images/240/mobile-transactions.jpg?v=20240713)
+    <img src='../images/240/mobile-transactions.jpg?v=20240713' alt='mobile transactions' />
 </div>
 
 The companies list becomes too squashed up for smaller sizes, so mobile layouts render a different view of the data:
@@ -189,7 +189,7 @@ return  (
 At mobile dimensions the companies list now uses a card-based layout rather than a grid based layout:
 
 <div className='smallimage'>
-![mobile companies](../images/240/mobile-companies.jpg?v=20240713)
+    <img src='../images/240/mobile-companies.jpg?v=20240713' alt='mobile companies' />
 </div>
 
 ### Views, View Models and State

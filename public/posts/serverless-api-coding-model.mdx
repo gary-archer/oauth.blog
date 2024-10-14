@@ -7,7 +7,7 @@ Previously I described this blog’s <Link href='/posts/serverless-api-deploymen
 In our earlier Node.js API we used the Express HTTP Server. As part of migrating to AWS Serverless, we have only changed the API’s host layer. The API logic classes are identical to the earlier API:
 
 <div className='smallimage'>
-![code layout](../images/640/code-layout.jpg)
+    <img src='../images/640/code-layout.jpg' alt='code layout' />
 </div>
 
 Since the code is largely the same as our earlier Express based sample, this post will primarily explain the differences in setup and OAuth processing.
@@ -230,7 +230,7 @@ Although DynamoDB caching works well enough for my demo purposes, it would be su
 The API has some integration tests and utility classes to enable the API to be tested without an authorization server. During tests, the *input.txt* and *output.txt* files are updated with requests and responses in the lambda format:
 
 <div className='smallimage'>
-![test code](../images/640/test-code.jpg)
+    <img src='../images/640/test-code.jpg' alt='test code' />
 </div>
 
 The following test verifies authorization to data based on the *regions* array value. The utility classes deal with boiler plate code such as running *sls invoke* as a child process:

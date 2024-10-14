@@ -24,13 +24,13 @@ The code for the mobile app can be downloaded from [here](https://github.com/gar
 The Mobile UI will provide the same <Link href='/posts/api-journey-client-side'>API Client Journey</Link> as for earlier Web UIs, with a list view as the home page:
 
 <div className='smallimage'>
-![home view](../images/540/home-view.jpg?v=20240713)
+    <img src='../images/540/home-view.jpg?v=20240713' alt='home view' />
 </div>
 
 There will also be a details view, which exists primarily  to demonstrate navigation and deep linking:
 
 <div className='smallimage'>
-![details view](../images/540/details-view.jpg?v=20240713)
+    <img src='../images/540/details-view.jpg?v=20240713' alt='details view' />
 </div>
 
 ### Single Page iOS Application
@@ -58,13 +58,13 @@ This prevents a fake app from receiving a login result, since the attacker would
 AppAuth user logins will be via an [ASWebAuthenticationSession](https://dev.to/robotsquidward/quick-guide-to-aswebauthenticationsession-api-changes-in-ios-13-4m8i) window, which first presents the below system window to inform the user which app and login domain are being signed into:
 
 <div className='smallimage'>
-![aswebauthenticationsession start](../images/540/aswebauthenticationsession-start.jpg?v=20240914)
+    <img src='../images/540/aswebauthenticationsession-start.jpg?v=20240914' alt='aswebauthenticationsession start' />
 </div>
 
 The user is then presented with the main login window, which is external to the app and acts as a secure sandbox, so that the app itself never has access to the user’s password:
 
 <div className='smallimage'>
-![aswebauthenticationsession login](../images/540/aswebauthenticationsession-login.jpg?v=20240914)
+    <img src='../images/540/aswebauthenticationsession-login.jpg?v=20240914' alt='aswebauthenticationsession login' />
 </div>
 
 Use of the system browser provides some useful login usability options. The result is that cookies and passwords can often be shared between apps, to improve usability:
