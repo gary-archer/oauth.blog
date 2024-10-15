@@ -28,8 +28,8 @@ We use standard Spring Boot extensibility points via the following classes, whic
 
 | Class | Description |
 | ----- | ----------- |
-| <span style={{color:'green'}}>**ApplicationInitializer**</span> | Logic before Spring’s component system is initialised |
-| <span style={{color:'green'}}>**HttpServerConfiguration**</span> | Logic after Spring’s component system is initialised |
+| ApplicationInitializer | Logic before Spring’s component system is initialised |
+| HttpServerConfiguration | Logic after Spring’s component system is initialised |
 
 ### Dependency Composition
 
@@ -83,9 +83,9 @@ The role of each of these middleware classes is summarised below:
 
 | Middleware Class | Responsibility |
 | ---------------- | -------------- |
-| <span style={{color:'green'}}>**LoggingInterceptor**</span> | Manage the log entry for each API request, then log request and response details |
-| <span style={{color:'green'}}>**CustomHeaderInterceptor**</span> | Allow advanced client side testing of APIs via custom headers |
-| <span style={{color:'green'}}>**UnhandledExceptionHandler**</span> | A central place for handling exceptions, adding error details to logs, and producing the client error response |
+| LoggingInterceptor | Manage the log entry for each API request, then log request and response details |
+| CustomHeaderInterceptor | Allow advanced client side testing of APIs via custom headers |
+| UnhandledExceptionHandler | A central place for handling exceptions, adding error details to logs, and producing the client error response |
 
 ### Single Threaded Code
 

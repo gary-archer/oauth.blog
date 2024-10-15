@@ -35,9 +35,9 @@ We are using the following external dependencies:
 
 | Library | Usage |
 | ------- | ----- |
-| <span style={{color:'green'}}>**AppAuth**</span> | Does the OAuth based authentication work for the app |
-| <span style={{color:'green'}}>**Keychain Swift**</span> | Simplifies secure storage of OAuth tokens on devices |
-| <span style={{color:'green'}}>**SwiftUI-Tooltip**</span> | A utility to help display a tooltip containing user info |
+| AppAuth | Does the OAuth based authentication work for the app |
+| Keychain Swift | Simplifies secure storage of OAuth tokens on devices |
+| SwiftUI-Tooltip | A utility to help display a tooltip containing user info |
 
 These references were added via the *Swift Package Manager* and are built as libraries:
 
@@ -207,8 +207,8 @@ Our mobile app runs multiple views which could fail concurrently, so we implemen
 
 | Scenario | Instructions |
 | -------- | ------------ |
-| <span style={{color:'red'}}>UI Error</span> | Load data normally, then disable the network and click reload, to cause a connectivity exception |
-| <span style={{color:'red'}}>API Error</span> | Long press the *Reload* button, which then sends a custom HTTP header to the API to rehearse an API 500 exception |
+| UI Error | Load data normally, then disable the network and click reload, to cause a connectivity exception |
+| API Error | Long press the *Reload* button, which then sends a custom HTTP header to the API to rehearse an API 500 exception |
 
 Our error display looks as follows after concurrent view failures. The user can click a hyperlink to see details, or press the *Home* button to retry:
 

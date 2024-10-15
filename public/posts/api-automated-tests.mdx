@@ -83,9 +83,9 @@ This blog’s final APIs use the JOSE libraries from the below table for the JWT
 
 | API Technology | JWT Library |
 | -------------- | ----------- |
-| <span style={{color:'green'}}>**Node.js**</span> | [jose](https://github.com/panva/jose) |
-| <span style={{color:'green'}}>**.NET**</span> | [jose-jwt](https://github.com/dvsekhvalnov/jose-jwt) |
-| <span style={{color:'green'}}>**Java**</span> | [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) |
+| Node.js | [jose](https://github.com/panva/jose) |
+| .NET | [jose-jwt](https://github.com/dvsekhvalnov/jose-jwt) |
+| Java | [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) |
 
 First the authorization server must create a keypair, containing the private key it will use to sign tokens for the duration of the test session, as well as the public key that is formed into a JSON Web Keyset that is published over HTTP using Wiremock:
 
@@ -219,9 +219,9 @@ The load test also sends input fields that might give a load tester best options
 
 | Field | Description |
 | ----- | ----------- |
-| <span style={{color:'green'}}>**Session ID**</span> | An identifier to group all requests in the load test, used to ignore other entries |
-| <span style={{color:'green'}}>**Correlation ID**</span> | An identifier for a single request, to enable slow or failed requests to be quickly looked up |
-| <span style={{color:'green'}}>**Client Name**</span> | The name of the load test, as a mechanism to find all load test sessions |
+| Session ID | An identifier to group all requests in the load test, used to ignore other entries |
+| Correlation ID | An identifier for a single request, to enable slow or failed requests to be quickly looked up |
+| Client Name | The name of the load test, as a mechanism to find all load test sessions |
 
 ### Analysing Load Test Results
 

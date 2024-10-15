@@ -74,11 +74,11 @@ In total this results in the following files:
 
 | File | Deployed To |
 | ---- | ----------- |
-| <span style={{color:'green'}}>**example.ca.crt**</span> | The root CA, deployed to various trust stores. |
-| <span style={{color:'green'}}>**example.ca.key**</span> | The root CA's private key. |
-| <span style={{color:'green'}}>**example.ssl.crt**</span> | The SSL certificate. |
-| <span style={{color:'green'}}>**example.ssl.key**</span> | The SSL certificate's private key. |
-| <span style={{color:'green'}}>**example.ssl.p12**</span> | The protected key and certificate, used by APIs. |
+| example.ca.crt | The root CA, deployed to various trust stores. |
+| example.ca.key | The root CA's private key. |
+| example.ssl.crt | The SSL certificate. |
+| example.ssl.key | The SSL certificate's private key. |
+| example.ssl.p12 | The protected key and certificate, used by APIs. |
 
 You can use an [Online Certificate Decoder](https://certlogik.com/decoder/) and paste in the *example.ssl.crt* contents to see how recipients view the server's SSL certificate:
 
@@ -157,8 +157,8 @@ To configure root certificate trust, I start by creating a local trust bundle fi
 
 | Scenario | Required Trust Configuration |
 | -------- | ---------------------------- |
-| <span style={{color:'green'}}>**HTTP Proxy Running**</span>  | Trust the proxy root certificate. |
-| <span style={{color:'green'}}>**HTTP Proxy Not Running**</span> | Trust the development root certificate. |
+| HTTP Proxy Running  | Trust the proxy root certificate. |
+| HTTP Proxy Not Running | Trust the development root certificate. |
 
 The bundle file has multiple entries as shown here:
 
@@ -267,8 +267,8 @@ For this blog's <Link href='/posts/desktop-apps-overview'>OAuth Secured Desktop 
 
 | Area | Trust Behaviour |
 | ---- | --------------- |
-| <span style={{color:'green'}}>**Main Process**</span> | For requests from the main side of the app, [NODE_EXTRA_CA_CERTS may not enable certificate trust](https://github.com/electron/electron/issues/10257). During development you may have to use the environment variable *NODE_TLS_REJECT_UNAUTHORIZED=0*. |
-| <span style={{color:'green'}}>**Renderer Process**</span> | The Chromium browser uses the same trust store as the Google Chrome browser. |
+| Main Process | For requests from the main side of the app, [NODE_EXTRA_CA_CERTS may not enable certificate trust](https://github.com/electron/electron/issues/10257). During development you may have to use the environment variable *NODE_TLS_REJECT_UNAUTHORIZED=0*. |
+| Renderer Process | The Chromium browser uses the same trust store as the Google Chrome browser. |
 
 ### Trusting a Root Certificate in Command Line Tools
 

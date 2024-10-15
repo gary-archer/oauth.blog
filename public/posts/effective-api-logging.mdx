@@ -19,9 +19,9 @@ The following table summarises some common limitations you may run into with you
 
 | Problem Area | Description |
 | ------------ | ----------- |
-| <span style={{color:'red'}}>Difficult to Query</span> | Logger per class output may use free text and as a result only support text find operations. |
-| <span style={{color:'red'}}>Does not Scale</span> | Under load it may be difficult to answer basic questions such as how many errors of a particular type there have been today. |
-| <span style={{color:'red'}}>Not Configurable</span> | In some setups it can be impossible to get stakeholders to change the production log level when there is a problem, for fear they will make conditions worse. |
+| Difficult to Query | Logger per class output may use free text and as a result only support text find operations. |
+| Does not Scale | Under load it may be difficult to answer basic questions such as how many errors of a particular type there have been today. |
+| Not Configurable | In some setups it can be impossible to get stakeholders to change the production log level when there is a problem, for fear they will make conditions worse. |
 
 ### Technical Support Logging Requirements
 
@@ -29,21 +29,21 @@ In such cases, starting with your requirements can work better than following a 
 
 | Requirement | Behaviour |
 | ----------- | --------- |
-| <span style={{color:'green'}}>**Logs are Centralized**</span> | Technical support users go to a single known location to find API logs for all API instances. |
-| <span style={{color:'green'}}>**Logs are Structured**</span> | Logs contain data you want to query by, and each log entry can consist of both known and unknown fields. |
-| <span style={{color:'green'}}>**Logs are Easy to Use**</span> | Any semi-technical person can issue basic queries against the log data, with a small learning curve. |
-| <span style={{color:'green'}}>**Logs are Lightweight**</span> | Logging avoids redundant noise, so that logs are readable and do not impact performance. |
-| <span style={{color:'green'}}>**Logs are Secure**</span> | Logs do not include confidential data, such as emails or request bodies. As a result it should be possible to grant engineers access to production logs. |
-| <span style={{color:'green'}}>**Logging is Always On**</span> | Incidents are always in the past and changing the log level after the event is too late. |
-| <span style={{color:'green'}}>**Logging is the Same Everywhere**</span> | Logging works the same on a development computer as in production. |
+| Logs are Centralized | Technical support users go to a single known location to find API logs for all API instances. |
+| Logs are Structured | Logs contain data you want to query by, and each log entry can consist of both known and unknown fields. |
+| Logs are Easy to Use | Any semi-technical person can issue basic queries against the log data, with a small learning curve. |
+| Logs are Lightweight | Logging avoids redundant noise, so that logs are readable and do not impact performance. |
+| Logs are Secure | Logs do not include confidential data, such as emails or request bodies. As a result it should be possible to grant engineers access to production logs. |
+| Logging is Always On | Incidents are always in the past and changing the log level after the event is too late. |
+| Logging is the Same Everywhere | Logging works the same on a development computer as in production. |
 
 The primary goal of reliability logging is a system that is easy for the following people to use. It must be able to deal with busy production systems, with hundreds of concurrent users, or a million API calls per day.
 
 | Role | Usage |
 | ---- | ----- |
-| <span style={{color:'green'}}>**Developer**</span> | Looks at logs while coding. |
-| <span style={{color:'green'}}>**Tester**</span> | Looks at logs during various types of testing. |
-| <span style={{color:'green'}}>**DevOps**</span> | Looks at production logs to investigate incidents. |
+| Developer | Looks at logs while coding. |
+| Tester | Looks at logs during various types of testing. |
+| DevOps | Looks at production logs to investigate incidents. |
 
 ### Log Aggregation
 
@@ -55,8 +55,8 @@ To build your preferred logging, you can still use a logging framework, but you 
 
 | Logger Type | Output |
 | ----------- | ------ |
-| <span style={{color:'green'}}>**Request Logger**</span> | A production logger that outputs a single JSON object per API request and is easy to query. |
-| <span style={{color:'green'}}>**Logger per Class**</span> | A development logger that outputs free text which can be useful for developers, but is difficult to query. |
+| Request Logger | A production logger that outputs a single JSON object per API request and is easy to query. |
+| Logger per Class | A development logger that outputs free text which can be useful for developers, but is difficult to query. |
 
 In more complex APIs, the logger per class data at an INFO level may also be useful in production. In this case an alternative approach is to aggregate both types of log data and ensure that you can join data using a *Correlation ID*.
 
@@ -89,30 +89,30 @@ This blog's API logs use a schema with the following top level fields. Users of 
 
 | Field | Description |
 | ----- | ----------- |
-| <span style={{color:'green'}}>**ID**</span> | A globally unique identifier for the log entry. |
-| <span style={{color:'green'}}>**UTC Time**</span> | The time when the API code received the request. |
-| <span style={{color:'green'}}>**API Name**</span> | The name of the API within the platform. |
-| <span style={{color:'green'}}>**Operation Name**</span> | The name of the operation within the API. |
-| <span style={{color:'green'}}>**Host Name**</span> | The name of the server that hosts this API instance. |
-| <span style={{color:'green'}}>**HTTP Method**</span> | Whether a GET, POST etc. |
-| <span style={{color:'green'}}>**Path**</span> | The URL path and query string. |
-| <span style={{color:'green'}}>**Resource ID**</span> | The REST URL runtime path segments that identify the resource. |
-| <span style={{color:'green'}}>**Client Name**</span> | A readable value for the application that called the API. |
-| <span style={{color:'green'}}>**User ID**</span> | The subject claim from the OAuth access token. |
-| <span style={{color:'green'}}>**Status Code**</span> | The response status code. |
-| <span style={{color:'green'}}>**Milliseconds Taken**</span> | The number of milliseconds that the API code took to execute. |
-| <span style={{color:'green'}}>**Error Code**</span> | When an error occurs this field contains a text code to identify the cause of the error. |
-| <span style={{color:'green'}}>**Error ID**</span> | When an API 500 error occurs this field contains a generated number to track the exact error occurrence. |
-| <span style={{color:'green'}}>**Correlation ID**</span> | An identifier either supplied via a request header or which the API generates. |
-| <span style={{color:'green'}}>**Session ID**</span> | Used to partition multiple related calls to the API together, such as those for a frontend user session or load test. |
+| ID | A globally unique identifier for the log entry. |
+| UTC Time | The time when the API code received the request. |
+| API Name | The name of the API within the platform. |
+| Operation Name | The name of the operation within the API. |
+| Host Name | The name of the server that hosts this API instance. |
+| HTTP Method | Whether a GET, POST etc. |
+| Path | The URL path and query string. |
+| Resource ID | The REST URL runtime path segments that identify the resource. |
+| Client Name | A readable value for the application that called the API. |
+| User ID | The subject claim from the OAuth access token. |
+| Status Code | The response status code. |
+| Milliseconds Taken | The number of milliseconds that the API code took to execute. |
+| Error Code | When an error occurs this field contains a text code to identify the cause of the error. |
+| Error ID | When an API 500 error occurs this field contains a generated number to track the exact error occurrence. |
+| Correlation ID | An identifier either supplied via a request header or which the API generates. |
+| Session ID | Used to partition multiple related calls to the API together, such as those for a frontend user session or load test. |
 
 In addition, logs include these child objects which you cannot query directly. Instead, you use top level fields to get documents that contain these objects.
 
 | Field | Description |
 | ----- | ----------- |
-| <span style={{color:'green'}}>**Performance**</span> | Provides instrumentation on expensive subtasks to help understand where time is spent. |
-| <span style={{color:'green'}}>**Error**</span> | When the API returns a 400 or 500 response, this contains the client error response, along with context and exception details where applicable. |
-| <span style={{color:'green'}}>**Info**</span> | Additional arbitrary data can be added here, though I use this object sparingly. |
+| Performance | Provides instrumentation on expensive subtasks to help understand where time is spent. |
+| Error | When the API returns a 400 or 500 response, this contains the client error response, along with context and exception details where applicable. |
+| Info | Additional arbitrary data can be added here, though I use this object sparingly. |
 
 ### Users and Privacy
 

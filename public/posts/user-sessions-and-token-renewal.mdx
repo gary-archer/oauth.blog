@@ -69,8 +69,8 @@ You can solve some usability and reliability problems by lowering security, yet 
 
 | Behavior | Description |
 | -------- | ----------- |
-| <span style={{color:'red'}}>Access Tokens in Local Storage</span> | If you store access tokens in local storage, you no longer need to perform a token refresh when the user reloads the page or opens a new browser tab. |
-| <span style={{color:'red'}}>Refresh Tokens in Local Storage</span> | If you store refresh tokens in local storage, you can avoid the use of SSO cookies and get a new access token with a simple Ajax request from JavaScript. |
+| Access Tokens in Local Storage | If you store access tokens in local storage, you no longer need to perform a token refresh when the user reloads the page or opens a new browser tab. |
+| Refresh Tokens in Local Storage | If you store refresh tokens in local storage, you can avoid the use of SSO cookies and get a new access token with a simple Ajax request from JavaScript. |
 
 Note that an SPA can use PKCE to protect its authorization code grant requests. Yet the refresh token grant for an SPA has no protection, since the SPA has nowhere secure to store a client credential. An example request is shown here:
 

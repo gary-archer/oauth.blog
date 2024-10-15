@@ -24,10 +24,10 @@ A SAML website would validate the assertion and then start a cookie-based applic
 
 |   | ID Token | Access Token | Refresh Token |
 | - | -------- | ------------ | ------------- |
-| <span style={{color:'green'}}>**Used At**</span> | Client | API | Authorization Server |
-| <span style={{color:'green'}}>**Used For**</span> | Proof of Authentication | API Message Credential | Access Token Renewal |
-| <span style={{color:'green'}}>**Lifetime**</span> | Expiry Not Used | Short Expiry | Long Expiry |
-| <span style={{color:'green'}}>**Silently Renewable**</span> | No | Yes | Yes |
+| Used At | Client | API | Authorization Server |
+| Used For | Proof of Authentication | API Message Credential | Access Token Renewal |
+| Lifetime | Expiry Not Used | Short Expiry | Long Expiry |
+| Silently Renewable | No | Yes | Yes |
 
 You must not use the ID token as an API message credential. An ID token does not contain business permissions, which you express in access tokens using scopes and claims, and which APIs use to implement their business authorization.
 

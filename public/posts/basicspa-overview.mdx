@@ -8,11 +8,11 @@ The behaviour provided in the initial code sample is summarised below:
 
 | Behaviour | Description |
 | --------- | ----------- |
-| <span style={{color:'green'}}>**Authorization Server**</span> | Developers can connect to a cloud authorization server from code running on their computer. |
-| <span style={{color:'green'}}>**SPA Security**</span> | The SPA uses the authorization code flow (PKCE) for logins and uses access tokens to call the API. |
-| <span style={{color:'green'}}>**API Security**</span> | The API validates JWT access tokens, then works with claims to implement authorization. |
-| <span style={{color:'green'}}>**Reliable**</span> | Both the SPA and API handle expiry and other failure conditions in a solid manner. |
-| <span style={{color:'green'}}>**Real World URLs**</span> | The SPA makes cross domain calls to the API on the local computer, and views OAuth messages. |
+| Authorization Server | Developers can connect to a cloud authorization server from code running on their computer. |
+| SPA Security | The SPA uses the authorization code flow (PKCE) for logins and uses access tokens to call the API. |
+| API Security | The API validates JWT access tokens, then works with claims to implement authorization. |
+| Reliable | Both the SPA and API handle expiry and other failure conditions in a solid manner. |
+| Real World UURLs | The SPA makes cross domain calls to the API on the local computer, and views OAuth messages. |
 
 ### Components
 
@@ -22,7 +22,7 @@ The Basic SPA Code Sample will get the below components and endpoints talking to
 
 ### SPAs in 2021
 
-<span style={{color:'red'}}>This sample uses the traditional SPA solution, with a JavaScript OpenID Connect implementation. It is now considered more secure for your production apps to instead use a <Link href='/posts/spa-back-end-for-front-end'>Backend for Frontend</Link> approach.</span>
+This sample uses the traditional SPA solution, with a JavaScript OpenID Connect implementation. It is now considered more secure for your production apps to instead use a <Link href='/posts/spa-back-end-for-front-end'>Backend for Frontend</Link> approach.
 
 The traditional SPA flow remains useful when you first learn OAuth, and to represent a pure SPA architecture.
 
@@ -38,8 +38,8 @@ The SPA and API use the following respected open source libraries:
 
 | Component | Library | Features |
 | --------- | ------- | -------- |
-| <span style={{color:'green'}}>**SPA**</span> | [oidc-client-ts](https://github.com/authts/oidc-client-ts) | Implements OpenID Connect lifecycle events for a browser-based client, including logins, logouts and token renewal. |
-| <span style={{color:'green'}}>**API**</span> | [jose](https://github.com/panva/jose) | Validates JWT access tokens, returns claims and manages looking up and caching of token signing public keys. |
+| SPA | [oidc-client-ts](https://github.com/authts/oidc-client-ts) | Implements OpenID Connect lifecycle events for a browser-based client, including logins, logouts and token renewal. |
+| API | [jose](https://github.com/panva/jose) | Validates JWT access tokens, returns claims and manages looking up and caching of token signing public keys. |
 
 ### Programming Languages
 
@@ -47,8 +47,8 @@ This blog uses multiple technologies, and they are all modern and cross platform
 
 | Component | Language | Platforms |
 | --------- | -------- | --------- |
-| <span style={{color:'green'}}>**SPA**</span> | TypeScript | Chrome / Edge / Firefox / Safari / Mobile |
-| <span style={{color:'green'}}>**API**</span> | Node.js + TypeScript | Windows / macOS / Linux |
+| SPA | TypeScript | Chrome / Edge / Firefox / Safari / Mobile |
+| API | Node.js + TypeScript | Windows / macOS / Linux |
 
 ### Basic Web Technology for Early Samples
 
@@ -56,8 +56,8 @@ I use modern web technology, but avoid web frameworks to start with, to establis
 
 | Step | Details |
 | ---- | ------- |
-| <span style={{color:'green'}}>**SPA OAuth Code Integration**</span> | First show how to integrate standards-based OAuth support into an SPA with a focus on OAuth requirements. |
-| <span style={{color:'green'}}>**Modern SPA Framework**</span> | Avoid getting sidetracked by too much web technology initially, though this blog's <Link href="/posts/final-spa-overview">Final SPA</Link> uses React. |
+| SPA OAuth Code Integration | First show how to integrate standards-based OAuth support into an SPA with a focus on OAuth requirements. |
+| Modern SPA Framework | Avoid getting sidetracked by too much web technology initially, though this blog's <Link href="/posts/final-spa-overview">Final SPA</Link> uses React. |
 
 ### Code Sample Theme
 

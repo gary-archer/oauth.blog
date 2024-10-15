@@ -8,10 +8,10 @@ The following table summarises the main features of the code sample, some of whi
 
 | Feature | Description |
 | ------- | ----------- |
-| <span style={{color:'green'}}>**AppAuth Integration**</span> | We will implement the essential OpenID Connect behaviour by integrating the standard libraries |
-| <span style={{color:'green'}}>**Claimed HTTPS Schemes**</span> | The login result is returned to the app over HTTPS URLs, which is the most secure option according to security guidance |
-| <span style={{color:'green'}}>**Secure Token Storage**</span> | Tokens are stored on the device after login, and not accessible by other apps, so that users don’t need to authenticate on every app restart |
-| <span style={{color:'green'}}>**Deep Linking**</span> | Our app also supports HTTPS App Links, so that users can bookmark locations within the app |
+| AppAuth Integration | We will implement the essential OpenID Connect behaviour by integrating the standard libraries |
+| Claimed HTTPS Schemes | The login result is returned to the app over HTTPS URLs, which is the most secure option according to security guidance |
+| Secure Token Storage | Tokens are stored on the device after login, and not accessible by other apps, so that users don’t need to authenticate on every app restart |
+| Deep Linking | Our app also supports HTTPS App Links, so that users can bookmark locations within the app |
 
 ### Code Download
 
@@ -72,9 +72,9 @@ The following problems exist if you perform login redirects on a normal mobile w
 
 | Problem Area | Description |
 | ------------ | ----------- |
-| <span style={{color:'red'}}>Password Autofill</span> | This feature will generally work less reliably in a web view, resulting in a poor login experience |
-| <span style={{color:'red'}}>Single Sign On</span> | Cookies will not be shared with other apps and are likely to be dropped more aggressively within your own app |
-| <span style={{color:'red'}}>Could be Blocked</span> | Google is an example of an identity provider that [blocks logins on a mobile web view](https://auth0.com/blog/google-blocks-oauth-requests-from-embedded-browsers) |
+| Password Autofill | This feature will generally work less reliably in a web view, resulting in a poor login experience |
+| Single Sign On | Cookies will not be shared with other apps and are likely to be dropped more aggressively within your own app |
+| Could be Blocked | Google is an example of an identity provider that [blocks logins on a mobile web view](https://auth0.com/blog/google-blocks-oauth-requests-from-embedded-browsers) |
 
 ### Our Sample’s Login Usability Features
 
@@ -165,9 +165,9 @@ There are three scenarios where we will redirect the user on the Chrome custom t
 
 | Redirect Type | Description |
 | ------------- | ----------- |
-| <span style={{color:'green'}}>**Login**</span> | The user is interactively prompted to login |
-| <span style={{color:'green'}}>**Single Sign On**</span> | The user already has a valid session cookie and signs in automatically without a login screen |
-| <span style={{color:'green'}}>**Logout**</span> | The user’s session cookie is removed, with no prompt |
+| Login | The user is interactively prompted to login |
+| Single Sign On | The user already has a valid session cookie and signs in automatically without a login screen |
+| Logout | The user’s session cookie is removed, with no prompt |
 
 In each case, there needs to be a screen before invoking the deep link. You may find using the OpenID Connect *prompt=login* parameter on every login redirect is reliable. In this blog I instead use a custom intermediate page, partly because AWS Cognito does not support the *prompt* parameter.
 
@@ -189,9 +189,9 @@ Chrom custom tab logins improve usability, but they also add some complexity. Ou
 
 | Test Case | Description |
 | --------- | ----------- |
-| <span style={{color:'green'}}>**Change Orientation**</span> | The user switches between portrait and landscape |
-| <span style={{color:'green'}}>**Reactivate App**</span> | The user switches to another app and then re-runs our app from the home screen via the app’s launcher icon |
-| <span style={{color:'green'}}>**Deep Link**</span> | The user selects a deep link message from an email |
+| Change Orientation | The user switches between portrait and landscape |
+| Reactivate App | The user switches to another app and then re-runs our app from the home screen via the app’s launcher icon |
+| Deep Link | The user selects a deep link message from an email |
 
 ### Where Are We?
 

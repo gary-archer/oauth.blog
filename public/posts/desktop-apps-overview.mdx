@@ -8,10 +8,10 @@ The behaviour provided in our initial sample is summarised below:
 
 | Feature | Description |
 | ------- | ----------- |
-| <span style={{color:'green'}}>**Cross Platform**</span> | The desktop app uses a technology stack that enables it to run on Windows, macOS and Linux. |
-| <span style={{color:'green'}}>**Security Library Integration**</span> | A security library implements OpenID Connect logins and token handling. |
-| <span style={{color:'green'}}>**System Browser Logins**</span> | The desktop app invokes the system browser to authenticate the user, then listens for the login response. |
-| <span style={{color:'green'}}>**Reliability**</span> | The desktop app handles some re-entrancy scenarios when the app interacts with the system browser. |
+| Cross Platform | The desktop app uses a technology stack that enables it to run on Windows, macOS and Linux. |
+| Security Library Integration | A security library implements OpenID Connect logins and token handling. |
+| System Browser Logins | The desktop app invokes the system browser to authenticate the user, then listens for the login response. |
+| Reliability | The desktop app handles some re-entrancy scenarios when the app interacts with the system browser. |
 
 ### Desktop App Technology
 
@@ -37,9 +37,9 @@ A web client runs in a browser and has an addressable URL on which to receive lo
 
 | Option | Example Redirect URI | Usable By |
 | ------ | -------------------- | --------- |
-| <span style={{color:'green'}}>**Loopback Interface**</span> | *http://127.0.0.1:8000/callback* | Desktop apps |
-| <span style={{color:'green'}}>**Private URI Scheme**</span> | *x-authsamples-myapp:/callback* | Mobile or desktop apps |
-| <span style={{color:'green'}}>**Claimed HTTPS Scheme**</span> | *https://mobile.authsamples.com/appname/callback* | Mobile apps |
+| Loopback Interface | *http://127.0.0.1:8000/callback* | Desktop apps |
+| Private URI Scheme | *x-authsamples-myapp:/callback* | Mobile or desktop apps |
+| Claimed HTTPS Scheme | *https://mobile.authsamples.com/appname/callback* | Mobile apps |
 
 ### The AppAuth-JS Code Sample
 

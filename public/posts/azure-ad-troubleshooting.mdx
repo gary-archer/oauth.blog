@@ -40,8 +40,8 @@ After some research it turned out that this format of access token should only b
 
 | Access Token Type | Description |
 | ----------------- | ----------- |
-| <span style={{color:'green'}}>**Microsoft APIs**</span> | These tokens contain a *nonce* field in the JWT header and are not designed for custom APIs to validate. |
-| <span style={{color:'green'}}>**Custom APIs**</span> | Custom APIs need to receive an access token with their required scope(s) and an audience matching the registered API client. |
+| Microsoft APIs | These tokens contain a *nonce* field in the JWT header and are not designed for custom APIs to validate. |
+| Custom APIs | Custom APIs need to receive an access token with their required scope(s) and an audience matching the registered API client. |
 
 I therefore updated to the scope and permission settings from the previous blog post. The API then receives a normal JWT access token with the correct issuer and audience, and without a *nonce* in the JWT header. The API's JWT validation then succeeds:
 

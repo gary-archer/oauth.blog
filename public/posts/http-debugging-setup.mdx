@@ -278,8 +278,8 @@ In later posts I use [Electron](https://electronjs.org/) to develop <Link href='
 
 | Area | Proxy Behaviour |
 | ---- | --------------- |
-| <span style={{color:'green'}}>**Main Process**</span> | The main process follows Node.js rules if it needs to make outgoing connections. |
-| <span style={{color:'green'}}>**Renderer Process**</span> | Uses the Chromium Browser, which by default inherits proxy settings from the system proxy. |
+| Main Process | The main process follows Node.js rules if it needs to make outgoing connections. |
+| Renderer Process | Uses the Chromium Browser, which by default inherits proxy settings from the system proxy. |
 
 It is also possible to override the system proxy settings via [Electron Command Line Overrides](https://www.electronjs.org/docs/api/command-line-switches):
 
@@ -291,8 +291,8 @@ I commonly use the *curl* and *openssl* tools, on Windows, macOS and Linux opera
 
 | Environment Variable | Used For |
 | -------------------- | -------- |
-| <span style={{color:'green'}}>**http_proxy**</span> | Browsing to HTTP URLs |
-| <span style={{color:'green'}}>**https_proxy**</span> | Browsing to HTTPS URLs |
+| http_proxy | Browsing to HTTP URLs |
+| https_proxy | Browsing to HTTPS URLs |
 
 To use curl to connect to an HTTP URL I use commands of this form to capture traffic in an HTTP proxy:
 

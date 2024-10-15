@@ -8,9 +8,9 @@ This blog provides an <Link href='/posts/oauth-infrastructure-setup'>OAuth Infra
 
 | Component	| Base URL |
 | --------- | -------- |
-| <span style={{color:'green'}}>**SPA**</span> | *https://www.authsamples-dev.com* |
-| <span style={{color:'green'}}>**API**</span> | *https://api.authsamples-dev.com* |
-| <span style={{color:'green'}}>**Authorization Server**</span> | *https://login.authsamples.com* |
+| SPA | *https://www.authsamples-dev.com* |
+| API | *https://api.authsamples-dev.com* |
+| Authorization Server | *https://login.authsamples.com* |
 
 In this blog I use a cloud parent domain of *authsamples.com* for components that run in the AWS cloud. Components that run on a development computer use a fictional parent domain of *authsamples-dev.com*, to indicate that they are under development. OAuth flows use a mix of local and deployed components.
 
@@ -38,9 +38,9 @@ Authorization servers contain a registration entry for the OAuth client containi
 
 | Scope | Meaning |
 | ----- | ------- |
-| <span style={{color:'green'}}>**openid**</span> | OpenID Connect is used in addition to OAuth 2.0. |
-| <span style={{color:'green'}}>**profile**</span> | Needed later to get the user’s name details from the OpenID Connect userinfo endpoint. |
-| <span style={{color:'green'}}>**https://api.authsamples.com/investments**</span> | A custom scope to grant access to an area of business data. |
+| openid | OpenID Connect is used in addition to OAuth 2.0. |
+| profile | Needed later to get the user’s name details from the OpenID Connect userinfo endpoint. |
+| https://api.authsamples.com/investments | A custom scope to grant access to an area of business data. |
 
 ### Step 3. SPA Gets OpenID Connect Metadata
 
@@ -190,10 +190,10 @@ When the API receives the token it is the API’s job to validate it, which typi
 
 | Property | Expectation |
 | -------- | ----------- |
-| <span style={{color:'green'}}>**Issuer**</span> | The token is from our authorization server. |
-| <span style={{color:'green'}}>**Audience**</span> | The token was issued for our API. |
-| <span style={{color:'green'}}>**Digital Signature**</span> | The token has not been tampered with since issued. |
-| <span style={{color:'green'}}>**Active**</span> | The token is valid at the current time and not expired. |
+| Issuer | The token is from our authorization server. |
+| Audience | The token was issued for our API. |
+| Digital Signature | The token has not been tampered with since issued. |
+| Active | The token is valid at the current time and not expired. |
 
 To verify the access token’s digital signature, the API must download token signing public keys from AWS Cognito. This occurs when the JOSE security library calls Cognito's JSON Web Key Set (JWKS) endpoint:
 
