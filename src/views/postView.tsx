@@ -124,7 +124,7 @@ export function PostView(props: PostViewProps): JSX.Element {
             </Head>
             <header>
                 <h2>
-                    <Link href='/'>{siteTitle}</Link>
+                    <a href='home.mdx'>{siteTitle}</a>
                 </h2>
                 <p className='subHeadingText'>Designs and Code Samples</p>
             </header>
