@@ -8,9 +8,9 @@ The completed desktop code sample demonstrates these main features:
 
 | Feature | Description |
 | ------- | ----------- |
-| <span style={{color:'green'}}>**React Update**</span> | I update from plain TypeScript to a more complete frontend technology stack. |
-| <span style={{color:'green'}}>**Deep Linking**</span> | The app receieves login responses using private URI scheme based redirect URIs, to enable desktop deep links. |
-| <span style={{color:'green'}}>**Secure Token Storage**</span> | I save OAuth tokens across app restarts using operating system encryption private to the app and user. |
+| React Update | I update from plain TypeScript to a more complete frontend technology stack. |
+| Deep Linking | The app receieves login responses using private URI scheme based redirect URIs, to enable desktop deep links. |
+| Secure Token Storage | I save OAuth tokens across app restarts using operating system encryption private to the app and user. |
 
 ### Code Download
 
@@ -165,9 +165,9 @@ The actual tokens are stored as base64 encrypted bytes in a JSON file at one of 
 
 | Operating System | Stored Tokens Location |
 | ---------------- | ---------------------- |
-| <span style={{color:'green'}}>**Windows**</span> | ~/AppData/Roaming/finaldesktopapp/tokens.json |
-| <span style={{color:'green'}}>**macOS**</span> | ~/Library/Application Support/finaldesktopapp/tokens.json |
-| <span style={{color:'green'}}>**Linux (Gnome)**</span> | ~/.config/finaldesktopapp/tokens.json |
+| Windows | ~/AppData/Roaming/finaldesktopapp/tokens.json |
+| macOS | ~/Library/Application Support/finaldesktopapp/tokens.json |
+| Linux (Gnome) | ~/.config/finaldesktopapp/tokens.json |
 
 ### Deep Linking to Views
 
@@ -184,9 +184,9 @@ The easiest way to test deep linking is from a command shell, and the command va
 
 | Operating System | Example Command |
 | ---------------- | --------------- |
-| <span style={{color:'green'}}>**Windows**</span> | start x-authsamples-desktopapp:/companies/2 |
-| <span style={{color:'green'}}>**macOS**</span> | open x-authsamples-desktopapp:/companies/2 |
-| <span style={{color:'green'}}>**Linux (Gnome)**</span> | xdg-open  x-authsamples-desktopapp:/companies/2 |
+| Windows | start x-authsamples-desktopapp:/companies/2 |
+| macOS | open x-authsamples-desktopapp:/companies/2 |
+| Linux (Gnome) | xdg-open  x-authsamples-desktopapp:/companies/2 |
 
 If the desktop app is running, this command causes it to update its current location to the *Transactions View*. Otherwise, the app is a startup deep link and the app loads at that location:
 

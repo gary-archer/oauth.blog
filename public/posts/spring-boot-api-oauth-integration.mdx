@@ -42,17 +42,17 @@ This blog’s Java API will focus on customising Spring’s default behaviour in
 
 | Requirement | Description |
 | ----------- | ----------- |
-| <span style={{color:'green'}}>**Standards Based**</span> | We will use the same standards-based design patterns for OAuth security across Node.js, .NET and Java APIs. |
-| <span style={{color:'green'}}>**Best Security**</span> | The [jose4j library](https://bitbucket.org/b_c/jose4j/wiki/Home) will enable the most up to date and specialised security algorithms when dealing with JWTs. |
-| <span style={{color:'green'}}>**Extensible Claims**</span> | APIs are in full control of the claims principal, to work around authorization server limitations or add values that should not be issued to access tokens. |
-| <span style={{color:'green'}}>**Supportable**</span> | Identity and error details will be captured and included in logs, and JSON error responses will be customisable. |
+| Standards Based | We will use the same standards-based design patterns for OAuth security across Node.js, .NET and Java APIs. |
+| Best Security | The [jose4j library](https://bitbucket.org/b_c/jose4j/wiki/Home) will enable the most up to date and specialised security algorithms when dealing with JWTs. |
+| Extensible Claims | APIs are in full control of the claims principal, to work around authorization server limitations or add values that should not be issued to access tokens. |
+| Supportable | Identity and error details will be captured and included in logs, and JSON error responses will be customisable. |
 
 In Java our API’s OAuth code will follow the same two phases that we used in Node.js and .NET APIs:
 
 | Task | Description |
 | ---- | ----------- |
-| <span style={{color:'green'}}>**JWT Access Token Validation**</span> | Downloading a JSON Web Key Set and verifying received JWTs |
-| <span style={{color:'green'}}>**API Authorization**</span> | Creating a ClaimsPrincipal that includes useful claims, then applying them during authorization |
+| JWT Access Token Validation | Downloading a JSON Web Key Set and verifying received JWTs |
+| API Authorization | Creating a ClaimsPrincipal that includes useful claims, then applying them during authorization |
 
 ### Your Java Secured API?
 
@@ -80,11 +80,11 @@ The meaning of each field is summarised in the following table:
 
 | Field | Description |
 | ----- | ----------- |
-| <span style={{color:'green'}}>**issuer**</span> | The expected authorization server to be received in access tokens |
-| <span style={{color:'green'}}>**audience**</span> | The audience in JWT access tokens represents a set of related APIs |
-| <span style={{color:'green'}}>**scope**</span> | The business area for the API |
-| <span style={{color:'green'}}>**jwksEndpoint**</span> | The location from which jose4j will use token signing public keys |
-| <span style={{color:'green'}}>**claimsCacheTimeToLiveMinutes**</span> | The time for which extra claims, not present in access tokens, are cached |
+| issuer | The expected authorization server to be received in access tokens |
+| audience | The audience in JWT access tokens represents a set of related APIs |
+| scope | The business area for the API |
+| jwksEndpoint | The location from which jose4j will use token signing public keys |
+| claimsCacheTimeToLiveMinutes | The time for which extra claims, not present in access tokens, are cached |
 
 ### API Authorization
 
@@ -131,9 +131,9 @@ In this blog’s architecture, web specific concerns are not dealt with in APIs.
 
 | Component | Description |
 | --------- | ----------- |
-| <span style={{color:'green'}}>**Web Host**</span> | Manages returning static content and recommended web headers to the browser |
-| <span style={{color:'green'}}>**Backend for Frontend**</span> | Manages OpenID Connect concerns such as logins and logouts, and issuing of application level cookies |
-| <span style={{color:'green'}}>**API Gateway**</span> | Deals with web security concerns during API requests, including CSRF, cookie and CORS handling |
+| Web Host | Manages returning static content and recommended web headers to the browser |
+| Backend for Frontend | Manages OpenID Connect concerns such as logins and logouts, and issuing of application level cookies |
+| API Gateway | Deals with web security concerns during API requests, including CSRF, cookie and CORS handling |
 
 ### OAuth and Claims Code
 
@@ -187,10 +187,10 @@ There are a number of responsibilities that the library implements for us:
 
 | Responsibility | Description |
 | -------------- | ----------- |
-| <span style={{color:'green'}}>**JWKS Key Lookup**</span> | Downloading token signing public keys from the authorization server’s JWKS endpoint |
-| <span style={{color:'green'}}>**JWKS Key Caching**</span> | Caching the above keys and automatically dealing with new lookups when the signing keys are recycled |
-| <span style={{color:'green'}}>**Signature Checks**</span> | Cryptographically verifying the JSON Web Signature of received JWTs |
-| <span style={{color:'green'}}>**Field Checks**</span> | Checking that the token has the correct issuer and audience, and that it is not expired |
+| JWKS Key Lookup | Downloading token signing public keys from the authorization server’s JWKS endpoint |
+| JWKS Key Caching | Caching the above keys and automatically dealing with new lookups when the signing keys are recycled |
+| Signature Checks | Cryptographically verifying the JSON Web Signature of received JWTs |
+| Field Checks | Checking that the token has the correct issuer and audience, and that it is not expired |
 
 ### Claims Principal
 
@@ -198,12 +198,12 @@ The claims principal for the sample API deals with some custom fields shown here
 
 | Claim | Represents |
 | ----- | ---------- |
-| <span style={{color:'green'}}>**Scope**</span> | The scope for the API, which in this blog will be a  high level business area of *investments* |
-| <span style={{color:'green'}}>**Subject**</span> | The user’s technical OAuth identity, generated by the authorization server |
-| <span style={{color:'green'}}>**Manager ID**</span> | The business identity for a user, and in my example a manager is a party who administers investment data |
-| <span style={{color:'green'}}>**Role**</span> | A role from which business permissions would be derived, about the level of access |
-| <span style={{color:'green'}}>**Title**</span> | A business title for the user, which is displayed by frontend applications |
-| <span style={{color:'green'}}>**Regions**</span> | An array claim meant to represent a more detailed business rule that does not belong in access tokens |
+| Scope | The scope for the API, which in this blog will be a  high level business area of *investments* |
+| Subject | The user’s technical OAuth identity, generated by the authorization server |
+| Manager ID | The business identity for a user, and in my example a manager is a party who administers investment data |
+| Role | A role from which business permissions would be derived, about the level of access |
+| Title | A business title for the user, which is displayed by frontend applications |
+| Regions | An array claim meant to represent a more detailed business rule that does not belong in access tokens |
 
 In code the ClaimsPrincipal class is represented like this:
 
@@ -295,8 +295,8 @@ This results in an invalid access token being sent to the API, which returns an 
 
 | Data | Description |
 | ---- | ----------- |
-| <span style={{color:'green'}}>**HTTP Status**</span> | The appropriate HTTP status is returned |
-| <span style={{color:'green'}}>**Payload**</span> | A JSON error object containing *code* and *message* fields |
+| HTTP Status | The appropriate HTTP status is returned |
+| Payload | A JSON error object containing *code* and *message* fields |
 
 In total the following security related HTTP status codes may be returned:
 

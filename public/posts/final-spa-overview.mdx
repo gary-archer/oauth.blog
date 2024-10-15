@@ -8,9 +8,9 @@ The final SPA improves on the previous <Link href='/posts/improved-spa-code-samp
 
 | Requirement | Description |
 | ----------- | ----------- |
-| <span style={{color:'green'}}>**Best Browser Security**</span> | The SPA calls APIs using the strongest *HttpOnly SameSite=strict* cookies, with no tokens in the browser. |
-| <span style={{color:'green'}}>**Globally Equal Performance**</span> | Deploy the SPA to a content delivery network, so that web latency is roughly the same at any global location. |
-| <span style={{color:'green'}}>**Pure SPA Development**</span> | Web developers work productively on modern frontends, with small code bases and no security plumbing. |
+| Best Browser Security | The SPA calls APIs using the strongest *HttpOnly SameSite=strict* cookies, with no tokens in the browser. |
+| Globally Equal Performance | Deploy the SPA to a content delivery network, so that web latency is roughly the same at any global location. |
+| Pure SPA Development | Web developers work productively on modern frontends, with small code bases and no security plumbing. |
 
 ### Cloud Hosting
 
@@ -40,11 +40,11 @@ You use the following URLs during local development and only the first of these 
 
 | Component | Base URL |
 | --------- | -------- |
-| <span style={{color:'green'}}>**SPA**</span> | *https://www.authsamples-dev.com/spa/* |
-| <span style={{color:'green'}}>**Investments API**</span> | *https://api.authsamples.com/investments* |
-| <span style={{color:'green'}}>**Investments API Web Route**</span> | *https://bff.authsamples-dev.com/investments* |
-| <span style={{color:'green'}}>**OAuth Agent**</span> | *https://bff.authsamples.com-dev/oauth-agent* |
-| <span style={{color:'green'}}>**Authorization Server**</span> | *https://login.authsamples.com* |
+| SPA | *https://www.authsamples-dev.com/spa/* |
+| Investments API | *https://api.authsamples.com/investments* |
+| Investments API Web Route | *https://bff.authsamples-dev.com/investments* |
+| OAuth Agent | *https://bff.authsamples.com-dev/oauth-agent* |
+| Authorization Server | *https://login.authsamples.com* |
 
 ### OAuth Client
 
@@ -123,18 +123,18 @@ The time to first render in a secured web application is not immediate and requi
 
 | Step | Description |
 | ---- | ----------- |
-| <span style={{color:'green'}}>**Unauthenticated Access**</span> | The time to download HTML resources and run code to detect the user's authentication status. |
-| <span style={{color:'green'}}>**OAuth Login**</span> | The time to redirect to the authorization server and present login screens, then return to the SPA. |
-| <span style={{color:'green'}}>**Secure SPA Access**</span> | The application reload, followed by API requests to get secured data specific to the user. |
+| Unauthenticated Access | The time to download HTML resources and run code to detect the user's authentication status. |
+| OAuth Login | The time to redirect to the authorization server and present login screens, then return to the SPA. |
+| Secure SPA Access | The application reload, followed by API requests to get secured data specific to the user. |
 
 The final SPA uses the following mainstream techniques to ensure good performance:
 
 | Aspect | Responsibilities |
 | ------ | ---------------- |
-| <span style={{color:'green'}}>**Content Delivery**</span> | Web latency is roughly equal for all global users, since a CDN ensures that all web downloads are fairly local. |
-| <span style={{color:'green'}}>**Static Content Caching**</span> | The SPA uses cache control headers for web assets, to serve future requests from the browser cache. |
-| <span style={{color:'green'}}>**API Response Caching**</span> | The SPA caches HTTP GET responses to prevent redundant API requests, such as during back navigation. |
-| <span style={{color:'green'}}>**Download Sizes**</span> | As the SPA's code grows I would aim for medium-sized downloads using bundle splitting techniques and micro-frontends. |
+| Content Delivery | Web latency is roughly equal for all global users, since a CDN ensures that all web downloads are fairly local. |
+| Static Content Caching | The SPA uses cache control headers for web assets, to serve future requests from the browser cache. |
+| API Response Caching | The SPA caches HTTP GET responses to prevent redundant API requests, such as during back navigation. |
+| Download Sizes | As the SPA's code grows I would aim for medium-sized downloads using bundle splitting techniques and micro-frontends. |
 
 The final SPA's has a simple initial page to display a login button. Once rendered, all future SPA operations and page reloads use HTML resources from the browser's local cache.
 

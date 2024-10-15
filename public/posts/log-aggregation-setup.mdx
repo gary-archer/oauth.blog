@@ -24,9 +24,9 @@ We will run the following components to a basic level on a development computer,
 
 | Component | Role |
 | --------- | ---- |
-| <span style={{color:'green'}}>**Elasticsearch**</span> | A big data store which provides rich query capabilities |
-| <span style={{color:'green'}}>**Kibana**</span> | A UI which we can use for query related operations |
-| <span style={{color:'green'}}>**Filebeat**</span> | A lightweight tool to ship JSON log files to Elasticsearch |
+| Elasticsearch | A big data store which provides rich query capabilities |
+| Kibana | A UI which we can use for query related operations |
+| Filebeat | A lightweight tool to ship JSON log files to Elasticsearch |
 
 Note that our API logging solution is not locked-in to Elastic Stack, and if we ever found a better option we could migrate to it without any API code changes.
 
@@ -166,8 +166,8 @@ I sometimes use log aggregation when developing this blog’s secured components
 
 | Client | Behaviour |
 | ------ | --------- |
-| <span style={{color:'green'}}>**API**</span> | The <Link href='/posts/api-architecture-node'>Final API</Link> post explains how to run a local API setup |
-| <span style={{color:'green'}}>**SPA**</span> | The <Link href='/posts/how-to-run-the-react-js-spa'>Final SPA</Link> post explains how to point to a local API |
+| API | The <Link href='/posts/api-architecture-node'>Final API</Link> post explains how to run a local API setup |
+| SPA | The <Link href='/posts/how-to-run-the-react-js-spa'>Final SPA</Link> post explains how to point to a local API |
 
 To run these components, ensure that you have added the following entries to the hosts file on your local computer. In this configuration, the SPA calls a backend for frontend using cookies, and an access token request is forwarded to the local API:
 
@@ -337,10 +337,10 @@ The processors I use for the ingestion pipeline are summarised below:
 
 | Processor | Behaviour |
 | --------- | --------- |
-| <span style={{color:'green'}}>**drop**</span> | Ignores any log events from foreign log files encountered, since our logs all have an *apiName* field.
-| <span style={{color:'green'}}>**script**</span> | Prevents Elasticsearch from generating a unique *_id* field and instead set it to the id field from API logs. This ensures that if Filebeat gets redeployed and logs reprocessed, there will be no duplicated log entries in the aggregated data.
-| <span style={{color:'green'}}>**data**</span> | Assigns the *utcTime* from logs to the mandatory *@timestamp* field, rather than using the time logs were received.
-| <span style={{color:'green'}}>**remove**</span> | This removes any other extra fields that Elasticsearch generates during inbound processing.
+| drop | Ignores any log events from foreign log files encountered, since our logs all have an *apiName* field.
+| script | Prevents Elasticsearch from generating a unique *_id* field and instead set it to the id field from API logs. This ensures that if Filebeat gets redeployed and logs reprocessed, there will be no duplicated log entries in the aggregated data.
+| data | Assigns the *utcTime* from logs to the mandatory *@timestamp* field, rather than using the time logs were received.
+| remove | This removes any other extra fields that Elasticsearch generates during inbound processing.
 
 ### Step 11. Query API Logs
 

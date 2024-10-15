@@ -8,11 +8,11 @@ When designing token validation in APIs there are a few factors to consider:
 
 | Factor | Description |
 | ------ | ----------- |
-| <span style={{color:'green'}}>**Straightforward Code**</span> | Validating a JWT should not require a great amount of code or complicate your API. |
-| <span style={{color:'green'}}>**Enable API Authorization**</span> | The output from JWT validation should provide the main values the API needs for authorization. |
-| <span style={{color:'green'}}>**Best Security Capabilities**</span> | Aim to use modern, secure and efficient JWT algorithms. |
-| <span style={{color:'green'}}>**Developer Understanding**</span> | You should understand how the validation works, so that you can ensure it is doing the right things. |
-| <span style={{color:'green'}}>**Useful Errors**</span> | You must ensure that API clients receive useful error responses when access tokens fail validation. |
+| Straightforward Code | Validating a JWT should not require a great amount of code or complicate your API. |
+| Enable API Authorization | The output from JWT validation should provide the main values the API needs for authorization. |
+| Best Security Capabilities | Aim to use modern, secure and efficient JWT algorithms. |
+| Developer Understanding | You should understand how the validation works, so that you can ensure it is doing the right things. |
+| Useful Errors | You must ensure that API clients receive useful error responses when access tokens fail validation. |
 
 ### Libraries v Frameworks
 
@@ -24,9 +24,9 @@ This blog provides APIs developed in the following languages and in each case a 
 
 | Technology | JOSE Library |
 | ---------- | ------------ |
-| <span style={{color:'green'}}>**Node.js**</span> | [jose](https://github.com/panva/jose) |
-| <span style={{color:'green'}}>**.NET**</span> | [jose-jwt](https://github.com/dvsekhvalnov/jose-jwt) |
-| <span style={{color:'green'}}>**Java**</span> | [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) |
+| Node.js | [jose](https://github.com/panva/jose) |
+| .NET | [jose-jwt](https://github.com/dvsekhvalnov/jose-jwt) |
+| Java | [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) |
 
 JOSE libraries support a number of OAuth-related security specifications. The specification documents can be read by developers to strengthen their OAuth knowledge. JOSE libraries are also useful for <Link href='/posts/api-automated-tests'>issuing mock access tokens</Link> in API tests.
 
@@ -95,11 +95,11 @@ OAuth-secured APIs must validate JWT access tokens on every request. This is a f
 
 | Check | Description |
 | ----- | ----------- |
-| <span style={{color:'green'}}>**Algorithm**</span> | The API configures the algorithm(s) which which it expects JWTs to be signed. |
-| <span style={{color:'green'}}>**Signature**</span> | The API provides the token signing public key to the library. The most common way to do so is to configure a trusted JWKS URI. |
-| <span style={{color:'green'}}>**Issuer**</span> | The API configures its expected issuer to be the identity of the authorization server. |
-| <span style={{color:'green'}}>**Audience**</span> | The API configures its expected audience to be a logical identifier that represents its own identity. |
-| <span style={{color:'green'}}>**Time**</span> | The API only accepts JWTs that are valid for use at the current time and rejects expired JWTs. |
+| Algorithm | The API configures the algorithm(s) which which it expects JWTs to be signed. |
+| Signature | The API provides the token signing public key to the library. The most common way to do so is to configure a trusted JWKS URI. |
+| Issuer | The API configures its expected issuer to be the identity of the authorization server. |
+| Audience | The API configures its expected audience to be a logical identifier that represents its own identity. |
+| Time | The API only accepts JWTs that are valid for use at the current time and rejects expired JWTs. |
 
 ### API OAuth Configuration
 
@@ -180,11 +180,10 @@ If a malicious party issues a JWT access token with their own private key and se
 
 Ideally, the JOSE library should also cache the JSON Web Key Set details in-memory, for best performance and reliability. On future API requests, you get the following behaviours:
 
-
 | Input | Library Action |
 | ----- | -------------- |
-| <span style={{color:'green'}}>**Same Key Identifier**</span> | The security library uses the cached JSON Web Key, to prevent further calls to the authorization server’s JWKS URI. |
-| <span style={{color:'green'}}>**New key identifier**</span> | The security library makes a new call to the JWKS URI to get updated JSON Web Keys, including that for the new key identifier. |
+| Same Key Identifier | The security library uses the cached JSON Web Key, to prevent further calls to the authorization server’s JWKS URI. |
+| New key identifier | The security library makes a new call to the JWKS URI to get updated JSON Web Keys, including that for the new key identifier. |
 
 ### Token Signing Key Renewal
 

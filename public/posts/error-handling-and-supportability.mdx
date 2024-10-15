@@ -211,9 +211,9 @@ Developers are often attracted to vendor solutions that validate fields using de
 
 | Requirement | Description |
 | ----------- | ----------- |
-| <span style={{color:'green'}}>**Formats**</span> | It must be possible to override the error formats written to API responses and API logs, to match your error models. |
-| <span style={{color:'green'}}>**Configurable**</span> | Rules must handle your particular reliability requirements such as trimming or rejecting leading and trailing white space. |
-| <span style={{color:'green'}}>**Extensible**</span> | You must be able to create custom validators, which might operate on multiple fields, in addition to built-in declarative validators. |
+| Formats | It must be possible to override the error formats written to API responses and API logs, to match your error models. |
+| Configurable | Rules must handle your particular reliability requirements such as trimming or rejecting leading and trailing white space. |
+| Extensible | You must be able to create custom validators, which might operate on multiple fields, in addition to built-in declarative validators. |
 
 ### API 5xx Error Response Formats
 
@@ -233,9 +233,9 @@ The three extra fields provide the *Where*, *Which* and *When* of the failure, t
 
 | Field | Meaning |
 | ----- | ------- |
-| <span style={{color:'green'}}>**area**</span> | Where in your API platform to look for the root cause. |
-| <span style={{color:'green'}}>**id**</span> | Which log entry in that API’s logs contains the error details. |
-| <span style={{color:'green'}}>**utcTime**</span> | When the error occurred. |
+| area | Where in your API platform to look for the root cause. |
+| id | Which log entry in that API’s logs contains the error details. |
+| utcTime | When the error occurred. |
 
 Note also that the *root cause of the error* may have been in an upstream API rather than the API that returned the error to the caller.
 
