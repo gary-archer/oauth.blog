@@ -319,10 +319,10 @@ In total the following security related HTTP status codes may be returned:
 
 | Status | Description |
 | ------ | ----------- |
-| <span style={{color:'red'}}>401</span> | Access token is missing, invalid or expired |
-| <span style={{color:'red'}}>403</span> | The access token does not contain a required scope |
-| <span style={{color:'red'}}>404</span> | A *Not Found for User* error is returned if a resource is requested that claims do not allow |
-| <span style={{color:'red'}}>500</span> | A technical problem during OAuth processing, such as a network error downloading JWKS keys |
+| 401 | Access token is missing, invalid or expired |
+| 403 | The access token does not contain a required scope |
+| 404 | A *Not Found for User* error is returned if a resource is requested that claims do not allow |
+| 500 | A technical problem during OAuth processing, such as a network error downloading JWKS keys |
 
 A 500 error is shown below, and developers can view this type of request by following the <Link href='/posts/http-debugging-setup'>HTTP Proxy</Link> tutorial:
 

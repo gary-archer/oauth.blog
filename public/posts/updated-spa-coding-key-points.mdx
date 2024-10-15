@@ -196,7 +196,7 @@ userStore: new WebStorageStateStore({ store: localStorage }),
 automaticSilentRenew: true,
 ```
 
-For best reliability, you could also store a refresh token in local storage and avoid the use of iframe-based access token refresh completely. Yet persistent storage is the <span style={{color:'red'}}>least secure way to manage tokens in the browser</span>, with greatest XSS threats. When you also store refresh tokens, you make threats much worse, since an attacker can use the refresh token to get new access tokens without needing to supply a client credential.
+For best reliability, you could also store a refresh token in local storage and avoid the use of iframe-based access token refresh completely. Yet persistent storage is the least secure way to manage tokens in the browser, with greatest XSS threats. When you also store refresh tokens, you make threats much worse, since an attacker can use the refresh token to get new access tokens without needing to supply a client credential.
 
 By default, iframe-based token renewal does not work at all with AWS Cognito. To provide some kind of working demo solution with that authorization server I use a low security solution with refresh tokens stored in-memory. Usability is intentionally suboptimal, and there is a new OpenID Connect redirect (a single-sign-on event) every time you reload the page or open a new browser tab. To activate iframe-based token renewal you must set a different *provider* name in the SPA’s configuration file.
 

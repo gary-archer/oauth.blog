@@ -8,10 +8,10 @@ There are many technical goals you might articulate for an API platform. In this
 
 | Behaviour | Description |
 | --------- | ----------- |
-| <span style={{color:'green'}}>**Productive**</span> | The overall design reduces complexity and encourages a business focus for most API work. |
-| <span style={{color:'green'}}>**Secure**</span> | APIs implement security in the same way for requests from any type of client, with low-level security externalised. |
-| <span style={{color:'green'}}>**Supportable**</span> | Errors or slowness can be diagnosed quickly in most cases, due to solid logging and error handling designs. |
-| <span style={{color:'green'}}>**Scalable**</span> | Design patterns can scale across many APIs, clients and development teams. |
+| Productive | The overall design reduces complexity and encourages a business focus for most API work. |
+| Secure | APIs implement security in the same way for requests from any type of client, with low-level security externalised. |
+| Supportable | Errors or slowness can be diagnosed quickly in most cases, due to solid logging and error handling designs. |
+| Scalable | Design patterns can scale across many APIs, clients and development teams. |
 
 ### Components
 
@@ -19,12 +19,12 @@ The API flows in this blog serve web and mobile clients and consist of the follo
 
 | Component Type | Key Behaviour |
 | -------------- | ------------- |
-| <span style={{color:'green'}}>**Single Page Application**</span> | Clients that follow browser best practices and use cookies to transport access tokens to APIs. |
-| <span style={{color:'green'}}>**Native Application**</span> | Desktop and mobile clients that follow native best practices and call APIs with access tokens. |
-| <span style={{color:'green'}}>**API**</span> | APIs receive secure values in JWT access tokens and use them for business authorizion. |
-| <span style={{color:'green'}}>**API Gateway**</span> | The API gateway handles client-specific security differences, to handle concerns like cookies, CORS and CSRF for web clients. |
-| <span style={{color:'green'}}>**Authorization Server**</span> | The main security component that issues access tokens and implements user authentication. |
-| <span style={{color:'green'}}>**Log Aggregation System**</span> | Captures API logs and enables people to make sense of API activity under load. |
+| Single Page Application | Clients that follow browser best practices and use cookies to transport access tokens to APIs. |
+| Native Application | Desktop and mobile clients that follow native best practices and call APIs with access tokens. |
+| API | APIs receive secure values in JWT access tokens and use them for business authorizion. |
+| API Gateway | The API gateway handles client-specific security differences, to handle concerns like cookies, CORS and CSRF for web clients. |
+| Authorization Server | The main security component that issues access tokens and implements user authentication. |
+| Log Aggregation System | Captures API logs and enables people to make sense of API activity under load. |
 
 ### Scalable API Security
 
@@ -43,9 +43,9 @@ This is the key security component, and you should choose one that provides the 
 
 | Capabilities | Description |
 | ------------ | ----------- |
-| <span style={{color:'green'}}>**Support for Standards**</span> | There should be up-to-date support for many security standards, which map to your use cases. This includes recent authentication methods. |
-| <span style={{color:'green'}}>**Extensibility**</span> | It must be possible to take control over core behaviours and user attributes, so that you can authenticate users in your preferred ways and then issue your preferred access tokens. |
-| <span style={{color:'green'}}>**Reliability**</span> | The authorization server is a critical component. It should therefore align with your API deployments and have good troubleshooting support, to enable fast incident resolution. |
+| Support for Standards | There should be up-to-date support for many security standards, which map to your use cases. This includes recent authentication methods. |
+| Extensibility | It must be possible to take control over core behaviours and user attributes, so that you can authenticate users in your preferred ways and then issue your preferred access tokens. |
+| Reliability | The authorization server is a critical component. It should therefore align with your API deployments and have good troubleshooting support, to enable fast incident resolution. |
 
 ### Observability
 

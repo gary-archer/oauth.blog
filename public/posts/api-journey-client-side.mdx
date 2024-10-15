@@ -84,12 +84,12 @@ The API uses the following user attributes and frontend views visualise the use 
 
 | User Attribute | Represents |
 | -------------- | ---------- |
-| <span style={{color:'green'}}>**Scope**</span> | The main scope in the client’s access token is called *investments* to represent a business area. |
-| <span style={{color:'green'}}>**Manager ID**</span> | The API receives a useful business user identity in access tokens sent by the client. |
-| <span style={{color:'green'}}>**Role**</span> | The authorization server stores a role claim for each user, with values of *admin* or *user*, and issues it to access tokens. |
-| <span style={{color:'green'}}>**Regions**</span> | APIs use an array of allowed regions as an example of fine-grained business permissions not issued to access tokens. |
-| <span style={{color:'green'}}>**Name**</span> | Clients download data from the OpenID Connect userinfo endpoint, then display the *given_name* and *family_name* fields. |
-| <span style={{color:'green'}}>**Title**</span> | The title is an example product-specific user attribute which clients display in a tooltip. |
+| Scope | The main scope in the client’s access token is called *investments* to represent a business area. |
+| Manager ID | The API receives a useful business user identity in access tokens sent by the client. |
+| Role | The authorization server stores a role claim for each user, with values of *admin* or *user*, and issues it to access tokens. |
+| Regions | APIs use an array of allowed regions as an example of fine-grained business permissions not issued to access tokens. |
+| Name | Clients download data from the OpenID Connect userinfo endpoint, then display the *given_name* and *family_name* fields. |
+| Title | The title is an example product-specific user attribute which clients display in a tooltip. |
 
 This use of claims is similar to that in any moderately complex real-world system, with some <Link href='/posts/user-data'>user attributes</Link> stored in the identity data and others in the business data. Clients and APIs operate on both types of user attribute, in a way that you can easily extend.
 
@@ -280,10 +280,10 @@ All of this blog’s UIs support deep linking, to enable users to bookmark locat
 
 | Client Type | Deep Linking URL |
 | ----------- | ---------------- |
-| <span style={{color:'green'}}>**SPA**</span> | *https://www.authsamples.com/spa/companies/2* |
-| <span style={{color:'green'}}>**Desktop**</span> | *x-authsamples-desktopapp:/companies/2* |
-| <span style={{color:'green'}}>**Android**</span> | *https://mobile.authsamples.com/finalmobileapp/deeplink/companies/2* |
-| <span style={{color:'green'}}>**iOS**</span> | *https://mobile.authsamples.com/finalmobileapp/deeplink/companies/2* |
+| SPA | *https://www.authsamples.com/spa/companies/2* |
+| Desktop | *x-authsamples-desktopapp:/companies/2* |
+| Android | *https://mobile.authsamples.com/finalmobileapp/deeplink/companies/2* |
+| iOS | *https://mobile.authsamples.com/finalmobileapp/deeplink/companies/2* |
 
 These commands initiate views which in turn initiate API requests. APIs return 401 responses if an access token expires or if the user needs to re-authenticate. In such cases this blog’s frontends always run the requested view once any OAuth work is complete, so that bookmarking works correctly for users.
 
@@ -305,9 +305,9 @@ OAuth clients can experience some advanced failure scenarios that can be difficu
 
 | Failure Scenario | Resilient Application Behaviour |
 | ---------------- | ------------------------------- |
-| <span style={{color:'red'}}>Key Renewal</span> | Token signing keys, or cookie encryption keys used by SPAs, are sometimes renewed in an abrupt way. This blog’s clients handle 401 API responses after which token refresh would fail with a session expired error. This causes a new login redirect and avoids user errors. |
-| <span style={{color:'red'}}>Redirect Loops</span> | This blog’s apps don’t trigger an authorization redirect when APIs return permanent 401 errors. Instead, redirects only occur when there is no access token yet or if token refresh fails with a session expired error. Doing so prevents the possibility of redirect loops. |
-| <span style={{color:'red'}}>Invalid Tokens</span> | OAuth configuration mistakes can result in access tokens that APIs permanently reject, even though token refresh works. The client should then present an error, but clear token state. The client can then prompt the user to run a new authorization redirect. This enables the client to get a corrected access token and avoids the user being stuck. |
+| Key Renewal | Token signing keys, or cookie encryption keys used by SPAs, are sometimes renewed in an abrupt way. This blog’s clients handle 401 API responses after which token refresh would fail with a session expired error. This causes a new login redirect and avoids user errors. |
+| Redirect Loops | This blog’s apps don’t trigger an authorization redirect when APIs return permanent 401 errors. Instead, redirects only occur when there is no access token yet or if token refresh fails with a session expired error. Doing so prevents the possibility of redirect loops. |
+| Invalid Tokens | OAuth configuration mistakes can result in access tokens that APIs permanently reject, even though token refresh works. The client should then present an error, but clear token state. The client can then prompt the user to run a new authorization redirect. This enables the client to get a corrected access token and avoids the user being stuck. |
 
 ### Client Responsibilities are Separated
 

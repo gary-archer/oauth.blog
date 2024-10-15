@@ -123,9 +123,9 @@ I implement portable API security without depending on API frameworks in particu
 
 | Technology | JOSE Library |
 | ---------- | ------------ |
-| <span style={{color:'green'}}>**Node.js**</span> | [jose](https://github.com/panva/jose) |
-| <span style={{color:'green'}}>**jose4j**</span> | [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) |
-| <span style={{color:'green'}}>**.NET**</span> | [jose-jwt](https://github.com/dvsekhvalnov/jose-jwt) |
+| Node.js | [jose](https://github.com/panva/jose) |
+| .NET | [jose-jwt](https://github.com/dvsekhvalnov/jose-jwt) |
+| Java | [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) |
 
 ### APIs Use Extensible Claims
 
@@ -142,12 +142,12 @@ This blog's APIs and clients work with the following user attributes, which are 
 
 | User Attribute | Represents |
 | -------------- | ---------- |
-| <span style={{color:'green'}}>**Scope**</span> | The main scope in the client’s access token is called *investments* to represent a business area. |
-| <span style={{color:'green'}}>**Manager ID**</span> | The API receives a useful business user identity in access tokens sent by the client. |
-| <span style={{color:'green'}}>**Role**</span> | The authorization server stores a role claim for each user, with values of *admin* or *user*, and issues it to access tokens. |
-| <span style={{color:'green'}}>**Regions**</span> | APIs use an array of allowed regions as an example of fine-grained business permissions not issued to access tokens. |
-| <span style={{color:'green'}}>**Name**</span> | Clients download data from the OpenID Connect userinfo endpoint, then display the *given_name* and *family_name* fields. |
-| <span style={{color:'green'}}>**Title**</span> | The title is an example product-specific user attribute which clients display in a tooltip. |
+| Scope | The main scope in the client’s access token is called *investments* to represent a business area. |
+| Manager ID | The API receives a useful business user identity in access tokens sent by the client. |
+| Role | The authorization server stores a role claim for each user, with values of *admin* or *user*, and issues it to access tokens. |
+| Regions | APIs use an array of allowed regions as an example of fine-grained business permissions not issued to access tokens. |
+| Name | Clients download data from the OpenID Connect userinfo endpoint, then display the *given_name* and *family_name* fields. |
+| Title | The title is an example product-specific user attribute which clients display in a tooltip. |
 
 ### APIs Authorize Access to Data
 

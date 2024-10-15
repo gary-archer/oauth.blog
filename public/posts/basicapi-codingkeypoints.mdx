@@ -182,8 +182,8 @@ There are two main responsibilities involved in authorization in an OAuth secure
 
 | Responsibility | Description |
 | -------------- | ----------- |
-| <span style={{color:'green'}}>**Authenticate Requests**</span> | Digitally verify received JWT access tokens and return a 401 response if not valid. |
-| <span style={{color:'green'}}>**Perform Authorization**</span> | Trust claims from the payload of the JWT and use them for authorization. |
+| Authenticate Requests | Digitally verify received JWT access tokens and return a 401 response if not valid. |
+| Perform Authorization | Trust claims from the payload of the JWT and use them for authorization. |
 
 ### Authenticating Requests
 
@@ -326,11 +326,11 @@ The API code also implements solid error handling using these main classes:
 
 | Class | Description |
 | ----- | ----------- |
-| <span style={{color:'green'}}>**ServerError**</span> | Represents a technical problem in the API. |
-| <span style={{color:'green'}}>**ClientError**</span> | Represents a useful error response for an API client. |
-| <span style={{color:'green'}}>**ExceptionHandler**</span> | Catches any exceptions thrown by the API. |
-| <span style={{color:'green'}}>**ErrorFactory**</span> | Used to create exceptions to throw. |
-| <span style={{color:'green'}}>**ErrorCodes**</span> | A list of error causes. |
+| ServerError | Represents a technical problem in the API. |
+| ClientError | Represents a useful error response for an API client. |
+| ExceptionHandler | Catches any exceptions thrown by the API. |
+| ErrorFactory | Used to create exceptions to throw. |
+| ErrorCodes | A list of error causes. |
 
 An unhandled exception handler writes errors to logs and returns useful error responses to the SPA:
 

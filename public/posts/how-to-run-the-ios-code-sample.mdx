@@ -207,8 +207,8 @@ Our mobile app runs multiple views which could fail concurrently, so we implemen
 
 | Scenario | Instructions |
 | -------- | ------------ |
-| <span style={{color:'red'}}>UI Error</span> | Load data normally, then disable the network and click reload, to cause a connectivity exception |
-| <span style={{color:'red'}}>API Error</span> | Long press the *Reload* button, which then sends a custom HTTP header to the API to rehearse an API 500 exception |
+| UI Error | Load data normally, then disable the network and click reload, to cause a connectivity exception |
+| API Error | Long press the *Reload* button, which then sends a custom HTTP header to the API to rehearse an API 500 exception |
 
 Our error display looks as follows after concurrent view failures. The user can click a hyperlink to see details, or press the *Home* button to retry:
 

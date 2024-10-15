@@ -8,9 +8,9 @@ The goal of the Entra ID code sample is to match the <Link href='/posts/improved
 
 | Area | Description |
 | ---- | ----------- |
-| <span style={{color:'green'}}>**Authorization Server Integration**</span> | The SPA and API integrate with Entra ID and this post explains the authorization server settings. |
-| <span style={{color:'green'}}>**Same Security Libraries**</span> | I use the same open source standards-based libraries and the same main application code. |
-| <span style={{color:'green'}}>**Minor Vendor Differences**</span> | I minimize the impact of any vendor-specific code required by either AWS Cognito or Microsoft Entra ID. |
+| Authorization Server Integration | The SPA and API integrate with Entra ID and this post explains the authorization server settings. |
+| Same Security Libraries | I use the same open source standards-based libraries and the same main application code. |
+| Minor Vendor Differences | I minimize the impact of any vendor-specific code required by either AWS Cognito or Microsoft Entra ID. |
 
 ### Components
 
@@ -20,7 +20,7 @@ The components remain those that I used with this blog's default authorization s
 
 ### SPAs in 2021
 
-<span style={{color:'red'}}>This sample uses the traditional SPA solution, with OpenID Connect implemented solely in JavaScript. In 2021 the best practice is to upgrade to a <Link href='/posts/spa-back-end-for-front-end'>Backend for Frontend</Link> approach.</span>
+This sample uses the traditional SPA solution, with OpenID Connect implemented solely in JavaScript. In 2021 the best practice is to upgrade to a <Link href='/posts/spa-back-end-for-front-end'>Backend for Frontend</Link> approach.
 
 The traditional SPA flow remains useful to represent a pure SPA architecture and to learn about Entra ID integration. This blog’s <Link href='/posts/final-spa-overview'>Final SPA</Link> provides a BFF based solution, but requires a more complex flow.
 
@@ -40,8 +40,8 @@ In this post I explain some setup details for the Entra ID authorization server.
 
 | Component | URL |
 | --------- | --- |
-| <span style={{color:'green'}}>**Secured API**</span> | *https://api.authsamples-dev.com/api* |
-| <span style={{color:'green'}}>**Secured SPA**</span> | *https://www.authsamples-dev.com/spa* |
+| Secured API | *https://api.authsamples-dev.com/api* |
+| Secured SPA | *https://www.authsamples-dev.com/spa* |
 
 To get a working system you would need to follow the steps in this post for your own Microsoft account and then reconfigure the apps. The configuration is a little complex though, due to my requirement to issue custom claims to access tokens.
 
@@ -133,8 +133,8 @@ Next I defined two custom attributes to store against user accounts in the ident
 
 | User Attribute | Description |
 | -------------- | ----------- |
-| <span style={{color:'green'}}>**manager_id**</span> | A business user identity that the API receives in access tokens. |
-| <span style={{color:'green'}}>**role**</span> | A user role that the API uses in its authorization logic. |
+| manager_id | A business user identity that the API receives in access tokens. |
+| role | A user role that the API uses in its authorization logic. |
 
 I navigated to the *Cross-Tenant Synchronization* screen and added these fields to the user accounts schema:
 

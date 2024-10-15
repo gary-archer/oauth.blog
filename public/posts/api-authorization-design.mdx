@@ -20,9 +20,9 @@ The OAuth 2.0 authorization framework enables you to protect business data using
 
 | Step | Description |
 | ---- | ----------- |
-| <span style={{color:'green'}}>**Token Validation**</span> | Access token validation, to ensure the integrity of the message credential. |
-| <span style={{color:'green'}}>**Scope Checks**</span> | Boundary checks to ensure an access token's validity for a particular area of data. |
-| <span style={{color:'green'}}>**Claims-Based Authorization**</span> | Detailed permission checks against resources, using claims and fine-grained permissions to apply business rules. |
+| Token Validation | Access token validation, to ensure the integrity of the message credential. |
+| Scope Checks | Boundary checks to ensure an access token's validity for a particular area of data. |
+| Claims-Based Authorization | Detailed permission checks against resources, using claims and fine-grained permissions to apply business rules. |
 
 ### Step 1: Token Validation
 
@@ -41,8 +41,8 @@ In OAuth you use scopes to restrict API privileges that you grant to clients. Yo
 
 | Examples | Usage |
 | -------- | ----- |
-| <span style={{color:'green'}}>**sales**</span> | You might assign this scope for use at API endpoints that deal with selling products to the public. |
-| <span style={{color:'green'}}>**finance**</span> | You might use this scope for API endpoints that deal with a higher security money-based area. |
+| sales | You might assign this scope for use at API endpoints that deal with selling products to the public. |
+| finance | You might use this scope for API endpoints that deal with a higher security money-based area. |
  
 A client with an access token that contains only a *sales* scope can never successfully access data from *finance* API endpoints. The API would immediately reject the access token with a 403 forbidden error. This is true even if the user has finance rights.
 
@@ -58,9 +58,9 @@ In addition to business scopes, user facing applications typically use OpenID Co
 
 | Examples | Usage Scenario |
 | -------- | -------------- |
-| <span style={{color:'green'}}>**openid**</span> | Allows an app to use the user’s identity. |
-| <span style={{color:'green'}}>**profile**</span> | Allows an app to get a user’s name related information. |
-| <span style={{color:'green'}}>**email**</span>	| Allows an app to access a user’s email related information. |
+| openid | Allows an app to use the user’s identity. |
+| profile | Allows an app to get a user’s name related information. |
+| email | Allows an app to access a user’s email related information. |
 
 The OpenID Connect scopes show how you can restrict a client's access to fields within an object. Consider using this composition-based approach for your own APIs, when some areas of an object require higher security than others.
 
@@ -140,8 +140,8 @@ The following extra claims are looked up when the API first receives its access 
 
 | Extra Claim | Description |
 | ----------- | ----------- |
-| <span style={{color:'green'}}>**Title**</span> | A business title for the user in a particular context, which is displayed by the frontend application. |
-| <span style={{color:'green'}}>**Regions**</span> | An array claim representing a simplified version of the branches concept described at the start of this post. |
+| Title | A business title for the user in a particular context, which is displayed by the frontend application. |
+| Regions | An array claim representing a simplified version of the branches concept described at the start of this post. |
 
 The API authorizes access to resources using both the *role* from the access token and the *regions* array from the extra claims:
 
