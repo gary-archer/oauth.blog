@@ -12,13 +12,13 @@ export function NavBar(): JSX.Element {
             </div>
             <ul>
                 <div>
-                    <li><a href='index'>Main Index</a></li>
+                    <li><a href='index.mdx'>Main Index</a></li>
                 </div>
                 <div>
-                    <li><a href='quick-start'>Code Samples</a></li>
+                    <li><a href='quick-start.mdx'>Code Samples</a></li>
                 </div>
                 <div>
-                    <li><a href='about'>About</a></li>
+                    <li><a href='about.mdx'>About</a></li>
                 </div>
             </ul>
         </div>
