@@ -22,8 +22,8 @@ As is standard for a .NET API, the startup logic is coded primarily in the follo
 
 | Class | Description |
 | ----- | ----------- |
-| <span style={{color:'green'}}>**Program**</span> | The application entry point |
-| <span style={{color:'green'}}>**Startup**</span> | Manages REST and security specific behaviour |
+| Program | The application entry point |
+| Startup | Manages REST and security specific behaviour |
 
 The program class logic focuses on reading the configuration file and configuring logging:
 
@@ -82,9 +82,9 @@ The role of each of these middleware classes is summarised below:
 
 | Middleware Class | Responsibility |
 | ---------------- | -------------- |
-| <span style={{color:'green'}}>**LoggerMiddleware**</span> | Manage the log entry for each API request, then log request and response details |
-| <span style={{color:'green'}}>**CustomHeaderMiddleware**</span> | Allow advanced client side testing of APIs via custom headers |
-| <span style={{color:'green'}}>**UnhandledExceptionMiddleware**</span> | A central place for handling exceptions, adding error details to logs, and producing the client error response |
+| LoggerMiddleware | Manage the log entry for each API request, then log request and response details |
+| CustomHeaderMiddleware | Allow advanced client side testing of APIs via custom headers |
+| UnhandledExceptionMiddleware | A central place for handling exceptions, adding error details to logs, and producing the client error response |
 
 ### Single Threaded Code
 

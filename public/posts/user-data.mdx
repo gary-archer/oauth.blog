@@ -14,12 +14,12 @@ When planning a migration to OAuth, first design your user account schema in the
 
 | Attribute | Description |
 | --------- | ----------- |
-| <span style={{color:'green'}}>**Subject**</span> | A generated identifier for the user. |
-| <span style={{color:'green'}}>**Email**</span> | The user’s email address. |
-| <span style={{color:'green'}}>**Given Name**</span> | The first name(s) for the user. |
-| <span style={{color:'green'}}>**Family Name**</span> | The surname(s) for the user. |
-| <span style={{color:'green'}}>**Manager ID**</span> | A business identifier for the user. |
-| <span style={{color:'green'}}>**Role**</span> | Categorizes the type of user. |
+| Subject | A generated identifier for the user. |
+| Email | The user’s email address. |
+| Given Name | The first name(s) for the user. |
+| Family Name | The surname(s) for the user. |
+| Manager ID | A business identifier for the user. |
+| Role | Categorizes the type of user. |
 
 The values chosen should be fairly stable and not change often. The *Manager ID* links the identity data to the business data. The *Role* is a value used in the API's authorization logic.
 
@@ -35,9 +35,9 @@ As a simplified version of this concept, this blog’s example setup stores the 
 
 | Attribute | Description |
 | --------- | ----------- |
-| <span style={{color:'green'}}>**Manager ID**</span> | The business user identity. |
-| <span style={{color:'green'}}>**Title**</span> | An informational title for the user. |
-| <span style={{color:'green'}}>**Regions**</span> | Regions for which the user has access to data. |
+| Manager ID | The business user identity. |
+| Title | An informational title for the user. |
+| Regions | Regions for which the user has access to data. |
 
 ### Identifying Users to APIs
 
@@ -53,10 +53,10 @@ You may also need to call the authorization server’s user management APIs for 
 
 | Use Case | Description |
 | -------- | ----------- |
-| <span style={{color:'green'}}>**Existing User Migration**</span> | A migration process reads existing users in bulk from an existing data source and imports them into the authorization server. |
-| <span style={{color:'green'}}>**Administrator User Creation**</span> | An administrator creates users and assigns attributes across both data sources. |
-| <span style={{color:'green'}}>**Self-Sign-Up**</span> | A user signs up and provides proof of their identity, after which attributes save to both data sources. |
-| <span style={{color:'green'}}>**Profile Edits**</span> | A user edits their profile in an application form and data is saved to both data sources. |
+| Existing User Migration | A migration process reads existing users in bulk from an existing data source and imports them into the authorization server. |
+| Administrator User Creation | An administrator creates users and assigns attributes across both data sources. |
+| Self-Sign-Up | A user signs up and provides proof of their identity, after which attributes save to both data sources. |
+| Profile Edits | A user edits their profile in an application form and data is saved to both data sources. |
 
 When using OAuth, you decide whether you want to use self-sign-up during an authorization code flow. If you enable self-sign-up, the authorization server presents account creation forms. An advanced authorization server may be able to call an API that your provide, to create a business user identity for the new user. When the authorization code flow completes, your APIs receive all of the correct token claims for the new user.
 

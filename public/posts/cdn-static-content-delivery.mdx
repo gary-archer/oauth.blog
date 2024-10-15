@@ -16,9 +16,9 @@ In total we will use the following domains for web content and will create S3 bu
 
 | Domain | Usage |
 | ------ | ----- |
-| <span style={{color:'green'}}>**`www.authsamples.com`**</span> | Serving web content for an online SPA that connects to Serverless APIs |
-| <span style={{color:'green'}}>**`www.authsamples-k8s.com`**</span> | Serving web content for an online SPA that connects to Kubernetes APIs |
-| <span style={{color:'green'}}>**`mobile.authsamples.com`**</span> | Assets for enabling mobile logins and deep linking |
+| www.authsamples.com | Serving web content for an online SPA that connects to Serverless APIs |
+| www.authsamples-k8s.com | Serving web content for an online SPA that connects to Kubernetes APIs |
+| mobile.authsamples.com | Assets for enabling mobile logins and deep linking |
 
 This post covers the details for the first domain, and the steps for other domains are equivalent. First though we will briefly summarise some build related steps that help to enable a good deployment architecture.
 
@@ -210,10 +210,10 @@ There are four essential behaviours that the CDN host needs to provide, summaris
 
 | Behaviour | Description |
 | --------- | ----------- |
-| <span style={{color:'green'}}>**Compression**</span> | Web resources should be compressed by default to improve performance |
-| <span style={{color:'green'}}>**Security Headers**</span> | Security headers should be set to provide a security policy to the browser |
-| <span style={{color:'green'}}>**Performance Headers**</span> | The cache-control header should be set to prevent redundant requests from the browser to the CDN |
-| <span style={{color:'green'}}>**Document Serving**</span> | Serve the index.html, static resources like JavaScript bundles and handle invalid paths |
+| Compression | Web resources should be compressed by default to improve performance |
+| Security Headers | Security headers should be set to provide a security policy to the browser |
+| Performance Headers | The cache-control header should be set to prevent redundant requests from the browser to the CDN |
+| Document Serving | Serve the index.html, static resources like JavaScript bundles and handle invalid paths |
 
 These are configured under the *Behaviours* settings of the CloudFront distribution. Compression is simply a setting that you can enable. The security headers is mostly visual:
 

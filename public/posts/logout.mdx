@@ -16,10 +16,10 @@ This involves an HTTP top level redirect to the *End Session Endpoint*, and the 
 
 | Field | Description |
 | ----- | ----------- |
-| <span style={{color:'green'}}>**client_id**</span> | The client can send its ID to identify itself to the authorization server. |
-| <span style={{color:'green'}}>**id_token_hint**</span> | Or the client can send its ID token to prove its identity. |
-| <span style={{color:'green'}}>**post_logout_redirect_uri**</span> | The client can provide a location to return to in the app once logout completes. |
-| <span style={{color:'green'}}>**state**</span> | The client can provide an optional field and validate that it receives the same value in the response. |
+| client_id | The client can send its ID to identify itself to the authorization server. |
+| id_token_hint | Or the client can send its ID token to prove its identity. |
+| post_logout_redirect_uri | The client can provide a location to return to in the app once logout completes. |
+| state | The client can provide an optional field and validate that it receives the same value in the response. |
 
 The browser also sends the authorization server's SSO cookie in the request, since it is sent on a top level redirect. The authorization server response expires the SSO cookie.
 
@@ -29,8 +29,8 @@ To add to the complexity, some authorization servers use non-standard logout sol
 
 | Field | Description |
 | ----- | ----------- |
-| <span style={{color:'green'}}>**client_id**</span> | The client can send its ID to identify itself to the authorization server. |
-| <span style={{color:'green'}}>**logout_uri**</span> | The *post_logout_redirect_uri* must be provided in a parameter with a different name. |
+| client_id | The client can send its ID to identify itself to the authorization server. |
+| logout_uri | The *post_logout_redirect_uri* must be provided in a parameter with a different name. |
 
 ### Allowed Post Logout Redirect URIs
 
