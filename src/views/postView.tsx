@@ -93,7 +93,7 @@ export function PostView(props: PostViewProps): JSX.Element {
     /*
      * Load MDX, allow 50 milliseconds for it to render, then run post rendering logic
      */
-    const MdxContent = dynamic(() => import(`../../content/posts/${props.filename}.mdx`).then((result) => {
+    const MdxContent = dynamic(() => import(`../../public/posts/${props.filename}.mdx`).then((result) => {
         setTimeout(onRendered, 50);
         return result;
     }));

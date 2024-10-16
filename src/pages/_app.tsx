@@ -1,5 +1,5 @@
 import type {AppProps} from 'next/app'
-import '../../content/styles/app.css';
+import '../../public/styles/app.css';
 import 'prismjs/themes/prism-tomorrow.css';
 
 /*

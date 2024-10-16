@@ -81,17 +81,14 @@ expressApp.use('/', express.static(physicalRoot));
  * Tell Express how to handle requests for HTML files, where a .html extension is not specified
  */
 expressApp.get('*', (request, response) => {
-    
+
     if (response.locals.type === 'page') {
 
         const path = request.originalUrl.toLowerCase();
-        if (fs.existsSync(`${physicalRoot}/${path}.html`)) {
-
-            response.sendFile(`${path}.html`, {root: physicalRoot});
-
+        if (!fs.existsSync(`${physicalRoot}${path}.html`)) {
+            response.redirect('/posts/home');
         } else {
-
-            response.redirect('/');
+            response.sendFile(`${path}.html`, {root: physicalRoot});
         }
     }
 });

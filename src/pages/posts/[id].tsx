@@ -10,7 +10,7 @@ import {PostViewProps} from '../../views/postViewProps';
  */
 export async function getStaticPaths(): Promise<GetStaticPathsResult> {
 
-    const postsDirectory = path.join(process.cwd(), './content/posts');
+    const postsDirectory = path.join(process.cwd(), './public/posts');
     const mdxFiles = await fs.readdir(postsDirectory);
     const paths = mdxFiles.map((filename) => ({
         params: {
