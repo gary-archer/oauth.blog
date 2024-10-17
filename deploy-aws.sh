@@ -48,6 +48,11 @@ if [ $? -ne 0 ]; then
 fi
 
 #
+# Remove the index.html file so that requesting it causes a redirect to /posts/home
+#
+rm dist/index.html
+
+#
 # Delete any existing files in the S3 bucket
 #
 aws s3 rm "s3://$BUCKET_NAME" --recursive

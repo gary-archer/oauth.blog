@@ -46,6 +46,11 @@ if [ $? -ne 0 ]; then
 fi
 
 #
+# Remove the index.html file so that requesting it causes a redirect to /posts/home
+#
+rm dist/index.html
+
+#
 # Run Express in a child terminal
 #
 if [ "$PLATFORM" == 'MACOS' ]; then
@@ -66,7 +71,7 @@ fi
 # Wait for the blog static content to become available
 #
 echo 'Waiting for Web Host to become available ...'
-while [ "$(curl -k -s -o /dev/null -w ''%{http_code}'' "$WEB_ORIGIN/index.html")" != '200' ]; do
+while [ "$(curl -k -s -o /dev/null -w ''%{http_code}'' "$WEB_ORIGIN/posts/home")" != '200' ]; do
   sleep 2
 done
 
