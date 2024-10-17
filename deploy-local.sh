@@ -46,8 +46,9 @@ if [ $? -ne 0 ]; then
 fi
 
 #
-# Remove the index.html file so that requesting it causes a redirect to /posts/home
+# Delete files I do not want to deploy to the web host
 #
+rm dist/posts/*.mdx
 rm dist/index.html
 
 #
