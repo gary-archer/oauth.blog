@@ -37,16 +37,22 @@ function handler(event) {
     
     const request = event.request;
     const requestPath = request.uri.toLowerCase();
+
+    const isPageRequest = !requestPath.match(/^.*(\.txt)$/);
+    if (isPageRequest) {
     
-    return {
-        statusCode: 301,
-        statusDescription: 'Moved Permanently',
-        headers: {
-            'location': {
-                value: getTargetUrl(requestPath),
+        return {
+            statusCode: 301,
+            statusDescription: 'Moved Permanently',
+            headers: {
+                'location': {
+                    value: getTargetUrl(requestPath),
+                },
             },
-        },
-    };
+        };
+    }
+
+    return request;
 }
 
 function getTargetUrl(rawRequestPath) {
