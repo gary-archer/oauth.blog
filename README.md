@@ -22,11 +22,10 @@ The blog is primarily written using MDX markdown and has minimal JavaScript logi
 I have some particular requirements to render in these four modes:
 
 - MDX files should render in their [GitHub repository](https://github.com/gary-archer/apisandclients.com/tree/master/public/posts).
-- MDX content renders from the NEXT.js development host.
-- MDX content built to HTML renders from the Express web host
-- MDX content built to HTML renders from the AWS Cloudfront CDN
+- MDX content should render in the NEXT.js development host.
+- MDX content built to HTML renders from any web static content host
 
-I also use the following NEXT.js plugins:
+I use the following NEXT.js plugins so that standard GitHub behaviours work in NEXT.js:
 
 | Plugin | Usage |
 | ------ | ----- |
