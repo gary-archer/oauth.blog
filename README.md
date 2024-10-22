@@ -19,7 +19,7 @@ A technical blog with a focus on productive and reliable OAuth development setup
 ## Blog Technology
 
 The blog is primarily written using MDX markdown and has minimal JavaScript logic.\
-I have some particular requirements to render in these four modes:
+I have some particular requirements that I meet in these three scenarios:
 
 - MDX files should render in their [GitHub repository](https://github.com/gary-archer/apisandclients.com/tree/master/public/posts).
 - MDX content should render in the NEXT.js development host.
