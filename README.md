@@ -18,11 +18,10 @@ A technical blog with a focus on productive and reliable OAuth development setup
 
 ## Blog Technology
 
-The blog is primarily written using MDX markdown and has minimal JavaScript logic.\
-I have some particular requirements that I meet in these three scenarios:
+The blog is primarily written using MDX markdown and has minimal JavaScript logic:
 
-- MDX files should render in their [GitHub repository](https://github.com/gary-archer/apisandclients.com/tree/master/public/posts).
-- MDX content should render in the NEXT.js development host.
+- MDX files render in their [GitHub repository](https://github.com/gary-archer/apisandclients.com/tree/master/public/posts).
+- MDX content renders in the NEXT.js development host.
 - MDX content built to HTML renders from any web static content host
 
 I use the following NEXT.js plugins so that standard GitHub behaviours work in NEXT.js:
