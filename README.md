@@ -1,6 +1,10 @@
 # OAuth Developer Blog
 
-A technical blog with a focus on productive and reliable OAuth development setups.
+A technical blog with a focus on productive and reliable OAuth development setups:
+
+- [Home Page](public/posts/home.mdx)
+- [Index Page](public/posts/index.mdx)
+- [Code Samples](public/posts/quick-start.mdx)
 
 ## Running the Blog
 
