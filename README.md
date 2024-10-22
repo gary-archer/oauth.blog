@@ -12,7 +12,6 @@ A technical blog with a focus on productive and reliable OAuth development setup
 | ---- | ----------- |
 | npm install | First install dependencies |
 | npm start | Run in development mode and open a browser at http://localhost:3000 |
-| Wait for compilation | The web content may takes a minute to compile before being ready |
 | ./deploy-local.sh | Run in deployed mode locally using http://localhost:3001 |
 | ./deploy-aws.sh | I can use this script to deploy static content to AWS CloudFront |
 
