@@ -24,7 +24,7 @@ The blog is primarily written using MDX markdown and has minimal JavaScript logi
 - MDX content renders in the NEXT.js development host.
 - MDX content built to HTML renders from any web static content host
 
-I use the following NEXT.js plugins so that standard GitHub behaviours work in NEXT.js:
+I use the following plugins so that standard GitHub behaviours work in NEXT.js:
 
 | Plugin | Usage |
 | ------ | ----- |
