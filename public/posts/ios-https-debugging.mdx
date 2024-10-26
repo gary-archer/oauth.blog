@@ -6,7 +6,7 @@ Previously we put in place an initial iOS Setup and ran the <a href='ios-setup.m
 
 First configure and run the HTTP proxy on the host computer, as described in our earlier write up on <a href='http-debugging-setup.mdx'>HTTPS Debugging</a>. We also need to instruct the proxy to decrypt SSL traffic, as covered for other environments in the blog post on <a href='developer-ssl-setup.mdx'>SSL Trust Configuration</a>:
 
-### Determine the Computer’s IP Address
+### Determine the Computer's IP Address
 
 You can find the computer's network IP v4 address in various ways, such as by running the following command:
 
@@ -16,7 +16,7 @@ ifconfig | grep inet
 
 ### Configure iOS Simulator Proxy Settings
 
-With iOS Simulators there are quite a few places where we cannot emulate a real device. One of these is network settings, where the simulator instead always uses the local computer’s network. An HTTP proxy running on the local computer automatically comes into effect for the app on the simulator, as long as the HTTP proxy is started before the simulator.
+With iOS Simulators there are quite a few places where we cannot emulate a real device. One of these is network settings, where the simulator instead always uses the local computer's network. An HTTP proxy running on the local computer automatically comes into effect for the app on the simulator, as long as the HTTP proxy is started before the simulator.
 
 ### Configure iOS WiFi Proxy Settings
 
@@ -36,7 +36,7 @@ If we now run the system browser or a mobile app on the iOS device, any SSL requ
     <img src='../images/490/ssl-trust-error.jpg?v=20240804' alt='ssl trust error' />
 </div>
 
-This is because the HTTP proxy is intercepting SSL requests at runtime and replacing the root certificate authority. To fix this we need to configure simulators and devices to trust the HTTP Proxy’s root certificate.
+This is because the HTTP proxy is intercepting SSL requests at runtime and replacing the root certificate authority. To fix this we need to configure simulators and devices to trust the HTTP Proxy's root certificate.
 
 <div className='smallimage'>
     <img src='../images/490/proxy-root-ca.jpg?v=20240804' alt='proxy root ca' />
@@ -90,9 +90,9 @@ On all simulators and devices we can now view OAuth and API HTTPS messages such 
 
 ### Where Are We?
 
-We have now completed our iOS HTTP debugging setup, and will now move on to describe this blog’s fully functional OAuth mobile samples.
+We have now completed our iOS HTTP debugging setup, and will now move on to describe this blog's fully functional OAuth mobile samples.
 
 ### Next
 
-- Next we will start describing our <a href='android-code-sample-overview.mdx'>Secured Android App’s Behaviour</a>
+- Next we will start describing our <a href='android-code-sample-overview.mdx'>Secured Android App's Behaviour</a>
 - For a list of all blog posts see the <a href='index.mdx'>Index Page</a>

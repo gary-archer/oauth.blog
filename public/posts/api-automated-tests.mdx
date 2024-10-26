@@ -14,11 +14,11 @@ When your objective is to focus on API tests, it can be useful to have a test se
 
 ![mocking infrastructure](../images/380/mocking-infrastructure.jpg)
 
-The mock token issuer is a JWT library, and the JWKS Endpoint can be a utility API or an HTTP tool such as Wiremock. The API’s security code runs identically to a real setup, and performs all of the same authentication and authorization checks, followed by the same business logic.
+The mock token issuer is a JWT library, and the JWKS Endpoint can be a utility API or an HTTP tool such as Wiremock. The API's security code runs identically to a real setup, and performs all of the same authentication and authorization checks, followed by the same business logic.
 
 ### Developer Testing of OAuth Secured APIs
 
-The above is only one possible setup, and is perhaps most useful for API developers who want to write integration tests against their own code.  Each of this blog’s final APIs include both integration tests and a basic load test that use this technique:
+The above is only one possible setup, and is perhaps most useful for API developers who want to write integration tests against their own code.  Each of this blog's final APIs include both integration tests and a basic load test that use this technique:
 
 | API Technology | Test Technology |
 | -------------- | --------------- |
@@ -26,11 +26,11 @@ The above is only one possible setup, and is perhaps most useful for API develop
 | <a href='net-core-code-sample-overview.mdx'>NET</a> | XUnit |
 | <a href='java-spring-boot-api-overview.mdx'>Java</a> | JUnit |
 
-This post will describe the Node.js API’s test code, though the behaviour and source code for .NET and Java is almost identical.
+This post will describe the Node.js API's test code, though the behaviour and source code for .NET and Java is almost identical.
 
 ### API Test Settings
 
-This test setup then becomes one of the API’s deployment scenarios, and is represented by the below environment file. Only the configuration is different for the API, and it runs the same code as in real environments:
+This test setup then becomes one of the API's deployment scenarios, and is represented by the below environment file. Only the configuration is different for the API, and it runs the same code as in real environments:
 
 <div className='smallimage'>
     <img src='../images/380/environment-configurations.jpg' alt='environment configurations' />
@@ -79,7 +79,7 @@ after( async () => {
 });
 ```
 
-This blog’s final APIs use the JOSE libraries from the below table for the JWT handling in their integration tests. The library issues JWT access tokens in the same standards-based way as a real authorization server does:
+This blog's final APIs use the JOSE libraries from the below table for the JWT handling in their integration tests. The library issues JWT access tokens in the same standards-based way as a real authorization server does:
 
 | API Technology | JWT Library |
 | -------------- | ----------- |
@@ -92,28 +92,28 @@ First the authorization server must create a keypair, containing the private key
 ```typescript
 export class MockAuthorizationServer {
 
-    private readonly _baseUrl: string;
-    private readonly _httpProxy: HttpProxy;
-    private readonly _algorithm: string;
-    private _jwk: GenerateKeyPairResult | null;
-    private _keyId: string;
+    private readonly baseUrl: string;
+    private readonly httpProxy: HttpProxy;
+    private readonly algorithm: string;
+    private jwk: GenerateKeyPairResult | null;
+    private keyId: string;
 
     public constructor(useProxy = false) {
 
-        this._baseUrl = 'https://login.authsamples-dev.com:447/__admin/mappings';
-        this._httpProxy = new HttpProxy(useProxy, 'http://127.0.0.1:8888');
-        this._algorithm = 'ES256';
-        this._jwk = null;
-        this._keyId = Guid.create().toString();
+        this.baseUrl = 'https://login.authsamples-dev.com:447/__admin/mappings';
+        this.httpProxy = new HttpProxy(useProxy, 'http://127.0.0.1:8888');
+        this.algorithm = 'ES256';
+        this.jwk = null;
+        this.keyId = Guid.create().toString();
     }
 
     public async start(): Promise {
 
-        this._jwk = await generateKeyPair(this._algorithm);
+        this.jwk = await generateKeyPair(this.algorithm);
 
-        const jwk = await exportJWK(this._jwk.publicKey!);
-        jwk.kid = this._keyId;
-        jwk.alg = this._algorithm;
+        const jwk = await exportJWK(this.jwk.publicKey!);
+        jwk.kid = this.keyId;
+        jwk.alg = this.algorithm;
         const keys = {
             keys: [
                 jwk,
@@ -122,7 +122,7 @@ export class MockAuthorizationServer {
         const keysJson = JSON.stringify(keys);
 
         const stubbedResponse = {
-            id: this._keyId,
+            id: this.keyId,
             priority: 1,
             request: {
                 method: 'GET',
@@ -134,18 +134,18 @@ export class MockAuthorizationServer {
             },
         };
 
-        await this._register(stubbedResponse);
+        await this.register(stubbedResponse);
     }
 
     public async stop(): Promise {
-        await this._unregister(this._keyId);
+        await this.unregister(this.keyId);
     }
 }
 ```
 
 ### Using Mock Access Tokens in Tests
 
-This blog’s API tests cover token validation and authorization behaviour. All of these can be tested productively with the following type of syntax. Tokens for real users from the API’s data can be requested, and there is no need to deal with any OAuth client concerns:
+This blog's API tests cover token validation and authorization behaviour. All of these can be tested productively with the following type of syntax. Tokens for real users from the API's data can be requested, and there is no need to deal with any OAuth client concerns:
 
 ```typescript
 it ('Get transactions returns 404 for companies that do not match the regions claim', async () => {
@@ -177,9 +177,9 @@ public async issueAccessToken(options: MockTokenOptions): Promise<string> {
             manager_id: options.managerId,
             role: options.role,
         })
-            .setProtectedHeader( { kid: this._keyId, alg: this._algorithm } )
+            .setProtectedHeader( { kid: this.keyId, alg: this.algorithm } )
             .setExpirationTime(options.expiryTime)
-            .sign(this._jwk.privateKey);
+            .sign(this.jwk.privateKey);
 }
 ```
 
@@ -198,7 +198,7 @@ Therefore a basic API load test is also provided, which can be run with *npm run
 The load test is just a console application, which uses async await code to fire batches of 5 concurrent HTTP requests at a time to the API. This stays within operating system limits for in-flight requests to the same host, while ensuring that the API is continually processing multiple requests:
 
 ```typescript
-private async _executeApiRequests(requests: (() => Promise<ApiResponse>)[]): Promise<void> {
+private async executeApiRequests(requests: (() => Promise<ApiResponse>)[]): Promise<void> {
 
     const total = requests.length;
     const batchSize = 5;
@@ -207,7 +207,7 @@ private async _executeApiRequests(requests: (() => Promise<ApiResponse>)[]): Pro
     while (current < total) {
 
         const requestBatch = requests.slice(current, Math.min(current + batchSize, total));
-        const batchPromises = requestBatch.map((r) => this._executeApiRequest(r));
+        const batchPromises = requestBatch.map((r) => this.executeApiRequest(r));
 
         await Promise.all(batchPromises);
         current += batchSize;
@@ -229,7 +229,7 @@ If performance was below requirements, the load tester could capture logs, as de
 
 ### Where Are We?
 
-We have enabled this blog’s final APIs to be productively tested as a standalone component, using mock OAuth infrastructure. The testing also verifies that the API’s error handling and logging behaviours are working as expected when the system is handling concurrent requests.
+We have enabled this blog's final APIs to be productively tested as a standalone component, using mock OAuth infrastructure. The testing also verifies that the API's error handling and logging behaviours are working as expected when the system is handling concurrent requests.
 
 ### Next
 

@@ -1,6 +1,6 @@
 # .NET API – OAuth Integration
 
-In our previous post we explained how to run this blog’s <a href='net-core-code-sample-overview.mdx'>Final .NET API</a> and its main behaviours. Next we will explain the custom OAuth integration.
+In our previous post we explained how to run this blog's <a href='net-core-code-sample-overview.mdx'>Final .NET API</a> and its main behaviours. Next we will explain the custom OAuth integration.
 
 ### .NET API Defaults
 
@@ -38,11 +38,11 @@ public async Task<CompanyTransactions> GetCompanyTransactionsAsync(string id)
 }
 ```
 
-When getting started with OAuth secured APIs you should use these defaults. Yet this blog’s .NET API focuses on some deeper requirements.
+When getting started with OAuth secured APIs you should use these defaults. Yet this blog's .NET API focuses on some deeper requirements.
 
 ### Deeper Requirements
 
-This blog’s .NET API will focus on customising default behaviour in order to meet the following requirements:
+This blog's .NET API will focus on customising default behaviour in order to meet the following requirements:
 
 | Requirement | Description |
 | ----------- | ----------- |
@@ -51,7 +51,7 @@ This blog’s .NET API will focus on customising default behaviour in order to m
 | Extensible Claims | APIs are in full control of the claims principal, to work around authorization server limitations or add values that should not be issued to access tokens. |
 | Supportable | Identity and error details will be captured and included in logs, and JSON error responses will be customisable. |
 
-In .NET our OAuth code will follow the same phases that are used by all of this blog’s APIs:
+In .NET our OAuth code will follow the same phases that are used by all of this blog's APIs:
 
 | Task | Description |
 | ---- | ----------- |
@@ -60,7 +60,7 @@ In .NET our OAuth code will follow the same phases that are used by all of this 
 
 ### Your .NET Secured API?
 
-This API’s security implementation is meant to be thought provoking, to provide techniques for taking finer control over claims and error handling during secured requests. Some of these may be of interest to readers.
+This API's security implementation is meant to be thought provoking, to provide techniques for taking finer control over claims and error handling during secured requests. Some of these may be of interest to readers.
 
 The API contains quite a bit of plumbing code though, to make the API code feel the same across technology stacks. For your own solution you may be able to meet similar requirements in alternative ways.
 
@@ -92,7 +92,7 @@ The meaning of each field is summarised in the following table:
 
 ### API Authorization
 
-The API receives an access token with a payload of the following form. The scope of access is limited to investments data. The user’s business identity is a custom claim of *manager_id*, for a party who manages investments. Another custom claim for *role* is also issued to the access token:
+The API receives an access token with a payload of the following form. The scope of access is limited to investments data. The user's business identity is a custom claim of *manager_id*, for a party who manages investments. Another custom claim for *role* is also issued to the access token:
 
 ```json
 {
@@ -106,11 +106,11 @@ The API receives an access token with a payload of the following form. The scope
 }
 ```
 
-The API receives the main claims by processing the access token JWT, then does some more advanced work to deal with additional claims in an extensible way. The goal is to set up the API’s business logic with the most useful claims principal.
+The API receives the main claims by processing the access token JWT, then does some more advanced work to deal with additional claims in an extensible way. The goal is to set up the API's business logic with the most useful claims principal.
 
 ### Custom Authentication Handler
 
-The *Startup* class wires up our API’s custom OAuth behaviour by creating a custom handler where, unless the authorization policy is overridden for a particular endpoint, the security will be applied:
+The *Startup* class wires up our API's custom OAuth behaviour by creating a custom handler where, unless the authorization policy is overridden for a particular endpoint, the security will be applied:
 
 ```csharp
 private void ConfigureOAuth(IServiceCollection services)
@@ -160,7 +160,7 @@ protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
 
 ### OAuth and Claims Code
 
-A number of small classes are used to implement the desired behaviour. The main work is to validate the JWT received in the HTTP request, then return a *ClaimsPrincipal* that is useful to the rest of the API’s code.
+A number of small classes are used to implement the desired behaviour. The main work is to validate the JWT received in the HTTP request, then return a *ClaimsPrincipal* that is useful to the rest of the API's code.
 
 <div className='smallimage'>
     <img src='../images/330/oauth-classes.jpg' alt='oauth classes' />
@@ -210,7 +210,7 @@ There are a number of responsibilities that I would ideally like the JWT library
 
 | Responsibility | Description |
 | -------------- | ----------- |
-| JWKS Lookup | Downloading token signing public keys from the authorization server’s JWKS endpoint |
+| JWKS Lookup | Downloading token signing public keys from the authorization server's JWKS endpoint |
 | JWKS Caching | Caching the above keys and automatically dealing with new lookups when the signing keys are recycled |
 | Signature Checks | Cryptographically verifying the JSON Web Signature of received JWTs |
 | Protocol Claim Checks | Checking that the token has the correct issuer and audience, and that it is not expired |
@@ -224,7 +224,7 @@ The claims principal for the sample API contains the custom fields listed below:
 | Claim | Represents |
 | ----- | ---------- |
 | Scope | The scope for the API, which in this blog will be a  high level business area of *investments* |
-| Subject | The user’s technical OAuth identity, generated by the authorization server |
+| Subject | The user's technical OAuth identity, generated by the authorization server |
 | Manager ID | The business identity for a user, and in my example a manager is a party who administers investment data |
 | Role | A role from which business permissions would be derived, about the level of access |
 | Title | A business title for the user, which is displayed by frontend applications |
@@ -300,11 +300,11 @@ public async Task<CustomClaimsPrincipal> ExecuteAsync(HttpRequest request)
 
 This technique adds complexity and is best avoided in most APIs. Yet this type of design can prove useful if you  run into productivity problems, where many fine-grained authorization values are managed in the authorization server.
 
-If so, this is one possible way to ensure a stable access token and avoid needing to frequently deploy APIs and the authorization server together. It keeps the claims principal useful to the API’s logic, and reduces the need for access token versioning.
+If so, this is one possible way to ensure a stable access token and avoid needing to frequently deploy APIs and the authorization server together. It keeps the claims principal useful to the API's logic, and reduces the need for access token versioning.
 
 ### OAuth Error Responses
 
-The API implements this blog’s <a href='error-handling-and-supportability.mdx'>Error Handling Design</a>, starting by handling invalid or expired tokens. In a test client we can simulate a 401 error by clicking *Expire Access Token* followed by *Reload Data*:
+The API implements this blog's <a href='error-handling-and-supportability.mdx'>Error Handling Design</a>, starting by handling invalid or expired tokens. In a test client we can simulate a 401 error by clicking *Expire Access Token* followed by *Reload Data*:
 
 ![expiry testing](../images/330/expiry-testing.jpg)
 

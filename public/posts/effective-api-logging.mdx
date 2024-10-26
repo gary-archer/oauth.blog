@@ -47,7 +47,7 @@ The primary goal of reliability logging is a system that is easy for the followi
 
 ### Log Aggregation
 
-This blog’s final APIs do immediate logging of structured logs to a text file, which is a fast operation. In most API deployments the platform creates these files by redirecting *stdout* to a file. A log shipper component reads log files and sends the log data to a data store from where logs can be queried. Log aggregation is very standard these days, and this blog uses the free open source [Elastic Stack](https://www.elastic.co/elastic-stack), deployed using containers. The essential part of the solution is for API logs to contain good quality data.
+This blog's final APIs do immediate logging of structured logs to a text file, which is a fast operation. In most API deployments the platform creates these files by redirecting *stdout* to a file. A log shipper component reads log files and sends the log data to a data store from where logs can be queried. Log aggregation is very standard these days, and this blog uses the free open source [Elastic Stack](https://www.elastic.co/elastic-stack), deployed using containers. The essential part of the solution is for API logs to contain good quality data.
 
 ### Multiple Logger Types
 
@@ -120,7 +120,7 @@ The *User ID* requires a special mention, since these days you should not record
 
 ### API Logging Configuration
 
-This blog’s final APIs use Node.js, .NET and Java. Each API defines its logging behaviour in its configuration file. Production logs always use JSON output, to either the console or a file, and I configure JSON pretty printing on a development computer.
+This blog's final APIs use Node.js, .NET and Java. Each API defines its logging behaviour in its configuration file. Production logs always use JSON output, to either the console or a file, and I configure JSON pretty printing on a development computer.
 
 ```json
 {
@@ -162,7 +162,7 @@ This blog’s final APIs use Node.js, .NET and Java. Each API defines its loggin
 
 In your own APIs it may make sense to instead use the built-in logging configuration, such as that from [log4j2](https://logging.apache.org/log4j/2.x/manual/configuration.html), for best flexibility. In this blog I avoided doing so since I wanted the logging configuration to be expressed the same for all three API technologies.
 
-By default, this blog’s APIs output production JSON logs at all stages of the pipeline, including development computers. When required, developers can temporarily change to a logger per class configuration.
+By default, this blog's APIs output production JSON logs at all stages of the pipeline, including development computers. When required, developers can temporarily change to a logger per class configuration.
 
 ### Logging Framework Customisation
 
@@ -320,7 +320,7 @@ In places the API code contains statements to measure the performance of a parti
 ```typescript
 public async getUserInfo(accessToken: string): Promise<UserInfoClaims> {
 
-    return using(this._logEntry.createPerformanceBreakdown('userInfoLookup'), async () => {
+    return using(this.logEntry.createPerformanceBreakdown('userInfoLookup'), async () => {
 
         try {
 
@@ -329,7 +329,7 @@ public async getUserInfo(accessToken: string): Promise<UserInfoClaims> {
 
         } catch (e: any) {
 
-            throw ErrorUtils.fromUserInfoError(e, this._configuration.userInfoEndpoint);
+            throw ErrorUtils.fromUserInfoError(e, this.configuration.userInfoEndpoint);
         }
     });
 }
@@ -398,7 +398,7 @@ Each performance section also has a *details* field, which can store additional 
 
 ### Arbitrary Data
 
-You could use the *Info* object to handle other use cases. One option might be to temporarily log request input under particular error conditions. This might help to resolve a particularly tricky data-related bug that you can’t reproduce in any other way.
+You could use the *Info* object to handle other use cases. One option might be to temporarily log request input under particular error conditions. This might help to resolve a particularly tricky data-related bug that you can't reproduce in any other way.
 
 ### Client Context
 
@@ -423,7 +423,7 @@ An implementation needs to populate a *LogEntry* object stored in-memory during 
 - You may need to capture error or exception details in an *Error Filter*.
 - Business logic may sometimes need to use the log entry and contribute data to logs.
 
-The log entry is a natural request scoped object, and you may need to use it in a number of other classes. This log’s final APIs use dependency injection to inject the request-scoped log entry into objects that need it. I also ensure that this works correctly when API code resumes on a different thread after async await requests complete.
+The log entry is a natural request scoped object, and you may need to use it in a number of other classes. This log's final APIs use dependency injection to inject the request-scoped log entry into objects that need it. I also ensure that this works correctly when API code resumes on a different thread after async await requests complete.
 
 ### Non REST API Operations
 
@@ -456,7 +456,7 @@ I could update this blog's API logging to output performance details as [OpenTel
 
 ### Where Are We?
 
-I articulated how this blog’s logging would behave in a platform of APIs. Next, I explain this blog’s approach to handling errors and enabling fast problem resolution, both during and after development.
+I articulated how this blog's logging would behave in a platform of APIs. Next, I explain this blog's approach to handling errors and enabling fast problem resolution, both during and after development.
 
 ### Next
 

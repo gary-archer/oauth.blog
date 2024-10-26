@@ -26,7 +26,7 @@ The OAuth 2.0 authorization framework enables you to protect business data using
 
 ### Step 1: Token Validation
 
-The <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a> post described how an API verifies the JWT’s digital signature. If the token is not valid you return a 401 error such as the below payload. Think of token validation as an entry level check to authenticate the request to the API. The API then trusts the access token’s payload.
+The <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a> post described how an API verifies the JWT's digital signature. If the token is not valid you return a 401 error such as the below payload. Think of token validation as an entry level check to authenticate the request to the API. The API then trusts the access token's payload.
 
 ```json
 {
@@ -54,13 +54,13 @@ You don't usually need many scopes since you use claims for most authorization. 
 
 ### OpenID Connect Scopes
 
-In addition to business scopes, user facing applications typically use OpenID Connect built-in scopes, which represent areas of the user’s personal data. These tend to be more fine-grained than business scopes.
+In addition to business scopes, user facing applications typically use OpenID Connect built-in scopes, which represent areas of the user's personal data. These tend to be more fine-grained than business scopes.
 
 | Examples | Usage Scenario |
 | -------- | -------------- |
-| openid | Allows an app to use the user’s identity. |
-| profile | Allows an app to get a user’s name related information. |
-| email | Allows an app to access a user’s email related information. |
+| openid | Allows an app to use the user's identity. |
+| profile | Allows an app to get a user's name related information. |
+| email | Allows an app to access a user's email related information. |
 
 The OpenID Connect scopes show how you can restrict a client's access to fields within an object. Consider using this composition-based approach for your own APIs, when some areas of an object require higher security than others.
 
@@ -70,23 +70,23 @@ An API should require its own identity to be present in the audience (aud) claim
 
 ### Step 3: Claims
 
-Claims enable the deeper OAuth authorization behaviour. For each scope that the authorization server issues to access tokens, it also issues a set of claims. The <a href='managed-authorization-server-setup.mdx'>Cloud Authorization Server Setup</a> blog post explains how this works for this blog’s default authorization server. 
+Claims enable the deeper OAuth authorization behaviour. For each scope that the authorization server issues to access tokens, it also issues a set of claims. The <a href='managed-authorization-server-setup.mdx'>Cloud Authorization Server Setup</a> blog post explains how this works for this blog's default authorization server. 
 
 You can issue different claims to access tokens per user, and they can contain any data you need, so claims are much more flexible than scopes. In more advanced use cases, APIs cannot decide how to authorize solely from a user ID in an access token. Instead, OAuth enables you to design solutions where the authorization server provides APIs with runtime claims from trusted third-party systems.
 
 ### Claims Principal
 
-After your API validates a JWT access token you use its claims in your business authorization code. For example, you can inject a *ClaimsPrincipal* object that contains claims into classes that need it. A well-designed claims principal expresses your API’s main authorization data and should be useful to your API’s code.
+After your API validates a JWT access token you use its claims in your business authorization code. For example, you can inject a *ClaimsPrincipal* object that contains claims into classes that need it. A well-designed claims principal expresses your API's main authorization data and should be useful to your API's code.
 
 ```typescript
 export class CompanyService {
 
-    private readonly _repository: CompanyRepository;
-    private readonly _claims: ClaimsPrincipal;
+    private readonly repository: CompanyRepository;
+    private readonly claims: ClaimsPrincipal;
 
     public constructor(repository: CompanyRepository, claims: ClaimsPrincipal) {
-        this._repository = repository;
-        this._claims = claims;
+        this.repository = repository;
+        this.claims = claims;
     }
 }
 ```
@@ -103,7 +103,7 @@ You should not manage volatile business permissions in your authorization server
 
 In your API code, you may therefore need to combine access token claims with extra values. You can do this in multiple ways, according to your coding preferences. When I first wrote this blog, the AWS Cognito authorization server did not support issuing custom claims to access tokens, yet I still wanted a useful and expressive claims principal that demonstrated my design intent. I did not want my code to be dictated by the limitations of an authorization server implementation.
 
-Therefore, I designed an object with the following structure, so that I could inject it into business logic classes and the claims that should be in the access token were readily available. In addition, there may be some main authorization values that you may prefer not to issue to access tokens for manageability reasons. These might be good candidates to represent as extra claims.
+Therefore, I designed an object with the following structure, so that I could inject it into business logic classes and the claims that should be in the access token were readily available. In addition, there may be some main authorization values that you may prefer not to issue to access tokens for manageability reasons. These might be good candidates to represent as extra values in the claims principal.
 
 ```typescript
 export class ClaimsPrincipal {
@@ -116,11 +116,11 @@ My API code samples continue to use this technique, since it is useful to know h
 
 ![token to claims](../images/130/token-to-claims.jpg)
 
-Understand that true claims are those that the authorization server asserts when it cryptographically signs access tokens. The main identity values should always be issued to access tokens when possible, so that the API receives them in a cryptographically verifiable format. Yet you might consider the extra values to be claims in practical terms, when they originate from a source that the API trusts just as much as the authorization server. Therefore, extra claims lookup is one option you can consider for a productive API code setup.
+Understand that true claims are those that the authorization server asserts when it cryptographically signs access tokens. The main identity values should always be issued to access tokens when possible, so that the API receives them in a cryptographically verifiable format. Yet you might treat the extra values like claims when they originate from a trusted source like the API's database.
 
-### This Blog’s Example Claims
+### This Blog's Example Claims
 
-This blog’s APIs use the following form of access token payload. When you design access tokens, imagine you had to explain your API security to a reviewer or a penetration tester. You should be able to point out how the scopes and claims lock down the access token to restrict its privileges.
+This blog's APIs use the following form of access token payload. When you design access tokens, imagine you had to explain your API security to a reviewer or a penetration tester. You should be able to point out how the scopes and claims lock down the access token to restrict its privileges.
 
 The scope restricts access to an *investments* business area. The scope and audience would allow the access token to be used by a small set of related APIs. A custom claim for *manager_id* provides a business user identity to the API. A custom *role* claim is issued to the access token, and the API can use it to derive volatile business permissions:
 
@@ -146,9 +146,9 @@ The following extra claims are looked up when the API first receives its access 
 The API authorizes access to resources using both the *role* from the access token and the *regions* array from the extra claims:
 
 ```typescript
-private _isUserAuthorizedForCompany(company: Company): boolean {
+private isUserAuthorizedForCompany(company: Company): boolean {
 
-    const role = ClaimsReader.getStringClaim(this._claims.jwt, CustomClaimNames.role).toLowerCase();
+    const role = ClaimsReader.getStringClaim(this.claims.jwt, CustomClaimNames.role).toLowerCase();
     if (role === 'admin') {
         return true;
     }
@@ -157,7 +157,7 @@ private _isUserAuthorizedForCompany(company: Company): boolean {
         return false;
     }
 
-    const extraClaims = this._claims.extra as SampleExtraClaims;
+    const extraClaims = this.claims.extra as SampleExtraClaims;
     const found = extraClaims.regions.find((c) => c === company.region);
     return !!found;
 }
@@ -165,7 +165,7 @@ private _isUserAuthorizedForCompany(company: Company): boolean {
 
 ### Claims Caching Algorithm
 
-This blog’s APIs use an OAuth filter with the following overall algorithm, where a thread-safe memory cache stores a hash of the access token mapped to extra claims. This ensures that the extra claims data source lookup only occurs occasionally.
+This blog's APIs use an OAuth filter with the following overall algorithm, where a thread-safe memory cache stores a hash of the access token mapped to extra claims. This ensures that the extra claims data source lookup only occurs occasionally.
 
 ```typescript
 export class OAuthFilter {
@@ -177,19 +177,19 @@ export class OAuthFilter {
             throw ErrorFactory.createClient401Error('No access token was supplied in the bearer header');
         }
 
-        const jwtClaims = await this._accessTokenValidator.execute(accessToken);
+        const jwtClaims = await this.accessTokenValidator.execute(accessToken);
 
         const accessTokenHash = createHash('sha256').update(accessToken).digest('hex');
-        let extraClaims = await this._cache.getExtraUserClaims(accessTokenHash);
+        let extraClaims = await this.cache.getExtraUserClaims(accessTokenHash);
         if (extraClaims) {
-            this._extraClaimsProvider.createClaimsPrincipal(jwtClaims, extraClaims, request);
+            this.extraClaimsProvider.createClaimsPrincipal(jwtClaims, extraClaims, request);
         }
 
-        extraClaims = await this._extraClaimsProvider.lookupExtraClaims(jwtClaims, request);
+        extraClaims = await this.extraClaimsProvider.lookupExtraClaims(jwtClaims, request);
 
-        await this._cache.setExtraUserClaims(accessTokenHash, extraClaims!, jwtClaims.exp!);
+        await this.cache.setExtraUserClaims(accessTokenHash, extraClaims!, jwtClaims.exp!);
 
-        return this._extraClaimsProvider.createClaimsPrincipal(jwtClaims, extraClaims, request);
+        return this.extraClaimsProvider.createClaimsPrincipal(jwtClaims, extraClaims, request);
     }
 }
 ```
@@ -202,5 +202,5 @@ I explained some standard OAuth security behaviours and some manageability conce
 
 ### Next
 
-- I summarise this blog’s <a href='federated-logins.mdx'>User Authentication Behaviour</a>.
+- I summarise this blog's <a href='federated-logins.mdx'>User Authentication Behaviour</a>.
 - For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

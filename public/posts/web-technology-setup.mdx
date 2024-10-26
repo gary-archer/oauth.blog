@@ -70,7 +70,7 @@ import {UserManager, UserManagerSettings} from 'oidc-client';
 import mustache from 'mustache';
 ```
 
-This blog’s APIs use Node.js 20 or later, with the following *tsconfig.json* configuration. You use some of these settings when you import modules and you use other settings when you build code:
+This blog's APIs use Node.js 20 or later, with the following *tsconfig.json* configuration. You use some of these settings when you import modules and you use other settings when you build code:
 
 ```json
 {
@@ -100,7 +100,7 @@ You use the following settings when you import modules:
 | [moduleResolution](https://www.typescriptlang.org/tsconfig#moduleResolution) | Use modern rules to resolve external modules. |
 | [allowSyntheticDefaultImports](https://www.typescriptlang.org/tsconfig#allowSyntheticDefaultImports) | Enable the cleanest import syntax for older CommonJS modules. |
 
-You also need to tell the compiler that the project’s own source files use ECMAScript modules. To do so, specify *type=module* in the *package.json* file. For Node.js APIs that use *type=module*, a *.js* suffix is required when you import other classes. During coding this is a TypeScript file, though it becomes JavaScript when executed:
+You also need to tell the compiler that the project's own source files use ECMAScript modules. To do so, specify *type=module* in the *package.json* file. For Node.js APIs that use *type=module*, a *.js* suffix is required when you import other classes. During coding this is a TypeScript file, though it becomes JavaScript when executed:
 
 ```typescript
 import {CompanyRepository} from '../repositories/companyRepository.js';
@@ -162,16 +162,16 @@ I  use a class-based development model, to encapsulate data, behaviour and depen
 ```typescript
 export class CompaniesView {
 
-    private readonly _apiClient: ApiClient;
+    private readonly apiClient: ApiClient;
 
     public constructor(apiClient: ApiClient) {
-        this._apiClient = apiClient;
+        this.apiClient = apiClient;
     }
 
     public async load(): Promise {
 
-        const data =  await this._apiClient.getCompanyList();
-        this._renderData(data);
+        const data =  await this.apiClient.getCompanyList();
+        this.renderData(data);
     }
 }
 ```
@@ -343,7 +343,7 @@ The [webpack](https://webpack.js.org/) tool is used. I use it for one main task,
 
 ### Building Code: Webpack Configuration
 
-Webpack requires a configuration object and the syntax can seem a little cryptic at first. Mostly though, you just need to specify the SPA’s entry point source file, then provide an output folder for compiled bundles:
+Webpack requires a configuration object and the syntax can seem a little cryptic at first. Mostly though, you just need to specify the SPA's entry point source file, then provide an output folder for compiled bundles:
 
 ```javascript
 import path from 'path';
@@ -392,11 +392,11 @@ export default {
 }
 ```
 
-Webpack has its own rules for resolving imports. You have to use *extensions* to tell it to include extensions from both the SPA’s TypeScript code, and JavaScript code consumed from the *node_modules* folder.
+Webpack has its own rules for resolving imports. You have to use *extensions* to tell it to include extensions from both the SPA's TypeScript code, and JavaScript code consumed from the *node_modules* folder.
 
 ### Building Code: Processing TypeScript
 
-The SPA’s application code builds to an *app.bundle.js* file. When compiling the SPA, the [ts-loader](https://github.com/TypeStrong/ts-loader) library uses the settings from the *tsconfig.json* file. I configure webpack to build a second, larger bundle, called *vendor.bundle.js*, containing third-party code from the *node_modules* folder.
+The SPA's application code builds to an *app.bundle.js* file. When compiling the SPA, the [ts-loader](https://github.com/TypeStrong/ts-loader) library uses the settings from the *tsconfig.json* file. I configure webpack to build a second, larger bundle, called *vendor.bundle.js*, containing third-party code from the *node_modules* folder.
 
 ### Building Code: Web Compilation
 
@@ -416,16 +416,16 @@ For SPAs, I ensure that output works in mainstream browsers for the last 5 years
 | [target](https://www.typescriptlang.org/tsconfig#target) | Building to ES2017 means built code runs in all mainstream desktop and mobile browsers and *await* statements are output to the built code. |
 | [module](https://www.typescriptlang.org/tsconfig#module) | ES2022 means bundled code uses the ECMAScript module format, which browser hosts support, and may output top level await statements to the built code. |
 
-Since the SPA builds to ES2017 JavaScript, the development build results remain close to the SPA’s TypeScript code, with types removed. Keeping the built code similar to the developed code makes decompilation easier later.
+Since the SPA builds to ES2017 JavaScript, the development build results remain close to the SPA's TypeScript code, with types removed. Keeping the built code similar to the developed code makes decompilation easier later.
 
 ```typescript
 class CompaniesView {
     constructor(apiClient) {
-        this._apiClient = apiClient;
+        this.apiClient = apiClient;
     }
     async load() {
-        const data = await this._apiClient.getCompanyList();
-        this._renderData(data);
+        const data = await this.apiClient.getCompanyList();
+        this.renderData(data);
     }
 }
 ```
@@ -447,7 +447,7 @@ Deployed builds for Node.js APIs should instead run JavaScript code, for best pe
 
 ### Executing Code: Recompiling after Code Changes
 
-The SPA code recompiles automatically when you change code, via webpack’s *watch* parameter:
+The SPA code recompiles automatically when you change code, via webpack's *watch* parameter:
 
 ![spa-build](../images/90/spa-build.jpg?v=20240826)
 
@@ -531,14 +531,14 @@ export default merge(baseConfig, {
 });
 ```
 
-To prevent TypeScript compilation errors, I reference the *IS_DEBUG* variable in the SPA’s *typings.d.ts* file. The SPA's error handling code uses the variable to decide whether to render stack traces:
+To prevent TypeScript compilation errors, I reference the *IS_DEBUG* variable in the SPA's *typings.d.ts* file. The SPA's error handling code uses the variable to decide whether to render stack traces:
 
 ```typescript
 public static getErrorStack(error: UIError): ErrorLine | null {
 
     if (IS_DEBUG) {
         if (error.stack) {
-            return ErrorFormatter._createErrorLine('Stack', error.stack);
+            return ErrorFormatter.createErrorLine('Stack', error.stack);
         }
     }
 
@@ -557,11 +557,11 @@ You should save a backup of source map files for each application release. When 
 The right pane then displays an updated stack trace based on the original TypeScript lines of code. In the following example output you can see that the failure is at *line 55* of the *ApiClient* source file:
 
 ```markdown
-Error: simulating an exception at ApiClient._callApi (webpack:///./api/client/apiClient.ts:55:18)
+Error: simulating an exception at ApiClient.callApi (webpack:///./api/client/apiClient.ts:55:18)
 at async ApiClient.getCompanyList (webpack:///./api/client/apiClient.ts:31:15)
 at async CompaniesView.load (webpack:///./views/companiesView.ts:25:25)
 at async Router.loadView (webpack:///./views/router.ts:43:12)
-at async App._loadMainView (webpack:///./app/app.ts:118:8)
+at async App.loadMainView (webpack:///./app/app.ts:118:8)
 at async App.execute (webpack:///./app/app.ts:51:12)
 ```
 

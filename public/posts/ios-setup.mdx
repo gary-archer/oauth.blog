@@ -20,7 +20,7 @@ Download the code sample via the following command:
 git clone https://github.com/openid/AppAuth-iOS
 ```
 
-From Xcode’s home screen, select *File / Open* and navigate to the *AppAuth-iOS/Examples/Example-iOS_Swift-Carthage* folder:
+From Xcode's home screen, select *File / Open* and navigate to the *AppAuth-iOS/Examples/Example-iOS_Swift-Carthage* folder:
 
 ![xcode build](../images/480/xcode-build.jpg)
 
@@ -41,7 +41,7 @@ I then add AppAuth using the Swift dependency manager, from the above screen, by
 
 ### Step 5: Understand Mobile OAuth Client Settings
 
-In this post we will point the AppAuth code sample to a client that I registered in this blog’s AWS Cognito authorization server:
+In this post we will point the AppAuth code sample to a client that I registered in this blog's AWS Cognito authorization server:
 
 ![oauth client 1](../images/480/oauth-client1.jpg)
 
@@ -66,7 +66,7 @@ let kClientID: String? = "53osemtot8tp3n3qct5r2hijk3";
 let kRedirectURI: String = "net.openid.appauthdemo:/oauth2redirect";
 ```
 
-You must also register the *Redirect URI Scheme* in the mobile app’s *info.plist* file:
+You must also register the *Redirect URI Scheme* in the mobile app's *info.plist* file:
 
 ![info plist](../images/480/info-plist.jpg)
 
@@ -84,7 +84,7 @@ let request = OIDAuthorizationRequest(configuration: configuration,
 
 ### Step 7: Run the Sample App on an Emulator
 
-We can run the app using Xcode’s build and run option in the top left of the IDE. I always first select the latest emulator version:
+We can run the app using Xcode's build and run option in the top left of the IDE. I always first select the latest emulator version:
 
 ![xcode run](../images/480/xcode-run.jpg)
 
@@ -100,7 +100,7 @@ Next an [ASWebAuthenticationSession](https://developer.apple.com/documentation/a
     <img src='../images/480/app-login.jpg' alt='app login' />
 </div>
 
-You can then sign in to the app using this blog’s cloud test credential:
+You can then sign in to the app using this blog's cloud test credential:
 
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*

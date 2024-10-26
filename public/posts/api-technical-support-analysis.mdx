@@ -139,7 +139,7 @@ LIMIT 100
 """}
 ```
 
-This query returns results similar to the following and provides a clear picture of the user’s technical activity against APIs:
+This query returns results similar to the following and provides a clear picture of the user's technical activity against APIs:
 
 ```markdown
 |   apiName    |    method     |            path                      |clientName|  statusCode   |     errorCode      |
@@ -331,7 +331,7 @@ The preferred place to find problems is at the earliest stage of the pipeline, w
 
 ### 3.1. Cross Team Error Lookup
 
-A good logging system empowers developers when there is an error with someone else’s component. Any developer in any team should be able to quickly look up the cause of the upstream error via a basic query:
+A good logging system empowers developers when there is an error with someone else's component. Any developer in any team should be able to quickly look up the cause of the upstream error via a basic query:
 
 ```markdown
 GET apilogs*/_search

@@ -44,7 +44,7 @@ Next save the password when prompted, then navigate between views by clicking an
 
 ### Step 4: View Library Dependencies
 
-View the app’s *build.gradle.kts* file to understand the our Single Activity App’s third party dependencies, which include the AppAuth Library. The app requires Android 8 (SDK 26) and above, since this simplifies some areas of the Android implementation.
+View the app's *build.gradle.kts* file to understand the our Single Activity App's third party dependencies, which include the AppAuth Library. The app requires Android 8 (SDK 26) and above, since this simplifies some areas of the Android implementation.
 
 ```kotlin
 object VERSION {
@@ -179,7 +179,7 @@ Note that if the intermediate page is left for a couple of minutes before the us
 
 ### Step 9: Understand Login Completion
 
-Once the authorization code is received by the app, it sends an *Authorization Code Grant* request to Cognito’s token endpoint, which returns OAuth tokens in the response:
+Once the authorization code is received by the app, it sends an *Authorization Code Grant* request to Cognito's token endpoint, which returns OAuth tokens in the response:
 
 ![authorization code grant](../images/510/authorization-code-grant.jpg?v=20240912)
 
@@ -203,7 +203,7 @@ Similarly I would recommend changing the screen orientation half way through log
 
 ![landscape](../images/510/landscape.jpg?v=20240912)
 
-The app’s *MainActivity* is configured with *launchMode=singleTop* and  *configChanges=orientation|screenSize*. It is therefore redrawn but not recreated when the orientation changes.
+The app's *MainActivity* is configured with *launchMode=singleTop* and  *configChanges=orientation|screenSize*. It is therefore redrawn but not recreated when the orientation changes.
 
 ### Step 11: Test Restarting the App after Login
 
@@ -324,7 +324,7 @@ The user can navigate backwards to return to previously loaded views. It is wort
 
 ### Where Are We?
 
-We have shown how to run this blog’s Android code sample,  and test its technical behaviour. Next we will drill into the infrastructure needed to enable the use of OAuth claimed HTTPS schemes.
+We have shown how to run this blog's Android code sample,  and test its technical behaviour. Next we will drill into the infrastructure needed to enable the use of OAuth claimed HTTPS schemes.
 
 ### Next
 

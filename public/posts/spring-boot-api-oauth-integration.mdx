@@ -34,11 +34,11 @@ You can also add an entry such as this to an *application properties file* when 
 logging.level.org.springframework.security=DEBUG
 ```
 
-When getting started with OAuth secured APIs you should use these defaults. Yet this blog’s Java API focuses on some deeper requirements.
+When getting started with OAuth secured APIs you should use these defaults. Yet this blog's Java API focuses on some deeper requirements.
 
 ### Deeper Requirements
 
-This blog’s Java API will focus on customising Spring’s default behaviour in order to meet the following requirements:
+This blog's Java API will focus on customising Spring's default behaviour in order to meet the following requirements:
 
 | Requirement | Description |
 | ----------- | ----------- |
@@ -47,7 +47,7 @@ This blog’s Java API will focus on customising Spring’s default behaviour in
 | Extensible Claims | APIs are in full control of the claims principal, to work around authorization server limitations or add values that should not be issued to access tokens. |
 | Supportable | Identity and error details will be captured and included in logs, and JSON error responses will be customisable. |
 
-In Java our API’s OAuth code will follow the same two phases that we used in Node.js and .NET APIs:
+In Java our API's OAuth code will follow the same two phases that we used in Node.js and .NET APIs:
 
 | Task | Description |
 | ---- | ----------- |
@@ -56,7 +56,7 @@ In Java our API’s OAuth code will follow the same two phases that we used in N
 
 ### Your Java Secured API?
 
-This API’s security implementation is meant to be thought provoking, to provide techniques for taking finer control over claims and error handling during secured requests. Some of these may be of interest to readers.
+This API's security implementation is meant to be thought provoking, to provide techniques for taking finer control over claims and error handling during secured requests. Some of these may be of interest to readers.
 
 The API contains quite a bit of plumbing code though, to make the API code feel the same across technology stacks. For your own solution you may be able to meet similar requirements in alternative ways.
 
@@ -88,7 +88,7 @@ The meaning of each field is summarised in the following table:
 
 ### API Authorization
 
-The API receives an access token with a payload of the following form. The scope of access is limited to *investments* data. The user’s business identity is a custom claim of *manager_id*, for a party who manages investments. Another custom claim for *role* is also issued to the access token:
+The API receives an access token with a payload of the following form. The scope of access is limited to *investments* data. The user's business identity is a custom claim of *manager_id*, for a party who manages investments. Another custom claim for *role* is also issued to the access token:
 
 ```json
 {
@@ -102,11 +102,11 @@ The API receives an access token with a payload of the following form. The scope
 }
 ```
 
-The API receives the main claims by processing the access token JWT, then does some more advanced work to deal with additional claims in an extensible way. The goal is to set up the API’s business logic with the most useful claims principal.
+The API receives the main claims by processing the access token JWT, then does some more advanced work to deal with additional claims in an extensible way. The goal is to set up the API's business logic with the most useful claims principal.
 
 ### Custom Authorization Filter
 
-The *HttpServerConfiguration* class wires up our API’s custom OAuth behaviour. This returns a *SecurityFilterChain* class, which configures a custom resource server implementation:
+The *HttpServerConfiguration* class wires up our API's custom OAuth behaviour. This returns a *SecurityFilterChain* class, which configures a custom resource server implementation:
 
 ```java
 @Bean
@@ -127,7 +127,7 @@ public SecurityFilterChain filterChain(final HttpSecurity http) throws Exception
 }
 ```
 
-In this blog’s architecture, web specific concerns are not dealt with in APIs. Instead, APIs are designed to be callable equally from web and mobile clients. Therefore this blog’s SPA’s web security is managed by the following components, and Spring’s web security is disabled:
+In this blog's architecture, web specific concerns are not dealt with in APIs. Instead, APIs are designed to be callable equally from web and mobile clients. Therefore this blog's SPA's web security is managed by the following components, and Spring's web security is disabled:
 
 | Component | Description |
 | --------- | ----------- |
@@ -137,7 +137,7 @@ In this blog’s architecture, web specific concerns are not dealt with in APIs.
 
 ### OAuth and Claims Code
 
-A number of small classes are used to implement the desired behaviour from this blog’s <a href='api-authorization-design.mdx'>API Authorization Design</a>. The main work is to validate the JWT received in the HTTP request, then return a *ClaimsPrincipal* that is useful to the rest of the API’s code.
+A number of small classes are used to implement the desired behaviour from this blog's <a href='api-authorization-design.mdx'>API Authorization Design</a>. The main work is to validate the JWT received in the HTTP request, then return a *ClaimsPrincipal* that is useful to the rest of the API's code.
 
 <div className='smallimage'>
     <img src='../images/360/oauth-classes.jpg' alt='oauth classes' />
@@ -145,7 +145,7 @@ A number of small classes are used to implement the desired behaviour from this 
 
 ### JWT Access Token Validation
 
-The *AccessTokenValidator* class deals with direct calls to the authorization server and its main code is to validate access tokens using jose4j. This includes checking for the API’s required scope:
+The *AccessTokenValidator* class deals with direct calls to the authorization server and its main code is to validate access tokens using jose4j. This includes checking for the API's required scope:
 
 ```java
 public JwtClaims execute(final String accessToken) {
@@ -187,7 +187,7 @@ There are a number of responsibilities that the library implements for us:
 
 | Responsibility | Description |
 | -------------- | ----------- |
-| JWKS Key Lookup | Downloading token signing public keys from the authorization server’s JWKS endpoint |
+| JWKS Key Lookup | Downloading token signing public keys from the authorization server's JWKS endpoint |
 | JWKS Key Caching | Caching the above keys and automatically dealing with new lookups when the signing keys are recycled |
 | Signature Checks | Cryptographically verifying the JSON Web Signature of received JWTs |
 | Field Checks | Checking that the token has the correct issuer and audience, and that it is not expired |
@@ -199,7 +199,7 @@ The claims principal for the sample API deals with some custom fields shown here
 | Claim | Represents |
 | ----- | ---------- |
 | Scope | The scope for the API, which in this blog will be a  high level business area of *investments* |
-| Subject | The user’s technical OAuth identity, generated by the authorization server |
+| Subject | The user's technical OAuth identity, generated by the authorization server |
 | Manager ID | The business identity for a user, and in my example a manager is a party who administers investment data |
 | Role | A role from which business permissions would be derived, about the level of access |
 | Title | A business title for the user, which is displayed by frontend applications |
@@ -283,11 +283,11 @@ public ClaimsPrincipal execute(final HttpServletRequest request) {
 
 This technique adds complexity and is best avoided in most APIs. Yet this type of design can prove useful if you  run into productivity problems, where many fine-grained authorization values are managed in the authorization server.
 
-If so, this is one possible way to ensure a stable access token and avoid needing to frequently deploy APIs and the authorization server together. It keeps the claims principal useful to the API’s logic, and reduces the need for access token versioning.
+If so, this is one possible way to ensure a stable access token and avoid needing to frequently deploy APIs and the authorization server together. It keeps the claims principal useful to the API's logic, and reduces the need for access token versioning.
 
 ### OAuth Error Responses
 
-The API implements this blog’s <a href='error-handling-and-supportability.mdx'>Error Handling Design</a>, starting by handling invalid tokens in the standard way. We can simulate a 401 error by clicking our UI’s *Expire Access Token* button followed by the *Reload Data* button:
+The API implements this blog's <a href='error-handling-and-supportability.mdx'>Error Handling Design</a>, starting by handling invalid tokens in the standard way. We can simulate a 401 error by clicking our UI's *Expire Access Token* button followed by the *Reload Data* button:
 
 ![expiry testing](../images/360/expiry-testing.jpg)
 

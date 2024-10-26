@@ -56,17 +56,17 @@ root.render (
 The *main.ts* source file is the entry point that receives deep link notifications. The app registers a private URI scheme at application startup, which writes entries to user specific areas of the operating system:
 
 ```typescript
-private async _registerPrivateUriScheme(): Promise<void> {
+private async registerPrivateUriScheme(): Promise<void> {
 
     if (process.platform === 'win32') {
 
         app.setAsDefaultProtocolClient(
-            this._configuration!.oauth.privateSchemeName,
+            this.configuration!.oauth.privateSchemeName,
             process.execPath,
             [app.getAppPath()]);
 
     } else {
-        app.setAsDefaultProtocolClient(this._configuration!.oauth.privateSchemeName);
+        app.setAsDefaultProtocolClient(this.configuration!.oauth.privateSchemeName);
     }
 }
 ```
@@ -89,18 +89,18 @@ public execute(): void {
 When the operating system invokes a deep link, the following code runs in the *main.ts* source file:
 
 ```typescript
-private _handleDeepLink(deepLinkUrl: string): void {
+private handleDeepLink(deepLinkUrl: string): void {
 
-    if (this._window) {
+    if (this.window) {
 
-        if (this._window.isMinimized()) {
-            this._window.restore();
+        if (this.window.isMinimized()) {
+            this.window.restore();
         }
 
-        this._window.focus();
+        this.window.focus();
     }
 
-    this._ipcEvents.handleDeepLink(deepLinkUrl);
+    this.ipcEvents.handleDeepLink(deepLinkUrl);
 }
 ```
 
@@ -109,14 +109,14 @@ The main process first asks its authenticator service to process the deep link i
 ```typescript
 public handleDeepLink(deepLinkUrl: string): boolean {
 
-    if (this._authenticatorService.handleDeepLink(deepLinkUrl)) {
+    if (this.authenticatorService.handleDeepLink(deepLinkUrl)) {
         return true;
     }
 
     const url = UrlParser.tryParse(deepLinkUrl);
     if (url && url.pathname) {
-        const path = url.pathname.replace(this._configuration.oauth.privateSchemeName + ':', '');
-        this._window!.webContents.send(IpcEventNames.ON_DEEP_LINK, path);
+        const path = url.pathname.replace(this.configuration.oauth.privateSchemeName + ':', '');
+        this.window!.webContents.send(IpcEventNames.ON_DEEP_LINK, path);
     }
 
     return false;
@@ -135,12 +135,12 @@ public handleDeepLink(deepLinkUrl: string): boolean {
         const path = url.pathname.toLowerCase();
         if (path === '/callback') {
 
-            this._eventEmitter.emit('LOGIN_COMPLETE', args);
+            this.eventEmitter.emit('LOGIN_COMPLETE', args);
             return true;
 
         } else if (path === '/logoutcallback') {
 
-            this._eventEmitter.emit('LOGOUT_COMPLETE', args);
+            this.eventEmitter.emit('LOGOUT_COMPLETE', args);
             return true;
         }
     }
@@ -160,7 +160,7 @@ public load(): TokenData | null {
 
     try {
 
-        const encryptedBytesBase64 = this._store.get(this._key);
+        const encryptedBytesBase64 = this.store.get(this.key);
         if (!encryptedBytesBase64) {
             return null;
         }
@@ -184,7 +184,7 @@ The OAuth processing code calls the TokenStorage class after the following event
 
 ### Concurrent Operations
 
-React renders the desktop app’s views in a non-deterministic sequence, so the following two views can call an API in parallel:
+React renders the desktop app's views in a non-deterministic sequence, so the following two views can call an API in parallel:
 
 ![concurrent api requests](../images/450/concurrent-api-requests.jpg)
 
@@ -200,7 +200,7 @@ This blog completes this blog's desktop integration using the recommendations fr
 
 ### Where Are We?
 
-I updated the desktop app with new features that improve usability, to complete this blog’s desktop mini-theme. Next I begin coverage of OAuth for mobile apps.
+I updated the desktop app with new features that improve usability, to complete this blog's desktop mini-theme. Next I begin coverage of OAuth for mobile apps.
 
 ### Next
 

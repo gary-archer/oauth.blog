@@ -19,7 +19,7 @@ Even more important is the hidden cost when software and people do not have good
 
 ### Design for Failure Scenarios
 
-To meet these goals, you should build software that expects failure. It is common these days to read about this approach in cloud-native deployments, but there is usually insufficient focus on coding. The following sections of this post describe some common failure scenarios and desired outcomes, along with design thinking to achieve them. I use the coding techniques in this blog’s code samples.
+To meet these goals, you should build software that expects failure. It is common these days to read about this approach in cloud-native deployments, but there is usually insufficient focus on coding. The following sections of this post describe some common failure scenarios and desired outcomes, along with design thinking to achieve them. I use the coding techniques in this blog's code samples.
 
 ### 401 Error Responses
 
@@ -65,7 +65,7 @@ For API 401s, you can also include the error details in a [www-authenticate head
 
 ### 4xx Error Responses due to Invalid Input
 
-In real world APIs you will want to validate all input early, to prevent deeper problems such as data corruption. This blog’s apps use a couple of basic input validation cases to cover the concept. The API returns a *Not Found for User* response if the user tries to access data they are not entitled to, by editing the browser location. In the below screenshot, the user is unauthorized to access company 3:
+In real world APIs you will want to validate all input early, to prevent deeper problems such as data corruption. This blog's apps use a couple of basic input validation cases to cover the concept. The API returns a *Not Found for User* response if the user tries to access data they are not entitled to, by editing the browser location. In the below screenshot, the user is unauthorized to access company 3:
 
 ![unauthorized resource](../images/290/unauthorized-resource.jpg?v=20240913)
 
@@ -92,7 +92,7 @@ Similarly, if you use a syntactically invalid ID such as *abc*, the API returns 
 The *Transactions View* in this blog's frontends can handle these known API error codes gracefully and redirect the user back to the home page. More generally, useful error codes put clients in control:
 
 ```typescript
-private _isExpectedApiError(error: UIError): boolean {
+private isExpectedApiError(error: UIError): boolean {
 
     if (error.statusCode === 404 && error.errorCode === ErrorCodes.companyNotFound) {
         return true;
@@ -108,7 +108,7 @@ private _isExpectedApiError(error: UIError): boolean {
 
 ### Error Codes List
 
-For each of this blog’s frontend and API code samples, an *ErrorCodes* object represents error causes. It provides a full list of error codes that you can publish it to interested parties when required, such as those who integrate with your API.
+For each of this blog's frontend and API code samples, an *ErrorCodes* object represents error causes. It provides a full list of error codes that you can publish it to interested parties when required, such as those who integrate with your API.
 
 ```typescript
 export class ErrorCodes {
@@ -141,7 +141,7 @@ When a client receives an unexpected API 4xx error response and cannot continue,
 
 - *Oops – something has gone wrong*
 
-This blog’s apps present an *Error Summary Link* for the failing view. The user can either view details or perform a *Navigation Action* by clicking the home button, to try to recover:
+This blog's apps present an *Error Summary Link* for the failing view. The user can either view details or perform a *Navigation Action* by clicking the home button, to try to recover:
 
 ![error summary](../images/290/error-summary.jpg?v=20240913)
 
@@ -154,14 +154,14 @@ The client should model errors as a first class object. You can then decide whic
 ```typescript
 export class UIError extends Error {
 
-    private _area: string;
-    private _errorCode: string;
-    private _userAction: string;
-    private _utcTime: string;
-    private _statusCode: number;
-    private _instanceId: number;
-    private _details: any;
-    private _url: string;
+    private area: string;
+    private errorCode: string;
+    private userAction: string;
+    private utcTime: string;
+    private statusCode: number;
+    private instanceId: number;
+    private details: any;
+    private url: string;
 }
 ```
 
@@ -217,7 +217,7 @@ Developers are often attracted to vendor solutions that validate fields using de
 
 ### API 5xx Error Response Formats
 
-API 500 errors most commonly occur due to either bugs, misconfiguration or temporary infrastructure problems. You should consider additional fields to help with fast problem resolution. This blog’s APIs return an extended error response for server errors with the following format:
+API 500 errors most commonly occur due to either bugs, misconfiguration or temporary infrastructure problems. You should consider additional fields to help with fast problem resolution. This blog's APIs return an extended error response for server errors with the following format:
 
 ```json
 {
@@ -234,20 +234,20 @@ The three extra fields provide the *Where*, *Which* and *When* of the failure, t
 | Field | Meaning |
 | ----- | ------- |
 | area | Where in your API platform to look for the root cause. |
-| id | Which log entry in that API’s logs contains the error details. |
+| id | Which log entry in that API's logs contains the error details. |
 | utcTime | When the error occurred. |
 
 Note also that the *root cause of the error* may have been in an upstream API rather than the API that returned the error to the caller.
 
 ### Client 5xx Error Displays
 
-For API 5xx errors, the key difference is that this blog’s apps render the extra fields in the API response. This includes an *Error ID* to represent a particular occurrence of the error:
+For API 5xx errors, the key difference is that this blog's apps render the extra fields in the API response. This includes an *Error ID* to represent a particular occurrence of the error:
 
 ![500 error details](../images/290/500-error-details.jpg?v=20240913)
 
 ### API 5xx Error Logs
 
-For 5xx errors, this blog’s APIs log the error details in the following format. This includes client and service error details. The service details including a call stack and any other useful information that could explain the cause. Some error fields are denormalized, to support error queries:
+For 5xx errors, this blog's APIs log the error details in the following format. This includes client and service error details. The service details including a call stack and any other useful information that could explain the cause. Some error fields are denormalized, to support error queries:
 
 ```json
 
@@ -331,11 +331,11 @@ Typically 500 errors are the most difficult to reproduce or test, but the abilit
 - The right people have access to production logs.
 - People understand how the incident resolution process works.
 
-All of this blog’s final frontend code samples enable rehearsal of an API 500 error. To cause an API exception you long-press the *Reload Data* button for a few seconds, which results in the frontend sending a custom header to the API:
+All of this blog's final frontend code samples enable rehearsal of an API 500 error. To cause an API exception you long-press the *Reload Data* button for a few seconds, which results in the frontend sending a custom header to the API:
 
 ![error rehearsal](../images/290/error-rehearsal.jpg?v=20240913)
 
-This blog’s final APIs use a small middleware class to checks for a custom header and throws an exception when the header value matches the name of the API. This enables a basic form of chaos testing, where a client can choose which API to break.
+This blog's final APIs use a small middleware class to checks for a custom header and throws an exception when the header value matches the name of the API. This enables a basic form of chaos testing, where a client can choose which API to break.
 
 ```typescript
 export class CustomHeaderMiddleware {
@@ -344,7 +344,7 @@ export class CustomHeaderMiddleware {
 
         const apiToBreak = request.header('x-authsamples-test-exception');
         if (apiToBreak) {
-            if (apiToBreak.toLowerCase() === this._apiName.toLowerCase()) {
+            if (apiToBreak.toLowerCase() === this.apiName.toLowerCase()) {
 
                 throw ErrorFactory.createServerError(
                     BaseErrorCodes.exceptionSimulation,
@@ -374,7 +374,7 @@ BasicDesktopApp      |FinalApi      |getUserInfo           |500            |serv
 
 ### Error Coding Steps
 
-You can reason about error handling as the following main steps, which I use in this blog’s code samples:
+You can reason about error handling as the following main steps, which I use in this blog's code samples:
 
 | Step | Description |
 | ---- | ----------- |
@@ -390,21 +390,21 @@ When there is an exception, both clients and APIs collect exception-related data
 ```typescript
 export class ServerErrorImpl extends ServerError {
 
-    private readonly _statusCode: number;
-    private readonly _errorCode: string;
-    private readonly _instanceId: number;
-    private readonly _utcTime: string;
-    private _details: any;
+    private readonly statusCode: number;
+    private readonly errorCode: string;
+    private readonly instanceId: number;
+    private readonly utcTime: string;
+    private details: any;
 
     public constructor(errorCode: string, userMessage: string, stack?: string | undefined) {
 
         super(userMessage);
 
-        this._statusCode = 500;
-        this._errorCode = errorCode;
-        this._instanceId = Math.floor(Math.random() * (MAX_ERROR_ID - MIN_ERROR_ID + 1) + MIN_ERROR_ID);
-        this._utcTime = new Date().toISOString();
-        this._details = '';
+        this.statusCode = 500;
+        this.errorCode = errorCode;
+        this.instanceId = Math.floor(Math.random() * (MAX_ERROR_ID - MIN_ERROR_ID + 1) + MIN_ERROR_ID);
+        this.utcTime = new Date().toISOString();
+        this.details = '';
 
         if (stack) {
             this.stack = stack;
@@ -421,18 +421,18 @@ public async validateToken(accessToken: string): Promise<JWTPayload> {
     try {
 
         const options = {
-            algorithms: [this._configuration.algorithm],
-            issuer: this._configuration.issuer,
-            audience: this._configuration.audience,
+            algorithms: [this.configuration.algorithm],
+            issuer: this.configuration.issuer,
+            audience: this.configuration.audience,
         };
-        const result = await jwtVerify(accessToken, this._jwksRetriever.remoteJWKSet, options);
+        const result = await jwtVerify(accessToken, this.jwksRetriever.remoteJWKSet, options);
 
         return result.payload;
 
     } catch (e: any) {
 
         if (e.code === 'ERR_JOSE_GENERIC') {
-            throw ErrorUtils.fromSigningKeyDownloadError(e, this._configuration.jwksEndpoint);
+            throw ErrorUtils.fromSigningKeyDownloadError(e, this.configuration.jwksEndpoint);
         }
 
         let details = 'JWT verification failed';
@@ -464,7 +464,7 @@ export class UnhandledExceptionHandler {
         if (error instanceof ServerError) {
             
             logEntry.setServerError(error);
-            clientError = error.toClientError(this._configuration.apiName);
+            clientError = error.toClientError(this.configuration.apiName);
 
         } else {
 
@@ -487,31 +487,31 @@ export class ErrorFormatter {
 
         const lines: ErrorLine[] = [];
 
-        lines.push(this._createErrorLine('User Action', error.userAction, 'highlightcolor'));
+        lines.push(this.createErrorLine('User Action', error.userAction, 'highlightcolor'));
 
         if (error.message.length > 0) {
-            lines.push(this._createErrorLine('Info', error.message));
+            lines.push(this.createErrorLine('Info', error.message));
         }
 
         if (error.utcTime.length > 0) {
             const displayTime = moment(error.utcTime).format('DD MMM YYYY HH:mm:ss');
-            lines.push(this._createErrorLine('UTC Time', displayTime));
+            lines.push(this.createErrorLine('UTC Time', displayTime));
         }
 
         if (error.area.length > 0) {
-            lines.push(this._createErrorLine('Area', error.area));
+            lines.push(this.createErrorLine('Area', error.area));
         }
 
         if (error.errorCode.length > 0) {
-            lines.push(this._createErrorLine('Error Code', error.errorCode));
+            lines.push(this.createErrorLine('Error Code', error.errorCode));
         }
 
         if (error.instanceId > 0) {
-            lines.push(this._createErrorLine('Instance Id', error.instanceId.toString(), 'errorcolor'));
+            lines.push(this.createErrorLine('Instance Id', error.instanceId.toString(), 'errorcolor'));
         }
 
         if (error.statusCode > 0) {
-            lines.push(this._createErrorLine('Status Code', error.statusCode.toString()));
+            lines.push(this.createErrorLine('Status Code', error.statusCode.toString()));
         }
 
         return lines;
@@ -526,5 +526,5 @@ I explained some scalable techniques that I use in this blog when working with e
 
 ### Next
 
-- I summarise the behaviour of this blog’s <a href='api-architecture-node.mdx'>Final Node.js API</a>.
+- I summarise the behaviour of this blog's <a href='api-architecture-node.mdx'>Final Node.js API</a>.
 - For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

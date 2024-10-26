@@ -10,7 +10,7 @@ The following table summarises the main features of the code sample, some of whi
 | ------- | ----------- |
 | AppAuth Integration | We will implement the essential OpenID Connect behaviour by integrating the standard libraries |
 | Claimed HTTPS Schemes | The login result is returned to the app over HTTPS URLs, which is the most secure option according to security guidance |
-| Secure Token Storage | Tokens are stored securely on the device after login, so that users don’t need to authenticate on every app restart |
+| Secure Token Storage | Tokens are stored securely on the device after login, so that users don't need to authenticate on every app restart |
 | Deep Linking | The app also supports HTTPS Universal Links, so that users can bookmark locations within the app |
 
 ### Code Download
@@ -45,7 +45,7 @@ Our iOS App will be coded entirely in [Swift and SwiftUI](https://developer.appl
 
 ### Security Recommendations
 
-There are risks with mobile apps that a malicious third party could install an app that uses our app’s *Client ID* and *Redirect URI*, so we will follow high security recommendations, to use *Claimed HTTP Schemes*:
+There are risks with mobile apps that a malicious third party could install an app that uses our app's *Client ID* and *Redirect URI*, so we will follow high security recommendations, to use *Claimed HTTP Schemes*:
 
 - [Financial Grade APIs / Native Apps](https://openid.net/specs/openid-financial-api-part-1-ID2.html#native-apps)
 
@@ -61,7 +61,7 @@ AppAuth user logins will be via an [ASWebAuthenticationSession](https://dev.to/r
     <img src='../images/540/aswebauthenticationsession-start.jpg?v=20240914' alt='aswebauthenticationsession start' />
 </div>
 
-The user is then presented with the main login window, which is external to the app and acts as a secure sandbox, so that the app itself never has access to the user’s password:
+The user is then presented with the main login window, which is external to the app and acts as a secure sandbox, so that the app itself never has access to the user's password:
 
 <div className='smallimage'>
     <img src='../images/540/aswebauthenticationsession-login.jpg?v=20240914' alt='aswebauthenticationsession login' />
@@ -82,7 +82,7 @@ The following problems exist if you perform login redirects on a normal mobile w
 | Single Sign On | Cookies will not be shared with other apps and are likely to be dropped more aggressively within your own app |
 | Could be Blocked | Google is an example of an identity provider that [blocks logins on a mobile web view](https://auth0.com/blog/google-blocks-oauth-requests-from-embedded-browsers) |
 
-### Our Sample’s Login Usability Features
+### Our Sample's Login Usability Features
 
 Using an ASWebAuthenticationSession window will provide the best chance of password autofill working, so that the user does not need to continually remember their password. After login we will store the *OAuth Refresh Token* on the device, using secure operating system storage private to the app. This ensures that, on subsequent application restarts, the first thing the user sees is the app.
 
@@ -100,7 +100,7 @@ The user must then set a *passcode* or *fingerprint* in order to resume using th
 
 ### Password Autofill Details
 
-To use password autofill it must first be enabled in system settings on the iOS device. On the initial login the user will need to type in their credentials. By default the ASWebAuthenticationSession window will immediately disappear after login and the user will be unable to use the system’s *Save Password* feature. We will resolve this problem by presenting a *Post Login Page* after authentication but before the browser window is closed.
+To use password autofill it must first be enabled in system settings on the iOS device. On the initial login the user will need to type in their credentials. By default the ASWebAuthenticationSession window will immediately disappear after login and the user will be unable to use the system's *Save Password* feature. We will resolve this problem by presenting a *Post Login Page* after authentication but before the browser window is closed.
 
 <div className='smallimage'>
     <img src='../images/540/save-password-prompt.jpg' alt='save password prompt' />
@@ -128,7 +128,7 @@ The session buttons help to ensure that navigation is reliable within the app as
 
 ### Logout
 
-The sample also implements <a href='logout.mdx'>Open ID Connect RP-Initiated Logout</a>, to remove the authorization server’s session cookie. In a real-world app a logout capability enables you to test data access for different users with different settings or permissions. One annoyance is that the ASWebAuthenticationSession indicates *Sign In* during the logout redirect, rather then *Sign Out*:
+The sample also implements <a href='logout.mdx'>Open ID Connect RP-Initiated Logout</a>, to remove the authorization server's session cookie. In a real-world app a logout capability enables you to test data access for different users with different settings or permissions. One annoyance is that the ASWebAuthenticationSession indicates *Sign In* during the logout redirect, rather then *Sign Out*:
 
 <div className='smallimage'>
     <img src='../images/540/aswebauthenticationsession-start.jpg?v=20240914' alt='logout prompt' />
@@ -183,11 +183,11 @@ There are three scenarios where we will redirect the user on the ASWebAuthentica
 | ------------- | ----------- |
 | Login | The user is interactively prompted to login |
 | Single Sign On | The user already has a valid session cookie and signs in automatically without a login screen |
-| Logout | The user’s session cookie is removed, with no prompt |
+| Logout | The user's session cookie is removed, with no prompt |
 
 In each case, there needs to be a screen before invoking the deep link. You may find using the OpenID Connect *prompt=login* parameter on every login redirect is reliable. In this blog I instead use a custom intermediate page, partly because AWS Cognito does not yet support the *prompt* parameter.
 
-### This Blog’s Intermediate Web Pages
+### This Blog's Intermediate Web Pages
 
 This blog uses the following custom *AWS Hosted Web Pages* that are returned to after login / logout redirects. A real company could present its own branded pages instead.
 
@@ -206,7 +206,7 @@ ASWebAuthenticationSession based logins have usability benefits, but they also a
 | Test Case | Description |
 | --------- | ----------- |
 | Change Orientation | The user switches between portrait and landscape |
-| Reactivate App | The user switches to another app and then re-runs our app from the home screen via the app’s shortcut |
+| Reactivate App | The user switches to another app and then re-runs our app from the home screen via the app's shortcut |
 | Deep Link | The user selects a deep link message from an email |
 
 ### Where Are We?

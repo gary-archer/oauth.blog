@@ -10,7 +10,7 @@ This means, to limit the impact of Cross Site Scripting (XSS) exploits, single p
 
 ### High Level Requirements
 
-At a higher level, there were three main requirements I wanted to meet for this blog’s final SPA. When first writing this blog I struggled for quite some time to meet all of them.
+At a higher level, there were three main requirements I wanted to meet for this blog's final SPA. When first writing this blog I struggled for quite some time to meet all of them.
 
 | Requirement | Description |
 | ----------- | ----------- |
@@ -20,7 +20,7 @@ At a higher level, there were three main requirements I wanted to meet for this 
 
 The cookie requirement is an awkward one for SPAs. When developing SPAs and APIs you should not need to return to older website technology stacks. The key technique to maintain an SPA architecture and meet all three requirements is to use API-driven cookie issuing,
 
-### This Blog’s Backend for Frontend
+### This Blog's Backend for Frontend
 
 In 2021 I adopted the *Token Handler Pattern* which consists of the following API components that implement cookie security. These components are stateless and easy to manage, since cookies contain all state. You deploy cookie issuing APIs and they do not need to run on the computers of web developers.
 
@@ -35,7 +35,7 @@ I illustrate the overall components here, where the token handler acts as an adv
 
 ![components](../images/210/components.jpg)
 
-I deploy the final SPA’s web content as an [AWS CloudFront Distribution](https://aws.amazon.com/cloudfront/) and static web files do not need securing. The SPA calls a business API that does not do any cookie processing. The API uses exactly the same code to handle requests from web, desktop and mobile clients.
+I deploy the final SPA's web content as an [AWS CloudFront Distribution](https://aws.amazon.com/cloudfront/) and static web files do not need securing. The SPA calls a business API that does not do any cookie processing. The API uses exactly the same code to handle requests from web, desktop and mobile clients.
 
 ### API Driven Cookie Issuing
 
@@ -72,7 +72,7 @@ Even more important than deployed environments is the local development environm
 | OAuth Agent | *https://bff.authsamples-dev.com/oauth-agent* |
 | Authorization Server | *https://login.authsamples.com* |
 
-For local development URLs I used a hostname suffix of *-dev*. The *authsamples-dev.com* site represents components that run on the local computer. Yet the *bff* subdomain runs in AWS, solely to support local SPA development. For the web origin and API routes to work together, you must alias the web domain to *localhost* in your computer’s hosts file:
+For local development URLs I used a hostname suffix of *-dev*. The *authsamples-dev.com* site represents components that run on the local computer. Yet the *bff* subdomain runs in AWS, solely to support local SPA development. For the web origin and API routes to work together, you must alias the web domain to *localhost* in your computer's hosts file:
 
 ```markdown
 127.0.0.1 www.authsamples-dev.com

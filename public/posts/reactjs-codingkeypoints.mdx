@@ -21,7 +21,7 @@ The final SPA is a React app that runs at a */spa* path. Additional paths, for o
     <img src='../images/240/spa-code.jpg' alt='spa code' />
 </div>
 
-From a security viewpoint, any additional apps added to the web domain should be for the same business area. All apps then share each other’s API cookies and also each other’s cross site scripting threats.
+From a security viewpoint, any additional apps added to the web domain should be for the same business area. All apps then share each other's API cookies and also each other's cross site scripting threats.
 
 ### HTML Markup
 
@@ -52,21 +52,21 @@ The final SPA uses the same HTML markup as earlier SPAs:
 
 ### Web Host
 
-The final SPA could use any web static content host, but this component should always be lightweight and never interferes with the frontend experience. For development I use the full-featured Express HTTP server for local testing of production web behaviours, like its content security policy. The web host's logic serves the SPA’s static content from the */spa* folder. Other folders could be added in future, for additional micro-frontends:
+The final SPA could use any web static content host, but this component should always be lightweight and never interferes with the frontend experience. For development I use the full-featured Express HTTP server for local testing of production web behaviours, like its content security policy. The web host's logic serves the SPA's static content from the */spa* folder. Other folders could be added in future, for additional micro-frontends:
 
 ```typescript
 public initialise(): void {
 
     const spaBasePath = '/spa/';
-    const spaRoot = this._getSpaFilesBasePath();
-    this._express.use(spaBasePath, express.static(spaRoot));
+    const spaRoot = this.getSpaFilesBasePath();
+    this.express.use(spaBasePath, express.static(spaRoot));
 
-    this._express.get('*', (request, response) => {
+    this.express.get('*', (request, response) => {
 
         const requestPath = request.path.toLowerCase();
         if (requestPath === '/favicon.ico') {
 
-            const root = this._getRootFilesBasePath();
+            const root = this.getRootFilesBasePath();
             response.sendFile('favicon.ico', {root});
 
         } else if (requestPath.startsWith(spaBasePath)) {
@@ -160,7 +160,7 @@ return (
 
 ### Mobile First Layout
 
-I deploy the demo SPA’s static content to the AWS content delivery network. Since it is available online, I used Bootstrap's features to make the mobile layout basically presentable. In the transactions view the following markup shows 3 items per row on large screens, 2 items per row on medium screens and only a single item per row on small mobile devices:
+I deploy the demo SPA's static content to the AWS content delivery network. Since it is available online, I used Bootstrap's features to make the mobile layout basically presentable. In the transactions view the following markup shows 3 items per row on large screens, 2 items per row on medium screens and only a single item per row on small mobile devices:
 
 ```jsx
 <div className='col-lg-4 col-md-6 col-xs-12' key={transaction.id} />
@@ -208,16 +208,16 @@ Views get recreated frequently, whereas I manage application state within view m
 ```typescript
 public getCompaniesViewModel(): CompaniesContainerViewModel {
 
-    if (!this._companiesViewModel) {
+    if (!this.companiesViewModel) {
 
-        this._companiesViewModel = new CompaniesContainerViewModel(
+        this.companiesViewModel = new CompaniesContainerViewModel(
             this.fetchClient!,
-            this._eventBus,
-            this._viewModelCoordinator!,
+            this.eventBus,
+            this.viewModelCoordinator!,
         );
     }
 
-    return this._companiesViewModel;
+    return this.companiesViewModel;
 }
 ```
 
@@ -225,7 +225,7 @@ This technique is a basic but portable way to manage application state in fronte
 
 ### Separation of View Logic from General Logic
 
-I use the React framework’s hook-based syntax to develop the SPA’s views. In mobile development I use other frameworks, such as SwiftUI, which have their own view syntax.
+I use the React framework's hook-based syntax to develop the SPA's views. In mobile development I use other frameworks, such as SwiftUI, which have their own view syntax.
 
 ```typescript
 export function CompaniesContainer(props: CompaniesContainerProps): JSX.Element {
@@ -244,7 +244,7 @@ I avoid the use of frameworks like React or SwiftUI for non-view logic, such as 
 
 ### Triggering API Requests
 
-For views that call APIs, data loading typically begins when the [useEffect hook](https://reactjs.org/docs/hooks-effect.html) executes. The view’s *startup* method calls a *loadData* method to trigger API requests. The *Reload Data* button also invokes the *loadData* method.
+For views that call APIs, data loading typically begins when the [useEffect hook](https://reactjs.org/docs/hooks-effect.html) executes. The view's *startup* method calls a *loadData* method to trigger API requests. The *Reload Data* button also invokes the *loadData* method.
 
 ```typescript
 async function startup(): Promise<void> {
@@ -272,24 +272,24 @@ public async callApi(options?: ViewLoadOptions): Promise<void> {
         causeError: options?.causeError || false,
     };
 
-    this._viewModelCoordinator.onMainViewModelLoading();
-    this._updateError(null);
+    this.viewModelCoordinator.onMainViewModelLoading();
+    this.updateError(null);
 
     try {
 
-        const result = await this._fetchClient.getCompanyList(fetchOptions);
+        const result = await this.fetchClient.getCompanyList(fetchOptions);
         if (result) {
-            this._updateCompanies(result);
+            this.updateCompanies(result);
         }
 
     } catch (e: any) {
 
-        this._updateError(ErrorFactory.fromException(e));
-        this._updateCompanies([]);
+        this.updateError(ErrorFactory.fromException(e));
+        this.updateCompanies([]);
 
     } finally {
 
-        this._viewModelCoordinator.onMainViewModelLoaded(fetchOptions.cacheKey);
+        this.viewModelCoordinator.onMainViewModelLoaded(fetchOptions.cacheKey);
     }
 }
 ```
@@ -326,15 +326,15 @@ Clients that use tokens can determine whether the user is authenticated by the p
 The fetch client throws an error with a *login_required* error code when it is asked to call APIs but *isLoggedIn* is not set to true. For the final SPA this error could occur concurrently, so the SPA handles the condition using a *ViewModelCoordinator* object. After all view models have tried to load, if there is one or more errors with a *login_required* error code, an event is published. This main application view subscribes to this event and then triggers a login redirect.
 
 ```typescript
-private _handleErrorsAfterLoad(): void {
+private handleErrorsAfterLoad(): void {
 
-    if (this._loadedCount === this._loadingCount) {
+    if (this.loadedCount === this.loadingCount) {
 
-        const errors = this._getLoadErrors();
+        const errors = this.getLoadErrors();
 
         const loginRequired = errors.find((e) => e.errorCode === ErrorCodes.loginRequired);
         if (loginRequired) {
-            this._eventBus.emit(EventNames.LoginRequired, new LoginRequiredEvent());
+            this.eventBus.emit(EventNames.LoginRequired, new LoginRequiredEvent());
             return;
         }
     }
@@ -365,7 +365,7 @@ public async login(currentLocation: string): Promise<void> {
 
     try {
 
-        const response = await this._callOAuthAgent('POST', 'login/start');
+        const response = await this.callOAuthAgent('POST', 'login/start');
         HtmlStorageHelper.preLoginLocation = currentLocation;
         location.href = response.authorizationRequestUrl;
 
@@ -392,7 +392,7 @@ public async handlePageLoad(): Promise<string | null> {
                 const request = {
                     pageUrl: location.href,
                 };
-                const response = await this._callOAuthAgent(
+                const response = await this.callOAuthAgent(
                     'POST',
                     'login/end',
                     request) as EndLoginResponse;
@@ -406,7 +406,7 @@ public async handlePageLoad(): Promise<string | null> {
 
             } catch (e: any) {
 
-                if (this._isSessionExpiredError(e)) {
+                if (this.isSessionExpiredError(e)) {
                     return null;
                 }
 
@@ -426,7 +426,7 @@ The SPA retains full control over login usability. Rather than using a few lines
 After login the SPA uses *HttpOnly SameSite=strict Secure* cookies to call APIs. The SPA must use the *withCredentials* flag to instruct the browser to send cookies to its backend for frontend. The SPA sends a custom header to enforce CORS preflight requests, as a CSRF prevention best practice. The SPA also sends some custom headers to the API for logging purposes.
 
 ```typescript
-private async _callApiWithCredential(
+private async callApiWithCredential(
     method: Method,
     url: string,
     fetchOptions: FetchOptions,
@@ -435,7 +435,7 @@ private async _callApiWithCredential(
     const headers: any = {
         'token-handler-version':        '1',
         'x-authsamples-api-client':     'FinalSPA',
-        'x-authsamples-session-id':     this._sessionId,
+        'x-authsamples-session-id':     this.sessionId,
         'x-authsamples-correlation-id': Guid.create().toString(),
     };
 
@@ -455,12 +455,12 @@ private async _callApiWithCredential(
 When the current access token expires, the SPA makes a token refresh request to get new tokens and rewrite cookies with new tokens. The SPA then retries the original API request with updated cookies. It is also possible that the user could close all browser windows when the *isLoggedIn=true* flag is set. The next time the user runs the app, session cookies are no longer present and APIs return 401 responses. The SPA, and this blog's native apps, cope reliably with these conditions using the following overall algorithm for API requests:
 
 ```typescript
-if (!this._authenticator.isLoggedIn()) {
+if (!this.authenticator.isLoggedIn()) {
     throw loginRequiredError;
 }
 
 try {
-    return await this._callApiWithCredential(method, url, options, dataToSend);
+    return await this.callApiWithCredential(method, url, options, dataToSend);
 
 } catch (e1: any) {
 
@@ -470,7 +470,7 @@ try {
     }
 
     try {
-        await this._authenticator.synchronizedRefresh();
+        await this.authenticator.synchronizedRefresh();
 
     } catch (e2: any) {
 
@@ -479,7 +479,7 @@ try {
 
     try {
 
-        return await this._callApiWithCredential(method, url, options, dataToSend);
+        return await this.callApiWithCredential(method, url, options, dataToSend);
 
     }  catch (e3: any) {
         throw ErrorFactory.fromHttpError(e3, url, 'API');
@@ -506,28 +506,28 @@ public async execute(action: () => Promise<void>): Promise<void> {
             reject(error);
         };
 
-        this._callbacks.push([onSuccess, onError]);
+        this.callbacks.push([onSuccess, onError]);
     });
 
-    const performAction = this._callbacks.length === 1;
+    const performAction = this.callbacks.length === 1;
     if (performAction) {
 
         try {
 
             await action();
 
-            this._callbacks.forEach((c) => {
+            this.callbacks.forEach((c) => {
                 c[0]();
             });
 
         } catch (e) {
 
-            this._callbacks.forEach((c) => {
+            this.callbacks.forEach((c) => {
                 c[1](e);
             });
         }
 
-        this._callbacks = [];
+        this.callbacks = [];
     }
 
     return promise;

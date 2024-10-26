@@ -26,7 +26,7 @@ One reason to improve the dependency management is to enable the request scoped 
 
 ### Application Startup Logic
 
-Our API starts by running the *app.ts* file, which creates the container and then runs an *HttpServerConfiguration* object to set up the Express web server and the application’s dependencies:
+Our API starts by running the *app.ts* file, which creates the container and then runs an *HttpServerConfiguration* object to set up the Express web server and the application's dependencies:
 
 ```typescript
 const loggerFactory = LoggerFactoryBuilder.create();
@@ -52,15 +52,15 @@ The *HttpServerConfiguration* class configures an *Inversify Express Server*, wh
 
 ```typescript
 attributes and set up controller autowiring
-new InversifyExpressServer(this._container, null, {rootPath: '/investments/'}, this._expressApp)
+new InversifyExpressServer(this.container, null, {rootPath: '/investments/'}, this.expressApp)
     .setConfig(() => {
 
-        this._expressApp.set('etag', false);
-        base.configureMiddleware(this._expressApp);
+        this.expressApp.set('etag', false);
+        base.configureMiddleware(this.expressApp);
     })
     .setErrorConfig(() => {
 
-        base.configureExceptionHandler(this._expressApp);
+        base.configureExceptionHandler(this.expressApp);
     })
     .build();
 ```
@@ -75,15 +75,15 @@ Our startup logic also performs [DI Composition](https://freecontent.manning.com
 ```typescript
 public async configure(): Promise<void> {
 
-    const base = new BaseCompositionRoot(this._container)
+    const base = new BaseCompositionRoot(this.container)
         .useApiBasePath('/investments/')
-        .useOAuth(this._configuration.oauth)
+        .useOAuth(this.configuration.oauth)
         .withExtraClaimsProvider(new SampleExtraClaimsProvider())
-        .withLogging(this._configuration.logging, this._loggerFactory)
-        .withProxyConfiguration(this._configuration.api.useProxy, this._configuration.api.proxyUrl)
+        .withLogging(this.configuration.logging, this.loggerFactory)
+        .withProxyConfiguration(this.configuration.api.useProxy, this.configuration.api.proxyUrl)
         .register();
 
-    CompositionRoot.registerDependencies(this._container);
+    CompositionRoot.registerDependencies(this.container);
 }
 ```
 
@@ -97,18 +97,18 @@ The *BaseCompositionRoot* object represents initialisation of common code, which
 Inversify uses the following type of syntax to register dependencies:
 
 ```typescript
-private _registerBaseDependencies(): void {
+private registerBaseDependencies(): void {
 
-    this._container.bind(BASETYPES.UnhandledExceptionHandler)
-        .toConstantValue(this._exceptionHandler!);
-    this._container.bind(BASETYPES.LoggerFactory)
-        .toConstantValue(this._loggerFactory!);
-    this._container.bind(BASETYPES.LoggingConfiguration)
-        .toConstantValue(this._loggingConfiguration!);
-    this._container.bind(BASETYPES.HttpProxy)
-        .toConstantValue(this._httpProxy!);
+    this.container.bind(BASETYPES.UnhandledExceptionHandler)
+        .toConstantValue(this.exceptionHandler!);
+    this.container.bind(BASETYPES.LoggerFactory)
+        .toConstantValue(this.loggerFactory!);
+    this.container.bind(BASETYPES.LoggingConfiguration)
+        .toConstantValue(this.loggingConfiguration!);
+    this.container.bind(BASETYPES.HttpProxy)
+        .toConstantValue(this.httpProxy!);
 
-    this._container.bind(BASETYPES.LogEntry)
+    this.container.bind(BASETYPES.LogEntry)
         .toConstantValue({} as any);
 }
 ```
@@ -120,18 +120,18 @@ As part of composing base dependencies, middleware classes for cross cutting con
 ```typescript
 public configureMiddleware(expressApp: Application): void {
 
-    this._loggerMiddleware = new LoggerMiddleware(this._loggerFactory!);
-    expressApp.use(`${this._apiBasePath}*`, this._loggerMiddleware.logRequest);
+    this.loggerMiddleware = new LoggerMiddleware(this.loggerFactory!);
+    expressApp.use(`${this.apiBasePath}*`, this.loggerMiddleware.logRequest);
 
-    this._authorizerMiddleware = new AuthorizerMiddleware();    
-    expressApp.use(`${this._apiBasePath}*`, this._authorizerMiddleware!.authorize);
+    this.authorizerMiddleware = new AuthorizerMiddleware();    
+    expressApp.use(`${this.apiBasePath}*`, this.authorizerMiddleware!.authorize);
 
-    const handler = new CustomHeaderMiddleware(this._loggingConfiguration!.apiName);
-    expressApp.use(`${this._apiBasePath}*`, handler.processHeaders);
+    const handler = new CustomHeaderMiddleware(this.loggingConfiguration!.apiName);
+    expressApp.use(`${this.apiBasePath}*`, handler.processHeaders);
 }
 ```
 
-The role of each of the API’s middleware classes is summarised below:
+The role of each of the API's middleware classes is summarised below:
 
 | Middleware Class | Responsibility |
 | ---------------- | -------------- |
@@ -148,13 +148,13 @@ As is common in other API technology stacks, our final Node.js sample uses metho
 @controller('/companies')
 export class CompanyController extends BaseHttpController {
 
-    private readonly _service: CompanyService;
+    private readonly service: CompanyService;
 
     public constructor(
         @inject(SAMPLETYPES.CompanyService) service: CompanyService) {
 
         super();
-        this._service = service;
+        this.service = service;
     }
 
     @httpGet('')
@@ -216,12 +216,12 @@ The log entry is a natural request scoped object and is created in the *LoggerMi
 ```typescript
 public logRequest(request: Request, response: Response, next: NextFunction): void {
 
-    const logEntry = this._loggerFactory.createLogEntry();
+    const logEntry = this.loggerFactory.createLogEntry();
     const container = ChildContainerHelper.resolve(request);
     container.bind(BASETYPES.LogEntry).toConstantValue(logEntry);
 
     logEntry.start(request);
-    logEntry.processRoutes(request, this._routeMetadataHandler);
+    logEntry.processRoutes(request, this.routeMetadataHandler);
 
     response.on('finish', () => {
         logEntry.end(response);
@@ -238,23 +238,23 @@ The log entry class can also be injected into business logic, which can contribu
 @injectable()
 export class CompanyRepository {
 
-    private readonly _jsonReader: JsonFileReader;
-    private readonly _logEntry: LogEntry;
+    private readonly jsonReader: JsonFileReader;
+    private readonly logEntry: LogEntry;
 
     public constructor(
         @inject(SAMPLETYPES.JsonFileReader) jsonReader: JsonFileReader,
         @inject(BASETYPES.LogEntry) logEntry: LogEntry) {
 
-        this._jsonReader = jsonReader;
-        this._logEntry = logEntry;
-        this._setupCallbacks();
+        this.jsonReader = jsonReader;
+        this.logEntry = logEntry;
+        this.setupCallbacks();
     }
 
     public async getCompanyList(): Promise<Company[]> {
 
-        return using(this._logEntry.createPerformanceBreakdown('selectCompanyListData'), async () => {
+        return using(this.logEntry.createPerformanceBreakdown('selectCompanyListData'), async () => {
 
-            return this._jsonReader.readData<Company[]>('data/companyList.json');
+            return this.jsonReader.readData<Company[]>('data/companyList.json');
         });
     }
 }
@@ -266,7 +266,7 @@ Logging classes write to a log file and, if the <a href='log-aggregation-setup.m
 
 ### Error Handling Implementation
 
-The API implements this blog’s <a href='error-handling-and-supportability.mdx'>Error Handling and Supportability</a> design. By default all errors escape to a global exception handler, whose role is to log errors and return an error response to the caller:
+The API implements this blog's <a href='error-handling-and-supportability.mdx'>Error Handling and Supportability</a> design. By default all errors escape to a global exception handler, whose role is to log errors and return an error response to the caller:
 
 ```typescript
 public handleException(exception: any, request: Request, response: Response, next: NextFunction): void {
@@ -279,7 +279,7 @@ public handleException(exception: any, request: Request, response: Response, nex
     let clientError;
     if (error instanceof ServerError) {
         logEntry.setServerError(error);
-        clientError = error.toClientError(this._configuration.apiName);
+        clientError = error.toClientError(this.configuration.apiName);
     } else {
         logEntry.setClientError(error);
         clientError = error;
@@ -350,10 +350,10 @@ Error output for developers has a *productive and readable format*, and producti
 }
 ```
 
-By default our exception handler treats unknown errors as general exceptions and returns a 500 response. For closer control of the response, the API’s logic can throw a *ServerError* or *ClientError* derived instance:
+By default our exception handler treats unknown errors as general exceptions and returns a 500 response. For closer control of the response, the API's logic can throw a *ServerError* or *ClientError* derived instance:
 
 ```typescript
-private _unauthorizedError(companyId: number): ClientError {
+private unauthorizedError(companyId: number): ClientError {
 
     throw ErrorFactory.createClientError(
         404,
@@ -364,7 +364,7 @@ private _unauthorizedError(companyId: number): ClientError {
 
 ### Portability
 
-The above code is mainstream and can be implemented in any technology stack. This blog’s .NET and Java APIs will be coded in an almost identical manner.
+The above code is mainstream and can be implemented in any technology stack. This blog's .NET and Java APIs will be coded in an almost identical manner.
 
 ### Where Are We?
 

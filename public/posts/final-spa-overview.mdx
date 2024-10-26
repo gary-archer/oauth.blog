@@ -14,7 +14,7 @@ The final SPA improves on the previous <a href='improved-spa-code-sample-overvie
 
 ### Cloud Hosting
 
-I deploy the overall system of the SPA and APIs to AWS. I upload the SPA’s web static content to S3, then CloudFront replicates the web resources to ~400 global locations, without the need to manage servers or containers:
+I deploy the overall system of the SPA and APIs to AWS. I upload the SPA's web static content to S3, then CloudFront replicates the web resources to ~400 global locations, without the need to manage servers or containers:
 
 ![aws technologies](../images/220/aws-technologies.jpg)
 
@@ -22,7 +22,7 @@ I deploy the API code sample to AWS as <a href='serverless-api-overview.mdx'>Ser
 
 ### Online Deployment
 
-Any reader can run the AWS deployed version of the SPA from this blog's <a href='quick-start.mdx'>Cloud Samples Quick Start</a> page. You can sign in to the SPA with a test user account, then test OAuth lifecycle events via the demo app’s buttons:
+Any reader can run the AWS deployed version of the SPA from this blog's <a href='quick-start.mdx'>Cloud Samples Quick Start</a> page. You can sign in to the SPA with a test user account, then test OAuth lifecycle events via the demo app's buttons:
 
 ![online spa](../images/220/online-spa.jpg?v=20240713)
 
@@ -58,7 +58,7 @@ A second entry exists to run the SPA during development, which has an equivalent
 
 ### React Code
 
-The SPA’s code now uses React as a web framework, to enable better features during coding of views. The SPA renders a tree of views which leads to concurrent API requests. The SPA must synchronise the triggering of both token renewal and user re-authentication when tokens expire.
+The SPA's code now uses React as a web framework, to enable better features during coding of views. The SPA renders a tree of views which leads to concurrent API requests. The SPA must synchronise the triggering of both token renewal and user re-authentication when tokens expire.
 
 ```jsx
 return (
@@ -82,7 +82,7 @@ return (
 
 ### Path Based Routing
 
-Earlier SPAs in this blog used hash-based routing. The final SPA instead uses React’s support for path-based routes. The SPA continues to use a *base* path expressed in the index.html file:
+Earlier SPAs in this blog used hash-based routing. The final SPA instead uses React's support for path-based routes. The SPA continues to use a *base* path expressed in the index.html file:
 
 ```html
 <!DOCTYPE html>

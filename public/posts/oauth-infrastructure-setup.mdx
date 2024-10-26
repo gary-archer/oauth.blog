@@ -4,7 +4,7 @@ The previous post explained <a href='jwt-access-token-validation.mdx'>JWT Access
 
 ### Step 1: Define Base URLs
 
-When working with OAuth, I recommend designing URLs for a development computer, to enable the most productive setups. I use the following base URLs for this blog’s code samples:
+When working with OAuth, I recommend designing URLs for a development computer, to enable the most productive setups. I use the following base URLs for this blog's code samples:
 
 | Development Base URL | Description |
 | -------------------- | ----------- |
@@ -29,7 +29,7 @@ For the first code sample, you configure the following subdomains. By using real
 
 ### Step 2: Choose an Initial Authorization Server
 
-By default, this blog’s code samples point to my low cost deployment of the AWS Cognito authorization server at *https://login.authsamples.com*. Anyone can run frontend code samples that point to it, then sign in and run an OAuth application lifecycle.
+By default, this blog's code samples point to my low cost deployment of the AWS Cognito authorization server at *https://login.authsamples.com*. Anyone can run frontend code samples that point to it, then sign in and run an OAuth application lifecycle.
 
 ![authorization server domain](../images/80/domain.jpg)
 
@@ -37,7 +37,7 @@ A key point when starting with OAuth is to point your apps to HTTPS endpoints de
 
 | Type | Description |
 | ---- | ----------- |
-| Cloud Hosted | A cloud platform’s authorization server, such as those from AWS or Microsoft, with internet OAuth endpoints. |
+| Cloud Hosted | A cloud platform's authorization server, such as those from AWS or Microsoft, with internet OAuth endpoints. |
 | Cloud Native | A docker based authorization server, with local OAuth endpoints and better visibility into how the authorization server works. |
 
 Either provides a convenient option when getting started with OAuth. This blog shows how to integrate user-facing apps and APIs, using portable code. Your applications are then compliant with any standards-based authorization server.
@@ -65,7 +65,7 @@ An authorization server should enable many possible ways for users to authentica
 
 ![login user experience](../images/80/login-ux.jpg)
 
-This blog’s frontend code samples all perform an authorization code flow and therefore support many other ways to authenticate users. To update to a different method, you would reconfigure your authorization server. No application code would need to change.
+This blog's frontend code samples all perform an authorization code flow and therefore support many other ways to authenticate users. To update to a different method, you would reconfigure your authorization server. No application code would need to change.
 
 ### Step 6: Locate Open ID Connect Metadata
 
@@ -113,10 +113,10 @@ Frontend apps are registered as OAuth clients using an administration user inter
 
 ### Step 8: Configure Token Lifetimes
 
-The configuration of OAuth clients includes token lifetimes. This blog’s code samples use the following example values:
+The configuration of OAuth clients includes token lifetimes. This blog's code samples use the following example values:
 
-- The access token lifetime is *15 minutes* and access tokens may expire multiple times during the user’s authenticated session.
-- The refresh token lifetime is *12 hours*, which becomes the maximum time for the user’s authenticated session against APIs.
+- The access token lifetime is *15 minutes* and access tokens may expire multiple times during the user's authenticated session.
+- The refresh token lifetime is *12 hours*, which becomes the maximum time for the user's authenticated session against APIs.
 - The ID token lifetime is also *12 hours*, though this time is not used.
 
 ![token lifetimes](../images/80/token-lifetimes.jpg)
@@ -183,5 +183,5 @@ I explained a thought process for an initial setup, to get started with OAuth de
 
 ### Next
 
-- Next I explain this blog’s <a href='web-technology-setup.mdx'>JavaScript Technology Setup</a>.
+- Next I explain this blog's <a href='web-technology-setup.mdx'>JavaScript Technology Setup</a>.
 - For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

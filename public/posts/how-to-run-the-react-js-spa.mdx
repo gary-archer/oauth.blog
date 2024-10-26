@@ -14,7 +14,7 @@ git clone https://github.com/gary-archer/oauth.websample.final
 
 ### Step 2: Add Domains to your Computer
 
-You need to use this blog’s web development domain. Add a local DNS entry in your hosts file, which exists at one of these locations:
+You need to use this blog's web development domain. Add a local DNS entry in your hosts file, which exists at one of these locations:
 
 | OS | Path |
 | -- | ---- |
@@ -151,11 +151,11 @@ referrer-policy: same-origin
 
 ### Local API Setup
 
-It is also possible to run an API that provides the SPA’s data on the local computer, but you then need to manage cookies for this routing. One way to do so is to run a local token handler. To do so, first ensure that a docker engine is installed, and also the *envsubst* tool.
+It is also possible to run an API that provides the SPA's data on the local computer, but you then need to manage cookies for this routing. One way to do so is to run a local token handler. To do so, first ensure that a docker engine is installed, and also the *envsubst* tool.
 
 ### Step A: Run the API
 
-Select one of this blog’s final APIs from the below list, and follow its instructions, to run the API on port 446:
+Select one of this blog's final APIs from the below list, and follow its instructions, to run the API on port 446:
 
 - <a href='api-architecture-node.mdx'>Node.js API</a>
 - <a href='net-core-code-sample-overview.mdx'>.NET API</a>
@@ -163,7 +163,7 @@ Select one of this blog’s final APIs from the below list, and follow its instr
 
 ### Step B: Update DNS
 
-Next, add the API subdomain and local backend for frontend domain to your computer’s hosts file:
+Next, add the API subdomain and local backend for frontend domain to your computer's hosts file:
 
 ```markdown
 127.0.0.1  localhost www.authsamples-dev.com api.authsamples-dev.com bfflocal.authsamples-dev.com
@@ -171,7 +171,7 @@ Next, add the API subdomain and local backend for frontend domain to your comput
 
 ### Step C: Run the SPA against a Local API
 
-To make the SPA connect to one of this blog’s final APIs, first ensure that the API is running. Then use a *LOCALAPI* parameter when running the scripts described earlier:
+To make the SPA connect to one of this blog's final APIs, first ensure that the API is running. Then use a *LOCALAPI* parameter when running the scripts described earlier:
 
 ```bash
 export LOCALAPI=true
@@ -179,7 +179,7 @@ export LOCALAPI=true
 ./run.sh
 ```
 
-This runs some utility token handler components in a small docker compose network. You can study the deployment resources to get a feel for how this works. The SPA’s configuration then routes to the API via the local backend for frontend rather than the cloud BFF:
+This runs some utility token handler components in a small docker compose network. You can study the deployment resources to get a feel for how this works. The SPA's configuration then routes to the API via the local backend for frontend rather than the cloud BFF:
 
 ```json
 {

@@ -17,7 +17,7 @@ Our web pages are first uploaded to an AWS S3 bucket:
 
 ![s3 bucket](../images/520/s3-bucket.jpg?v=20240912)
 
-They are then included in one of this blog’s <a href='cdn-static-content-delivery.mdx'>CloudFront Distributions</a>, so that the pages are served over an HTTPS URL:
+They are then included in one of this blog's <a href='cdn-static-content-delivery.mdx'>CloudFront Distributions</a>, so that the pages are served over an HTTPS URL:
 
 ![cloudfront distro](../images/520/cloudfront-distro.jpg?v=20240912)
 
@@ -28,7 +28,7 @@ Pages are then available at these URLs:
 
 ### Deep Linking Assets File
 
-In order for claimed HTTPS scheme logins to work you must configure [Android app link verification](https://developer.android.com/training/app-links/verify-android-applinks). This includes hosting a deep linking assets file, which is contained in the project at *security/assetlinks.json*. This associates our app’s signing key and package name with its hosting domain:
+In order for claimed HTTPS scheme logins to work you must configure [Android app link verification](https://developer.android.com/training/app-links/verify-android-applinks). This includes hosting a deep linking assets file, which is contained in the project at *security/assetlinks.json*. This associates our app's signing key and package name with its hosting domain:
 
 ```json
 [
@@ -105,7 +105,7 @@ com.authsamples.finalmobileapp:
 
 ### Deep Linking Registration Failures
 
-Deep linking registration can fail, and one way to reproduce this is to configure the mobile device to connect to the internet via an <a href='android-https-debugging.mdx'>HTTP Proxy</a>. The system’s *Intent Filter Verifier* will not trust the HTTP proxy’s man in the middle certificate, and the result is that the app installs successfully but the claimed HTTPS scheme is not correctly configured:
+Deep linking registration can fail, and one way to reproduce this is to configure the mobile device to connect to the internet via an <a href='android-https-debugging.mdx'>HTTP Proxy</a>. The system's *Intent Filter Verifier* will not trust the HTTP proxy's man in the middle certificate, and the result is that the app installs successfully but the claimed HTTPS scheme is not correctly configured:
 
 ![verification failure](../images/520/verification-failure.jpg?v=20240912)
 
@@ -174,13 +174,13 @@ During development, I use an HTTP proxy as follows when I want to view OAuth or 
 
 ### Android App Code Signing
 
-To finish off our discussion on deep linking, let’s look at how I generated the signature from the assets file. Install the [Java KeyStore Explorer](https://keystore-explorer.org/downloads.html) and open our keyStore file, which has a password of *android*. For educational purposes I have included the keystore file with my source code, though of course you should not do this for a real app. I then used the *Tools / Generate Key Pair* option to create an ECDSA key with default options and a 10 year validity.
+To finish off our discussion on deep linking, let's look at how I generated the signature from the assets file. Install the [Java KeyStore Explorer](https://keystore-explorer.org/downloads.html) and open our keyStore file, which has a password of *android*. For educational purposes I have included the keystore file with my source code, though of course you should not do this for a real app. I then used the *Tools / Generate Key Pair* option to create an ECDSA key with default options and a 10 year validity.
 
 I then chose *Add Extensions / Use Standard Template / Code Signing* and included the *Subject Key Identifier* extension. I then used some naming to fit with this blog, and copied the below *SHA256 Fingerprint* to the mobile assets file:
 
 ![fingerprint](../images/520/fingerprint.jpg?v=20240912)
 
-Finally, the app’s gradle file references our Android keystore file, which is used to digitally sign our app when it is built.
+Finally, the app's gradle file references our Android keystore file, which is used to digitally sign our app when it is built.
 
 ```kotlin
 signingConfigs {

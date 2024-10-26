@@ -45,7 +45,7 @@ export class JwksRetriever {
             agent: httpProxy.agent,
         } as RemoteJWKSetOptions;
 
-        this._remoteJWKSet = createRemoteJWKSet(new URL(configuration.jwksEndpoint), jwksOptions);
+        this.remoteJWKSet = createRemoteJWKSet(new URL(configuration.jwksEndpoint), jwksOptions);
     }
 }
 ```
@@ -53,21 +53,21 @@ export class JwksRetriever {
 In the access token validator class, the following code runs on every API request:
 
 ```typescript
-const accessToken = this._readAccessToken(request);
+const accessToken = this.readAccessToken(request);
 if (!accessToken) {
     throw ErrorFactory.fromMissingTokenError();
 }
 
 const options = {
-    algorithms: [this._configuration.algorithm],
-    issuer: this._configuration.issuer,
-    audience: this._configuration.audience
+    algorithms: [this.configuration.algorithm],
+    issuer: this.configuration.issuer,
+    audience: this.configuration.audience
 } as JWTVerifyOptions;
 
-const result = await jwtVerify(accessToken, this._jwksRetriever.remoteJWKSet, options);
+const result = await jwtVerify(accessToken, this.jwksRetriever.remoteJWKSet, options);
 
-const userId = this._getClaim(result.payload.sub, 'sub');
-const scope = this._getClaim(result.payload['scope'], 'scope');
+const userId = this.getClaim(result.payload.sub, 'sub');
+const scope = this.getClaim(result.payload['scope'], 'scope');
 return new ClaimsPrincipal(userId, scope.split(' '));
 ```
 
@@ -79,7 +79,7 @@ A normal JWT access tokens consists of three parts:
 - *Payload*
 - *Signature*
 
-The authorization server uses an asymmetric private key to create the digital signature, and the public key can be made available to any party that needs to cryptographically verify it. Here is an example AWS Cognito JWT access token from this blog’s first code sample:
+The authorization server uses an asymmetric private key to create the digital signature, and the public key can be made available to any party that needs to cryptographically verify it. Here is an example AWS Cognito JWT access token from this blog's first code sample:
 
 ```markdown
 eyJraWQiOiIyV01TWGcwekEydVFlTjE0ZWlma0o5Nk5TTURpUmdtSXNGcE9yNHNJVWRvPSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJhNmI0MDRiMS05OGFmLTQxYTItOGU3Zi1lNDA2MWRjMGJmODYiLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAuZXUtd2VzdC0yLmFtYXpvbmF3cy5jb21cL2V1LXdlc3QtMl9xcUpnVmV1VG4iLCJ2ZXJzaW9uIjoyLCJjbGllbnRfaWQiOiI2dGcwcWdsZGRwdnFoNzRrM2piZjFtbWo2NCIsIm9yaWdpbl9qdGkiOiI0NDNmNGMzNS1iNmRiLTQzYzktODgzYS0wMThmOWM5NzMzOGMiLCJldmVudF9pZCI6ImMyMGViMGI1LWJhODQtNDMzNC04M2NhLWI3NWExMGQ1ZmY0NyIsInRva2VuX3VzZSI6ImFjY2VzcyIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUiLCJhdXRoX3RpbWUiOjE2MzQ5NzgwNDQsImV4cCI6MTYzNDk4MTY0NCwiaWF0IjoxNjM0OTc4MDQ0LCJqdGkiOiI3Zjk0YzJhNC0zNWE3LTQ2NGItODFkMC05MDQ4YmUzODBhODkiLCJ1c2VybmFtZSI6ImE2YjQwNGIxLTk4YWYtNDFhMi04ZTdmLWU0MDYxZGMwYmY4NiJ9.CM5j3AXOGNL77AjW1-QImb6uwR8JE6ZojWOfKI-nZJhkCsDlSmG2qMpq6Ntkm-Pve6zA9TkWbCWSA1MHKwgQPMXobz5UDQSJSGwiEIa4L9Q6eCGIEDs5153DkXRD4KLYu-SGLOgSurzRuc-EUINDA7zyErNDKGbaFf8qPV5QuMTCQGO-h1SkvLU85yc8Xp6Q8MYv9ydf1oWukjCJdDSzlUdjP6Vsb3V5xKaTBWFvHpwoo5cwyD51Pu8Lsu7p7B-vQAfzXjfgPjnc5EQY_fNYZoh9MaB6b3EnGgZz0oY9gCZHhlr_cRxgZlR_-J9KeUIYcW5Mna-J5GYFe6eRcEePxw
@@ -143,7 +143,7 @@ The API provides the JOSE library with the authorization server's JWKS URI, from
 
 - [https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json](https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json)
 
-This endpoint returns multiple public keys in a JSON Web Key Set and each of these has a key identifier. The security library uses the entry whose kid value matches that in the access token’s JWT header to verify the token:
+This endpoint returns multiple public keys in a JSON Web Key Set and each of these has a key identifier. The security library uses the entry whose kid value matches that in the access token's JWT header to verify the token:
 
 ```json
 {
@@ -182,7 +182,7 @@ Ideally, the JOSE library should also cache the JSON Web Key Set details in-memo
 
 | Input | Library Action |
 | ----- | -------------- |
-| Same Key Identifier | The security library uses the cached JSON Web Key, to prevent further calls to the authorization server’s JWKS URI. |
+| Same Key Identifier | The security library uses the cached JSON Web Key, to prevent further calls to the authorization server's JWKS URI. |
 | New key identifier | The security library makes a new call to the JWKS URI to get updated JSON Web Keys, including that for the new key identifier. |
 
 ### Token Signing Key Renewal

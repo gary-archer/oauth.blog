@@ -1,6 +1,6 @@
 # API Journey – Client Side
 
-Previously I summarised some backend technical behaviours in <a href='api-journey-server-side.mdx'>API Journey – Server Side</a>. Next I summarize some end-to-end technical behaviours for OAuth-secured applications, which this blog’s final frontend code samples implement in multiple technologies:
+Previously I summarised some backend technical behaviours in <a href='api-journey-server-side.mdx'>API Journey – Server Side</a>. Next I summarize some end-to-end technical behaviours for OAuth-secured applications, which this blog's final frontend code samples implement in multiple technologies:
 
 - <a href='final-spa-overview.mdx'>Final SPA</a>
 - <a href='final-desktop-sample-overview.mdx'>Final Desktop App</a>
@@ -66,9 +66,9 @@ The shell then lays out a tree of views, some of which call APIs when they load.
 </>
 ```
 
-### This Blog’s Example Views
+### This Blog's Example Views
 
-This blog’s frontend code samples are fictional apps based on a theme of protecting money-based data. The business area is *investments*, where *company* and *transaction* resources are administered by some kind of *manager*. There are two users, where the first has business permissions to one region:
+This blog's frontend code samples are fictional apps based on a theme of protecting money-based data. The business area is *investments*, where *company* and *transaction* resources are administered by some kind of *manager*. There are two users, where the first has business permissions to one region:
 
 ![guest user](../images/270/guest-user.jpg?v=20240911)
 
@@ -84,7 +84,7 @@ The API uses the following user attributes and frontend views visualise the use 
 
 | User Attribute | Represents |
 | -------------- | ---------- |
-| Scope | The main scope in the client’s access token is called *investments* to represent a business area. |
+| Scope | The main scope in the client's access token is called *investments* to represent a business area. |
 | Manager ID | The API receives a useful business user identity in access tokens sent by the client. |
 | Role | The authorization server stores a role claim for each user, with values of *admin* or *user*, and issues it to access tokens. |
 | Regions | APIs use an array of allowed regions as an example of fine-grained business permissions not issued to access tokens. |
@@ -95,7 +95,7 @@ This use of claims is similar to that in any moderately complex real-world syste
 
 ### Views, Models and Data Loading
 
-For a React app, I use code similar to the following to load views and call APIs. The view asks its view model to fetch data from APIs, which takes place asynchronously to avoid blocking the UI thread. The view then binds to the model’s data, or renders an error when API requests fail unexpectedly:
+For a React app, I use code similar to the following to load views and call APIs. The view asks its view model to fetch data from APIs, which takes place asynchronously to avoid blocking the UI thread. The view then binds to the model's data, or renders an error when API requests fail unexpectedly:
 
 ```typescript
 export function CompaniesContainer(props: CompaniesContainerProps): JSX.Element {
@@ -142,25 +142,25 @@ public async callApi(options?: ViewLoadOptions): Promise<void> {
         causeError: options?.causeError || false,
     };
 
-    this._viewModelCoordinator.onMainViewModelLoading();
-    this._updateError(null);
-    this._updateCompanies([]);
+    this.viewModelCoordinator.onMainViewModelLoading();
+    this.updateError(null);
+    this.updateCompanies([]);
 
     try {
 
-        const result = await this._apiClient.getCompanyList(fetchOptions);
+        const result = await this.apiClient.getCompanyList(fetchOptions);
         if (result) {
-            this._updateCompanies(result);
+            this.updateCompanies(result);
         }
 
     } catch (e: any) {
 
-        this._updateError(ErrorFactory.fromException(e));
-        this._updateCompanies([]);
+        this.updateError(ErrorFactory.fromException(e));
+        this.updateCompanies([]);
 
     } finally {
 
-        this._viewModelCoordinator.onMainViewModelLoaded(fetchOptions.cacheKey);
+        this.viewModelCoordinator.onMainViewModelLoaded(fetchOptions.cacheKey);
     }
 }
 ```
@@ -173,7 +173,7 @@ I therefore cache API responses to HTTP GET requests in the frontend, in a threa
 
 ```typescript
 export class FetchCache {
-    private readonly _requests: Record<string, FetchCacheItem> = {};
+    private readonly requests: Record<string, FetchCacheItem> = {};
 }
 ```
 
@@ -209,11 +209,11 @@ Although I only demonstrate password logins, use of a code flow means that all o
 
 ### Concurrent API Requests
 
-This blog's final clients send an API request to get the current main view’s data, as well as two small API requests to get user info for the upper right view:
+This blog's final clients send an API request to get the current main view's data, as well as two small API requests to get user info for the upper right view:
 
 ![concurrent api requests](../images/270/concurrent-api-requests.jpg?v=20240911)
 
-The user can then navigate around views to trigger further API calls, if that view’s data is not yet loaded. A forced reload of data is possible by clicking the reload button, which re-runs the 3 API requests concurrently.
+The user can then navigate around views to trigger further API calls, if that view's data is not yet loaded. A forced reload of data is possible by clicking the reload button, which re-runs the 3 API requests concurrently.
 
 ### Expiry Events
 
@@ -225,7 +225,7 @@ Any resilient client should support this behaviour, since there could be multipl
 
 ```typescript
 public async synchronizedRefresh(): Promise<void> {
-    await this._concurrencyHandler.execute(this._performTokenRefresh);
+    await this.concurrencyHandler.execute(this.performTokenRefresh);
 }
 ```
 
@@ -244,28 +244,28 @@ public async execute(action: () => Promise<void>): Promise<void> {
             reject(error);
         };
 
-        this._callbacks.push([onSuccess, onError]);
+        this.callbacks.push([onSuccess, onError]);
     });
 
-    const performAction = this._callbacks.length === 1;
+    const performAction = this.callbacks.length === 1;
     if (performAction) {
 
         try {
 
             await action();
 
-            this._callbacks.forEach((c) => {
+            this.callbacks.forEach((c) => {
                 c[0]();
             });
 
         } catch (e: any) {
 
-            this._callbacks.forEach((c) => {
+            this.callbacks.forEach((c) => {
                 c[1](e);
             });
         }
 
-        this._callbacks = [];
+        this.callbacks = [];
     }
 
     return promise;
@@ -276,7 +276,7 @@ Eventually the client's refresh token also expires. This can be simulated by cli
 
 ### Deep Linking
 
-All of this blog’s UIs support deep linking, to enable users to bookmark locations within the app. An example deep linking URL for each of the final clients is shown here:
+All of this blog's UIs support deep linking, to enable users to bookmark locations within the app. An example deep linking URL for each of the final clients is shown here:
 
 | Client Type | Deep Linking URL |
 | ----------- | ---------------- |
@@ -285,11 +285,11 @@ All of this blog’s UIs support deep linking, to enable users to bookmark locat
 | Android | *https://mobile.authsamples.com/finalmobileapp/deeplink/companies/2* |
 | iOS | *https://mobile.authsamples.com/finalmobileapp/deeplink/companies/2* |
 
-These commands initiate views which in turn initiate API requests. APIs return 401 responses if an access token expires or if the user needs to re-authenticate. In such cases this blog’s frontends always run the requested view once any OAuth work is complete, so that bookmarking works correctly for users.
+These commands initiate views which in turn initiate API requests. APIs return 401 responses if an access token expires or if the user needs to re-authenticate. In such cases this blog's frontends always run the requested view once any OAuth work is complete, so that bookmarking works correctly for users.
 
 ### Clients and APIs are Supportable
 
-Clients and APIs follow this blog’s approach to <a href='error-handling-and-supportability.mdx'>Error Handling and Supportability</a>. API or OAuth requests could fail, in which case the view renders an *Error Summary* link. You can rehearse API 500 errors by long-pressing the *Reload Data* button for a few seconds:
+Clients and APIs follow this blog's approach to <a href='error-handling-and-supportability.mdx'>Error Handling and Supportability</a>. API or OAuth requests could fail, in which case the view renders an *Error Summary* link. You can rehearse API 500 errors by long-pressing the *Reload Data* button for a few seconds:
 
 ![error summary](../images/270/error-summary.jpg?v=20240911)
 
@@ -305,8 +305,8 @@ OAuth clients can experience some advanced failure scenarios that can be difficu
 
 | Failure Scenario | Resilient Application Behaviour |
 | ---------------- | ------------------------------- |
-| Key Renewal | Token signing keys, or cookie encryption keys used by SPAs, are sometimes renewed in an abrupt way. This blog’s clients handle 401 API responses after which token refresh would fail with a session expired error. This causes a new login redirect and avoids user errors. |
-| Redirect Loops | This blog’s apps don’t trigger an authorization redirect when APIs return permanent 401 errors. Instead, redirects only occur when there is no access token yet or if token refresh fails with a session expired error. Doing so prevents the possibility of redirect loops. |
+| Key Renewal | Token signing keys, or cookie encryption keys used by SPAs, are sometimes renewed in an abrupt way. This blog's clients handle 401 API responses after which token refresh would fail with a session expired error. This causes a new login redirect and avoids user errors. |
+| Redirect Loops | This blog's apps don't trigger an authorization redirect when APIs return permanent 401 errors. Instead, redirects only occur when there is no access token yet or if token refresh fails with a session expired error. Doing so prevents the possibility of redirect loops. |
 | Invalid Tokens | OAuth configuration mistakes can result in access tokens that APIs permanently reject, even though token refresh works. The client should then present an error, but clear token state. The client can then prompt the user to run a new authorization redirect. This enables the client to get a corrected access token and avoids the user being stuck. |
 
 ### Client Responsibilities are Separated
@@ -329,5 +329,5 @@ I summarised a non-functional journey for clients, where OAuth does not create t
 
 ### Next
 
-- Next I explain this blog’s <a href='effective-api-logging.mdx'>Effective API Logging</a> design.
+- Next I explain this blog's <a href='effective-api-logging.mdx'>Effective API Logging</a> design.
 - For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

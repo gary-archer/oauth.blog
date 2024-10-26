@@ -147,7 +147,7 @@ In *Route 53 / Hosted Zones*, the initial generated domain name is then mapped t
 
 ### API Deployment
 
-The deployment script then continues by deploying the ZIP file to AWS, which will create cloud HTTPS endpoints that route to the API’s lambda functions:
+The deployment script then continues by deploying the ZIP file to AWS, which will create cloud HTTPS endpoints that route to the API's lambda functions:
 
 ![deployment](../images/630/deployment.jpg)
 
@@ -217,7 +217,7 @@ Log entries can be viewed in the AWS console, but CloudWatch is only used for im
 
 ![log entry](../images/630/log-entry.jpg)
 
-In order to perform the above logging, the API’s code needs access to the full request and response details. Therefore I would recommend always using the *REST API* option, since any API should have access to this data:
+In order to perform the above logging, the API's code needs access to the full request and response details. Therefore I would recommend always using the *REST API* option, since any API should have access to this data:
 
 ![rest api](../images/630/rest-api.jpg)
 

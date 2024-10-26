@@ -15,20 +15,20 @@ The main process creates the window for the frontend when it starts:
 ```typescript
 class Main {
 
-    private _configuration: Configuration;
-    private _ipcEvents: IpcMainEvents;
-    private _window: BrowserWindow | null;
+    private configuration: Configuration;
+    private ipcEvents: IpcMainEvents;
+    private window: BrowserWindow | null;
 
     public constructor() {
-        this._configuration = ConfigurationLoader.load(`${app.getAppPath()}/desktop.config.json`);
-        this._ipcEvents = new IpcMainEvents(this._configuration);
-        this._window = null;
-        this._setupCallbacks();
+        this.configuration = ConfigurationLoader.load(`${app.getAppPath()}/desktop.config.json`);
+        this.ipcEvents = new IpcMainEvents(this.configuration);
+        this.window = null;
+        this.setupCallbacks();
     }
 
-    private _createMainWindow(): void {
+    private createMainWindow(): void {
 
-        this._window = new BrowserWindow({
+        this.window = new BrowserWindow({
             width: 1280,
             height: 720,
             minWidth: 800,
@@ -41,10 +41,10 @@ class Main {
             },
         });
 
-        this._ipcEvents.register(this._window);
-        this._window.loadFile('./index.html');
-        this._initialiseHttpHeaders();
-        this._window.on('closed', this._onClosed);
+        this.ipcEvents.register(this.window);
+        this.window.loadFile('./index.html');
+        this.initialiseHttpHeaders();
+        this.window.on('closed', this.onClosed);
     }
     ...
 }    
@@ -166,15 +166,15 @@ The frontend uses a *RendererIpcEvents* entry point for sending IPC events. The 
 export class RendererIpcEvents {
 
     public async getCompanyTransactions(id: string) : Promise<CompanyTransactions> {
-        return await this._sendMessage(IpcEventNames.ON_GET_TRANSACTIONS, {id});
+        return await this.sendMessage(IpcEventNames.ON_GET_TRANSACTIONS, {id});
     }
 
     public async login(): Promise<void> {
-        await this._sendMessage(IpcEventNames.ON_LOGIN, {});
+        await this.sendMessage(IpcEventNames.ON_LOGIN, {});
     }
 
     public async tokenRefresh(): Promise<void> {
-        await this._sendMessage(IpcEventNames.ON_TOKEN_REFRESH, {});
+        await this.sendMessage(IpcEventNames.ON_TOKEN_REFRESH, {});
     }
     ...
 }
@@ -187,34 +187,34 @@ export class MainIpcEvents {
 
     public register(): void {
 
-        ipcMain.handle(IpcEventNames.ON_GET_TRANSACTIONS, this._onGetCompanyTransactions);
-        ipcMain.handle(IpcEventNames.ON_LOGIN, this._onLogin);
-        ipcMain.handle(IpcEventNames.ON_TOKEN_REFRESH, this._onTokenRefresh);
+        ipcMain.handle(IpcEventNames.ON_GET_TRANSACTIONS, this.onGetCompanyTransactions);
+        ipcMain.handle(IpcEventNames.ON_LOGIN, this.onLogin);
+        ipcMain.handle(IpcEventNames.ON_TOKEN_REFRESH, this.onTokenRefresh);
         ...
     }
 
-    private async _onGetCompanyTransactions(event: IpcMainInvokeEvent, args: any): Promise<CompanyTransactions> {
+    private async onGetCompanyTransactions(event: IpcMainInvokeEvent, args: any): Promise<CompanyTransactions> {
 
-        return this._handleAsyncOperation(
+        return this.handleAsyncOperation(
             event,
             IpcEventNames.ON_GET_TRANSACTIONS,
-            () => this._apiService.getCompanyTransactions(args.id));
+            () => this.apiService.getCompanyTransactions(args.id));
     }
 
-    private async _onLogin(event: IpcMainInvokeEvent): Promise<any> {
+    private async onLogin(event: IpcMainInvokeEvent): Promise<any> {
 
-        return this._handleAsyncOperation(
+        return this.handleAsyncOperation(
             event,
             IpcEventNames.ON_LOGIN,
-            () => this._authenticatorService.login());
+            () => this.authenticatorService.login());
     }
 
-    private async _onTokenRefresh(event: IpcMainInvokeEvent): Promise<any> {
+    private async onTokenRefresh(event: IpcMainInvokeEvent): Promise<any> {
 
-        return this._handleAsyncOperation(
+        return this.handleAsyncOperation(
             event,
             IpcEventNames.ON_TOKEN_REFRESH,
-            () => this._authenticatorService.refreshAccessToken());
+            () => this.authenticatorService.refreshAccessToken());
     }
     ...
 }
@@ -251,13 +251,13 @@ You then see that the desktop app sends requests with tokens and acts as a publi
 The renderer process begins when it creates an *App* class, which acts as the application shell. This creates some global forwarder objects that drive API calls and OAuth operations, in the same manner as earlier SPAs:
 
 ```typescript
-private async _initialiseApp(): Promise<void> {
+private async initialiseApp(): Promise<void> {
 
-    this._ipcEvents = new IpcRendererEvents(window);
-    this._authenticatorClient = new AuthenticatorClientImpl(this._ipcEvents);
-    this._apiClient = new ApiClient(this._ipcEvents, this._authenticatorClient);
-    this._router = new Router(this._apiClient);
-    this._isInitialised = true;
+    this.ipcEvents = new IpcRendererEvents(window);
+    this.authenticatorClient = new AuthenticatorClientImpl(this.ipcEvents);
+    this.apiClient = new ApiClient(this.ipcEvents, this.authenticatorClient);
+    this.router = new Router(this.apiClient);
+    this.isInitialised = true;
 }
 ```
 
@@ -266,20 +266,20 @@ private async _initialiseApp(): Promise<void> {
 The backend creates the objects that do the real OAuth and API work, to call remote endpoints. As for earlier code samples, the app first loads a configuration file and passes settings to each object:
 
 ```typescript
-this._configuration = configuration;
+this.configuration = configuration;
 
-this._httpProxy = new HttpProxy(
-    this._configuration.app.useProxy,
-    this._configuration.app.proxyUrl);
+this.httpProxy = new HttpProxy(
+    this.configuration.app.useProxy,
+    this.configuration.app.proxyUrl);
 
-this._authenticatorService = new AuthenticatorServiceImpl(
-    this._configuration.oauth,
-    this._httpProxy);
+this.authenticatorService = new AuthenticatorServiceImpl(
+    this.configuration.oauth,
+    this.httpProxy);
 
-this._apiService = new ApiService(
-    this._configuration,
-    this._authenticatorService,
-    this._httpProxy);
+this.apiService = new ApiService(
+    this.configuration,
+    this.authenticatorService,
+    this.httpProxy);
 ```
 
 ### OAuth Operations
@@ -304,14 +304,14 @@ export interface AuthenticatorService {
 The main process's *ApiService* uses the following shared function to manage API requests:
 
 ```typescript
-private async _callApi(
+private async callApi(
     method: Method,
     url: string,
     dataToSend: any = null): Promise<any> {
 
     try {
 
-        const accessToken = await this._authenticatorService.getAccessToken();
+        const accessToken = await this.authenticatorService.getAccessToken();
         if (!accessToken) {
             throw ErrorFactory.fromLoginRequired();
         }
@@ -327,8 +327,8 @@ private async _callApi(
             headers,
         } as AxiosRequestConfig;
 
-        if (this._httpProxy.agent) {
-            requestOptions.httpsAgent = this._httpProxy.agent;
+        if (this.httpProxy.agent) {
+            requestOptions.httpsAgent = this.httpProxy.agent;
         }
 
         const response = await axios.request(requestOptions);
@@ -345,7 +345,7 @@ private async _callApi(
 Meanwhile the renderer's *ApiClient* manages token refresh when an API request fails with a 401 error:
 
 ```typescript
-private async _getDataFromApi(callback: () => Promise<any>): Promise<any> {
+private async getDataFromApi(callback: () => Promise<any>): Promise<any> {
 
     try {
 
@@ -358,7 +358,7 @@ private async _getDataFromApi(callback: () => Promise<any>): Promise<any> {
             throw error1;
         }
 
-        await this._authenticatorClient.refreshAccessToken();
+        await this.authenticatorClient.refreshAccessToken();
         return await callback();
     }
 }
@@ -383,22 +383,22 @@ export class LoginNavigation {
 The main process uses code to spin up an HTTP server to receive the authorization response, and to send the authorization request on the system browser.
 
 ```typescript
-private async _startLogin(): Promise<AuthorizationRequestResponse> {
+private async startLogin(): Promise<AuthorizationRequestResponse> {
 
     try {
 
-        const server = new LoopbackWebServer(this._configuration, this._eventEmitter);
+        const server = new LoopbackWebServer(this.configuration, this.eventEmitter);
         const runtimePort = await server.start();
-        const host = this._configuration.loopbackHostname;
-        const redirectUri = `http://${host}:${runtimePort}${this._configuration.redirectPath}`;
+        const host = this.configuration.loopbackHostname;
+        const redirectUri = `http://${host}:${runtimePort}${this.configuration.redirectPath}`;
 
-        await this._loadMetadata();
+        await this.loadMetadata();
 
         const handler = new LoginRequestHandler(
-            this._configuration,
-            this._metadata!,
-            this._loginState,
-            this._eventEmitter);
+            this.configuration,
+            this.metadata!,
+            this.loginState,
+            this.eventEmitter);
         return await handler.execute(redirectUri);
 
     } catch (e: any) {
@@ -408,22 +408,22 @@ private async _startLogin(): Promise<AuthorizationRequestResponse> {
 }
 ```
 
-If not already started, the loopback HTTP server finds a free port in the app’s configured range, then starts listening:
+If not already started, the loopback HTTP server finds a free port in the app's configured range, then starts listening:
 
 ```typescript
-private async _startServer(): Promise<void> {
+private async startServer(): Promise<void> {
 
     const options = {
         port: portNumbers(
-            this._configuration.loopbackMinPort,
-            this._configuration.loopbackMaxPort),
-        host: this._configuration.loopbackHostname,
+            this.configuration.loopbackMinPort,
+            this.configuration.loopbackMaxPort),
+        host: this.configuration.loopbackHostname,
     };
-    LoopbackWebServer._runtimePort = await getPort(options);
+    LoopbackWebServer.runtimePort = await getPort(options);
 
-    LoopbackWebServer._server = Http.createServer(this._handleBrowserRequest);
+    LoopbackWebServer.server = Http.createServer(this.handleBrowserRequest);
 
-    LoopbackWebServer._server.listen(LoopbackWebServer._runtimePort);
+    LoopbackWebServer.server.listen(LoopbackWebServer.runtimePort);
 }
 ```
 
@@ -434,7 +434,7 @@ The *LoginRequestHandler* class manages sending the authorization request and re
 When the app receives a successful authorization response it sends an authorization code grant request using the *TokenRequest* object. On success, the *TokenResponse* contains a set of OAuth tokens:
 
 ```typescript
-private async _endLogin(result: LoginRedirectResult): Promise<void> {
+private async endLogin(result: LoginRedirectResult): Promise<void> {
 
     try {
 
@@ -442,16 +442,16 @@ private async _endLogin(result: LoginRedirectResult): Promise<void> {
             grant_type: GRANT_TYPE_AUTHORIZATION_CODE,
             code: result.response!.code,
             redirect_uri: result.request.redirectUri,
-            client_id: this._configuration.clientId,
+            client_id: this.configuration.clientId,
             extras: {
                 code_verifier: result.request.internal!['code_verifier'],
             },
         };
         const tokenRequest = new TokenRequest(requestJson);
 
-        const tokenRequestHandler = new BaseTokenRequestHandler(this._customRequestor);
+        const tokenRequestHandler = new BaseTokenRequestHandler(this.customRequestor);
 
-        const tokenResponse = await tokenRequestHandler.performTokenRequest(this._metadata!, tokenRequest);
+        const tokenResponse = await tokenRequestHandler.performTokenRequest(this.metadata!, tokenRequest);
 
         const newTokenData = {
             accessToken: tokenResponse.accessToken,
@@ -459,7 +459,7 @@ private async _endLogin(result: LoginRedirectResult): Promise<void> {
             idToken: tokenResponse.idToken ? tokenResponse.idToken : null,
         };
 
-        this._tokens = newTokenData;
+        this.tokens = newTokenData;
 
     } catch (e: any) {
 
@@ -485,19 +485,19 @@ The *LoginRequestHandler* class manages these concerns. It stores all *Authoriza
 ```typescript
 const promise = new Promise<AuthorizationRequestResponse>((resolve, reject) => {
 
-    this._state.storeRequest(authorizationRequest);
+    this.state.storeRequest(authorizationRequest);
 
-    this._eventEmitter.once('LOGIN_COMPLETE', (args: URLSearchParams) => {
+    this.eventEmitter.once('LOGIN_COMPLETE', (args: URLSearchParams) => {
 
         const state = args.get('state') || '';
-        const foundRequest = this._state.getRequestForState(state);
+        const foundRequest = this.state.getRequestForState(state);
         if (!foundRequest) {
             reject(ErrorFactory.fromLoginCancelled());
             return;
         }
 
-        this._state.clear();
-        resolve(this._handleBrowserLoginResponse(args, foundRequest));
+        this.state.clear();
+        resolve(this.handleBrowserLoginResponse(args, foundRequest));
     });
 });
 
@@ -507,25 +507,25 @@ It is probably not logically possible to solve all re-entrancy cases perfectly. 
 
 ### Refreshing Access Tokens
 
-Every 15 minutes the desktop app’s access token expires, and the desktop app uses the AppAuth *TokenRequest* object again, to send a token refresh token request, then update tokens stored in-memory:
+Every 15 minutes the desktop app's access token expires, and the desktop app uses the AppAuth *TokenRequest* object again, to send a token refresh token request, then update tokens stored in-memory:
 
 ```typescript
-private async _performTokenRefresh(): Promise<void> {
+private async performTokenRefresh(): Promise<void> {
 
     try {
 
-        await this._loadMetadata();
+        await this.loadMetadata();
 
         const requestJson = {
             grant_type: GRANT_TYPE_REFRESH_TOKEN,
-            client_id: this._configuration.clientId,
-            refresh_token: this._tokens!.refreshToken!,
+            client_id: this.configuration.clientId,
+            refresh_token: this.tokens!.refreshToken!,
             redirect_uri: '',
         };
         const tokenRequest = new TokenRequest(requestJson);
 
-        const tokenRequestHandler = new BaseTokenRequestHandler(this._customRequestor);
-        const tokenResponse = await tokenRequestHandler.performTokenRequest(this._metadata!, tokenRequest);
+        const tokenRequestHandler = new BaseTokenRequestHandler(this.customRequestor);
+        const tokenResponse = await tokenRequestHandler.performTokenRequest(this.metadata!, tokenRequest);
 
         const newTokenData = {
             accessToken: tokenResponse.accessToken,
@@ -534,19 +534,19 @@ private async _performTokenRefresh(): Promise<void> {
         };
 
         if (!newTokenData.refreshToken) {
-            newTokenData.refreshToken = this._tokens!.refreshToken;
+            newTokenData.refreshToken = this.tokens!.refreshToken;
         }
         if (!newTokenData.idToken) {
-            newTokenData.idToken = this._tokens!.idToken;
+            newTokenData.idToken = this.tokens!.idToken;
         }
 
-        this._tokens = newTokenData;
+        this.tokens = newTokenData;
 
     } catch (e: any) {
 
         if (e.error === ErrorCodes.refreshTokenExpired) {
 
-            this._tokens = null;
+            this.tokens = null;
 
         } else {
 
@@ -565,16 +565,16 @@ The *AuthenticatorService* also has some test methods to enable simulation of to
 ```typescript
 public async expireAccessToken(): Promise<void> {
 
-    if (this._tokens && this._tokens.accessToken) {
-        this._tokens.accessToken = `${this._tokens.accessToken}x`;
+    if (this.tokens && this.tokens.accessToken) {
+        this.tokens.accessToken = `${this.tokens.accessToken}x`;
     }
 }
 
 public async expireRefreshToken(): Promise<void> {
 
-    if (this._tokens && this._tokens.refreshToken) {
-        this._tokens.refreshToken = `${this._tokens.refreshToken}x`;
-        this._tokens.accessToken = `${this._tokens.accessToken}x`;
+    if (this.tokens && this.tokens.refreshToken) {
+        this.tokens.refreshToken = `${this.tokens.refreshToken}x`;
+        this.tokens.accessToken = `${this.tokens.accessToken}x`;
     }
 }
 ```

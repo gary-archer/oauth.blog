@@ -4,18 +4,18 @@ The previous post I explained some <a href='updated-spa-coding-key-points.mdx'>S
 
 ### API Authorization Implementation
 
-In the first sample’s <a href='basicapi-codingkeypoints.mdx'>API Code Details</a> we explained that OAuth processing consists of the following two main code areas:
+In the first sample's <a href='basicapi-codingkeypoints.mdx'>API Code Details</a> we explained that OAuth processing consists of the following two main code areas:
 
 | Responsibility | Description |
 | -------------- | ----------- |
 | Authenticate Requests | Verify incoming access tokens and return a 401 error response for invalid tokens. |
-| Set up Authorization | Read claims needed for authorization, then pass them through to the API’s business logic. |
+| Set up Authorization | Read claims needed for authorization, then pass them through to the API's business logic. |
 
 The updated API implements <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a> in the same way as the first code sample, but now also implements this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. This starts with enforcing its required scope:
 
 ```typescript
 const scopes = ClaimsReader.getClaim(claims['scope'] as string, 'scope');
-if (scopes.indexOf(this._configuration.scope) === -1) {
+if (scopes.indexOf(this.configuration.scope) === -1) {
 
     throw new ClientError(
         403,
@@ -24,32 +24,32 @@ if (scopes.indexOf(this._configuration.scope) === -1) {
 }
 ```
 
-The API then builds a *ClaimsPrincipal* object from the access token claims. This is injected into the API’s *CompanyService* class, which then has immediate access to the values it needs to implement its business authorization:
+The API then builds a *ClaimsPrincipal* object from the access token claims. This is injected into the API's *CompanyService* class, which then has immediate access to the values it needs to implement its business authorization:
 
 ```typescript
 public async getCompanyList(): Promise<Company[]> {
 
-    const companies = await this._repository.getCompanyList();
-    return companies.filter((c) => this._isUserAuthorizedForCompany(c));
+    const companies = await this.repository.getCompanyList();
+    return companies.filter((c) => this.isUserAuthorizedForCompany(c));
 }
 
 public async getCompanyTransactions(id: number): Promise<CompanyTransactions> {
 
-    const data = await this._repository.getCompanyTransactions(id);
-    if (!data || !this._isUserAuthorizedForCompany(data.company)) {
-        throw this._unauthorizedError(id);
+    const data = await this.repository.getCompanyTransactions(id);
+    if (!data || !this.isUserAuthorizedForCompany(data.company)) {
+        throw this.unauthorizedError(id);
     }
 
     return data;
 }
 ```
 
-The sample’s business logic uses both a *role* claim from the access token and a *regions* claim that is meant to represent a finer grained permission that is not issued to the access token:
+The sample's business logic uses both a *role* claim from the access token and a *regions* claim that is meant to represent a finer grained permission that is not issued to the access token:
 
 ```typescript
-private _isUserAuthorizedForCompany(company: Company): boolean {
+private isUserAuthorizedForCompany(company: Company): boolean {
 
-    const role = ClaimsReader.getStringClaim(this._claims.jwt, 'role');
+    const role = ClaimsReader.getStringClaim(this.claims.jwt, 'role');
     if (role === 'admin') {
         return true;
     }
@@ -58,24 +58,24 @@ private _isUserAuthorizedForCompany(company: Company): boolean {
         return false;
     }
 
-    const found = this._claims.extra.regions.find((c) => c === company.region);
+    const found = this.claims.extra.regions.find((c) => c === company.region);
     return !!found;
 }
 ```
 
 ### OAuth Middleware Customisation
 
-The API’s customised claims include additional fine-grained authorization values:
+The API's customised claims include additional fine-grained authorization values:
 
 ```typescript
 export class ClaimsPrincipal {
 
-    private _jwtClaims: JWTPayload;
-    private _extraClaims: ExtraClaims;
+    private jwtClaims: JWTPayload;
+    private extraClaims: ExtraClaims;
 
     public constructor(jwtClaims: JWTPayload, extraClaims: ExtraClaims) {
-        this._jwtClaims = jwtClaims;
-        this._extraClaims = extraClaims;
+        this.jwtClaims = jwtClaims;
+        this.extraClaims = extraClaims;
     }
 }
 ```
@@ -109,28 +109,28 @@ An *OAuthFilter* object does the main work to set up a useful claims principal:
 ```typescript
 public async authorizeRequestAndGetClaims(request: Request): Promise<ClaimsPrincipal> {
 
-    const accessToken = this._readAccessToken(request);
+    const accessToken = this.readAccessToken(request);
     if (!accessToken) {
         throw ClientError.create401('No access token was supplied in the bearer header');
     }
 
-    const tokenClaims = await this._accessTokenValidator.execute(accessToken);
+    const tokenClaims = await this.accessTokenValidator.execute(accessToken);
 
     const accessTokenHash = createHash('sha256').update(accessToken).digest('hex');
-    let extraClaims = await this._cache.getExtraUserClaims(accessTokenHash);
+    let extraClaims = await this.cache.getExtraUserClaims(accessTokenHash);
     if (extraClaims) {
         return new ClaimsPrincipal(tokenClaims, extraClaims);
     }
 
-    extraClaims = await this._extraClaimsProvider.lookupExtraClaims(tokenClaims);
+    extraClaims = await this.extraClaimsProvider.lookupExtraClaims(tokenClaims);
 
-    await this._cache.setExtraUserClaims(accessTokenHash, extraClaims, tokenClaims.exp!);
+    await this.cache.setExtraUserClaims(accessTokenHash, extraClaims, tokenClaims.exp!);
 
     return new ClaimsPrincipal(tokenClaims, extraClaims);
 }
 ```
 
-When a token is first received, the extra claims are cached using the [Node Memory Cache](https://github.com/mpneuried/nodecache). A time-to-live is set that must not exceed the access token’s *exp* (expiry) claim:
+When a token is first received, the extra claims are cached using the [Node Memory Cache](https://github.com/mpneuried/nodecache). A time-to-live is set that must not exceed the access token's *exp* (expiry) claim:
 
 ```typescript
 public addClaimsForToken(accessTokenHash: string, claims: ExtraClaims, expiry: number): void {
@@ -141,12 +141,12 @@ public addClaimsForToken(accessTokenHash: string, claims: ExtraClaims, expiry: n
 
         console.debug(`Token to be cached will expire in ${secondsToCache} seconds (hash: ${accessTokenHash})`);
 
-        if (secondsToCache > this._defaultTimeToLiveSeconds) {
-            secondsToCache = this._defaultTimeToLiveSeconds;
+        if (secondsToCache > this.defaultTimeToLiveSeconds) {
+            secondsToCache = this.defaultTimeToLiveSeconds;
         }
 
         console.debug(`Adding token to claims cache for ${secondsToCache} seconds (hash: ${accessTokenHash})`);
-        this._cache.set(accessTokenHash, claims, secondsToCache);
+        this.cache.set(accessTokenHash, claims, secondsToCache);
     }
 }
 ```
@@ -156,7 +156,7 @@ When the API receives the same access token on subsequent API requests, it immed
 ```typescript
 public getClaimsForToken(accessTokenHash: string): ExtraClaims | null {
 
-    const claims = this._cache.get<ExtraClaims>(accessTokenHash);
+    const claims = this.cache.get<ExtraClaims>(accessTokenHash);
     if (!claims) {
 
         console.debug(`New token will be added to claims cache (hash: ${accessTokenHash})`);
@@ -172,22 +172,22 @@ When getting started with OAuth secured APIs you should not need complex code li
 
 ### User Info
 
-The API has a new endpoint to provide business user attributes to the SPA client. This endpoint returns the user name for display, and also the regions information shown in the SPA’s tooltip:
+The API has a new endpoint to provide business user attributes to the SPA client. This endpoint returns the user name for display, and also the regions information shown in the SPA's tooltip:
 
 ```typescript
 export class UserInfoService {
 
-    private readonly _claims: ClaimsPrincipal;
+    private readonly claims: ClaimsPrincipal;
 
     public constructor(claims: ClaimsPrincipal) {
-        this._claims = claims;
+        this.claims = claims;
     }
 
     public getUserInfo(): any {
 
         return {
-            title: this._claims.extra.title,
-            regions: this._claims.extra.regions,
+            title: this.claims.extra.title,
+            regions: this.claims.extra.regions,
         };
     }
 }

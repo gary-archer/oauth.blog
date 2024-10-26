@@ -18,23 +18,23 @@ git clone https://github.com/gary-archer/oauth.desktopsample1
 
 ### Step 2: View the Code in an IDE
 
-The desktop app re-uses some code from this blog’s <a href='improved-spa-code-sample-overview.mdx'>second SPA</a> and has exactly the same views:
+The desktop app re-uses some code from this blog's <a href='improved-spa-code-sample-overview.mdx'>second SPA</a> and has exactly the same views:
 
 ```typescript
 export class CompaniesView {
 
-    private readonly _apiClient: ApiClient;
+    private readonly apiClient: ApiClient;
 
     public constructor(apiClient: ApiClient) {
-        this._apiClient = apiClient;
+        this.apiClient = apiClient;
     }
 
     public async load(): Promise<void> {
 
         try {
 
-            const data = await this._apiClient.getCompanyList();
-            this._renderData(data);
+            const data = await this.apiClient.getCompanyList();
+            this.renderData(data);
 
         } catch (e) {
 
@@ -49,7 +49,7 @@ export class CompaniesView {
 
 ### Step 3: Build and Run the Code
 
-Run the following bash script to build the desktop app’s TypeScript code and then run the executable:
+Run the following bash script to build the desktop app's TypeScript code and then run the executable:
 
 ```bash
 ./start.sh
@@ -63,7 +63,7 @@ When you click the button, the app first indicates that a login is in progress:
 
 ![logging in](../images/420/logging-in.jpg?v=20240922)
 
-The app then creates an authorization request URL and opens the default system browser at that URL. You can use this blog’s test user account to sign in:
+The app then creates an authorization request URL and opens the default system browser at that URL. You can use this blog's test user account to sign in:
 
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*

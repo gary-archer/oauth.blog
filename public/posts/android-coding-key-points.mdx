@@ -1,10 +1,10 @@
 # Android Code Sample – Code Details
 
-Previously we described our <a href='android-infrastructure-setup.mdx'>Android Infrastructure Setup</a> and we will now look at some key areas of our sample’s code. See also the <a href='api-journey-client-side.mdx'>Client Side API Journey</a> to understand the background and the requirements being met.
+Previously we described our <a href='android-infrastructure-setup.mdx'>Android Infrastructure Setup</a> and we will now look at some key areas of our sample's code. See also the <a href='api-journey-client-side.mdx'>Client Side API Journey</a> to understand the background and the requirements being met.
 
 ### Portable Code
 
-One of this blog’s coding goals is to use the same UI classes across multiple platforms. Our Android app uses the same logical separation of responsibilities into classes as the earlier <a href='reactjs-codingkeypoints.mdx'>React SPA</a>:
+One of this blog's coding goals is to use the same UI classes across multiple platforms. Our Android app uses the same logical separation of responsibilities into classes as the earlier <a href='reactjs-codingkeypoints.mdx'>React SPA</a>:
 
 <div className='smallimage'>
     <img src='../images/530/code-layout.jpg' alt='code layout' />
@@ -26,7 +26,7 @@ The project was initially created via the below *Empty Activity* template, after
 
 ![project creation](../images/530/project-creation.jpg)
 
-I then added these options to the application’s *build.gradle.kts* file, which enables views to be created using the newer *Jetpack Compose* syntax, which lead to cleaner code than older XML layout views:
+I then added these options to the application's *build.gradle.kts* file, which enables views to be created using the newer *Jetpack Compose* syntax, which lead to cleaner code than older XML layout views:
 
 ```kotlin
 buildFeatures {
@@ -39,7 +39,7 @@ composeOptions {
 
 ### Main Activity Entry Point
 
-Our single activity is specified in the manifest file as the default / launcher activity, and fulfils a similar role to our SPA’s application shell:
+Our single activity is specified in the manifest file as the default / launcher activity, and fulfils a similar role to our SPA's application shell:
 
 ```xml
 <activity
@@ -99,7 +99,7 @@ init {
 
 ### View Layout and Composition
 
-The main activity’s layout creates a number of child views, including a navigation host, whose content is swapped out as the user navigates, in a similar way to the main view of an SPA:
+The main activity's layout creates a number of child views, including a navigation host, whose content is swapped out as the user navigates, in a similar way to the main view of an SPA:
 
 ```kotlin
 private fun createViews() {
@@ -386,7 +386,7 @@ At runtime the properties of AppAuth objects are set based on our OAuth configur
 
 ### AppAuth Library – Login Responses
 
-Our manifest file tells AppAuth’s login activity to use a claimed HTTPS scheme to receive login responses at the path provided:
+Our manifest file tells AppAuth's login activity to use a claimed HTTPS scheme to receive login responses at the path provided:
 
 ```xml
 <activity
@@ -501,7 +501,7 @@ The message sent includes a *Code Verifier* used for PKCE handling, and AppAuth 
 
 ### Secure Token Storage
 
-After login, the app stores OAuth tokens using a *TokenStorage* object, which saves them to shared preferences. The Android system ensures that no other app can access the demo app’s tokens, so it is not necessary to encrypt the stored values.
+After login, the app stores OAuth tokens using a *TokenStorage* object, which saves them to shared preferences. The Android system ensures that no other app can access the demo app's tokens, so it is not necessary to encrypt the stored values.
 
 ### Application Restarts without Login
 
@@ -604,12 +604,12 @@ As well as being more efficient, this ensures that our code uses [refresh token 
 
 ### Logout
 
-The app’s logout logic involves these two actions:
+The app's logout logic involves these two actions:
 
 - Removing the refresh token from Android secure storage
-- Removing the authorization server’s session cookie
+- Removing the authorization server's session cookie
 
-The second step requires a redirect on a Chrome custom tab, since the authorization server session cookie can only be removed via the system browser. To make this work with AWS Cognito’s custom logout endpoint, the following code was used:
+The second step requires a redirect on a Chrome custom tab, since the authorization server session cookie can only be removed via the system browser. To make this work with AWS Cognito's custom logout endpoint, the following code was used:
 
 ```kotlin
 override fun startLogout(launchAction: (i: Intent) -> Unit) {
@@ -640,7 +640,7 @@ override fun startLogout(launchAction: (i: Intent) -> Unit) {
 }
 ```
 
-Logout request messages include a *Post Logout Redirect URI* that points to our *Web Hosted Post-Logout Page*. The user clicks a *Continue* button and the web page again invokes the app’s claimed HTTPS scheme, which matches the below logout receiver activity, so that control is returned to the app and logout can complete:
+Logout request messages include a *Post Logout Redirect URI* that points to our *Web Hosted Post-Logout Page*. The user clicks a *Continue* button and the web page again invokes the app's claimed HTTPS scheme, which matches the below logout receiver activity, so that control is returned to the app and logout can complete:
 
 ```xml
 <activity
@@ -693,7 +693,7 @@ public static final class TokenRequestErrors {
 }
 ```
 
-The app’s error handling is diligent about capturing these runtime details, to help with OAuth problem resolution:
+The app's error handling is diligent about capturing these runtime details, to help with OAuth problem resolution:
 
 <div className='smallimage'>
     <img src='../images/530/appauth-error.jpg?v=20240912' alt='appauth error' />
@@ -769,5 +769,5 @@ We have implemented an OpenID Connect secured Android app with no blocking issue
 
 ### Next
 
-- Next we will start describing our <a href='ios-code-sample-overview.mdx'>Secured iOS App’s Behaviour</a>
+- Next we will start describing our <a href='ios-code-sample-overview.mdx'>Secured iOS App's Behaviour</a>
 - For a list of all blog posts see the <a href='index.mdx'>Index Page</a>

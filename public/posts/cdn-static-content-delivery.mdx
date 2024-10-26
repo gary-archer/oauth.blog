@@ -41,7 +41,7 @@ The build script for the SPA produces a *dist* folder containing files to deploy
     <img src='../images/610/release-bundles.jpg' alt='release bundles' />
 </div>
 
-A final *index.html* file is then produced, adding cache busting timestamps to asset references, to ensure that the browser’s cache never serves old files after an upgrade.
+A final *index.html* file is then produced, adding cache busting timestamps to asset references, to ensure that the browser's cache never serves old files after an upgrade.
 
 I also apply [subresource integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) attributes, to bind each resource to the HTML file. This does not solve any real security problems for my web deployment, but is a personal preference, to assert the correctness of assets shipped together.
 
@@ -75,7 +75,7 @@ A script called *rewriteIndexHtml.ts* is responsible for producing the final HTM
 
 ### SPA Deployed Configuration
 
-In development, the SPA downloads an *spa.config.json* file, containing the following values. These would vary depending on the stage of a company’s deployment pipeline:
+In development, the SPA downloads an *spa.config.json* file, containing the following values. These would vary depending on the stage of a company's deployment pipeline:
 
 ```json
 {
@@ -92,7 +92,7 @@ if (location.origin.toLowerCase() === productionConfiguration.app.webOrigin.toLo
     return productionConfiguration;
 }
 
-return this._download();
+return this.download();
 ```
 
 If so then a hard coded configuration object is used instead:
@@ -129,7 +129,7 @@ Once the upload completes a number of files exist in the S3 bucket, where the SP
 
 ![spa subfolder](../images/610/spa-subfolder.jpg)
 
-Our SPA’s default URL has this generated HTTP URL:
+Our SPA's default URL has this generated HTTP URL:
 
 - *http://www.authsamples.com.s3-website.eu-west-2.amazonaws.com*
 
@@ -219,7 +219,7 @@ These are configured under the *Behaviours* settings of the CloudFront distribut
 
 ![csp](../images/610/csp.jpg)
 
-The most interesting setting is the [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) which I set to this string to protect against common threats and to only allow the SPA’s JavaScript to make remote calls to its web host and backend for frontend:
+The most interesting setting is the [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) which I set to this string to protect against common threats and to only allow the SPA's JavaScript to make remote calls to its web host and backend for frontend:
 
 ```markdown
 default-src 'none';
@@ -263,7 +263,7 @@ function handler(event) {
 }
 ```
 
-Document serving uses a *Viewer Request* function with the following logic to serve the *index.html* file for all React routes, so that React works correctly in the browser. This function also handles paths outside the React app by redirecting to the web domain’s default location:
+Document serving uses a *Viewer Request* function with the following logic to serve the *index.html* file for all React routes, so that React works correctly in the browser. This function also handles paths outside the React app by redirecting to the web domain's default location:
 
 ```javascript
 function handler(event) {
@@ -309,7 +309,7 @@ function handler(event) {
 
 The code running within a CDN only manages web concerns. I avoid activities such as calling APIs, since CDNs may impose short code timeouts and small HTTP message sizes.
 
-The behaviour settings for the final SPA are configured in the AWS console as follows, to apply the finishing touches to the SPA’s web architecture:
+The behaviour settings for the final SPA are configured in the AWS console as follows, to apply the finishing touches to the SPA's web architecture:
 
 ![cloudfront functions](../images/610/cloudfront-functions.jpg)
 
@@ -327,7 +327,7 @@ While edge locations are being updated, the AWS Console UI shows an *In Progress
 
 ### Where Are We?
 
-We have implemented our SPA’s global deployment, to achieve good global performance in a low cost and easy to manage way.
+We have implemented our SPA's global deployment, to achieve good global performance in a low cost and easy to manage way.
 
 ### Next
 

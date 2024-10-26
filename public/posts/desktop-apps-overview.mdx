@@ -1,6 +1,6 @@
 # Desktop Code Sample Overview
 
-Previously I summarised this blog’s <a href='native-architecture-goals.mdx'>Native Architecture Goals</a>. I cover secure mobile apps in later posts. First though, I provide a couple of OpenID Connect secured desktop code samples. They connect to <a href='cloud-hosting.mdx'>HTTPS endpoints hosted in AWS</a>, so that you only need to run the desktop app's code to get a fully integrated solution.
+Previously I summarised this blog's <a href='native-architecture-goals.mdx'>Native Architecture Goals</a>. I cover secure mobile apps in later posts. First though, I provide a couple of OpenID Connect secured desktop code samples. They connect to <a href='cloud-hosting.mdx'>HTTPS endpoints hosted in AWS</a>, so that you only need to run the desktop app's code to get a fully integrated solution.
 
 ### Features
 
@@ -33,7 +33,7 @@ The desktop app looks almost the same on Windows, macOS and Linux:
 
 ### Native Authorization Responses
 
-A web client runs in a browser and has an addressable URL on which to receive login responses. Native apps need a different mechanism, and the [RFC 8252 standard](https://datatracker.ietf.org/doc/rfc8252) explains the three options that you can use. Only the first two options work for a desktop app, and I use the loopback option for this blog’s initial desktop app. The final desktop app instead uses a private URI scheme. Later, this blog’s mobile apps use claimed HTTPS schemes.
+A web client runs in a browser and has an addressable URL on which to receive login responses. Native apps need a different mechanism, and the [RFC 8252 standard](https://datatracker.ietf.org/doc/rfc8252) explains the three options that you can use. Only the first two options work for a desktop app, and I use the loopback option for this blog's initial desktop app. The final desktop app instead uses a private URI scheme. Later, this blog's mobile apps use claimed HTTPS schemes.
 
 | Option | Example Redirect URI | Usable By |
 | ------ | -------------------- | --------- |

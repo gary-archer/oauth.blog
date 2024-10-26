@@ -46,7 +46,7 @@ We will run scripts from the *docker-local* folder to deploy a development setup
 
 ### Step 2: Configure DNS and SSL
 
-First add the following logging domain name to your computer’s hosts file:
+First add the following logging domain name to your computer's hosts file:
 
 ```markdown
 127.0.0.1 logs.authsamples-dev.com
@@ -162,7 +162,7 @@ To generate local API logs you need to run an API, and a client that calls the A
 ~/dev/oauth.apisample.nodejs
 ```
 
-I sometimes use log aggregation when developing this blog’s secured components, when I want to look more closely at API logs. For example, I can run the final Node.js API locally, with the final SPA as a client.
+I sometimes use log aggregation when developing this blog's secured components, when I want to look more closely at API logs. For example, I can run the final Node.js API locally, with the final SPA as a client.
 
 | Client | Behaviour |
 | ------ | --------- |
@@ -318,7 +318,7 @@ By default, Filebeat adds some fields to each log entry on the outbound side of 
         "script": {
           "lang": "painless",
           "description": "Use a client side unique id to prevent duplicates",
-          "source": "ctx._id = ctx.id"
+          "source": "ctx.id = ctx.id"
         },
         "date" : {
           "field" : "utcTime",
@@ -378,14 +378,14 @@ You should see files whose sizes match those on the host:
 -rw-r--r-- 1 filebeat filebeat   511 Oct  2 19:46 api.2022-10-02.0.log
 ```
 
-Alternatively, view Filebeat’s own logs to see details of any log shipping errors:
+Alternatively, view Filebeat's own logs to see details of any log shipping errors:
 
 ```bash
 export FILEBEAT_CONTAINER_ID=$(docker ps | grep filebeat | awk '{print $1}')
 docker logs -f $FILEBEAT_CONTAINER_ID
 ```
 
-The Filebeat documentation explains the component’s [folder layout](https://www.elastic.co/guide/en/beats/filebeat/current/directory-layout.html), and note that the data folder is used to track offsets in files being shipped:
+The Filebeat documentation explains the component's [folder layout](https://www.elastic.co/guide/en/beats/filebeat/current/directory-layout.html), and note that the data folder is used to track offsets in files being shipped:
 
 ![filebeat tracking](../images/390/filebeat-tracking.jpg)
 

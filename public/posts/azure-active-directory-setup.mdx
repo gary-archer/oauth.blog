@@ -22,7 +22,7 @@ The components remain those that I used with this blog's default authorization s
 
 This sample uses the traditional SPA solution, with OpenID Connect implemented solely in JavaScript. In 2021 the best practice is to upgrade to a <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend</a> approach.
 
-The traditional SPA flow remains useful to represent a pure SPA architecture and to learn about Entra ID integration. This blog’s <a href='final-spa-overview.mdx'>Final SPA</a> provides a BFF based solution, but requires a more complex flow.
+The traditional SPA flow remains useful to represent a pure SPA architecture and to learn about Entra ID integration. This blog's <a href='final-spa-overview.mdx'>Final SPA</a> provides a BFF based solution, but requires a more complex flow.
 
 ### Code Download
 
@@ -82,12 +82,12 @@ I assigned each user *First name* and *Last name* fields. The *Object ID* field 
 
 I then did an initial login for each user with the following steps in a new incognito browser window, to configure the user for MFA, as Entra ID requires. I used the Google authenticator app on my mobile device.
 
-- In the Entra ID Portal, reset the user’s password to get a temporary one.
+- In the Entra ID Portal, reset the user's password to get a temporary one.
 - Login to the SPA and reset the password when prompted.
 - There follows a prompt to create an entry in an authenticator app.
 - The browser login form then presents a QR code.
 - On my mobile device I scanned the QR code in my authenticator app.
-- In the browser I then entered the authenticator app’s one-time-code.
+- In the browser I then entered the authenticator app's one-time-code.
 
 On all subsequent logins I only enter the username and password, until I am again prompted for a new one-time-code from the authenticator app.
 
@@ -181,7 +181,7 @@ Identify the configuration files containing OAuth settings used by the UI and AP
 
 ### Step 9. Update SPA Configuration
 
-For the SPA update both the *Tenant ID* and the SPA’s *Client ID* to your own value:
+For the SPA update both the *Tenant ID* and the SPA's *Client ID* to your own value:
 
 ```json
 {
@@ -235,7 +235,7 @@ This configuration is equivalent to that of the earlier <a href='improved-spa-co
 
 ### Step 11. Configure DNS
 
-Update the hosts file on your computer to include this blog’s local development domains, described in the earlier <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a> post:
+Update the hosts file on your computer to include this blog's local development domains, described in the earlier <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a> post:
 
 ```markdown
 127.0.0.1 www.authsamples-dev.com api.authsamples-dev.com

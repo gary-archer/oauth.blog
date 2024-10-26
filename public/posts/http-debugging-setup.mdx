@@ -29,7 +29,7 @@ I use the *–ssl-insecure* option when upstream components use my own OpenSSL g
 
 After running the above command, you must configure the operating system to use an HTTP proxy, with *host=127.0.0.1* and *port=8888*. A little later in this post I provide screenshots to show how to do so on Windows, macOS and Linux computers.
 
-Next, browse to http://mitm.it and follow the instructions so that your browser trusts the HTTP proxy’s root certificate authority. You can then capture OAuth and API requests, including those sent from this blog’s code samples:
+Next, browse to http://mitm.it and follow the instructions so that your browser trusts the HTTP proxy's root certificate authority. You can then capture OAuth and API requests, including those sent from this blog's code samples:
 
 ![mitm cert docs](../images/100/mitm-cert-docs.jpg)
 
@@ -76,7 +76,7 @@ Next, I perform any environment specific configuration, explained in the followi
 
 ### Debug the Initial SPA and API
 
-First, edit the API configuration for this blog’s <a href='basicspa-execution.mdx'>initial SPA and API code sample</a> and set *useProxy=true*:
+First, edit the API configuration for this blog's <a href='basicspa-execution.mdx'>initial SPA and API code sample</a> and set *useProxy=true*:
 
 ```json
 {
@@ -97,7 +97,7 @@ First, edit the API configuration for this blog’s <a href='basicspa-execution.
 }
 ```
 
-Then run the code sample with the following commands so that mitmproxy captures outgoing OAuth requests from the API. Setting *NODE_TLS_REJECT_UNAUTHORIZED* is a quick way to get the sample’s Node.js API to trust the proxy root certificate. I cover SSL trust in the next post.
+Then run the code sample with the following commands so that mitmproxy captures outgoing OAuth requests from the API. Setting *NODE_TLS_REJECT_UNAUTHORIZED* is a quick way to get the sample's Node.js API to trust the proxy root certificate. I cover SSL trust in the next post.
 
 ```bash
 export NODE_TLS_REJECT_UNAUTHORIZED=0
@@ -106,13 +106,13 @@ cd oauth.websample1
 ./start.sh
 ```
 
-After you authenticate in the SPA you see the following request from the API’s JWT library to the authorization server's JWKS URI, to download token signing public keys:
+After you authenticate in the SPA you see the following request from the API's JWT library to the authorization server's JWKS URI, to download token signing public keys:
 
 ![mitm jwks](../images/100/mitm-jwks.jpg?v=20240714)
 
 ### HTTP Proxying Mechanics
 
-The [mitmproxy docs](https://docs.mitmproxy.org/stable/concepts-howmitmproxyworks/) provide a great explanation of how HTTP proxying works. The application’s HTTP client is instructed to route via the proxy, which can chain to an existing HTTP proxy when applicable, such as those often used by corporate networks.
+The [mitmproxy docs](https://docs.mitmproxy.org/stable/concepts-howmitmproxyworks/) provide a great explanation of how HTTP proxying works. The application's HTTP client is instructed to route via the proxy, which can chain to an existing HTTP proxy when applicable, such as those often used by corporate networks.
 
 The proxy also performs manipulation of HTTPS traffic, by re-encrypting outgoing client traffic using its's own SSL certificate. Consider the following JWKS URI, which uses an Amazon root certificate:
 
@@ -161,7 +161,7 @@ On Linux, run the network tool for the operating system and configure equivalent
 
 ### Browser Proxy Settings
 
-Browsers usually inherit the system proxy settings, though command line overrides may exist, such as Chrome’s [–proxy-server option](https://www.linuxbabe.com/desktop-linux/configure-proxy-chromium-google-chrome-command-line). Firefox does not inherit the system settings, and instead you must set proxy details explicitly, under *Options / Network Settings*:
+Browsers usually inherit the system proxy settings, though command line overrides may exist, such as Chrome's [–proxy-server option](https://www.linuxbabe.com/desktop-linux/configure-proxy-chromium-google-chrome-command-line). Firefox does not inherit the system settings, and instead you must set proxy details explicitly, under *Options / Network Settings*:
 
 ![firefox proxy flags](../images/100/firefox-proxy-settings.jpg)
 
@@ -174,17 +174,17 @@ import HttpsProxyAgent from 'https-proxy-agent';
 
 export class HttpProxy {
 
-    private readonly _agent: any;
+    private readonly agent: any;
 
     public constructor(useProxy: boolean, proxyUrl: string) {
 
         if (useProxy) {
-            this._agent = HttpsProxyAgent(proxyUrl);
+            this.agent = HttpsProxyAgent(proxyUrl);
         }
     }
 
-    public get agent(): any {
-        return this._agent;
+    public getAgent(): any {
+        return this.agent;
     }
 }
 ```
@@ -251,7 +251,7 @@ public async Task<IEnumerable<Claim>> GetUserInfoAsync(string accessToken)
 
 ### Proxy Settings for Java APIs
 
-In later posts I provide an <a href='java-spring-boot-api-overview.mdx'>OAuth Secured Java API</a>. You can activate the proxy with standard system properties at startup, based on the API’s configuration settings. For HTTP URLs the properties use an *http* prefix, and for HTTPS URLs they use an *https* prefix:
+In later posts I provide an <a href='java-spring-boot-api-overview.mdx'>OAuth Secured Java API</a>. You can activate the proxy with standard system properties at startup, based on the API's configuration settings. For HTTP URLs the properties use an *http* prefix, and for HTTPS URLs they use an *https* prefix:
 
 ```java
 private void configureHttpDebugging(final ApiConfiguration configuration) {

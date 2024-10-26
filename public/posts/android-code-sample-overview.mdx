@@ -45,7 +45,7 @@ The Android App will be coded in Kotlin and will use [Jetpack Compose](https://d
 
 ### Security Recommendations
 
-There are risks with mobile apps that a malicious third party could install an app that uses our app’s *Client ID* and *Redirect URI*, so we will follow high security recommendations, to use *Claimed HTTP Schemes*:
+There are risks with mobile apps that a malicious third party could install an app that uses our app's *Client ID* and *Redirect URI*, so we will follow high security recommendations, to use *Claimed HTTP Schemes*:
 
 - [Financial Grade APIs / Native Apps](https://openid.net/specs/openid-financial-api-part-1-ID2.html#native-apps)
 
@@ -55,7 +55,7 @@ This prevents a fake app from receiving a login result, since the attacker would
 
 ### Logins via the System Browser
 
-AppAuth user logins will be via a [Chrome Custom Tab](https://developer.chrome.com/docs/android/custom-tabs) window, which overlays the app’s mobile views and acts as a secure sandbox, so that the app itself never has access to the user’s credentials.
+AppAuth user logins will be via a [Chrome Custom Tab](https://developer.chrome.com/docs/android/custom-tabs) window, which overlays the app's mobile views and acts as a secure sandbox, so that the app itself never has access to the user's credentials.
 
 <div className='smallimage'>
     <img src='../images/500/custom-tab-login.jpg?v=20240912' alt='custom tab login' />
@@ -76,7 +76,7 @@ The following problems exist if you perform login redirects on a normal mobile w
 | Single Sign On | Cookies will not be shared with other apps and are likely to be dropped more aggressively within your own app |
 | Could be Blocked | Google is an example of an identity provider that [blocks logins on a mobile web view](https://auth0.com/blog/google-blocks-oauth-requests-from-embedded-browsers) |
 
-### Our Sample’s Login Usability Features
+### Our Sample's Login Usability Features
 
 Using Chrome custom tabs will provide the best chance of password autofill working, so that the user does not need to continually remember their password. After login we will store the *OAuth Refresh Token* on the device, using secure operating system storage private to our app. This ensures that, on subsequent application restarts, the first thing the user sees is the app:
 
@@ -92,7 +92,7 @@ The user must then set a minimum security level of *Pattern*, *PIN* or *Password
 
 ### Password Autofill Details
 
-On the initial login the user will need to type in their email and password. By default the Chrome custom tab will immediately disappear after login and the user will be unable to use Chrome’s *Save Password* feature. We will resolve this problem by presenting a *Post Login Page* after authentication but before the browser window is closed.
+On the initial login the user will need to type in their email and password. By default the Chrome custom tab will immediately disappear after login and the user will be unable to use Chrome's *Save Password* feature. We will resolve this problem by presenting a *Post Login Page* after authentication but before the browser window is closed.
 
 <div className='smallimage'>
     <img src='../images/500/save-password-prompt.jpg?v=20240912' alt='save password prompt' />
@@ -120,7 +120,7 @@ Our session buttons help to ensure that built in *Back Stack Navigation* is reli
 
 ### Logout
 
-The sample also implements <a href='logout.mdx'>Open ID Connect RP-Initiated Logout</a>, to remove the authorization server’s session cookie. In a real-world app a logout capability enables you to test data access for different users with different settings or permissions.
+The sample also implements <a href='logout.mdx'>Open ID Connect RP-Initiated Logout</a>, to remove the authorization server's session cookie. In a real-world app a logout capability enables you to test data access for different users with different settings or permissions.
 
 ### Deep Linking
 
@@ -167,11 +167,11 @@ There are three scenarios where we will redirect the user on the Chrome custom t
 | ------------- | ----------- |
 | Login | The user is interactively prompted to login |
 | Single Sign On | The user already has a valid session cookie and signs in automatically without a login screen |
-| Logout | The user’s session cookie is removed, with no prompt |
+| Logout | The user's session cookie is removed, with no prompt |
 
 In each case, there needs to be a screen before invoking the deep link. You may find using the OpenID Connect *prompt=login* parameter on every login redirect is reliable. In this blog I instead use a custom intermediate page, partly because AWS Cognito does not support the *prompt* parameter.
 
-### This Blog’s Intermediate Web Pages
+### This Blog's Intermediate Web Pages
 
 We will use the following custom *AWS Hosted Web Pages* that are returned to after login / logout redirects. A real company could present its own branded pages instead.
 
@@ -190,7 +190,7 @@ Chrom custom tab logins improve usability, but they also add some complexity. Ou
 | Test Case | Description |
 | --------- | ----------- |
 | Change Orientation | The user switches between portrait and landscape |
-| Reactivate App | The user switches to another app and then re-runs our app from the home screen via the app’s launcher icon |
+| Reactivate App | The user switches to another app and then re-runs our app from the home screen via the app's launcher icon |
 | Deep Link | The user selects a deep link message from an email |
 
 ### Where Are We?

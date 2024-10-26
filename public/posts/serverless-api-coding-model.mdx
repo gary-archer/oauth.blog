@@ -1,10 +1,10 @@
 # Serverless API Code Details
 
-Previously I described this blog’s <a href='serverless-api-deployment.mdx'>Serverless API Deployment</a>. Next we will explain how we have coded this blog’s lambda based APIs, to include the behaviours from this blog's <a href='api-journey-server-side.mdx'>API Journey – Server Side</a> blog post.
+Previously I described this blog's <a href='serverless-api-deployment.mdx'>Serverless API Deployment</a>. Next we will explain how we have coded this blog's lambda based APIs, to include the behaviours from this blog's <a href='api-journey-server-side.mdx'>API Journey – Server Side</a> blog post.
 
 ### Portable Code
 
-In our earlier Node.js API we used the Express HTTP Server. As part of migrating to AWS Serverless, we have only changed the API’s host layer. The API logic classes are identical to the earlier API:
+In our earlier Node.js API we used the Express HTTP Server. As part of migrating to AWS Serverless, we have only changed the API's host layer. The API logic classes are identical to the earlier API:
 
 <div className='smallimage'>
     <img src='../images/640/code-layout.jpg' alt='code layout' />
@@ -46,7 +46,7 @@ Lambdas are enriched by injecting middleware classes to manage aspects such as a
 public enrichHandler(baseHandler: AsyncHandler, container: Container)
     : middy.MiddyfiedHandler<APIGatewayProxyEvent, APIGatewayProxyResult> | AsyncHandler {
 
-    const configuration = this._loadConfiguration();
+    const configuration = this.loadConfiguration();
 
     const base = new BaseCompositionRoot(container)
         .useLogging(configuration.logging, loggerFactory)
@@ -72,7 +72,7 @@ public enrichHandler(baseHandler: AsyncHandler, container: Container)
 }
 ```
 
-Earlier Node.js samples used middleware built into Express, whereas for AWS Lambdas we are using the [Middy Library](https://github.com/middyjs/middy), to separate plumbing code from the API’s logic classes:
+Earlier Node.js samples used middleware built into Express, whereas for AWS Lambdas we are using the [Middy Library](https://github.com/middyjs/middy), to separate plumbing code from the API's logic classes:
 
 ![middy](../images/640/middy.jpg)
 
@@ -81,24 +81,24 @@ Middy provides interception points called before, after and error. As an example
 ```typescript
 export class LoggerMiddleware implements middy.MiddlewareObj<APIGatewayProxyEvent, APIGatewayProxyResult> {
 
-    private readonly _container: Container;
-    private readonly _loggerFactory: LoggerFactoryImpl;
+    private readonly container: Container;
+    private readonly loggerFactory: LoggerFactoryImpl;
 
     public constructor(container: Container, loggerFactory: LoggerFactoryImpl) {
-        this._container = container;
-        this._loggerFactory = loggerFactory;
+        this.container = container;
+        this.loggerFactory = loggerFactory;
     }
 
     public before(request: middy.Request<APIGatewayProxyEvent, APIGatewayProxyResult>): void {
 
-        const logEntry = this._loggerFactory.createLogEntry();
-        this._container.rebind<LogEntryImpl>(BASETYPES.LogEntry).toConstantValue(logEntry);
+        const logEntry = this.loggerFactory.createLogEntry();
+        this.container.rebind<LogEntryImpl>(BASETYPES.LogEntry).toConstantValue(logEntry);
         logEntry.start(request.event, request.context);
     }
 
     public after(request: middy.Request<APIGatewayProxyEvent, APIGatewayProxyResult>): void {
 
-        const logEntry = this._container.get<LogEntryImpl>(BASETYPES.LogEntry);
+        const logEntry = this.container.get<LogEntryImpl>(BASETYPES.LogEntry);
         if (request.response && request.response.statusCode) {
             logEntry.setResponseStatus(request.response.statusCode);
         }
@@ -127,15 +127,15 @@ With Serverless lambdas I continue to use modern and productive code based on de
 @injectable()
 export class CompanyService {
 
-    private readonly _repository: CompanyRepository;
-    private readonly _claims: SampleCustomClaims;
+    private readonly repository: CompanyRepository;
+    private readonly claims: SampleCustomClaims;
 
     public constructor(
         @inject(SAMPLETYPES.CompanyRepository) repository: CompanyRepository,
         @inject(BASETYPES.CustomClaims) claims: SampleCustomClaims) {
 
-        this._repository = repository;
-        this._claims = claims;
+        this.repository = repository;
+        this.claims = claims;
     }
 }
 ```
@@ -144,13 +144,13 @@ In AWS, the entire API is spun up on every single HTTP request. There is no need
 
 ### JWT Access Token Validation
 
-Previously we explained this blog’s approach to <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a>, which involves caching the token signing public keys in-memory. For the Serverless API I needed to provide a custom key retriever to the JOSE library:
+Previously we explained this blog's approach to <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a>, which involves caching the token signing public keys in-memory. For the Serverless API I needed to provide a custom key retriever to the JOSE library:
 
 ```typescript
-const result = await jwtVerify(accessToken, this._jwksRetriever.getKey, options);
+const result = await jwtVerify(accessToken, this.jwksRetriever.getKey, options);
 ```
 
-A function with the following method signature is required, and this blog’s implementation gets cached keys from DynamoDB, to avoid needing to call the authorization server on every API request:
+A function with the following method signature is required, and this blog's implementation gets cached keys from DynamoDB, to avoid needing to call the authorization server on every API request:
 
 ```typescript
 async getKey(
@@ -163,17 +163,17 @@ This required a custom cache class to wrap DynamoDB, some of whose code is shown
 ```typescript
 export class AwsCache implements Cache {
 
-    private readonly _configuration: CacheConfiguration;
-    private readonly _extraClaimsProvider: ExtraClaimsProvider;
-    private readonly _database: DynamoDBClient;
+    private readonly configuration: CacheConfiguration;
+    private readonly extraClaimsProvider: ExtraClaimsProvider;
+    private readonly database: DynamoDBClient;
 
     public constructor(configuration: CacheConfiguration, extraClaimsProvider: ExtraClaimsProvider) {
 
         try {
 
-            this._configuration = configuration;
-            this._extraClaimsProvider = extraClaimsProvider;
-            this._database = new DynamoDBClient({region: configuration.region});
+            this.configuration = configuration;
+            this.extraClaimsProvider = extraClaimsProvider;
+            this.database = new DynamoDBClient({region: configuration.region});
 
         } catch (e) {
 
@@ -184,23 +184,23 @@ export class AwsCache implements Cache {
     public async setJwksKeys(jwksText: string): Promise<void> {
 
         const params = {
-            TableName: this._configuration.tableName,
+            TableName: this.configuration.tableName,
             Item: {
                 'CACHE_KEY' : {S: 'JWKS'},
                 'CACHE_VALUE' : {S: jwksText},
-                'TTL_VALUE': {N: `${this._getExpiry()}`},
+                'TTL_VALUE': {N: `${this.getExpiry()}`},
             }
         };
 
-        await this._putItem(params);
+        await this.putItem(params);
     }
 
-    private async _putItem(params: PutItemInput): Promise<void> {
+    private async putItem(params: PutItemInput): Promise<void> {
 
         try {
 
             const command = new PutItemCommand(params);
-            await this._database.send(command);
+            await this.database.send(command);
 
         } catch (e: any) {
 
@@ -212,12 +212,12 @@ export class AwsCache implements Cache {
 
 ### OAuth Middleware Customisation
 
-The API authorizes using this blog’s <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. This involves looking up and caching the following extra claims when an access token is first received.
+The API authorizes using this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. This involves looking up and caching the following extra claims when an access token is first received.
 
 ```typescript
 export class SampleExtraClaims extends ExtraClaims {
-    private readonly _title: string;
-    private readonly _regions: string[];
+    private readonly title: string;
+    private readonly regions: string[];
 }
 ```
 

@@ -6,7 +6,7 @@ Previously we enabled an initial Android setup by running the <a href='android-s
 
 First configure and run the HTTP proxy on the host computer, as described in our earlier write up on <a href='http-debugging-setup.mdx'>HTTPS Debugging</a>. We also need to instruct the proxy to decrypt SSL traffic, as covered for other environments in the blog post on <a href='developer-ssl-setup.mdx'>SSL Trust Configuration</a>:
 
-### Determine the Computer’s IP Address
+### Determine the Computer's IP Address
 
 This value may vary depending on whether you are using an emulator or a device connected via USB. Some Android emulators may use the special value *10.0.2.2* whereas others may use the computer's network IP v4 address, which you can find in various ways, such as by running the following command:
 
@@ -44,7 +44,7 @@ If we now run the system browser or a mobile app on the Android device, any SSL 
     <img src='../images/470/ssl-trust-error.jpg?v=20240804' alt='ssl trust error' />
 </div>
 
-This is because the HTTP proxy is intercepting SSL requests at runtime and replacing the root certificate authority. To fix this we need to configure emulators and devices to trust the HTTP proxy’s root certificate.
+This is because the HTTP proxy is intercepting SSL requests at runtime and replacing the root certificate authority. To fix this we need to configure emulators and devices to trust the HTTP proxy's root certificate.
 
 <div className='smallimage'>
     <img src='../images/470/proxy-root-ca.jpg?v=20240804' alt='proxy root ca' />
@@ -66,7 +66,7 @@ You can then make the CA file available for download by placing the resulting ce
 docker run -it --rm -p 80:80 -v ./fileshare:/var/lib/nginx/html:ro dceoy/nginx-autoindex
 ```
 
-From an emulator or device you can open Chrome and type the IP address of the host. Click a certificate file and save it to the device’s *Downloads* folder:
+From an emulator or device you can open Chrome and type the IP address of the host. Click a certificate file and save it to the device's *Downloads* folder:
 
 <div className='smallimage'>
     <img src='../images/470/get-proxy-root-ca.jpg?v=20240804' alt='get proxy root ca' />

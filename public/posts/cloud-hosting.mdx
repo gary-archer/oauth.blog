@@ -29,7 +29,7 @@ If you have your own cloud domain and subdomains, you could follow similar steps
 
 ### Managed Internet SSL Certificates
 
-[AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) issues TLS 1.3 certificates for the domain and its subdomains, using the same wildcard certificate concept we’ve used on a local computer in earlier posts:
+[AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) issues TLS 1.3 certificates for the domain and its subdomains, using the same wildcard certificate concept we've used on a local computer in earlier posts:
 
 ![certs](../images/580/certs.jpg)
 
@@ -79,7 +79,7 @@ Earlier in this blog we chose AWS Cognito as an initial low-cost authorization s
 
 ### Cloud Connected Code Samples
 
-Use of cloud hosting enables any reader of this blog to run this blog’s OAuth code samples. The <a href='quick-start.mdx'>Code Samples Quick Start</a> page provides details of online URLs and guest credentials for running the demo apps.
+Use of cloud hosting enables any reader of this blog to run this blog's OAuth code samples. The <a href='quick-start.mdx'>Code Samples Quick Start</a> page provides details of online URLs and guest credentials for running the demo apps.
 
 <div className='smallimage'>
     <img src='../images/580/cloud-login.jpg' alt='cloud login' />
@@ -87,7 +87,7 @@ Use of cloud hosting enables any reader of this blog to run this blog’s OAuth 
 
 ### Centralized API Logs
 
-APIs will use this blog’s <a href='effective-api-logging.mdx'>Effective API Logging</a> design to write immediate log data to AWS CloudWatch. These logs could then be aggregated and queried using <a href='api-technical-support-analysis.mdx'>Technical Support Queries</a>.
+APIs will use this blog's <a href='effective-api-logging.mdx'>Effective API Logging</a> design to write immediate log data to AWS CloudWatch. These logs could then be aggregated and queried using <a href='api-technical-support-analysis.mdx'>Technical Support Queries</a>.
 
 ### Lost Cost Initial Hosting
 
@@ -97,7 +97,7 @@ The AWS costs for the above setup are around 13 USD per year to register the bas
 
 ### Kubernetes Hosting
 
-The API side of the architecture can also run in a Kubernetes environment. In AWS this would be managed by spinning up an [EKS](https://docs.aws.amazon.com/whitepapers/latest/overview-deployment-options/amazon-elastic-kubernetes-service.html) cluster, that hosts this blog’s final APIs, along with any suppporting components. This is more expensive than Serverless hosting but enables richer choices, so can sometimes be a better choice on the API side of the architecture.
+The API side of the architecture can also run in a Kubernetes environment. In AWS this would be managed by spinning up an [EKS](https://docs.aws.amazon.com/whitepapers/latest/overview-deployment-options/amazon-elastic-kubernetes-service.html) cluster, that hosts this blog's final APIs, along with any suppporting components. This is more expensive than Serverless hosting but enables richer choices, so can sometimes be a better choice on the API side of the architecture.
 
 ### Where Are We?
 

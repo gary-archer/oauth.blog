@@ -37,7 +37,7 @@ Logins continue to use the system browser:
 
 ![desktop login](../images/440/desktop-login.jpg?v=20240925)
 
-You can use this blog’s test credential to sign in:
+You can use this blog's test credential to sign in:
 
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
@@ -60,7 +60,7 @@ The app also implements OpenID Connect RP initiated logout, which presents a sim
 
 ### OAuth Configuration Changes
 
-The final desktop app’s configuration no longer uses HTTP ports, and now uses login and logout completion pages as redirect URIs:
+The final desktop app's configuration no longer uses HTTP ports, and now uses login and logout completion pages as redirect URIs:
 
 ```json
 {
@@ -102,7 +102,7 @@ If you use your browser's *View Source* option you can see that the pages simply
 
 ![response forwarding](../images/440/response-forwarding.jpg?v=20240925)
 
-One downside of this approach is that, if the user doesn’t click the *Return to the App* button for a couple of minutes, the authorization code could time out, resulting in a user error. The user can always retry and recover though.
+One downside of this approach is that, if the user doesn't click the *Return to the App* button for a couple of minutes, the authorization code could time out, resulting in a user error. The user can always retry and recover though.
 
 ### Private URI Scheme Browser Prompts
 
@@ -176,7 +176,7 @@ The login and logout response messages received by the app are a type of deep li
 - *x-authsamples-desktopapp:/callback?code=…&state=…*
 - *x-authsamples-desktopapp:/logoutcallback*
 
-In some use cases, you can use deep linking to bookmark screens. For example, you might send the user an email with a URL link. Note however that email clients may consider the private URI scheme’s prefix suspect, and block this type of deep link:
+In some use cases, you can use deep linking to bookmark screens. For example, you might send the user an email with a URL link. Note however that email clients may consider the private URI scheme's prefix suspect, and block this type of deep link:
 
 - *x-authsamples-desktopapp:/companies/2*
 
@@ -192,7 +192,7 @@ If the desktop app is running, this command causes it to update its current loca
 
 ![deep link](../images/440/deeplink.jpg?v=20240925)
 
-If the app has a valid access token, it moves directly to the deep linking destination screen. Otherwise, a token renewal or login runs, followed by deep linking navigation afterwards. This blog’s API authorization applies business rules that mean the default test user can only access data for the USA region. Attempts to deep link to other companies fail API authorization and return a known error code. The desktop app handles this error specially, to return the user to the initial view:
+If the app has a valid access token, it moves directly to the deep linking destination screen. Otherwise, a token renewal or login runs, followed by deep linking navigation afterwards. This blog's API authorization applies business rules that mean the default test user can only access data for the USA region. Attempts to deep link to other companies fail API authorization and return a known error code. The desktop app handles this error specially, to return the user to the initial view:
 
 ![deep link unauthorized](../images/440/deeplink-unauthorized.jpg?v=20240925)
 
@@ -202,7 +202,7 @@ Finally, note that on macOS, startup deep links only work if you run a packaged 
 
 ### Local API Setup
 
-If required, you can run the desktop app against a local OAuth secured API. You can do so for one of this blog’s final APIs and following its instructions to run it locally:
+If required, you can run the desktop app against a local OAuth secured API. You can do so for one of this blog's final APIs and following its instructions to run it locally:
 
 - <a href='api-architecture-node.mdx'>Node.js API</a>
 - <a href='net-core-code-sample-overview.mdx'>.Net Core API</a>

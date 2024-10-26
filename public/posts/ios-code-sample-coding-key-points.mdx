@@ -1,10 +1,10 @@
 # iOS Code Sample – Code Details
 
-Previously we described our <a href='ios-code-sample-infrastructure.mdx'>iOS Infrastructure Setup</a> and we will now look at some key areas of our sample’s code. See also the <a href='api-journey-client-side.mdx'>Client Side API Journey</a> to understand the background and the requirements being met.
+Previously we described our <a href='ios-code-sample-infrastructure.mdx'>iOS Infrastructure Setup</a> and we will now look at some key areas of our sample's code. See also the <a href='api-journey-client-side.mdx'>Client Side API Journey</a> to understand the background and the requirements being met.
 
 ### Portable Code
 
-One of this blog’s coding goals is to use the same classes across multiple platforms. Our iOS App uses the same logical separation of responsibilities into classes as the earlier <a href='reactjs-codingkeypoints.mdx'>React SPA</a>:
+One of this blog's coding goals is to use the same classes across multiple platforms. Our iOS App uses the same logical separation of responsibilities into classes as the earlier <a href='reactjs-codingkeypoints.mdx'>React SPA</a>:
 
 <div className='smallimage'>
     <img src='../images/570/code-layout.jpg?v=20240914' alt='code layout' />
@@ -77,7 +77,7 @@ struct SampleApp: App {
 }
 ```
 
-The *AppView* source file renders a tree of views in a similar manner to the SPA’s application view:
+The *AppView* source file renders a tree of views in a similar manner to the SPA's application view:
 
 ```swift
 var body: some View {
@@ -627,7 +627,7 @@ As well as being more efficient, this ensures that our code is ready to use [ref
 We use AppAuth iOS support for End Session processing, and our logout code involves these two actions:
 
 - Removing the refresh token from iOS secure storage
-- Removing the authorization server’s session cookie
+- Removing the authorization server's session cookie
 
 The second step requires creating an *End Session Request*. We then redirect on an ASWebAuthenticationSession window, since the session cookie can only be removed via the system browser:
 
@@ -674,7 +674,7 @@ func startLogoutRedirect(viewController: UIViewController) throws {
 }
 ```
 
-Logout request messages include a *Post Logout Redirect URI* that points to our *Web Hosted Post Logout Page*. When the user continues, the web page again invokes the app’s claimed HTTPS scheme, which completes the operation in the same manner as for login redirects.
+Logout request messages include a *Post Logout Redirect URI* that points to our *Web Hosted Post Logout Page*. When the user continues, the web page again invokes the app's claimed HTTPS scheme, which completes the operation in the same manner as for login redirects.
 
 ### AppAuth Library – Error Codes
 
@@ -702,7 +702,7 @@ typedef NS_ENUM(NSInteger, OIDErrorCodeOAuthToken) {
 };
 ```
 
-The app’s error handling is diligent about capturing these runtime details, to help with OAuth problem resolution:
+The app's error handling is diligent about capturing these runtime details, to help with OAuth problem resolution:
 
 <div className='smallimage'>
     <img src='../images/570/appauth-error.jpg?v=20240914' alt='appauth error' />
@@ -712,7 +712,7 @@ By coding in Swift, our iOS sample requires fewest technical layers to integrate
 
 ### Navigation
 
-To manage navigation between views a *ViewRouter* class is used. The *MainView* class renders the currently active main view whenever the router’s published properties are updated.
+To manage navigation between views a *ViewRouter* class is used. The *MainView* class renders the currently active main view whenever the router's published properties are updated.
 
 ```swift
 class ViewRouter: ObservableObject {
@@ -738,7 +738,7 @@ class ViewRouter: ObservableObject {
 
 ### Deep Linking
 
-Our iOS app also uses deep linking, as a second form of navigation. When a deep link notification matches the *deep linking subpath*, the view router parses the incoming URL and updates the main view’s location:
+Our iOS app also uses deep linking, as a second form of navigation. When a deep link notification matches the *deep linking subpath*, the view router parses the incoming URL and updates the main view's location:
 
 ```swift
 func handleDeepLink(url: URL) {

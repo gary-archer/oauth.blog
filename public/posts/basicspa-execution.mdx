@@ -4,7 +4,7 @@ Previously I summarised the behaviour of the initial <a href='basicspa-overview.
 
 ### Prerequisites
 
-This blog’s code samples run in any Linux based terminal, and are tested on Ubuntu, Windows and macOS. On Windows it is expected that a [Git Bash](https://gitforwindows.org/) shell is used. Also ensure that an up to date version of [Node.js](https://nodejs.org/en/download/) is installed for your operating system.
+This blog's code samples run in any Linux based terminal, and are tested on Ubuntu, Windows and macOS. On Windows it is expected that a [Git Bash](https://gitforwindows.org/) shell is used. Also ensure that an up to date version of [Node.js](https://nodejs.org/en/download/) is installed for your operating system.
 
 ### Step 1: Download Code from GitHub
 
@@ -80,18 +80,18 @@ The registered OAuth settings for the SPA include a *Client ID*, *Redirect URI* 
 
 ![Client settings 2](../images/30/client-settings2.jpg)
 
-This blog’s code samples are standards-based, so you can change configurations to point to your own authorization server instead. You can then use your preferred URLs for the SPA and API.
+This blog's code samples are standards-based, so you can change configurations to point to your own authorization server instead. You can then use your preferred URLs for the SPA and API.
 
 ### Step 5: User Setup
 
-This blog uses the following main Cognito test account for SPA logins. This is not a real user and no personal data is used by this blog’s code samples:
+This blog uses the following main Cognito test account for SPA logins. This is not a real user and no personal data is used by this blog's code samples:
 
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
 
 ### Step 6: Domain Setup
 
-This blog’s code samples use DNS based URLs on a local computer, to represent a deployed architecture. Clean URLs are used, without a port number in the URL.
+This blog's code samples use DNS based URLs on a local computer, to represent a deployed architecture. Clean URLs are used, without a port number in the URL.
 
 | Component | Base URL |
 | --------- | -------- |
@@ -135,7 +135,7 @@ elif [ "$PLATFORM" == 'LINUX' ]; then
 fi
 ```
 
-The first child terminal builds the SPA’s JavaScript bundles:
+The first child terminal builds the SPA's JavaScript bundles:
 
 ![Running SPA](../images/30/running-spa.jpg?v=20240824)
 
@@ -143,7 +143,7 @@ The second terminal is for the API, which listens on port 80, and requires admin
 
 ![Running API](../images/30/running-api.jpg?v=20240824)
 
-To simplify the developer setup, the API also serves the SPA’s bundle files to the browser. A real web host is used later in this blog, when the SPA is deployed to a <a href="cdn-static-content-delivery.mdx">content delivery network</a>.
+To simplify the developer setup, the API also serves the SPA's bundle files to the browser. A real web host is used later in this blog, when the SPA is deployed to a <a href="cdn-static-content-delivery.mdx">content delivery network</a>.
 
 ### Step 8: Login to the SPA
 
@@ -161,7 +161,7 @@ The first API call is to *http://api.authsamples-dev.com/api/companies*, and if 
 
 ### Step 9: Run Navigation Actions
 
-You can click one of the *View Transactions* links to navigate to the SPA’s second view. Alternatively, you can type the following format of URL into the browser's address bar:
+You can click one of the *View Transactions* links to navigate to the SPA's second view. Alternatively, you can type the following format of URL into the browser's address bar:
 
 ```markdown
 http://localhost/spa/#company=2
@@ -175,7 +175,7 @@ Users can bookmark SPA locations. You can simulate this in a new browser tab or 
 
 ### Step 10: Run a User Session
 
-The SPA’s session management is incomplete in the initial code sample. Every time the access token expires the user has to login again. You can simulated expiry if you click *Expire Token* followed by *Reload Data*.
+The SPA's session management is incomplete in the initial code sample. Every time the access token expires the user has to login again. You can simulated expiry if you click *Expire Token* followed by *Reload Data*.
 
 ![Session testing](../images/30/session-testing.jpg)
 

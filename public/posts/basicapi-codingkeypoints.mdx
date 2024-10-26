@@ -62,22 +62,22 @@ The startup logic is in the *HttpServerConfiguration* class, whose main role is 
 public async initializeApi(): Promise<void> {
 
     const corsOptions = {
-        origin: this._configuration.api.trustedOrigins,
+        origin: this.configuration.api.trustedOrigins,
         maxAge: 86400,
     };
-    this._expressApp.use('/api/*', cors(corsOptions) as any);
-    this._expressApp.use('/api/*', this._apiController.onWriteHeaders);
+    this.expressApp.use('/api/*', cors(corsOptions) as any);
+    this.expressApp.use('/api/*', this.apiController.onWriteHeaders);
 
-    this._expressApp.use('/api/*', this._catch(this._apiLogger.logRequest));
-    this._expressApp.use('/api/*', this._catch(this._apiController.authorizationHandler));
+    this.expressApp.use('/api/*', this.catch(this.apiLogger.logRequest));
+    this.expressApp.use('/api/*', this.catch(this.apiController.authorizationHandler));
 
-    this._expressApp.get('/api/companies', this._catch(this._apiController.getCompanyList));
-    this._expressApp.get(
+    this.expressApp.get('/api/companies', this.catch(this.apiController.getCompanyList));
+    this.expressApp.get(
         '/api/companies/:id/transactions',
-        this._catch(this._apiController.getCompanyTransactions));
+        this.catch(this.apiController.getCompanyTransactions));
 
-    this._expressApp.use('/api/*', this._apiController.onRequestNotFound);
-    this._expressApp.use('/api/*', this._apiController.onException);
+    this.expressApp.use('/api/*', this.apiController.onRequestNotFound);
+    this.expressApp.use('/api/*', this.apiController.onException);
 }
 ```
 
@@ -106,7 +106,7 @@ The API uses a JSON configuration file in a similar manner to the SPA. The API c
 
 ### Web Static Content Hosting
 
-The API also uses Express to host web static content, to make the SPA’s files available for download to the browser. In the initial code sample, this is done for the following reasons:
+The API also uses Express to host web static content, to make the SPA's files available for download to the browser. In the initial code sample, this is done for the following reasons:
 
 - Demonstrating  that a web host should require only minimal code.
 - Reducing the number of parts so that the overall backend is easier to run.
@@ -114,8 +114,8 @@ The API also uses Express to host web static content, to make the SPA’s files 
 ```typescript
 public initializeWebStaticContentHosting(): void {
 
-    this._express.use('/spa', express.static('../spa'));
-    this._express.use('/favicon.ico', 
+    this.express.use('/spa', express.static('../spa'));
+    this.express.use('/favicon.ico', 
 }
 ```
 
@@ -144,12 +144,12 @@ The API uses *async / await* code to perform I/O. The following *CompanyReposito
 ```typescript
 public async getCompanyTransactions(id: number): Promise<CompanyTransactions | null> {
 
-    const companyList = await this._jsonReader.readData<Company[]>('data/companyList.json');
+    const companyList = await this.jsonReader.readData<Company[]>('data/companyList.json');
     const foundCompany = companyList.find((c) => c.id === id);
     if (foundCompany) {
 
         const companyTransactions =
-            await this._jsonReader.readData<CompanyTransactions[]>('data/companyTransactions.json');
+            await this.jsonReader.readData<CompanyTransactions[]>('data/companyTransactions.json');
 
         const foundTransactions = companyTransactions.find((ct) => ct.id === id);
         if (foundTransactions) {
@@ -172,7 +172,7 @@ public async authorizationHandler(
     response: Response,
     next: NextFunction): Promise<void> {
 
-    const claims = await this._accessTokenValidator.execute(request);
+    const claims = await this.accessTokenValidator.execute(request);
     response.locals.claims = claims;
     next();
 }
@@ -194,20 +194,20 @@ public async execute(request: Request): Promise<ClaimsPrincipal> {
 
     try {
 
-        const accessToken = this._readAccessToken(request);
+        const accessToken = this.readAccessToken(request);
         if (!accessToken) {
             throw ErrorFactory.fromMissingTokenError();
         }
 
         const options = {
-            algorithms: [this._configuration.algorithm],
-            issuer: this._configuration.issuer,
-            audience: this._configuration.audience,
+            algorithms: [this.configuration.algorithm],
+            issuer: this.configuration.issuer,
+            audience: this.configuration.audience,
         };
-        const result = await jwtVerify(accessToken, this._jwksRetriever.remoteJWKSet, options);
+        const result = await jwtVerify(accessToken, this.jwksRetriever.remoteJWKSet, options);
 
-        const userId = this._getClaim(result.payload.sub, 'sub');
-        const scope = this._getClaim(result.payload['scope'], 'scope');
+        const userId = this.getClaim(result.payload.sub, 'sub');
+        const scope = this.getClaim(result.payload['scope'], 'scope');
         return new ClaimsPrincipal(userId, scope.split(' '));
 
     } catch (e: any) {
@@ -230,20 +230,20 @@ Once the JWT is digitally verified, the API trusts claims returned from the libr
 ```typescript
 export class ClaimsPrincipal {
 
-    private _subject: string;
-    private _scopes: string[];
+    private subject: string;
+    private scopes: string[];
 
     public constructor(subject: string, scopes: string[]) {
-        this._subject = subject;
-        this._scopes = scopes;
+        this.subject = subject;
+        this.scopes = scopes;
     }
 
-    public get subject(): string {
-        return this._subject;
+    public getSubject(): string {
+        return this.subject;
     }
 
-    public get scopes(): string[] {
-        return this._scopes;
+    public getScopes(): string[] {
+        return this.scopes;
     }
 }
 ```
@@ -255,12 +255,12 @@ After the access token validator reates the claims principal it is injected into
 ```typescript
 export class CompanyService {
 
-    private readonly _repository: CompanyRepository;
-    private readonly _claims: ClaimsPrincipal;
+    private readonly repository: CompanyRepository;
+    private readonly claims: ClaimsPrincipal;
 
     public constructor(repository: CompanyRepository, claims: ClaimsPrincipal) {
-        this._repository = repository;
-        this._claims = claims;
+        this.repository = repository;
+        this.claims = claims;
     }
 }
 ```
@@ -268,7 +268,7 @@ export class CompanyService {
 If an attempt is made to access unauthorized data, the SPA can throw a forbidden error:
 
 ```typescript
-private _unauthorizedError(companyId: number): ClientError {
+private unauthorizedError(companyId: number): ClientError {
     return new ClientError(
         404,
         ErrorCodes.companyNotFound,
@@ -287,11 +287,11 @@ The initial API code sample does some basic logging, where each API request writ
 ```typescript
 export class LogEntry {
 
-    public readonly _utcTime: Date;
-    public _path: string;
-    public _method: string;
-    public _statusCode: number;
-    public _error: ClientError | ServerError | null;
+    public readonly utcTime: Date;
+    public path: string;
+    public method: string;
+    public statusCode: number;
+    public error: ClientError | ServerError | null;
 }
 ```
 

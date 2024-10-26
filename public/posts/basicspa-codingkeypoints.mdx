@@ -62,45 +62,45 @@ As the user navigates between screens, a main element within the root element up
 
 ### SPA Entry Point
 
-When the SPA’s *index.html* page loads, it creates a global instance of an application class defined in the *App.ts* file, and calls its *execute* method:
+When the SPA's *index.html* page loads, it creates a global instance of an application class defined in the *App.ts* file, and calls its *execute* method:
 
 ```typescript
 public async execute(): Promise<void> {
 
     try {
-        window.onhashchange = this._onHashChange;
+        window.onhashchange = this.onHashChange;
 
-        this._initialRender();
+        this.initialRender();
 
-        await this._initialiseApp();
+        await this.initialiseApp();
 
-        await this._handleLoginResponse();
+        await this.handleLoginResponse();
 
-        await this._loadMainView();
+        await this.loadMainView();
 
     } catch (e) {
 
-        this._errorView?.report(e);
+        this.errorView?.report(e);
     }
 }
 ```
 
 ### Application Startup
 
-The startup logic downloads the SPA’s configuration from the server, then creates an *Authenticator* object that wraps usage of the oidc-client-ts library and an *ApiClient* object to encapsulate the logic for API requests:
+The startup logic downloads the SPA's configuration from the server, then creates an *Authenticator* object that wraps usage of the oidc-client-ts library and an *ApiClient* object to encapsulate the logic for API requests:
 
 ```typescript
-private async _initialiseApp(): Promise<void> {
+private async initialiseApp(): Promise<void> {
 
-    this._configuration = await ConfigurationLoader.download('spa.config.json');
+    this.configuration = await ConfigurationLoader.download('spa.config.json');
 
-    this._authenticator = new Authenticator(this._configuration.oauth);
+    this.authenticator = new Authenticator(this.configuration.oauth);
 
-    this._apiClient = new ApiClient(this._configuration.app.apiBaseUrl, this._authenticator);
+    this.apiClient = new ApiClient(this.configuration.app.apiBaseUrl, this.authenticator);
 
-    this._router = new Router(this._apiClient, this._errorView);
+    this.router = new Router(this.apiClient, this.errorView);
 
-    this._isInitialised = true;
+    this.isInitialised = true;
 }
 ```
 
@@ -127,7 +127,7 @@ The *Authenticator* instance creates a *UserManager* object from the oidc-client
 ```typescript
 export class Authenticator {
 
-    private readonly _userManager: UserManager;
+    private readonly userManager: UserManager;
 
     public constructor(config: OAuthConfiguration) {
 
@@ -144,29 +144,29 @@ export class Authenticator {
 
         };
 
-        this._userManager = new UserManager(settings);
+        this.userManager = new UserManager(settings);
     }
 }
 ```
 
 ### Triggering Login Redirects
 
-As part of the main *execute* method, a *Router* class determines the initial view based on the SPA’s current URL location:
+As part of the main *execute* method, a *Router* class determines the initial view based on the SPA's current URL location:
 
 ```typescript
 public async loadView(): Promise<void> {
 
-    this._errorView.clear();
+    this.errorView.clear();
 
     const transactionsCompany = this.getTransactionsViewId();
     if (transactionsCompany) {
 
-        const view = new TransactionsView(this._apiClient, transactionsCompany);
+        const view = new TransactionsView(this.apiClient, transactionsCompany);
         await view.load();
 
     } else {
 
-        const view = new CompaniesView(this._apiClient);
+        const view = new CompaniesView(this.apiClient);
         await view.load();
     }
 }
@@ -179,8 +179,8 @@ public async load(): Promise<void> {
 
     try {
 
-        const data = await this._apiClient.getCompanyList();
-        this._renderData(data);
+        const data = await this.apiClient.getCompanyList();
+        this.renderData(data);
 
     } catch (e) {
 
@@ -190,33 +190,33 @@ public async load(): Promise<void> {
 }
 ```
 
-The *ApiClient* asks the *Authenticator* for an access token so that it can make the API request. If it cannot get one, the *ApiClient* triggers a login redirect. The in-flight API call is also terminated, with a *login_required* error. The SPA’s error handling code does not render errors with this error code.
+The *ApiClient* asks the *Authenticator* for an access token so that it can make the API request. If it cannot get one, the *ApiClient* triggers a login redirect. The in-flight API call is also terminated, with a *login_required* error. The SPA's error handling code does not render errors with this error code.
 
 ```typescript
-private async _callApi(path: string, method: Method, dataToSend?: any): Promise<any> {
+private async callApi(path: string, method: Method, dataToSend?: any): Promise<any> {
 
-    const url = `${this._apiBaseUrl}${path}`;
-    let token = await this._authenticator.getAccessToken();
+    const url = `${this.apiBaseUrl}${path}`;
+    let token = await this.authenticator.getAccessToken();
     if (!token) {
-        await this._authenticator.startLogin(null);
+        await this.authenticator.startLogin(null);
         throw ErrorHandler.getFromLoginRequired();
     }
 }
 ```
 
-The initial SPA only sends a single API request at a time. This blog’s final UI code samples will show a way to trigger login redirects when the frontend makes concurrent requests to APIs.
+The initial SPA only sends a single API request at a time. This blog's final UI code samples will show a way to trigger login redirects when the frontend makes concurrent requests to APIs.
 
-The *Authenticator* object first stores the SPA’s location in session storage and then performs a full screen redirect. In this blog, I only use full-screen redirects, since that is the most standard way to implement logins on both desktop and mobile devices. Popup windows are also possible, though they tend to have more user experience issues due to blocked or hidden windows.
+The *Authenticator* object first stores the SPA's location in session storage and then performs a full screen redirect. In this blog, I only use full-screen redirects, since that is the most standard way to implement logins on both desktop and mobile devices. Popup windows are also possible, though they tend to have more user experience issues due to blocked or hidden windows.
 
 ```typescript
-private async _startLogin(): Promise<void> {
+private async startLogin(): Promise<void> {
 
     const data = {
         hash: location.hash.length > 0 ? location.hash : '#',
     };
 
     try {
-        await this._userManager.signinRedirect({state: data});
+        await this.userManager.signinRedirect({state: data});
     } catch (e) {
         throw ErrorHandler.getFromLoginOperation(e, ErrorCodes.loginRequestFailed);
     }
@@ -243,15 +243,15 @@ public async handleLoginResponse(): Promise<void> {
         const state = args.get('state');
         if (state) {
 
-            const storedState = await this._userManager.settings.stateStore?.get(state);
+            const storedState = await this.userManager.settings.stateStore?.get(state);
             if (storedState) {
 
                 let redirectLocation = '#';
                 try {
 
-                    const user = await this._userManager.signinRedirectCallback();
+                    const user = await this.userManager.signinRedirectCallback();
                     redirectLocation = user.state.hash;
-                    this._loginTime = new Date().getTime();
+                    this.loginTime = new Date().getTime();
 
                 } catch (e: any) {
 
@@ -271,12 +271,12 @@ The above code demonstrates *deep linking*, where a user bookmarks a location li
 
 ### Rendering User Info
 
-After login, the SPA renders the logged in user’s name, and this information is stored in the *UserManager* class of the oidc-client-ts library, The *Authenticator* retrieves the user profile using the following code:
+After login, the SPA renders the logged in user's name, and this information is stored in the *UserManager* class of the oidc-client-ts library, The *Authenticator* retrieves the user profile using the following code:
 
 ```typescript
 public async getUserInfo(): Promise<UserInfo | null> {
 
-    const user = await this._userManager.getUser();
+    const user = await this.userManager.getUser();
     if (user && user.profile) {
         if (user.profile.given_name && user.profile.family_name) {
 
@@ -296,7 +296,7 @@ public async getUserInfo(): Promise<UserInfo | null> {
 The SPA can now successfully get an access token from the oidc-client-ts library and call the API with it. The [axios library](https://github.com/axios/axios) is used for HTTP requests:
 
 ```typescript
-private async _callApiWithToken(
+private async callApiWithToken(
     url: string,
     method: Method,
     dataToSend: any,
@@ -324,7 +324,7 @@ The SPA uses the [Mustache Template Library](https://github.com/janl/mustache.js
 
 
 ```typescript
-private _renderData(data: CompanyTransactions): void {
+private renderData(data: CompanyTransactions): void {
 
     const viewModel = {
         title: `Today's Transactions for ${data.company.name}`,
@@ -388,19 +388,19 @@ Any reliable OAuth client must implement the following behaviour:
 The code is structured to enable this, though the first code sample does not yet implement token refresh:
 
 ```typescript
-private async _callApi(path: string, method: Method, dataToSend?: any): Promise<any> {
+private async callApi(path: string, method: Method, dataToSend?: any): Promise<any> {
 
-    const url = `${this._apiBaseUrl}${path}`;
+    const url = `${this.apiBaseUrl}${path}`;
 
-    const token = await this._authenticator.getAccessToken();
+    const token = await this.authenticator.getAccessToken();
     if (!token) {
-        await this._authenticator.startLogin(null);
+        await this.authenticator.startLogin(null);
         throw ErrorHandler.getFromLoginRequired();
     }
 
     try {
 
-        return await this._callApiWithToken(url, method, dataToSend, token);
+        return await this.callApiWithToken(url, method, dataToSend, token);
 
     } catch (e: any) {
 
@@ -408,7 +408,7 @@ private async _callApi(path: string, method: Method, dataToSend?: any): Promise<
         if (error.statusCode !== 401)
             throw e;
 
-        await this._authenticator.startLogin(error);
+        await this.authenticator.startLogin(error);
         throw ErrorHandler.getFromLoginRequired();
     }
 }
@@ -450,16 +450,16 @@ public async startLogin(api401Error: UIError | null): Promise<void> {
             hash: location.hash.length > 0 ? location.hash : '#',
         };
 
-        if (api401Error && this._loginTime) {
+        if (api401Error && this.loginTime) {
 
             const currentTime = new Date().getTime();
-            const millisecondsSinceLogin = currentTime - this._loginTime;
+            const millisecondsSinceLogin = currentTime - this.loginTime;
             if (millisecondsSinceLogin < 250) {
                 throw api401Error;
             }
         }
 
-        await this._userManager.signinRedirect({state: data});
+        await this.userManager.signinRedirect({state: data});
 
     } catch (e: any) {
 
@@ -486,10 +486,10 @@ export class ErrorCodes {
 }
 ```
 
-The SPA’s *ErrorHandler* class translates errors into an object that contains error codes and other useful fields. When required, the SPA reads error payloads from HTTP responses, like the OAuth *error* and *error_description* fields from authorization server error responses. Backend components do not return sensitive error details to the SPA, so fields such as error codes can be safely displayed.
+The SPA's *ErrorHandler* class translates errors into an object that contains error codes and other useful fields. When required, the SPA reads error payloads from HTTP responses, like the OAuth *error* and *error_description* fields from authorization server error responses. Backend components do not return sensitive error details to the SPA, so fields such as error codes can be safely displayed.
 
 ```typescript
-private static _getOAuthExceptionMessage(exception: any): string {
+private static getOAuthExceptionMessage(exception: any): string {
 
     let oauthError = '';
     if (exception.error) {
@@ -502,7 +502,7 @@ private static _getOAuthExceptionMessage(exception: any): string {
     if (oauthError) {
         return oauthError;
     } else {
-        return ErrorHandler._getExceptionMessage(exception);
+        return ErrorHandler.getExceptionMessage(exception);
     }
 }
 ```
@@ -511,7 +511,7 @@ OAuth introduces additional endpoints, messages and configuration settings into 
 
 ### Where Are We?
 
-I summarised the initial SPA's code, where the oidc-client-ts security library is doing the difficult security work. I extend the SPA’s code in the second code sample, to complete its session management.
+I summarised the initial SPA's code, where the oidc-client-ts security library is doing the difficult security work. I extend the SPA's code in the second code sample, to complete its session management.
 
 ### Next
 

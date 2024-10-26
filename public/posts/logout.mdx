@@ -57,13 +57,13 @@ When logout has completed, this blog's code samples return the user to a *Post L
 
 ### Multi Tab Logout in SPAs
 
-It used to be possible for SPAs to use [OpenID Connect Session Management](https://openid.net/specs/openid-connect-session-1_0.html). In this flow, an iframe within each browser window polls the authorization server, sending it the SSO cookie, to check whether the user logged out elsewhere. However, since the SSO cookie is third-party, some browsers now refuse to send it from an iframe. Yet you can implement multi-tab logout if you simply store a boolean setting in local storage and use the [Browser Storage API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API) to watch for changes across tabs. This blog’s code samples use this approach.
+It used to be possible for SPAs to use [OpenID Connect Session Management](https://openid.net/specs/openid-connect-session-1_0.html). In this flow, an iframe within each browser window polls the authorization server, sending it the SSO cookie, to check whether the user logged out elsewhere. However, since the SSO cookie is third-party, some browsers now refuse to send it from an iframe. Yet you can implement multi-tab logout if you simply store a boolean setting in local storage and use the [Browser Storage API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API) to watch for changes across tabs. This blog's code samples use this approach.
 
 ![multi tab logout](../images/160/multi-tab-logout.jpg?v=20240822)
 
 ### Benign Logout Errors
 
-Some authorization servers may return logout error responses if you attempt to logout when there is no SSO cookie. This blog’s code samples ignore logout errors, to avoid user confusion, and simply navigate to the post logout location.
+Some authorization servers may return logout error responses if you attempt to logout when there is no SSO cookie. This blog's code samples ignore logout errors, to avoid user confusion, and simply navigate to the post logout location.
 
 ### Logout User Experience
 

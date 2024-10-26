@@ -30,7 +30,7 @@ The sample first downloads configuration settings from the server, to avoid hard
 
 ### Step 2. SPA Initiates an Authorization Redirect
 
-The SPA client needs to get an access token with which to call its APIs, and needs to initiate user authentication to get one. The SPA uses the *oidc-client-ts* library to create an authorization request URL containing OpenID Connect keywords. The SPA sets its location to this URL, to cause a front channel browser redirect to Cognito’s authorization endpoint:
+The SPA client needs to get an access token with which to call its APIs, and needs to initiate user authentication to get one. The SPA uses the *oidc-client-ts* library to create an authorization request URL containing OpenID Connect keywords. The SPA sets its location to this URL, to cause a front channel browser redirect to Cognito's authorization endpoint:
 
 ![Authorization Request](../images/40/authorization-request.jpg?v=20240727)
 
@@ -39,7 +39,7 @@ Authorization servers contain a registration entry for the OAuth client containi
 | Scope | Meaning |
 | ----- | ------- |
 | openid | OpenID Connect is used in addition to OAuth 2.0. |
-| profile | Needed later to get the user’s name details from the OpenID Connect userinfo endpoint. |
+| profile | Needed later to get the user's name details from the OpenID Connect userinfo endpoint. |
 | https://api.authsamples.com/investments | A custom scope to grant access to an area of business data. |
 
 ### Step 3. SPA Gets OpenID Connect Metadata
@@ -82,7 +82,7 @@ The SPA receives the response on its redirect URI. This can be a particular path
 
 ### Step 7. SPA Swaps Code for Tokens
 
-As part of its response processing, the library makes a direct HTTPS back channel request to the authorization server’s token endpoint. This is an *authorization code grant* message, which swaps the code for tokens:
+As part of its response processing, the library makes a direct HTTPS back channel request to the authorization server's token endpoint. This is an *authorization code grant* message, which swaps the code for tokens:
 
 ![Authorization Code Grant](../images/40/authorization-code-grant.jpg?v=20240727)
 
@@ -164,7 +164,7 @@ Because the SPA included the *openid* scope, OpenID Connect is used and the SPA 
 
 ### Step 12. SPA Downloads User Info
 
-Next the oidc-client-ts library sends the access token to the authorization server’s userinfo endpoint, to get additional details for the user. I always code apps to receive personal data from this endpoint, rather than from the ID token. The frontend uses this API response to display the user's name details.
+Next the oidc-client-ts library sends the access token to the authorization server's userinfo endpoint, to get additional details for the user. I always code apps to receive personal data from this endpoint, rather than from the ID token. The frontend uses this API response to display the user's name details.
 
 ![User info](../images/40/userinfo.jpg?v=20240727)
 
@@ -186,7 +186,7 @@ The API request then supplies the access token as a bearer credential in the HTT
 
 ### Step 14. API Validates Access Token
 
-When the API receives the token it is the API’s job to validate it, which typically involves checking the following:
+When the API receives the token it is the API's job to validate it, which typically involves checking the following:
 
 | Property | Expectation |
 | -------- | ----------- |
@@ -195,22 +195,22 @@ When the API receives the token it is the API’s job to validate it, which typi
 | Digital Signature | The token has not been tampered with since issued. |
 | Active | The token is valid at the current time and not expired. |
 
-To verify the access token’s digital signature, the API must download token signing public keys from AWS Cognito. This occurs when the JOSE security library calls Cognito's JSON Web Key Set (JWKS) endpoint:
+To verify the access token's digital signature, the API must download token signing public keys from AWS Cognito. This occurs when the JOSE security library calls Cognito's JSON Web Key Set (JWKS) endpoint:
 
 ![JSON Web Key Set](../images/40/jwks.jpg)
 
-The response contains public keys in the *JSON Web Key* format, and the security library selects the one that matches the key identifier (*kid*) in the access token’s JWT header. The library then uses the public key to cryptographically verify the JWT's signature.
+The response contains public keys in the *JSON Web Key* format, and the security library selects the one that matches the key identifier (*kid*) in the access token's JWT header. The library then uses the public key to cryptographically verify the JWT's signature.
 
 The API security library (or a utility that assists it) caches JSON Web Keys in-memory to avoid unnecessary lookups on subsequent API requests whose access tokens use the same key identifier.
 
 ### Step 15. API Returns Error Status Codes
 
-If the API’s token validation fails, the API must return one of these error results:
+If the API's token validation fails, the API must return one of these error results:
 
 - If the token is missing, invalid or expired, return a response with an HTTP *401* status code.
 - If there was a technical problem in the API, return a response with an HTTP *500* status code.
 
-I recommend testing these scenarios to ensure that the API returns useful error responses to the SPA. You can test the second failure scenario if you configure an invalid JWKS endpoint, like *jwks.xxx*, in the API’s configuration:
+I recommend testing these scenarios to ensure that the API returns useful error responses to the SPA. You can test the second failure scenario if you configure an invalid JWKS endpoint, like *jwks.xxx*, in the API's configuration:
 
 ```json
 {

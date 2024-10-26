@@ -91,23 +91,23 @@ To make my code samples easy to run, I store development certificates and keys i
 ```typescript
 public async startListening(): Promise<void> {
 
-    const port = this._configuration.api.port;
-    if (this._configuration.api.sslCertificateFileName && this._configuration.api.sslCertificatePassword) {
+    const port = this.configuration.api.port;
+    if (this.configuration.api.sslCertificateFileName && this.configuration.api.sslCertificatePassword) {
 
-        const pfxFile = await fs.readFile(this._configuration.api.sslCertificateFileName);
+        const pfxFile = await fs.readFile(this.configuration.api.sslCertificateFileName);
         const sslOptions = {
             pfx: pfxFile,
-            passphrase: this._configuration.api.sslCertificatePassword,
+            passphrase: this.configuration.api.sslCertificatePassword,
         };
 
-        const httpsServer = https.createServer(sslOptions, this._expressApp);
+        const httpsServer = https.createServer(sslOptions, this.expressApp);
         httpsServer.listen(port, () => {
             console.log(`API is listening on HTTPS port ${port}`);
         });
 
     } else {
 
-        this._expressApp.listen(port, () => {
+        this.expressApp.listen(port, () => {
             console.log(`API is listening on HTTP port ${port}`);
         });
     }
@@ -145,7 +145,7 @@ In this blog I run multiple UI and API code samples, then view OAuth messages fo
 
 ### HTTP Proxy Root Certificates
 
-HTTP proxy tools use a man-in-the-middle technique to replace the root of the target URL’s SSL certificate. This enables you to view traffic as HTTP, after which the proxy re-encrypts traffic with its own certificate, then routes the request to its target. The following screenshot shows MITM proxy replacing the root of the development certificates issued earlier.
+HTTP proxy tools use a man-in-the-middle technique to replace the root of the target URL's SSL certificate. This enables you to view traffic as HTTP, after which the proxy re-encrypts traffic with its own certificate, then routes the request to its target. The following screenshot shows MITM proxy replacing the root of the development certificates issued earlier.
 
 ![mitm cert](../images/110/mitm-cert.jpg?v=20240728)
 
@@ -153,7 +153,7 @@ Some corporate networks use their own SSL proxy / firewall filter that works in 
 
 ### Trust Bundles
 
-To configure root certificate trust, I start by creating a local trust bundle file at *~/trusted-ca-certs.crt*. This contains root CAs that I need to frequently trust. When running this blog’s code samples, the root authority to trust when tracing HTTPS requests depends whether an HTTP proxy is being used.
+To configure root certificate trust, I start by creating a local trust bundle file at *~/trusted-ca-certs.crt*. This contains root CAs that I need to frequently trust. When running this blog's code samples, the root authority to trust when tracing HTTPS requests depends whether an HTTP proxy is being used.
 
 | Scenario | Required Trust Configuration |
 | -------- | ---------------------------- |

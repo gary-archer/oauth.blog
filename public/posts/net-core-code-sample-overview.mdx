@@ -37,7 +37,7 @@ I use [Visual Studio Code](https://code.visualstudio.com/download) for C# develo
 
 ### Prerequisite 4: Optionally Install Node.js
 
-If you want to run the SPA as well as the API, install [Node.js](https://nodejs.org/en/download) to build the SPA’s JavaScript bundles.
+If you want to run the SPA as well as the API, install [Node.js](https://nodejs.org/en/download) to build the SPA's JavaScript bundles.
 
 ### Prerequisite 5: Install Docker
 
@@ -91,7 +91,7 @@ Next run tests with the following command:
 ./integration_tests.sh
 ```
 
-This spins up a JWKS URI with an HTTPS endpoint that the Wiremock utility provides. A number of tests then make OAuth-secured API requests. These tests focus on the API’s main security behaviours:
+This spins up a JWKS URI with an HTTPS endpoint that the Wiremock utility provides. A number of tests then make OAuth-secured API requests. These tests focus on the API's main security behaviours:
 ![test results](../images/320/test-results.jpg?v=20240915)
 
 ### Step 4: Run a Basic Load Test
@@ -128,7 +128,7 @@ export LOCALAPI='true'
 ./run.sh
 ```
 
-The *run.sh* script invokes the default browser at *https://www.authsamples-dev.com/spa* and you can sign in using this blog’s test credential:
+The *run.sh* script invokes the default browser at *https://www.authsamples-dev.com/spa* and you can sign in using this blog's test credential:
 
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
@@ -140,7 +140,7 @@ The API implements its security according to these two blog posts, using a JOSE 
 - <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a>
 - <a href='api-authorization-design.mdx'>API Authorization Design</a>
 
-The overall behaviour manages OAuth security correctly while setting up the API’s business logic with the authorization values it needs. These values may originate from multiple data sources and may not always be issued to tokens:
+The overall behaviour manages OAuth security correctly while setting up the API's business logic with the authorization values it needs. These values may originate from multiple data sources and may not always be issued to tokens:
 
 ```csharp
 public class CompanyService

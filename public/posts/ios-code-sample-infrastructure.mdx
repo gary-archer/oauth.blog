@@ -17,7 +17,7 @@ Our web pages are first uploaded to an AWS S3 bucket:
 
 ![s3 bucket](../images/560/s3-bucket.jpg?v=20240914)
 
-They are then included in one of this blog’s <a href='cdn-static-content-delivery.mdx'>CloudFront Distributions</a>, so that the pages are served over an HTTPS URL:
+They are then included in one of this blog's <a href='cdn-static-content-delivery.mdx'>CloudFront Distributions</a>, so that the pages are served over an HTTPS URL:
 
 ![cloudfront distro](../images/560/cloudfront-distro.jpg?v=20240914)
 
@@ -28,7 +28,7 @@ Pages are then available at these URLs:
 
 ### Deep Linking Assets File
 
-To support deep linking needed for claimed HTTPS scheme logins to work, the project includes a *security/.well-known/apple-app-site-association* document that associates our app’s *Unique ID* with its *Hosting Domain*:
+To support deep linking needed for claimed HTTPS scheme logins to work, the project includes a *security/.well-known/apple-app-site-association* document that associates our app's *Unique ID* with its *Hosting Domain*:
 
 ```json
 {
@@ -67,7 +67,7 @@ The *mobile.authsamples.com* S3 bucket has a *.well-known* folder containing the
 
 ![asset hosting](../images/560/asset-hosting.jpg)
 
-The Apple file needs to be configured to return a content type of *application/json*, which is configured under the S3 file’s properties:
+The Apple file needs to be configured to return a content type of *application/json*, which is configured under the S3 file's properties:
 
 ![content type](../images/560/content-type.jpg)
 

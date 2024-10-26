@@ -1,6 +1,6 @@
 # API Journey – Server Side
 
-Previously I summarised this blog’s <a href='api-platform-design.mdx'>API Platform Overview</a> to express some essential high-level ingredients. Next I summarise some end-to-end technical behaviors for OAuth-secured APIs, which I implemnt in this blog’s final API code samples, in multiple technology stacks:
+Previously I summarised this blog's <a href='api-platform-design.mdx'>API Platform Overview</a> to express some essential high-level ingredients. Next I summarise some end-to-end technical behaviors for OAuth-secured APIs, which I implemnt in this blog's final API code samples, in multiple technology stacks:
 
 - <a href='api-architecture-node.mdx'>Final Node.js API</a>
 - <a href='net-core-code-sample-overview.mdx'>Final .NET API</a>
@@ -68,26 +68,26 @@ I express entry points to API operations declaratively, using the HTTP path and 
 @controller('/companies')
 export class CompanyController extends BaseHttpController {
 
-    private readonly _service: CompanyService;
+    private readonly service: CompanyService;
 
     public constructor(@inject(SAMPLETYPES.CompanyService) service: CompanyService) {
         super();
-        this._service = service;
+        this.service = service;
     }
 
     @httpGet('/:id/transactions')
     public async getCompanyTransactions(@requestParam('id') id: string): Promise<CompanyTransactions> {
-        return this._service.getCompanyTransactions(id);
+        return this.service.getCompanyTransactions(id);
     }
 }
 ```
 ### Async for High Throughput
 
-Most APIs spend the vast majority of their execution time for an API request waiting on completion of asynchronous I/O events. Most commonly this involves database access or calls to an upstream API. This blog’s APIs use modern and standard *async await* code in all technologies, to avoid blocking, so that each thread can process additional API requests during the I/O completion of other requests.
+Most APIs spend the vast majority of their execution time for an API request waiting on completion of asynchronous I/O events. Most commonly this involves database access or calls to an upstream API. This blog's APIs use modern and standard *async await* code in all technologies, to avoid blocking, so that each thread can process additional API requests during the I/O completion of other requests.
 
 ### Zero Trust API Security
 
-This blog’s API code samples receive the following format of access token, which includes custom claims for *manager_id* and *role*:
+This blog's API code samples receive the following format of access token, which includes custom claims for *manager_id* and *role*:
 
 ```json
 {
@@ -108,11 +108,11 @@ public async validateAccessToken(accessToken: string): JwtClaims {
 
     const options = {
         algorithms: ['RS256'],
-        issuer: this._configuration.issuer,
-        options.audience = this._configuration.audience;
+        issuer: this.configuration.issuer,
+        options.audience = this.configuration.audience;
     } as JWTVerifyOptions;
 
-    const result = await jwtVerify(accessToken, this._jwksRetriever.remoteJWKSet, options);
+    const result = await jwtVerify(accessToken, this.jwksRetriever.remoteJWKSet, options);
     return  result.payload;
 }
 ```
@@ -142,7 +142,7 @@ This blog's APIs and clients work with the following user attributes, which are 
 
 | User Attribute | Represents |
 | -------------- | ---------- |
-| Scope | The main scope in the client’s access token is called *investments* to represent a business area. |
+| Scope | The main scope in the client's access token is called *investments* to represent a business area. |
 | Manager ID | The API receives a useful business user identity in access tokens sent by the client. |
 | Role | The authorization server stores a role claim for each user, with values of *admin* or *user*, and issues it to access tokens. |
 | Regions | APIs use an array of allowed regions as an example of fine-grained business permissions not issued to access tokens. |
@@ -157,23 +157,23 @@ I inject the claims object produced by OAuth middleware into business logic clas
 @injectable()
 export class CompanyService {
 
-    private readonly _repository: CompanyRepository;
-    private readonly _claims: SampleClaimsPrincipal;
+    private readonly repository: CompanyRepository;
+    private readonly claims: SampleClaimsPrincipal;
 
     public constructor(
         @inject(SAMPLETYPES.CompanyRepository) repository: CompanyRepository,
         @inject(BASETYPES.ClaimsPrincipal) claims: ClaimsPrincipal) {
 
-        this._repository = repository;
-        this._claims = claims as SampleClaimsPrincipal;
+        this.repository = repository;
+        this.claims = claims as SampleClaimsPrincipal;
     }
 
     public async getCompanyTransactions(companyId: number): Promise<CompanyTransactions> {
 
-        const data = await this._repository.getCompanyTransactions(companyId);
+        const data = await this.repository.getCompanyTransactions(companyId);
 
-        if (!data || !this._isUserAuthorizedForCompany(data.company)) {
-            throw this._unauthorizedError(companyId);
+        if (!data || !this.isUserAuthorizedForCompany(data.company)) {
+            throw this.unauthorizedError(companyId);
         }
 
         return data;
@@ -185,7 +185,7 @@ The authorization logic could be written in various other ways. The claims princ
 
 ### Testable OAuth Implementation
 
-You should test OAuth API security frequently as part of a secure API development lifecycle. This blog’s final APIs use tests that <a href='api-automated-tests.mdx'>mock the authorization server</a>. This technique enables you to easily control access tokens when you write integration tests on a development computer. I use the same JOSE library for both API access token validation and test code that produces JWTs.
+You should test OAuth API security frequently as part of a secure API development lifecycle. This blog's final APIs use tests that <a href='api-automated-tests.mdx'>mock the authorization server</a>. This technique enables you to easily control access tokens when you write integration tests on a development computer. I use the same JOSE library for both API access token validation and test code that produces JWTs.
 
 ```typescript
 describe('OAuth API Tests', () => {

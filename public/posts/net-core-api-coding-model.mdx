@@ -102,7 +102,7 @@ private void ConfigureApiDependencies(IServiceCollection services)
 
 ### High Throughput Requirement
 
-All of this blog’s APIs will be non blocking, to prevent threads being tied up during I/O completion:
+All of this blog's APIs will be non blocking, to prevent threads being tied up during I/O completion:
 
 ![throughput](../images/340/throughput.jpg)
 
@@ -250,7 +250,7 @@ Error output has a *productive and readable* format, and production logs will al
 }
 ```
 
-By default our exception handler treats unknown errors as general exceptions and returns a 500 response. For closer control of the response, the API’s code can throw a *ServerError* or *ClientError* derived instance:
+By default our exception handler treats unknown errors as general exceptions and returns a 500 response. For closer control of the response, the API's code can throw a *ServerError* or *ClientError* derived instance:
 
 ```csharp
 [HttpGet("{id}/transactions")]

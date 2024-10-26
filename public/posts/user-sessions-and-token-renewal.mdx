@@ -1,10 +1,10 @@
 # Iframe-Based Access Token Renewal
 
-In the previous post I summarised this blog’s <a href='federated-logins.mdx'>User Authentication Behaviour</a>. Next I explain iframe-based access token renewal for SPAs. This flow is now problematic, due to recent browser restrictions.
+In the previous post I summarised this blog's <a href='federated-logins.mdx'>User Authentication Behaviour</a>. Next I explain iframe-based access token renewal for SPAs. This flow is now problematic, due to recent browser restrictions.
 
 ### Traditional SPA Token Renewal
 
-The traditional SPA token renewal solution relied on returning only a short lived access token to the browser, and storing the access token in-memory, as the most secure JavaScript option. To refresh the token, the authorization server’s HttpOnly SSO cookie was used, which is shared across all browser tabs. Therefore any browser tab should be able to reliably get a new access token by sending the cookie.
+The traditional SPA token renewal solution relied on returning only a short lived access token to the browser, and storing the access token in-memory, as the most secure JavaScript option. To refresh the token, the authorization server's HttpOnly SSO cookie was used, which is shared across all browser tabs. Therefore any browser tab should be able to reliably get a new access token by sending the cookie.
 
 ### Iframe Token Renewal Requests
 
@@ -27,7 +27,7 @@ Yet this does not promote correct handling of API 401 responses, which can occur
 
 ### In-Memory Access Token Storage
 
-This blog’s next code sample uses an SPA that stores access tokens only in-memory. The SPA therefore needs to renew the access token when any of these conditions occur:
+This blog's next code sample uses an SPA that stores access tokens only in-memory. The SPA therefore needs to renew the access token when any of these conditions occur:
 
 - API returns a 401 response.
 - User reloads the browser page.

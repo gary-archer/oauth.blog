@@ -1,6 +1,6 @@
 # User Authentication Behaviour
 
-Previously I explained this blog’s <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. Next I provide a brief overview of some key points that you should understand about OAuth and user authentication.
+Previously I explained this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. Next I provide a brief overview of some key points that you should understand about OAuth and user authentication.
 
 ### The OpenID Connect Code Flow
 
@@ -15,7 +15,7 @@ This enables many possible ways to login, including those listed below. Multiple
 - Cryptography-backed options such as passkeys.
 - External identity providers (social logins).
 - External identity providers (business partners).
-- Custom authentication using the authorization server’s extensibility.
+- Custom authentication using the authorization server's extensibility.
 
 In all cases, once authentication completes, the client receives an authorization code in the browser response. The client swaps the code for tokens, after which the client receives an access token from the authorization server and can call APIs in the correct manner.
 
@@ -46,7 +46,7 @@ The exact details may vary depending on particular systems, the security standar
 
 ### Consistent API User Identity
 
-The deeper behaviour when you integrate authentication can be control over user attributes during the authentication flow. For example, you must ensure that access token claims, including user identities, remain the same when the user’s primary authentication factor changes.
+The deeper behaviour when you integrate authentication can be control over user attributes during the authentication flow. For example, you must ensure that access token claims, including user identities, remain the same when the user's primary authentication factor changes.
 
 ![token identity](../images/140/token-identity.jpg)
 

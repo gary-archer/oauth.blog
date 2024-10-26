@@ -38,7 +38,7 @@ My only motivation for activating advanced features is to enable *Access Token C
 
 ### Define Custom API Scopes
 
-To define custom API scopes in AWS Cognito you must configure a *Resource Server*. In this blog’s code samples I use the generated identifier to represent a set of related APIs for the *investments* business area. Only clients that work with investments data would be assigned the investments scope and be able to successfully call this blog’s example APIs.
+To define custom API scopes in AWS Cognito you must configure a *Resource Server*. In this blog's code samples I use the generated identifier to represent a set of related APIs for the *investments* business area. Only clients that work with investments data would be assigned the investments scope and be able to successfully call this blog's example APIs.
 
 ![scope](../images/600/scope.jpg)
 
@@ -87,11 +87,11 @@ The *claimsToSuppress* section is used to remove personal data from ID tokens, s
 
 The *claimsToAddOrOverride* section is used to customise access tokens. Claims are issued based on the client's scope so that different custom claims can be issued to different clients.
 
-These claims provide convenient fields for APIs and produce a more complete access token. In many cases this helps to lock down the access token and reduce its privileges. This blog’s use of claims is further explained in the blog post on <a href='api-authorization-design.mdx'>API Authorization Behavior</a>.
+These claims provide convenient fields for APIs and produce a more complete access token. In many cases this helps to lock down the access token and reduce its privileges. This blog's use of claims is further explained in the blog post on <a href='api-authorization-design.mdx'>API Authorization Behavior</a>.
 
 ### Where Are We?
 
-We have completed the configuration of a low maintenance cloud authorization server and activated some advanced but essential features. Next we will describe how the SPA’s static content is deployed globally.
+We have completed the configuration of a low maintenance cloud authorization server and activated some advanced but essential features. Next we will describe how the SPA's static content is deployed globally.
 
 ### Next
 
