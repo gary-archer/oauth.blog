@@ -449,18 +449,18 @@ The API code is able to indicate a 4xx condition by throwing a *ClientError*, or
 
 ### Error Logging and Responses
 
-This blog's APIs do their final error handling in an exception middleware class, which adds exception details to API logs and calls the *toResponseFormat* method to get the error object returned over the wire to clients:
+This blog's APIs do their final error handling in the exception middleware class, which adds exception details to API logs and calls the *toResponseFormat* method to get the error object returned over the wire to clients:
 
 ```typescript
 export class UnhandledExceptionHandler {
 
     public handleException(exception: any, request: Request, response: Response, next: NextFunction): void {
 
-        const perRequestContainer = ChildContainerHelper.resolve(request);
+        const container = response.locals.container as Container;
         const logEntry = perRequestContainer.get<LogEntryImpl>(BASETYPES.LogEntry);
         const error = ErrorUtils.fromException(exception);
 
-        let clientError;
+        let clientError: ClientError;
         if (error instanceof ServerError) {
             
             logEntry.setServerError(error);
@@ -472,8 +472,8 @@ export class UnhandledExceptionHandler {
             clientError = error;
         }
 
-        const writer = new ResponseWriter();
-        writer.writeObjectResponse(response, clientError.getStatusCode(), clientError.toResponseFormat());
+        response.setHeader('content-type', 'application/json');
+        response.status(clientError.getStatusCode()).send(JSON.stringify(clientError.toResponseFormat()));
     }
 }
 ```

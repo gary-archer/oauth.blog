@@ -65,7 +65,8 @@ export class UnhandledExceptionHandler {
 I express entry points to API operations declaratively, using the HTTP path and method:
 
 ```typescript
-@controller('/companies')
+@injectable()
+@Controller('/companies')
 export class CompanyController extends BaseHttpController {
 
     private readonly service: CompanyService;
@@ -75,7 +76,7 @@ export class CompanyController extends BaseHttpController {
         this.service = service;
     }
 
-    @httpGet('/:id/transactions')
+    @Get('/:id/transactions')
     public async getCompanyTransactions(@requestParam('id') id: string): Promise<CompanyTransactions> {
         return this.service.getCompanyTransactions(id);
     }

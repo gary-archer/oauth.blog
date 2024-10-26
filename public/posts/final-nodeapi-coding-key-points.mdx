@@ -1,32 +1,30 @@
 # Node.js API – Code Details
 
-In our last post we started describing an advanced code sample that implemented our <a href='api-architecture-node.mdx'>API Architecture in Node.js</a>. We will now drill into some final implementation details.
+In the last post I summarised an advanced code sample that implements this blog's <a href='api-architecture-node.mdx'>API Architecture in Node.js</a>. In this post I explain some code-level details.
 
 ### Code Structure
 
-Our advanced Node.js API consists of three main areas:
+The code for the advanced Node.js API consists of three main areas:
 
 - REST Host
-- API Business Logic
-- Common Code (plumbing)
+- Business Logic
+- Plumbing
 
 <div className='smallimage'>
     <img src='../images/310/code-layout.jpg' alt='code layout' />
 </div>
 
-In a real API platform, much of the plumbing folder could be extracted into one or more shared library references and there would be far less code.
+In a real API platform, you could produce shared libraries with some of the contents of the plumbing folder. The API would then have far less code.
 
 ### Use of Dependency Injection
 
-Our code has changed a fair amount since the previous API sample, and this includes use of [InversifyJS](https://github.com/inversify/InversifyJS) to manage object creation and lifetimes:
+The API uses [InversifyJS](https://github.com/inversify/InversifyJS) to manage object creation and lifetimes. This includes injecting the request scoped claims principal and log entry instances into business logic:
 
 ![inversifyjs](../images/310/inversifyjs.jpg)
 
-One reason to improve the dependency management is to enable the request scoped claims principal and log entry instances to be injected into business logic.
-
 ### Application Startup Logic
 
-Our API starts by running the *app.ts* file, which creates the container and then runs an *HttpServerConfiguration* object to set up the Express web server and the application's dependencies:
+The API's entry point is its *app.ts* file, which creates the container and then runs an *HttpServerConfiguration* object to set up the Express web server and the application's dependencies:
 
 ```typescript
 const loggerFactory = LoggerFactoryBuilder.create();
@@ -48,121 +46,37 @@ try {
 }
 ```
 
-The *HttpServerConfiguration* class configures an *Inversify Express Server*, which is just a wrapper around the Express HTTP Server:
+The *HttpServerConfiguration* class configures HTTP routes using the [Routing Controllers](https://github.com/typestack/routing-controllers) library:
 
 ```typescript
-attributes and set up controller autowiring
-new InversifyExpressServer(this.container, null, {rootPath: '/investments/'}, this.expressApp)
-    .setConfig(() => {
-
-        this.expressApp.set('etag', false);
-        base.configureMiddleware(this.expressApp);
-    })
-    .setErrorConfig(() => {
-
-        base.configureExceptionHandler(this.expressApp);
-    })
-    .build();
+useContainer(new InversifyAdapter(this.container));
+useExpressServer(this.expressApp, {
+    defaultErrorHandler: false,
+    routePrefix: apiBasePath,
+    controllers: [CompanyController, UserInfoController],
+});
 ```
 
-### Dependency Composition
-
-Our startup logic also performs [DI Composition](https://freecontent.manning.com/dependency-injection-in-net-2nd-edition-understanding-the-composition-root/), which consists of 2 types of dependency:
-
-- Plumbing objects
-- Application objects
+This enables declarative routes for API requests, as is common in other API technology stacks:
 
 ```typescript
-public async configure(): Promise<void> {
-
-    const base = new BaseCompositionRoot(this.container)
-        .useApiBasePath('/investments/')
-        .useOAuth(this.configuration.oauth)
-        .withExtraClaimsProvider(new SampleExtraClaimsProvider())
-        .withLogging(this.configuration.logging, this.loggerFactory)
-        .withProxyConfiguration(this.configuration.api.useProxy, this.configuration.api.proxyUrl)
-        .register();
-
-    CompositionRoot.registerDependencies(this.container);
-}
-```
-
-The *BaseCompositionRoot* object represents initialisation of common code, which sets up these cross cutting concerns:
-
-- API Request Logging
-- API Exception Handling
-- An OAuth Filter
-- A Custom Claims Provider
-
-Inversify uses the following type of syntax to register dependencies:
-
-```typescript
-private registerBaseDependencies(): void {
-
-    this.container.bind(BASETYPES.UnhandledExceptionHandler)
-        .toConstantValue(this.exceptionHandler!);
-    this.container.bind(BASETYPES.LoggerFactory)
-        .toConstantValue(this.loggerFactory!);
-    this.container.bind(BASETYPES.LoggingConfiguration)
-        .toConstantValue(this.loggingConfiguration!);
-    this.container.bind(BASETYPES.HttpProxy)
-        .toConstantValue(this.httpProxy!);
-
-    this.container.bind(BASETYPES.LogEntry)
-        .toConstantValue({} as any);
-}
-```
-
-### Middleware
-
-As part of composing base dependencies, middleware classes for cross cutting concerns are also created, and these are natural singletons:
-
-```typescript
-public configureMiddleware(expressApp: Application): void {
-
-    this.loggerMiddleware = new LoggerMiddleware(this.loggerFactory!);
-    expressApp.use(`${this.apiBasePath}*`, this.loggerMiddleware.logRequest);
-
-    this.authorizerMiddleware = new AuthorizerMiddleware();    
-    expressApp.use(`${this.apiBasePath}*`, this.authorizerMiddleware!.authorize);
-
-    const handler = new CustomHeaderMiddleware(this.loggingConfiguration!.apiName);
-    expressApp.use(`${this.apiBasePath}*`, handler.processHeaders);
-}
-```
-
-The role of each of the API's middleware classes is summarised below:
-
-| Middleware Class | Responsibility |
-| ---------------- | -------------- |
-| LoggerMiddleware | Manage the log entry for each API request, then log request and response details |
-| AuthorizerMiddleware | OAuth processing, getting data needed for request authorization, and adding identity details to logs |
-| CustomHeaderMiddleware | Allow advanced client side testing of APIs via custom headers |
-| UnhandledExceptionHandler | A central place for handling exceptions, adding error details to logs, and producing the client error response |
-
-### Controller Annotations
-
-As is common in other API technology stacks, our final Node.js sample uses method and path annotations to manage receiving API requests, and these are provided by [Inversify Express Utils](https://github.com/inversify/inversify-express-utils).
-
-```typescript
-@controller('/companies')
+@injectable()
+@Controller('/companies')
 export class CompanyController extends BaseHttpController {
 
     private readonly service: CompanyService;
 
-    public constructor(
-        @inject(SAMPLETYPES.CompanyService) service: CompanyService) {
-
+    public constructor(@inject(SAMPLETYPES.CompanyService) service: CompanyService) {
         super();
         this.service = service;
     }
 
-    @httpGet('')
+    @Get('')
     public async getCompanyList(): Promise<Company[]> {
         ...
     }
 
-    @httpGet('/:id/transactions')
+    @Get('/:id/transactions')
     public async getCompanyTransactions(@requestParam('id') id: string): Promise<CompanyTransactions> {
 
         ...
@@ -170,19 +84,86 @@ export class CompanyController extends BaseHttpController {
 }
 ```
 
-Note that dependency injection works differently to languages such as C# and Java, since code is compiled to JavaScript and type information is lost. Inversify deals with this by requiring injected objects to be accompanied by an identifying string key, which can be reliably coded as a constant.
+Dependency injection works differently in Node.js to languages such as C# and Java, since the final JavaScript loses type information. Inversify therefore accompanies each injected type with a unique [JavaScript symbol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol).
 
-### Autowiring of REST Controllers
+### Dependency Composition
 
-Inversify Express Utils uses a [Container Per Request](https://structuremap.github.io/the-container/nested-containers/) pattern, to create a child container at the start of every HTTP request:
+The startup logic registers dependencies, which consist of both plumbing objects and application objects:
 
-![container per request](../images/310/container-per-request.jpg)
+```typescript
+new BaseCompositionRoot(this.container)
+    .useOAuth(this.configuration.oauth)
+    .withExtraClaimsProvider(new SampleExtraClaimsProvider())
+    .withLogging(this.configuration.logging, this.loggerFactory)
+    .withExceptionHandler(exceptionHandler)
+    .withProxyConfiguration(this.configuration.api.useProxy, this.configuration.api.proxyUrl)
+    .register();
 
-The controller and method for the incoming request are then identified based on which controller annotations the incoming request maps to. The controller class and its dependencies are then created.
+CompositionRoot.registerDependencies(this.container);
+```
+
+Inversify uses the following type of syntax to register singleton dependencies. The *ClaimsPrincipal* and *LogEntry* are runtime created objects with a request scope, but Inversify requires a registration for them so I assign an initial stub object:
+
+```typescript
+container.bind<UnhandledExceptionHandler>(BASETYPES.UnhandledExceptionHandler)
+    .toConstantValue(exceptionHandler);
+
+container.bind<ClaimsPrincipal>(BASETYPES.ClaimsPrincipal)
+    .toConstantValue({} as any);
+container.bind<LogEntry>(BASETYPES.LogEntry)
+    .toConstantValue({} as any);
+```
+
+### Middleware
+
+As part of composing base dependencies, I create middleware classes for cross cutting concerns, and these are natural singletons:
+
+```typescript
+const childContainerMiddleware = new ChildContainerMiddleware(this.container);
+const loggerMiddleware = new LoggerMiddleware(this.loggerFactory);
+const authorizerMiddleware = new AuthorizerMiddleware();
+const customHeaderMiddleware = new CustomHeaderMiddleware(this.configuration.logging.apiName);
+const exceptionHandler = new UnhandledExceptionHandler(this.configuration.logging);
+```
+
+I summarise the role of each of the API's middleware objects in the following table:
+
+| Middleware Class | Responsibility |
+| ---------------- | -------------- |
+| ChildContainerMiddleware | Create a child container per request, to store request scoped objects. |
+| LoggerMiddleware | Create the log entry for the API request, then log request and response details. |
+| AuthorizerMiddleware | OAuth processing, creating the claims principal for the API request, and adding identity details to logs. |
+| CustomHeaderMiddleware | Enable advanced client side testing of APIs via custom headers. |
+| UnhandledExceptionHandler | A central place to handle exceptions, add error details to logs, and produce the client error response. |
+
+### Child Container Per Request
+
+Inversify supports a child container concept, and the first middleware creates a child container at the start of each HTTP request and tears it down at the end of an HTTP request. The child container can access all objects from the parent container:
+
+```typescript
+export class ChildContainerMiddleware {
+
+    private readonly container: Container;
+
+    public constructor(container: Container) {
+        this.container = container;
+    }
+
+    public execute(request: Request, response: Response, next: NextFunction): void {
+
+        response.locals.container = this.container.createChild();
+        response.on('finish', () => {
+            delete response.locals.container;
+        });
+
+        next();
+    }
+}
+```
 
 ### Single Threaded Code
 
-For APIs with small dependency graphs, I like to reduce the likelihood of parallel requests  impacting each other. I do this by giving each request its own independent object instances. The API uses a request scope for REST specific objects, or a transient scope for domain logic classes:
+For APIs with small dependency graphs, I reduce the likelihood of parallel requests impacting each other, by giving each request its own independent object instances. The API uses a request scope for REST specific objects, or a transient scope for domain logic classes:
 
 ```typescript
 public static registerDependencies(container: Container): void {
@@ -203,25 +184,46 @@ public static registerDependencies(container: Container): void {
 }
 ```
 
+### Dependency Resolution
+
+The *InversifyAdapter* object uses the child container to resolve all objects when it autowires REST controllers. Inversify stores request and transient scoped objects for the current HTTP request only in the child container and not in the parent container:
+
+```typescript
+export class InversifyAdapter implements IocAdapter {
+
+    private readonly container: Container;
+
+    constructor(container: Container) {
+        this.container = container;
+    }
+
+    public get<T>(someClass: ClassConstructor<T>, action?: Action): T {
+
+        const childContainer = action?.response.locals.container as Container;
+        return childContainer?.resolve<T>(someClass);
+    }
+}
+```
+
 ### Logging Implementation
 
-API logging is also implemented via plumbing code, and the end goal is to enable <a href='api-technical-support-analysis.mdx'>platform wide technical support queries by people</a>.
+I use a number of plumbing classes to implement API logging, whose end goal is to enable <a href='api-technical-support-analysis.mdx'>useful technical support queries by people</a>.
 
 <div className='smallimage'>
     <img src='../images/310/logging-classes.jpg' alt='logging classes' />
 </div>
 
-The log entry is a natural request scoped object and is created in the *LoggerMiddleware*, which does most of the logging work:
+The *LoggerMiddleware* creates a *LogEntry* and dynamically updates the stub object registered earlier:
 
 ```typescript
-public logRequest(request: Request, response: Response, next: NextFunction): void {
+public execute(request: Request, response: Response, next: NextFunction): void {
 
     const logEntry = this.loggerFactory.createLogEntry();
-    const container = ChildContainerHelper.resolve(request);
-    container.bind(BASETYPES.LogEntry).toConstantValue(logEntry);
+    const container = response.locals.container as Container;
+    container.bind<LogEntry>(BASETYPES.LogEntry).toConstantValue(logEntry);
 
-    logEntry.start(request);
-    logEntry.processRoutes(request, this.routeMetadataHandler);
+    const routeMetadata = this.routeMetadataHandler.getOperationRouteInfo(request);
+    logEntry.start(request, routeMetadata);
 
     response.on('finish', () => {
         logEntry.end(response);
@@ -232,7 +234,7 @@ public logRequest(request: Request, response: Response, next: NextFunction): voi
 }
 ```
 
-The log entry class can also be injected into business logic, which can contribute to logs, as for the *CompanyRepository*, which provides performance instrumentation:
+The log entry does most of the logging work, such as inspecting Express request and response objects. The log entry can also be injected into business logic, which can contribute to logs. For example, the *CompanyRepository* provides performance instrumentation:
 
 ```typescript
 @injectable()
@@ -253,30 +255,58 @@ export class CompanyRepository {
     public async getCompanyList(): Promise<Company[]> {
 
         return using(this.logEntry.createPerformanceBreakdown('selectCompanyListData'), async () => {
-
             return this.jsonReader.readData<Company[]>('data/companyList.json');
         });
     }
 }
 ```
 
-Logging classes write to a log file and, if the <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</a> is followed, logs will automatically flow to a local Elasticsearch instance. Developers can then query API activity on their local computer:
+Logging objects write to a log file and, if you follow the <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</a>, logs automatically flow to a local Elasticsearch instance. You can then query your own API activity during development:
 
 ![log queries](../images/310/log-queries.jpg)
 
-### Error Handling Implementation
 
-The API implements this blog's <a href='error-handling-and-supportability.mdx'>Error Handling and Supportability</a> design. By default all errors escape to a global exception handler, whose role is to log errors and return an error response to the caller:
+### Authorizer Middleware
+
+The API uses the same OAuth integration and claims handling techniques as this blog's second code sample, explained earlier in the <a href='updated-api-coding-key-points.mdx'>Updated API Code Details</a> blog post. The middleware replaces the stub claims principal object and also adds identity data to logs:
 
 ```typescript
-public handleException(exception: any, request: Request, response: Response, next: NextFunction): void {
+public async execute(request: Request, response: Response, next: NextFunction): Promise<void> {
 
-    const perRequestContainer = ChildContainerHelper.resolve(request);
-    const logEntry = perRequestContainer.get<LogEntryImpl>(BASETYPES.LogEntry);
+    const container = response.locals.container as Container;
 
+    try {
+
+        const filter =  container.get<OAuthFilter>(BASETYPES.OAuthFilter);
+        const logEntry = container.get<LogEntryImpl>(BASETYPES.LogEntry);
+
+        const claimsPrincipal = await filter.execute(request, response);
+        logEntry.setIdentity(ClaimsReader.getStringClaim(claimsPrincipal.getJwt(), 'sub'));
+        container.bind<ClaimsPrincipal>(BASETYPES.ClaimsPrincipal).toConstantValue(claimsPrincipal);
+
+        next();
+
+    } catch (e) {
+
+        const exceptionHandler = container.get<UnhandledExceptionHandler>(
+            BASETYPES.UnhandledExceptionHandler);
+        exceptionHandler.execute(e, request, response, next);
+    }
+}
+```
+
+### Exception Handler
+
+The API implements this blog's <a href='error-handling-and-supportability.mdx'>Error Handling and Supportability</a> design. All errors, including access token validation failures, escape to the global exception handler, which logs technical details and returns error responses to the caller:
+
+```typescript
+public execute(exception: any, request: Request, response: Response, next: NextFunction): void {
+
+    const container = response.locals.container as Container;
+    const logEntry = container.get<LogEntryImpl>(BASETYPES.LogEntry);
     const error = ErrorUtils.fromException(exception);
 
-    let clientError;
+    let clientError: ClientError;
     if (error instanceof ServerError) {
         logEntry.setServerError(error);
         clientError = error.toClientError(this.configuration.apiName);
@@ -285,14 +315,12 @@ public handleException(exception: any, request: Request, response: Response, nex
         clientError = error;
     }
 
-    const writer = new ResponseWriter();
-    writer.writeObjectResponse(response, clientError.getStatusCode(), clientError.toResponseFormat());
+    response.setHeader('content-type', 'application/json');
+    response.status(clientError.getStatusCode()).send(JSON.stringify(clientError.toResponseFormat()));
 }
 ```
 
-This is very standard, but the art of good error handling is to design good error objects that contain useful fields to both callers of the API and your technical support staff.
-
-Error output for developers has a *productive and readable format*, and production logs will also be rendered like this, including context such as which user, session, API and operation was involved.
+This is very standard, but the art of good error handling is to design good error objects that contain useful fields to both callers of the API and your technical support staff. Development error output has a productive and readable format that matches the rendering of production logs. Each log entry includes context like the current user, session, API and operation.
 
 ```json
 {
@@ -350,7 +378,7 @@ Error output for developers has a *productive and readable format*, and producti
 }
 ```
 
-By default our exception handler treats unknown errors as general exceptions and returns a 500 response. For closer control of the response, the API's logic can throw a *ServerError* or *ClientError* derived instance:
+By default, the exception handler treats unknown errors as general exceptions and returns a 500 response. For closer control of the response, the API's logic can throw a *ServerError* or *ClientError* derived instance:
 
 ```typescript
 private unauthorizedError(companyId: number): ClientError {
@@ -364,13 +392,13 @@ private unauthorizedError(companyId: number): ClientError {
 
 ### Portability
 
-The above code is mainstream and can be implemented in any technology stack. This blog's .NET and Java APIs will be coded in an almost identical manner.
+The API uses some techniques not seen in many example Node.js APIs. However, the design is very mainstream and commonly used in other API technologies, to enable a productive code setup. The code for this blog's .NET and Java APIs is almost identical.
 
 ### Where Are We?
 
-We have implemented our non functional requirements in Node.js without any blocking issues, and separated plumbing from other code. In a real API we could then focus on growing the business logic.
+I implemented some non-functional requirements in Node.js without any blocking issues, and separated plumbing from other code. In a real API I could then focus on growing the business logic.
 
 ### Next
 
-- Next we will implement our <a href='net-core-code-sample-overview.mdx'>API Architecture in .NET</a>
-- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>
+- Next I implement the same <a href='net-core-code-sample-overview.mdx'>API Architecture in .NET</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.
