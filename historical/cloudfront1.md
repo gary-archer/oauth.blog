@@ -10,8 +10,10 @@ This redirects historical blog post URLs to a location within my GitHub repos.
 const targetHost = 'https://github.com/gary-archer/oauth.blog/tree/master/public';
 
 const renames = {
+    '/home/code-samples-quickstart': 'quick-start',
     '/2017/09/08/goal-1-requirements': 'web-architecture-goals',
     '/2019/09/15/developer-domain-setup': 'oauth-infrastructure-setup',
+    '/2020/07/21/spa-reverse-proxy-based-token-renewal': 'user-sessions-and-token-renewal',
     '/2018/05/23/typescript-technology-setup': 'web-technology-setup',
     '/2017/10/03/api-tokens-claims': 'api-authorization-design',
     '/2020/05/23/federation-logins': 'federated-logins',
