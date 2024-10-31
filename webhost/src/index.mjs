@@ -43,7 +43,7 @@ function classifyFile(request, response) {
 /*
  * Add response headers for security and caching
  */
-expressApp.use('/*', (request, response, next) => {
+expressApp.use('/*_', (request, response, next) => {
 
     classifyFile(request, response);
 

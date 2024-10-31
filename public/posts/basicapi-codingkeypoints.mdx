@@ -65,19 +65,19 @@ public async initializeApi(): Promise<void> {
         origin: this.configuration.api.trustedOrigins,
         maxAge: 86400,
     };
-    this.expressApp.use('/api/*', cors(corsOptions) as any);
-    this.expressApp.use('/api/*', this.apiController.onWriteHeaders);
+    this.expressApp.use('/api/*_', cors(corsOptions) as any);
+    this.expressApp.use('/api/*_', this.apiController.onWriteHeaders);
 
-    this.expressApp.use('/api/*', this.catch(this.apiLogger.logRequest));
-    this.expressApp.use('/api/*', this.catch(this.apiController.authorizationHandler));
+    this.expressApp.use('/api/*_', this.catch(this.apiLogger.logRequest));
+    this.expressApp.use('/api/*_', this.catch(this.apiController.authorizationHandler));
 
     this.expressApp.get('/api/companies', this.catch(this.apiController.getCompanyList));
     this.expressApp.get(
         '/api/companies/:id/transactions',
         this.catch(this.apiController.getCompanyTransactions));
 
-    this.expressApp.use('/api/*', this.apiController.onRequestNotFound);
-    this.expressApp.use('/api/*', this.apiController.onException);
+    this.expressApp.use('/api/*_', this.apiController.onRequestNotFound);
+    this.expressApp.use('/api/*_', this.apiController.onException);
 }
 ```
 
