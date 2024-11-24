@@ -80,11 +80,12 @@ expressApp.use('/', express.static(physicalRoot));
 /*
  * Tell Express how to handle requests for HTML files, where a .html extension is not specified
  */
-expressApp.get('*', (request, response) => {
+expressApp.get('/*_', (request, response) => {
+
+    const requestPath = request.path.toLowerCase();
 
     if (response.locals.type === 'page') {
 
-        const requestPath = request.path.toLowerCase();
         if (fs.existsSync(`${physicalRoot}${requestPath}.html`)) {
 
             // Serve HTML files within the posts folder
