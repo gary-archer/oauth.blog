@@ -101,9 +101,9 @@ You should not manage volatile business permissions in your authorization server
 
 ### Customising the Claims Principal
 
-In your API code, you may therefore need to combine access token claims with extra values. You can do this in multiple ways, according to your coding preferences. When I first wrote this blog, the AWS Cognito authorization server did not support issuing custom claims to access tokens, yet I still wanted a useful and expressive claims principal that demonstrated my design intent. I did not want my code to be dictated by the limitations of an authorization server implementation.
+In your API authorization code, you should combine access token claims with extra values, and you could implement a solution in multiple ways. For example, use both a *ClaimsPrincipal* object and a *Permissions* object. Yet there are some values that you might want to treat like claims in your API authorization code but not issue to access tokens, to reduce dependencies on the authorization server.
 
-Therefore, I designed an object with the following structure, so that I could inject it into business logic classes and the claims that should be in the access token were readily available. In addition, there may be some main authorization values that you may prefer not to issue to access tokens for manageability reasons. These might be good candidates to represent as extra values in the claims principal.
+When I first wrote this blog, the AWS Cognito authorization server did not support issuing custom claims to access tokens, yet I still wanted a useful claims principal to express my preferred access token design. I did not want my API authorization code to be dictated by the limitations of a particular authorization server. Therefore, I designed an object with the following structure, so that I could inject it into business logic classes and the claims that should be in the access token were readily available.
 
 ```typescript
 export class ClaimsPrincipal {
@@ -116,7 +116,7 @@ My API code samples continue to use this technique, since it is useful to know h
 
 ![token to claims](../images/130/token-to-claims.jpg)
 
-Understand that true claims are those that the authorization server asserts when it cryptographically signs access tokens. The main identity values should always be issued to access tokens when possible, so that the API receives them in a cryptographically verifiable format. Yet you might treat the extra values like claims when they originate from a trusted source like the API's database.
+Understand that true claims are those that the authorization server asserts when it cryptographically signs access tokens. The main identity values should always be issued to access tokens when possible, so that the API receives them in a cryptographically verifiable format.
 
 ### This Blog's Example Claims
 
@@ -136,7 +136,7 @@ The scope restricts access to an *investments* business area. The scope and audi
 }
 ```
 
-The following extra claims are looked up when the API first receives its access token:
+This blog's APIs use the *manager_id* to look up and cache the following extra user values when the API first receives its access token. Therefore, these authorization values also derive from access token claims. The API authorization code uses these values in an identical way to true claims from the access token:
 
 | Extra Claim | Description |
 | ----------- | ----------- |
@@ -194,7 +194,7 @@ export class OAuthFilter {
 }
 ```
 
-This technique adds complexity to API code, so avoid it when getting started with OAuth. Instead, use claims from the access token payload. Understand though, that some claims-related plumbing code might set up your API's business logic classes in productive ways. The plumbing only needs writing once, after which you can implement many claims checks in your business logic with clean code.
+This technique adds complexity to API code, so avoid it when getting started with OAuth. Instead, focus on using claims from the access token payload. Understand though, that it is common for APIs to need to cache some extra authorization values not issued to the access token. Some claims-related plumbing code can set up your API's business logic classes to authorize in productive ways.
 
 ### Where Are We?
 
