@@ -303,7 +303,7 @@ This technique adds complexity that you may not need. Yet it enables API develop
 
 The API implements this blog's <a href='error-handling-and-supportability.mdx'>Error Handling Design</a>, starting with logic for invalid or expired tokens. In a test client you can simulate a 401 error if you click *Expire Access Token* followed by *Reload Data*:
 
-![expiry testing](../images/330/expiry-testing.jpg)
+![expiry testing](../images/330/expiry-testing.jpg?v=20241201)
 
 This results in the client sending an invalid access token to the API, which returns an error response in my preferred format:
 
@@ -321,18 +321,25 @@ In total, the API may return the following OAuth-related HTTP status codes:
 | 404 | The API's claims do not allow access to a resource so the API returns a *Not Found for User* error. |
 | 500 | A technical problem during OAuth processing, such as a network error downloading JWKS keys. |
 
-A 500 error is shown below, and developers can view this type of request by following the <a href='http-debugging-setup.mdx'>HTTP Proxy</a> tutorial:
+When the API fails to download the JWKS it returns the following type of response body to the client:
 
-![500 error](../images/330/500-error.jpg)
+```json
+{
+  "code": "jwks_download_failure",
+  "message": "Problem encountered downloading JWKS keys",
+  "id": 43132,
+  "area": "FinalApi",
+  "utcTime": "2024-12-01T13:03:09"
+}
+```
 
 The client can then take various types of action based on the HTTP status and error code it receives. For server errors, user facing apps can display received error details to assist technical support staff:
 
+![500 error display](../images/330/500-error-display.jpg?v=20241201)
 
-![500 error display](../images/330/500-error-display.jpg)
+### API Logs and Identity Data
 
-### Identity and API Logs
-
-API logs include details about OAuth errors, which helps when there is a configuration problem:
+API logs include details about OAuth errors, which helps when there is a configuration problem. For HTTP status 4xx errors the logged error content is concise, whereas 5xx errors contain further details. Any type of error entry should explain the cause. The following example shows a 401 error due to a rejected token, which includes context that the API does not return to the client:
 
 ```json
 {

@@ -289,7 +289,7 @@ If so, this is one possible way to ensure a stable access token and avoid needin
 
 The API implements this blog's <a href='error-handling-and-supportability.mdx'>Error Handling Design</a>, starting by handling invalid tokens in the standard way. We can simulate a 401 error by clicking our UI's *Expire Access Token* button followed by the *Reload Data* button:
 
-![expiry testing](../images/360/expiry-testing.jpg)
+![expiry testing](../images/360/expiry-testing.jpg?v=20241201)
 
 This results in an invalid access token being sent to the API, which returns an error response in its standard format:
 
@@ -307,13 +307,21 @@ In total the following security related HTTP status codes may be returned:
 | 404 | A *Not Found for User* error is returned if a resource is requested that domain specific claims do not allow |
 | 500 | A technical problem during OAuth processing, such as a network error downloading JWKS keys |
 
-A 500 error is shown below in an <a href='http-debugging-setup.mdx'>HTTP Proxy Tool</a>, and this type of error includes additional fields to help enable fast problem resolution:
+When the API fails to download the JWKS it returns the following type of response body to the client:
 
-![500 error](../images/360/500-error.jpg)
+```json
+{
+  "code": "jwks_download_failure",
+  "message": "Problem encountered downloading JWKS keys",
+  "id": 43132,
+  "area": "FinalApi",
+  "utcTime": "2024-12-01T13:03:09"
+}
+```
 
-The client can then take various types of action based on HTTP status and error code returned. For server errors the UI displays details that may be useful for technical support staff:
+The client can then take various types of action based on the HTTP status and error code it receives. For server errors, user facing apps can display received error details to assist technical support staff:
 
-![500 error display](../images/360/500-error-display.jpg)
+![500 error display](../images/360/500-error-display.jpg?v=20241201)
 
 ### Identity and API Logs
 
