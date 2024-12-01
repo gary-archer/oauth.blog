@@ -1,6 +1,6 @@
 # API Journey – Server Side
 
-Previously I summarised this blog's <a href='api-platform-design.mdx'>API Platform Overview</a> to express some essential high-level ingredients. Next I summarise some end-to-end technical behaviors for OAuth-secured APIs, which I implemnt in this blog's final API code samples, in multiple technology stacks:
+Previously I summarised this blog's <a href='api-platform-design.mdx'>API Platform Overview</a> to express some essential high-level ingredients. Next I summarise some end-to-end technical behaviours for OAuth-secured APIs, which I implemnt in this blog's final API code samples, in multiple technology stacks:
 
 - <a href='api-architecture-node.mdx'>Final Node.js API</a>
 - <a href='net-core-code-sample-overview.mdx'>Final .NET API</a>
@@ -120,7 +120,7 @@ public async validateAccessToken(accessToken: string): JwtClaims {
 
 ### Portable OAuth Implementation
 
-I implement portable API security without depending on API frameworks in particualar technology stacks. Instead, I use JavaScript Object Signing and Encryption (JOSE) libraries with up-to-date options for working with JWTs and their signing keys. I believe that a library-based approach enables the best understanding and control over the important behaviors.
+I implement portable API security without depending on API frameworks in particualar technology stacks. Instead, I use JavaScript Object Signing and Encryption (JOSE) libraries with up-to-date options for working with JWTs and their signing keys. I believe that a library-based approach enables the best understanding and control over the important behaviours.
 
 | Technology | JOSE Library |
 | ---------- | ------------ |
