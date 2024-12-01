@@ -39,7 +39,19 @@ public async Task<CompanyTransactions> GetCompanyTransactionsAsync(string id)
 }
 ```
 
-To get visibility into the Microsoft code behaviour, you can configure a log level for the *Microsoft.AspNetCore.Authentication.JwtBearer* namespace. When getting started with OAuth secured APIs these are good defaults, but this blog's .NET API focuses on some deeper requirements.
+To get visibility into the underlying behaviour of the Microsoft classes and to troubleshoot failures you can add entries like the following to your *appSettings.json* file.
+
+```json
+ {
+    "Logging": {
+        "LogLevel": {
+            "Microsoft.AspNetCore.Authentication.JwtBearer": "Debug"
+        }
+    }
+}
+```
+
+When getting started with OAuth secured APIs these are good defaults, but this blog's .NET API focuses on some deeper requirements.
 
 ### Deeper Requirements
 
@@ -91,7 +103,7 @@ The meaning of each field is summarised in the following table:
 
 ### API Authorization
 
-The API receives an access token with the following payload to restrict the client's API access. The scope is limited to *investments* data. The user's business identity is a custom claim of *manager_id*, for a party who manages investments. The authorization server also issues a custom claim for *role* to the access token:
+The API receives an access token with the following payload to restrict the client's API access. The scope limits access to *investments* data. The user's business identity is a custom claim of *manager_id* to represent a person who manages investments. The authorization server also issues a custom *role* claim to the access token:
 
 ```json
 {
@@ -105,7 +117,7 @@ The API receives an access token with the following payload to restrict the clie
 }
 ```
 
-The API processes the JWT access token to receive the main claimns, The API then does some more advanced work to look up additional values that I want to treat like claims in the API code. The goal is to set up the API's business logic with a useful claims principal.
+The API processes the JWT access token to receive the main claims. The API then does some more advanced work to look up additional values that I want to treat like claims in the API code. The goal is to set up the API's business logic with a useful claims principal.
 
 ### Custom Authentication Handler
 
@@ -167,7 +179,7 @@ I use a number of small classes to implement the desired behaviour. The main wor
 
 ### JWT Access Token Validation
 
-The *AccessTokenValidator* class wraps calls to the *jose-jwt* library and also makes some additional checks:
+The *AccessTokenValidator* object wraps calls to the *jose-jwt* library and also makes some additional checks:
 
 ```csharp
 public async Task ValidateTokenAsync(string accessToken)
@@ -229,7 +241,7 @@ The claims principal for the sample API contains the custom fields listed below:
 | Title | A business title for the user, which frontend applications get from the API and display. |
 | Regions | An array claim meant to represent a more detailed business rule that does not belong in access tokens. |
 
-In code the *ClaimsPrincipal* class is represented like this, consisting of easy to use objects:
+In code the *ClaimsPrincipal* class is represented as follows, consisting of type safe objects:
 
 ```csharp
 public class CustomClaimsPrincipal : ClaimsPrincipal
@@ -309,16 +321,16 @@ This results in the client sending an invalid access token to the API, which ret
 
 | Data | Description |
 | ---- | ----------- |
-| HTTP Status | The appropriate HTTP status is returned. |
-| Payload | A JSON error object containing *code* and *message* fields. |
+| HTTP Status | The API returns an appropriate HTTP status code. |
+| Payload | The API returns a JSON error object containing *code* and *message* fields. |
 
 In total, the API may return the following OAuth-related HTTP status codes:
 
 | Status | Description |
 | ------ | ----------- |
-| 401 | Access token is missing, invalid or expired. |
+| 401 | The access token is missing, invalid or expired. |
 | 403 | The access token does not contain a required scope. |
-| 404 | The API's claims do not allow access to a resource so the API returns a *Not Found for User* error. |
+| 404 | The API's claims do not allow access to a requested resource so the API returns a *Not Found for User* error. |
 | 500 | A technical problem during OAuth processing, such as a network error downloading JWKS keys. |
 
 When the API fails to download the JWKS it returns the following type of response body to the client:
@@ -368,11 +380,11 @@ API logs include details about OAuth errors, which helps when there is a configu
 }
 ```
 
-After the API validates a JWT, it writes the received subject claim, most commonly a UUID, to a *userId* field in the request's API log entry. This can potentially help to track users in benign ways, for technical support purposes. Doing so requires care, as discussed in the <a href='effective-api-logging.mdx'>Effective API Logging</a> post.
+After the API validates a JWT, it writes the received subject claim, most commonly a UUID, to a *userId* field in the request's API log entry. This can potentially help to track users in benign ways, for technical support purposes. Doing so requires care and I say more about secure logs in the <a href='effective-api-logging.mdx'>Effective API Logging</a> post.
 
 ### Where Are We?
 
-I implemented .NET API Security in a requirements first manner, to enable behaviour that is likely to be important for any OAuth secured API, regardless of technology.
+I implemented .NET API Security in a requirements first manner, to enable behaviour that is important for any OAuth secured API, regardless of technology.
 
 ### Next
 
