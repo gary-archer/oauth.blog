@@ -117,24 +117,25 @@ The quickest way to fix deep linking registration failures and get a working app
 }
 ```
 
-Yet this is not really how my code sample is meant to be run. An alternative option is to host your own deep linking assets file on a development web server, by running the following script, providing your Apple Team ID:
+Yet this is not really how my code sample is meant to be run. An alternative option is to host your own deep linking assets file on a development web server, by running the following script, and overriding the Apple Team ID and Bundle ID with your own values:
 
 ```bash
 export APPLE_TEAM_ID='U3VTCHYEM7'
+export BUNDLE_ID='com.authsamples.finalmobileapp'
 ./DevelopmentWebServer/run.sh
 ```
 
-You can study the script to see how it creates an SSL certificate and key, registers the root certificate authority as trusted on the simulator, then runs an HTTPS web server, to serve a deep linking assets file that uses your Apple Team ID. Next, update the */etc/hosts* file on your MacBook, to alias the deep linking domain to localhost:
+You can study the script to see how it creates an SSL certificate and key, registers the root certificate authority as trusted on the simulator, then runs an HTTPS web server, to serve a deep linking assets file that uses your Apple Team ID and Bundle ID. Next, update the */etc/hosts* file on your MacBook, to alias the deep linking domain to localhost:
 
 ```markdown
 127.0.0.1 mobile.authsamples.com
 ```
 
-Finally, configure Xcode to use the same Apple Team ID to sign the app. Then re-run the app on the simulator:
+Finally, configure Xcode to use the same Apple Team ID and Bundle ID. Then re-run the app on the simulator:
 
 ![code signing](../images/560/code-signing.jpg?v=20240914)
 
-Since we are using [mode=developer](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_associated-domains) the app should now run successfully. This technique will only work for simulators, and for more complete testing you would instead need to provide your own iOS infrastructure.
+Since we are using [mode=developer](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_associated-domains) the app will now run successfully. This technique will only work for simulators, and for more complete testing you would instead need to provide your own iOS infrastructure.
 
 ### HTTP Debugging and Claimed HTTPS Schemes
 
