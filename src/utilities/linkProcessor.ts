@@ -1,4 +1,4 @@
-import {MutableRefObject} from 'react';
+import {RefObject} from 'react';
 
 /*
  * By default I use <a> tags that link to physical MDX files.
@@ -6,7 +6,7 @@ import {MutableRefObject} from 'react';
  * When running in NEXT.js, this routine dynamically strips the .mdx suffix.
  * The result is that NEXT.js navigation works as expected.
  */
-export function updateMdxLinks(rootRef: MutableRefObject<HTMLDivElement>): void {
+export function updateMdxLinks(rootRef: RefObject<HTMLDivElement | null>): void {
 
     const allAnchors = rootRef.current?.querySelectorAll<HTMLAnchorElement>('a');
     if (allAnchors) {

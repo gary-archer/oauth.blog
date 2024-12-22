@@ -1,10 +1,10 @@
-import {MutableRefObject} from 'react';
+import {RefObject} from 'react';
 
 /*
  * Add a copy to clipboard button to each markdown code block after it has been rendered by remark-prism
  * https://css-tricks.com/syntax-highlighting-prism-on-a-next-js-site
  */
-export function addCopyToClipboardButtons(rootRef: MutableRefObject<HTMLDivElement>): void {
+export function addCopyToClipboardButtons(rootRef: RefObject<HTMLDivElement | null>): void {
 
     const allPres = rootRef.current?.querySelectorAll<HTMLPreElement>('pre');
     if (allPres) {

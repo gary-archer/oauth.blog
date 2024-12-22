@@ -13,7 +13,7 @@ export async function getStaticPaths(): Promise<GetStaticPathsResult> {
 
     const postsDirectory = path.join(process.cwd(), './public/posts');
     const mdxFiles = await fs.readdir(postsDirectory);
-    const paths = mdxFiles.map((filename) => ({
+    const paths = mdxFiles.map((filename: string) => ({
         params: {
             id: filename.replace(/\.mdx$/, ''),
         }
@@ -30,7 +30,7 @@ export async function getStaticPaths(): Promise<GetStaticPathsResult> {
  */
 export async function getStaticProps(context: GetStaticPropsContext): Promise<GetStaticPropsResult<PostViewProps>> {
   
-    const id = context.params.id as string;
+    const id = context.params?.id as string;
     return {
         props: {
             filename: id,

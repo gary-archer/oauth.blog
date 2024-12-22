@@ -13,7 +13,7 @@ import {NavBar} from './navBar';
  */
 export function PostView(props: PostViewProps): JSX.Element {
 
-    const rootRef = useRef<HTMLDivElement>(null);
+    const rootRef = useRef<HTMLDivElement | null>(null);
     const scrollPositions = useRef<{[file: string]: number}>({});
     const router = useRouter();
     let [showNavBar, setShowNavBar] = useState(false);
@@ -69,10 +69,7 @@ export function PostView(props: PostViewProps): JSX.Element {
             // Otherwise, return to a bookmarked section within the page if there is a hash fragment
             // On initial page load, content is not hydrated so we must scroll after content is rendered
             if (typeof window !== 'undefined' && window.location.hash) {
-
-                document
-                    .querySelector(window.location.hash)
-                    .scrollIntoView({ behavior: 'instant' });
+                document.querySelector(window.location.hash)?.scrollIntoView({ behavior: 'instant' });
             }
         }
     }
@@ -106,7 +103,7 @@ export function PostView(props: PostViewProps): JSX.Element {
     /*
      * Render H3 subheadings in posts as links
      */
-    const subheadingLink = ({id, ...rest}) => {
+    const subheadingLink = ({id, ...rest}: any) => {
         
         if (id) {
             return (
