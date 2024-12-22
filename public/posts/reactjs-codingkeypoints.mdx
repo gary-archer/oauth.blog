@@ -18,7 +18,7 @@ These earlier SPAs used access tokens in the browser, which is no longer recomme
 The final SPA is a React app that runs at a */spa* path. Additional paths, for other micro-frontends, could run within the same web domain, to keep the code base manageable as it grows:
 
 <div className='smallimage'>
-    <img src='../images/240/spa-code.jpg' alt='spa code' />
+    <img src='../images/240/spa-code.jpg?v=20241222' alt='spa code' />
 </div>
 
 From a security viewpoint, any additional apps added to the web domain should be for the same business area. All apps then share each other's API cookies and also each other's cross site scripting threats.
@@ -52,41 +52,52 @@ The final SPA uses the same HTML markup as earlier SPAs:
 
 ### Web Host
 
-The final SPA could use any web static content host, but this component should always be lightweight and never interferes with the frontend experience. For development I use the full-featured Express HTTP server for local testing of production web behaviours, like its content security policy. The web host's logic serves the SPA's static content from the */spa* folder. Other folders could be added in future, for additional micro-frontends:
+The final SPA could use any web static content host, but this component should always be lightweight and never interfere with the frontend experience. For development I use the webpack development server and also ensure the following important local behaviors. In a real system with would help to derisk production deployments.
+
+- The web host uses production security, including SSL and strong web security headers.
+- The serving of static content supports code splitting and works the same as deployed systems.
+
+The web host's logic serves the SPA's static content from the */spa* folder. Other folders could be added in future, for additional micro-frontends. An abbreviated configuration is shown here with the most essential settings:
 
 ```typescript
-public initialise(): void {
+const devServer: webpackDevServer.Configuration = {
 
-    const spaBasePath = '/spa/';
-    const spaRoot = this.getSpaFilesBasePath();
-    this.express.use(spaBasePath, express.static(spaRoot));
-
-    this.express.get('*', (request, response) => {
-
-        const requestPath = request.path.toLowerCase();
-        if (requestPath === '/favicon.ico') {
-
-            const root = this.getRootFilesBasePath();
-            response.sendFile('favicon.ico', {root});
-
-        } else if (requestPath.startsWith(spaBasePath)) {
-
-            response.sendFile('index.html', {root: spaRoot});
-
-        } else {
-
-            response.redirect(spaBasePath);
-        }
-    });
+    server: {
+        type: 'https',
+        options: {
+            key: fs.readFileSync('../certs/authsamples-dev.ssl.key'),
+            cert: fs.readFileSync('../certs/authsamples-dev.ssl.crt'),
+        },
+    },
+    static: {
+        directory: path.join(dirname, '../dist'),
+    },
+    port: 443,
+    historyApiFallback: {
+        index: '/spa/',
+    },
+    hot: true,
+    allowedHosts: [
+        'www.authsamples-dev.com',
+    ],
+    headers: secureHeaders
 }
-```
 
-When required, I can also deploy the web host in local docker-based deployments, such as to a development Kubernetes cluster. You can test a docker compose deployment of the web host with these commands:
+const devConfig: webpack.Configuration = {
+    mode: 'development',
+    devServer,
+    output: Object.assign({}, baseConfig.output, {
+        devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]',
+        publicPath: '/spa/',
+    }),
+    plugins:[
+        new webpack.DefinePlugin({
+            IS_DEBUG: 'true',
+        })
+    ]
+};
 
-```bash
-./deployment/docker-local/build.sh
-./deployment/docker-local/deploy.sh
-./deployment/docker-local/teardown.sh
+export default merge(baseConfig, devConfig);
 ```
 
 ### React Library Setup
@@ -95,13 +106,13 @@ The SPA no longer uses a JavaScript security library to implement OpenID Connect
 
 ```json
 "dependencies": {
-  "axios": "^1.7.2",
+  "axios": "^1.7.9",
   "guid-typescript": "^1.0.9",
   "js-event-bus": "^1.1.1",
-  "react": "^18.3.2",
-  "react-dom": "^18.3.0",
+  "react": "^19.0.0",
+  "react-dom": "^19.0.0",
   "react-modal": "^3.16.1",
-  "react-router-dom": "^6.23.1"
+  "react-router-dom": "^7.0.2"
 }
 ```
 
