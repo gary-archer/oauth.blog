@@ -25,13 +25,21 @@ First update your computer's hosts file to create domains for local development.
 127.0.0.1 api.authsamples-dev.com login.authsamples-dev.com www.authsamples-dev.com bfflocal.authsamples-dev.com
 ```
 
-### Prerequisite 2: Install Java
+### Prerequisite 2
+
+Install OpenSSL 3+ so that you can create development certificates and run the API over HTTPS.
+
+### Prerequisite 3: Install Java
 
 I use the latest long term support version of Java that Spring Boot supports, which is [Java 21](https://www.azul.com/downloads/?version=java-21-lts) at the time of writing. I use the open source Azul Java SDK and create a *JAVA_HOME* environment variable at a location such as */usr/lib/jvm/zulu-21-amd64*.
 
 ![java](../images/350/java.jpg)
 
-### Prerequisite 3: Optionally Install a Java IDE
+### Prerequisite 4: Install Docker
+
+To run API tests, or the full SPA and API solution, you use Docker utility components, so install a local engine such as [Docker Desktop](https:/www/.docker.com/products/docker-desktop).
+
+### Prerequisite 5: Optionally Install a Java IDE
 
 I use the free community edition of [Intellj Idea](https://www.jetbrains.com/idea/download) for Java based development. The project structure must be uploaded to use the downloaded JDK. Also install the [Lombok plugin](https://plugins.jetbrains.com/plugin/6317-lombok) and optionally the [Checkstyle plugin](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea).
 
@@ -39,13 +47,9 @@ I use the free community edition of [Intellj Idea](https://www.jetbrains.com/ide
 
 When I load the project I wait for the gradle sync to complete. Then I run the *FinalApiApplication.java* source file to start listening for requests over HTTPS.
 
-### Prerequisite 4: Optionally Install Node.js
+### Prerequisite 6: Optionally Install Node.js
 
 If you want to run the SPA as well as the API, install [Node.js](https://nodejs.org/en/download) to build the SPA's JavaScript bundles.
-
-### Prerequisite 5: Install Docker
-
-To run API tests, or the full SPA and API solution, you use Docker utility components, so install a local engine such as [Docker Desktop](https:/www/.docker.com/products/docker-desktop).
 
 ### Step 1: Get the Code
 
