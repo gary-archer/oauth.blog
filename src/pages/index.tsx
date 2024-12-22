@@ -1,4 +1,5 @@
 import {GetStaticPropsResult} from 'next';
+import {JSX} from 'react';
 import {PostView} from '../views/postView';
 import {PostViewProps} from '../views/postViewProps';
 

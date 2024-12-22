@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import {JSX} from 'react';
 
 /*
  * The client side navbar is rendered to the top right in wide views or after other content in mobile views

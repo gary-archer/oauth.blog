@@ -2,7 +2,7 @@ import {MDXProvider} from '@mdx-js/react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import {useRouter} from 'next/router'
-import {useEffect, useRef, useState} from 'react';
+import {JSX, useEffect, useRef, useState} from 'react';
 import {addCopyToClipboardButtons} from '../utilities/codeProcessor';
 import {updateMdxLinks} from '../utilities/linkProcessor';
 import {PostViewProps} from './postViewProps';

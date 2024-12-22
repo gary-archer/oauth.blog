@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import {GetStaticPathsResult, GetStaticPropsContext, GetStaticPropsResult} from 'next';
 import path from 'path';
+import {JSX} from 'react';
 import {PostView} from '../../views/postView';
 import {PostViewProps} from '../../views/postViewProps';
 

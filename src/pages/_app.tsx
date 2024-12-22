@@ -1,4 +1,5 @@
 import type {AppProps} from 'next/app'
+import {JSX} from 'react';
 import '../../public/styles/app.css';
 import 'prismjs/themes/prism-tomorrow.css';
 
