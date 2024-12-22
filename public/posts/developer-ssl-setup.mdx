@@ -86,7 +86,7 @@ You can use an [Online Certificate Decoder](https://certlogik.com/decoder/) and 
 
 ### This Blog's SSL Code Samples
 
-To make my code samples easy to run, I store development certificates and keys in a [public GitHub repository](https://github.com/gary-archer/oauth.developmentcertificates) so that code sample scripts can easily download them. You should of course never store real private keys in a source code repository like this. When APIs start, they load the password-protected P12 file, then listen on SSL port 443:
+This blog's code samples include bash scripts that you can run to create OpenSSL certificates for local development. When APIs start, they load the password-protected P12 file, then listen on SSL port 443:
 
 ```typescript
 public async startListening(): Promise<void> {
