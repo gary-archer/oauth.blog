@@ -47,7 +47,7 @@ If you want to run the SPA as well as the API, install [Node.js](https://nodejs.
 
 To run API tests, or the full SPA and API solution, you use Docker utility components, so install a local engine such as [Docker Desktop](https:/www/.docker.com/products/docker-desktop).
 
-### Step 1: Build and Run the API
+### Step 1: Get the Code
 
 Close the GitHub repository with the following command:
 
@@ -55,17 +55,16 @@ Close the GitHub repository with the following command:
 git clone https://github.com/gary-archer/oauth.apisample.javaspringboot
 ```
 
-Run the following command, which downloads some OpenSSL development certificates, then runs the API on HTTPS using port 446:
+![repo](../images/350/repo.jpg)
+
+### Step 2: Create SSL Certificates
+
+Run the following command, which creates some OpenSSL development certificates:
 
 ```bash
-./start.sh
+./certs/create.sh
 ```
-
-![running api](../images/350/running-api.jpg?v=20240915)
-
-### Step 2: Configure SSL Trust
-
-The API runs over SSL and when you run it for the first time it downloads some development certificates. To prevent SSL trust problems from tests or the browser you may need to <a href='developer-ssl-setup.mdx'>Configure Java and Browser Trust</a> for the root certificate at the following location. 
+To prevent SSL trust problems from tests or the browser you may need to <a href='developer-ssl-setup.mdx'>Configure Java and Browser Trust</a> for the root certificate at the following location. 
 
 ```markdown
 certs/authsamples-dev.ca.crt
@@ -83,7 +82,28 @@ You can revoke trust for the root certificate later if required, using the follo
 sudo "$JAVA_HOME/bin/keytool" -delete -alias authsamples.ca -cacerts -storepass changeit -noprompt
 ```
 
-### Step 3: Run Integration Tests
+### Step 3: Run the API
+
+Next run the API:
+
+```bash
+./start.sh
+```
+
+The Spring Boot HTTP server then listens on HTTPS port 446:
+
+![running api](../images/350/running-api.jpg?v=20240915)
+
+You can then navigate to the following URL in a browser without any SSL trust warnings:
+
+```markdown
+https://api.authsamples-dev.com:446/investments/companies
+```
+
+![browse to api](../images/350/browse-to-api.jpg?v=20240915)
+
+
+### Step 4: Run Integration Tests
 
 To run JUnit tests, the API must be pointed to a mock authorization server, so must run with a test configuration. Stop the API if it is running, then re-run it via this command:
 
@@ -101,7 +121,7 @@ This spins up a JWKS URI with an HTTPS endpoint that the Wiremock utility provid
 
 ![test results](../images/350/test-results.jpg?v=20240915)
 
-### Step 4: Run a Basic Load Test
+### Step 5: Run a Basic Load Test
 
 While the API runs with a test configuration you can also run a basic load test that sends parallel API requests. This helps to ensure that the API code has no concurrency bugs:
 
@@ -115,7 +135,7 @@ The test fires batches of 5 concurrent requests at a time and also intentionally
 
 The <a href='api-automated-tests.mdx'>API Automated Tests</a> post explains how tests get user level tokens without running a full authorization code flow.
 
-### Step 5: Run the SPA Client
+### Step 6: Run the SPA Client
 
 You can run any of this blog's final frontend clients against the API:
 

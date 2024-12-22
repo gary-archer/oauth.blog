@@ -52,16 +52,16 @@ First add the following logging domain name to your computer's hosts file:
 127.0.0.1 logs.authsamples-dev.com
 ```
 
-Next run the following script to download a development SSL certificate for this domain name:
+Next run the following script to create a development SSL certificate for this domain name:
 
 ```bash
-./deployment/docker-local/downloadcerts.sh
+./certs/create.sh
 ```
 
-Then follow instructions to configure <a href='developer-ssl-setup.mdx'>Browser SSL Trust</a> for the following root certificate, so that we can run the Kibana UI later:
+Then follow instructions to configure <a href='developer-ssl-setup.mdx'>Browser SSL Trust</a> for the following root certificate, so that you can run the Kibana UI and avoid SSL trust errors:
 
 ```markdown
-./deployment/docker-local/certs/authsamples-dev.ca.crt
+./certs/authsamples-dev.ca.crt
 ```
 
 ### Step 3: Understand Elasticsearch Deployment

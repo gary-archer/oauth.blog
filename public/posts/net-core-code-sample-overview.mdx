@@ -43,7 +43,7 @@ If you want to run the SPA as well as the API, install [Node.js](https://nodejs.
 
 To run API tests, or the full SPA and API solution, you use Docker utility components, so install a local engine such as [Docker Desktop](https:/www/.docker.com/products/docker-desktop).
 
-### Step 1: Build and Run the API
+### Step 1: Get the Code
 
 Close the GitHub repository with the following command:
 
@@ -53,21 +53,38 @@ git clone https://github.com/gary-archer/oauth.apisample.netcore
 
 ![repo](../images/320/repo.jpg)
 
-Run the following command, which downloads some OpenSSL development certificates, then runs the API on HTTPS using port 446:
+### Step 2: Create SSL Certificates
+
+Next run the following command, which creates some OpenSSL development certificates:
+
+```bash
+./certs/create.sh
+```
+To prevent SSL trust problems from tests or the browser you may need to <a href='developer-ssl-setup.mdx'>Configure .NET and Browser Trust</a> for the root certificate at the following location. 
+
+```markdown
+certs/authsamples-dev.ca.crt
+```
+
+### Step 3: Build and Run the API
+
+Close the GitHub repository with the following command:
+
+```bash
+git clone https://github.com/gary-archer/oauth.apisample.netcore
+```
+
+![repo](../images/320/repo.jpg)
+
+Next run the API:
 
 ```bash
 ./start.sh
 ```
 
+The .NET HTTP server then listens on HTTPS port 446:
+
 ![running api](../images/320/running-api.jpg?v=20240915)
-
-### Step 2: Configure SSL Trust
-
-To prevent SSL trust problems from tests or the browser you should <a href='developer-ssl-setup.mdx'>Configure .NET and Browser Trust</a> for the root certificate at the following location. 
-
-```markdown
-certs/authsamples-dev.ca.crt
-```
 
 You can then navigate to the following URL in a browser without any SSL trust warnings:
 
@@ -77,7 +94,7 @@ https://api.authsamples-dev.com:446/investments/companies
 
 ![browse to api](../images/320/browse-to-api.jpg?v=20240915)
 
-### Step 3: Run Integration Tests
+### Step 4: Run Integration Tests
 
 To run XUnit tests, the API must be pointed to a mock authorization server, so must run with a test configuration. Stop the API if it is running, then re-run it via this command:
 
@@ -94,7 +111,7 @@ Next run tests with the following command:
 This spins up a JWKS URI with an HTTPS endpoint that the Wiremock utility provides. A number of tests then make OAuth-secured API requests. These tests focus on the API's main security behaviours:
 ![test results](../images/320/test-results.jpg?v=20240915)
 
-### Step 4: Run a Basic Load Test
+### Step 5: Run a Basic Load Test
 
 While the API runs with a test configuration you can also run a basic load test that sends parallel API requests. This helps to ensure that the API code has no concurrency bugs:
 

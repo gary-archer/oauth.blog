@@ -233,7 +233,7 @@ For the API configuration, replace the *Tenant ID* with your own value, and also
 
 This configuration is equivalent to that of the earlier <a href='improved-spa-code-sample-overview.mdx'>Updated SPA and API</a>, which ran against AWS Cognito. The Graph details in the configuration are explained in the next post.
 
-### Step 11. Configure DNS
+### Step 11. Configure DNS and SSL
 
 Update the hosts file on your computer to include this blog's local development domains, described in the earlier <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a> post:
 
@@ -241,28 +241,24 @@ Update the hosts file on your computer to include this blog's local development 
 127.0.0.1 www.authsamples-dev.com api.authsamples-dev.com
 ```
 
-### Step 12. Build the Code
-
-Next run the following script, which downloads some  OpenSSL generated certificates, then build the SPA and API code:
+The API and web static content hosting uses SSL so you must create OpenSSL development certificates by running this script:
 
 ```bash
-./build.sh
+./certs/create.sh
 ```
 
-### Step 13. Configure SSL Trust
-
-The API and web static content hosting uses SSL so you must ensure that your browser trusts the root certificate at the below location, as explained in the <a href='developer-ssl-setup.mdx'>SSL Trust Configuration</a> post.
+Then ensure that your browser trusts the root certificate at the following location, as explained in the <a href='developer-ssl-setup.mdx'>SSL Trust Configuration</a> post.
 
 ```markdown
-api/certs/authsamples-dev.ca.crt
+certs/authsamples-dev.ca.crt
 ```
 
-### Step 14. Run the SPA
+### Step 12. Build and Run the SPA and API
 
-Next run the following script, to run the API over SSL on port 443. The default browser then runs at *https://www.authsamples-dev.com/spa*. The SPA redirects to Microsoft online and you can sign in with one of the test user accounts:
+Next run the following script, to build the code and run the API over SSL on port 443. The default browser then runs at *https://www.authsamples-dev.com/spa*. The SPA redirects to Microsoft online and you can sign in with one of the test user accounts:
 
 ```bash
-./run.sh
+./build.sh && ./run.sh
 ```
 
 Login completes successfully and you can run the same SPA and API that was previously run against AWS Cognito. There are some minor OAuth differences but both apps use essentially the same code.

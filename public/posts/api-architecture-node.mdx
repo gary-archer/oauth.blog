@@ -33,7 +33,7 @@ Download [Node.js](https://nodejs.org/en/download) for your operating system, wh
 
 To run API tests, or the full SPA and API solution, you use Docker utility components, so install a local engine such as [Docker Desktop](https:/www/.docker.com/products/docker-desktop).
 
-### Step 1: Build and Run the API
+### Step 1: Get the Code
 
 Close the GitHub repository with the following command:
 
@@ -43,21 +43,30 @@ git clone https://github.com/gary-archer/oauth.apisample.nodejs
 
 ![repo](../images/300/repo.jpg)
 
-Run the following command, which downloads some OpenSSL development certificates, then runs the API on HTTPS using port 446:
+### Step 2: Create SSL Certificates
+
+Run the following command, which creates some OpenSSL development certificates:
+
+```bash
+./certs/create.sh
+```
+To prevent SSL trust problems from tests or the browser you may need to <a href='developer-ssl-setup.mdx'>Configure Node.js and Browser Trust</a> for the root certificate at the following location. 
+
+```markdown
+certs/authsamples-dev.ca.crt
+```
+
+### Step 3: Run the API
+
+Next run the API:
 
 ```bash
 ./start.sh
 ```
 
+The Express HTTP server then listens on HTTPS port 446:
+
 ![running api](../images/300/running-api.jpg?v=20240915)
-
-### Step 2: Configure SSL Trust
-
-To prevent SSL trust problems from tests or the browser you should <a href='developer-ssl-setup.mdx'>Configure Node.js and Browser Trust</a> for the root certificate at the following location. 
-
-```markdown
-certs/authsamples-dev.ca.crt
-```
 
 You can then navigate to the following URL in a browser without any SSL trust warnings:
 
@@ -67,7 +76,7 @@ https://api.authsamples-dev.com:446/investments/companies
 
 ![browse to api](../images/300/browse-to-api.jpg?v=20240915)
 
-### Step 3: Run Integration Tests
+### Step 4: Run Integration Tests
 
 To run mocha tests, you must run the API with a configuration that points to a mock authorization server. Stop the API if it is running, then re-run it via this command:
 
@@ -85,7 +94,7 @@ This spins up a JWKS URI with an HTTPS endpoint that the Wiremock utility provid
 
 ![test results](../images/300/test-results.jpg)
 
-### Step 4: Run a Basic Load Test
+### Step 5: Run a Basic Load Test
 
 While the API runs with a test configuration you can also run a basic load test that sends parallel API requests. This helps to ensure that the API code has no concurrency bugs:
 
@@ -99,7 +108,7 @@ The test fires batches of 5 concurrent requests at a time and also intentionally
 
 The <a href='api-automated-tests.mdx'>API Automated Tests</a> post explains how tests get user level tokens without running a full authorization code flow.
 
-### Step 5: Run the SPA Client
+### Step 6: Run the SPA Client
 
 You can run any of this blog's final frontend clients against the API:
 

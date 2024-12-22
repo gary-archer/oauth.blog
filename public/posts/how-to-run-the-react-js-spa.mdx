@@ -12,22 +12,7 @@ git clone https://github.com/gary-archer/oauth.websample.final
 
 ![repo](../images/230/repo.jpg?v=20242212)
 
-### Step 2: Add Domains to your Computer
-
-You need to use this blog's web development domain. Add a local DNS entry in your hosts file, which exists at one of these locations:
-
-| OS | Path |
-| -- | ---- |
-| Windows | c:\system32\drivers\etc\hosts |
-| macOS / Linux | /etc/hosts |
-
-Add the following entry to point the SPA's web origin to your local computer:
-
-```markdown
-127.0.0.1  localhost www.authsamples-dev.com
-```
-
-### Step 3: View the React Code
+### Step 2: View the React Code
 
 The main SPA code is located in an */spa* subfolder and has a standard file layout, with React code within the views folder:
 
@@ -63,35 +48,46 @@ React provides a modern toolset that helps to enable productivity:
 | Components | A componentized development model, that promotes clean code and a separation of concerns. |
 | Ecosystem | Web development best practice techniques from the React community. |
 
-### Step 4: Execute the Build Script
+### Step 3: Configure DNS and SSL
 
-Open a terminal and run the following command from the root folder, to do some basic setup such as installing dependencies:
+You need to use this blog's web development domain. Add a local DNS entry in your hosts file, which exists at one of these locations:
 
-```bash
-./build.sh
+| OS | Path |
+| -- | ---- |
+| Windows | c:\system32\drivers\etc\hosts |
+| macOS / Linux | /etc/hosts |
+
+Add the following entry to point the SPA's web origin to your local computer:
+
+```markdown
+127.0.0.1  localhost www.authsamples-dev.com
 ```
 
-### Step 5: Configure SSL Trust
+Next run the following script to create some OpenSSL development certificates:
 
-The build script downloads some OpenSSL issued development certificates. You should ensure that your browser trusts the root certificate at the below location, according to the <a href='developer-ssl-setup.mdx'>SSL Trust Configuration</a> post.
+```bash
+./certs/create.sh
+```
+
+You should then ensure that your browser trusts the root certificate at the below location, according to the <a href='developer-ssl-setup.mdx'>SSL Trust Configuration</a> post.
 
 ```markdown
 certs/authsamples-dev.ca.crt
 ```
 
-### Step 6: Execute the Run Script
+### Step 4: Run the SPA
 
-Next run the following command from the original terminal window, to serve web content using the [Webpack development server](https://webpack.js.org/configuration/dev-server/) and open the default browser at *https://www.authsamples-dev.com*:
+Open a terminal and run the following commands from the root folder, to build and run the code:
 
 ```bash
-./run.sh
+./build.sh && ./run.sh
 ```
 
-The frontend runs in watch mode, so that you follow a pure SPA development model. You can update the React code and quickly see changes in the browser:
+The [Webpack development server](https://webpack.js.org/configuration/dev-server/) serves static content in watch mode. The default browser then opens at *https://www.authsamples-dev.com*.
 
 ![spa build](../images/230/spa-build.jpg?v=20241222)
 
-### Step 7: Sign In to the SPA
+### Step 5: Sign In to the SPA
 
 You will then be prompted to sign in, and can do so with this test credential:
 
@@ -102,13 +98,13 @@ After login, the SPA sends an HttpOnly encrypted cookie containing an AWS Cognit
 
 ![spa data](../images/230/spa-data.jpg?v=20240713)
 
-### Step 8: View Secure Cookies
+### Step 6: View Secure Cookies
 
 When the SPA makes API requests it sends a short-lived access token encrypted into an *HttpOnly SameSite=strict Secure* cookie. Since Cognito uses RS256 JWTs, the cookie size is around 1.5KB, which is comfortably below browser 4KB cookie size limits. You can use browser tools to view secure cookies, which are for the backend for frontend subdomain and not the web origin. The SPA does not require any cookies to download static content, and does not use cookies when the user performs navigation operations:
 
 ![cookie properties](../images/230/cookie-properties.jpg?v=20240817)
 
-### Step 9: View Updated SPA Configuration
+### Step 7: View Updated SPA Configuration
 
 In earlier samples, the SPA performed its own OpenID Connect flow in JavaScript. This work is now done by remote token handler components, and the SPA configuration is therefore reduced to a backend for frontend base URL:
 
@@ -118,7 +114,7 @@ In earlier samples, the SPA performed its own OpenID Connect flow in JavaScript.
 }
 ```
 
-### Step 10: Understand Web Security Headers
+### Step 8: Understand Web Security Headers
 
 The web host now writes a number of security headers, the most interesting of which is the *Content Security Policy*. It contains the following values, since the SPA now only makes remote calls via its backend for frontend:
 
@@ -141,7 +137,7 @@ x-content-type-options: nosniff
 referrer-policy: same-origin
 ```
 
-### Step 11: Run a Release Build
+### Step 9: Run a Release Build
 
 You can run some scripts to test a release deployment and run the SPA at the same local computer URL. The *build.sh* script produces JavaScript release bundles. The *deploy.sh* script runs an Express Docker container that serves static content in the same way as the webbpack development server. The *teardown.sh* script stops the Docker container.
 
