@@ -1,49 +1,44 @@
 # Web Content Delivery
 
-Previously we finalized the <a href='managed-authorization-server-setup.mdx'>Managed Authorization Server Setup</a>, using AWS Cognito. In this post we will apply finishing touches to the <a href='web-technology-setup.mdx'>Modern Web Technology Setup</a>, to complete the web architecture by deploying static content to a content delivery network.
+Previously I finalized the <a href='managed-authorization-server-setup.mdx'>Managed Authorization Server Setup</a>, using AWS Cognito. In this post I apply some finishing touches to the <a href='web-technology-setup.mdx'>Modern Web Technology Setup</a>, to complete the web architecture with deployment of static content to a content delivery network.
 
 ### Global Web Performance
 
-In this post we will meet performance requirements discussed earlier in <a href='web-architecture-goals.mdx'>Web Architecture Goals</a>. AWS CloudFront is a content delivery network that provides optimized web hosting:
+In this post I demonstrate meeting performance goals from the earlier post on <a href='web-architecture-goals.mdx'>Web Architecture Goals</a>. AWS CloudFront is a content delivery network that provides optimized web hosting:
 
 ![cdn](../images/610/cdn.jpg)
 
-To deploy the SPA we will simply upload web assets to S3, after which CloudFront will distribute them to many global *edge* locations, so that all users receive roughly equal web performance.
+To deploy the SPA I simply upload web assets to S3 after which CloudFront distributes them to many global *edge* locations, so that all users receive roughly equal web performance.
 
 ### CloudFront Domains
 
-In total we will use the following domains for web content and will create S3 buckets and CloudFront distributions for each of them:
+In total I use the following domains for web content, each of which has an S3 buckets and a CloudFront distributions:
 
 | Domain | Usage |
 | ------ | ----- |
-| www.authsamples.com | Serving web content for an online SPA that connects to Serverless APIs |
-| www.authsamples-k8s.com | Serving web content for an online SPA that connects to Kubernetes APIs |
-| mobile.authsamples.com | Assets for enabling mobile logins and deep linking |
+| www.authsamples.com | Serves web content for an online SPA that connects to Serverless APIs. |
+| www.authsamples-k8s.com | Serves web content for an online SPA that connects to Kubernetes APIs. |
+| mobile.authsamples.com | Serves assets used of native mobile logins and mobile deep linking. |
 
-This post covers the details for the first domain, and the steps for other domains are equivalent. First though we will briefly summarise some build related steps that help to enable a good deployment architecture.
+This post covers the details for the first domain, and the steps for other domains are equivalent. First though I briefly summarise some build related steps that help to enable a good deployment architecture.
 
 ### Automated Deployment
 
-Details on how to run the final SPA locally were covered in <a href='how-to-run-the-react-js-spa.mdx'>this earlier post</a>. CloudFront deployment is then managed via the following commands, though this only works if you have access to my AWS account:
+In a prevouis post I explained <a href='how-to-run-the-react-js-spa.mdx'>How to Run the Final SPA</a>. To deploy to CloudFront I use the following commands, though they only work if you have access to my AWS account:
 
 ```bash
 git clone https://github.com/gary-archer/oauth.websample.final
 cd oauth.websample.final/deployment/cloudfront
-./build.sh
-./deploy.sh
+./build.sh && ./deploy.sh
 ```
 
 ### SPA Release Builds
 
-The build script for the SPA produces a *dist* folder containing files to deploy. Release builds of webpack produce minified JavaScript bundles. This includes source map files that are not deployed but could be used to resolve production stack traces. Bootstrap CSS is also minified, using the [purgecss](https://github.com/FullHuman/purgecss) command line tool.
+The build script for the final SPA produces a root level *dist* folder containing static content to deploy. A real build system could provide content for multiple micro frontends within the same web domain. I build the release JavaScript bundles with minification enabled. I also use the [purgecss command line tool](https://github.com/FullHuman/purgecss) to reduce the size of the Bootstrap CSS file. The following screenshot shows the final assets. I do not deploy source map files but in a real system they could be used later to resolve production stack traces.
 
-<div className='smallimage'>
-    <img src='../images/610/release-bundles.jpg' alt='release bundles' />
-</div>
+<img src='../images/610/release-bundles.jpg' alt='release bundles' />
 
-A final *index.html* file is then produced, adding cache busting timestamps to asset references, to ensure that the browser's cache never serves old files after an upgrade.
-
-I also apply [subresource integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) attributes, to bind each resource to the HTML file. This does not solve any real security problems for my web deployment, but is a personal preference, to assert the correctness of assets shipped together.
+I produce a final *index.html* file and use cache busting timestamps for JS and CSS files, to ensure that the browser's cache never serves old files after an upgrade. I also apply [subresource integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) attributes, to bind each resource to the HTML file. This does not solve any real security problems for my web deployment, but is a personal preference, to assert the correctness of assets shipped together.
 
 ```html
 <!DOCTYPE html>
@@ -67,7 +62,7 @@ I also apply [subresource integrity](https://developer.mozilla.org/en-US/docs/We
 </html>
 ```
 
-A script called *rewriteIndexHtml.ts* is responsible for producing the final HTML file, and ensuring that it remains readable. This script also removes the below line from release bundle files, to prevent production users ever seeing messages about missing source maps in the browser console:
+A script called *rewriteIndexHtml.ts* produces the final HTML file while also keeping it readable. This script also removes the below line from release bundle files, to prevent production users ever seeing messages about missing source maps in the browser console:
 
 ```markdown
 //# sourceMappingURL=app.bundle.js.map
@@ -75,7 +70,7 @@ A script called *rewriteIndexHtml.ts* is responsible for producing the final HTM
 
 ### SPA Deployed Configuration
 
-In development, the SPA downloads an *spa.config.json* file, containing the following values. These would vary depending on the stage of a company's deployment pipeline:
+In development, the SPA downloads an *spa.config.json* file, whose content would depend on the domain in which the SPA runs. Use of a configuration file provides a mechanism where binaries can be built once and then promoted down a pipeline. Code never then needs changing, if for example a completely new test environment needs to be created.
 
 ```json
 {
@@ -83,9 +78,8 @@ In development, the SPA downloads an *spa.config.json* file, containing the foll
 }
 ```
 
-This provides a mechanism where binaries are built once then promoted down a pipeline. Code never then needs changing, if for example a completely new test environment needs to be created.
 
-Production configurations are instead hard coded, to avoid the need for configuration downloads, and because JSON files do not have subresource integrity protection. The SPA does so by checking its web origin to see if it is running in a production domain:
+I instead hard code the production configuration, to avoid the need for configuration downloads, and because JSON files do not have subresource integrity protection. When getting configuration, the SPA first checks its web origin and uses hard coded configuration when it runs in a production domain:
 
 ```typescript
 if (location.origin.toLowerCase() === productionConfiguration.app.webOrigin.toLowerCase()) {
@@ -95,73 +89,57 @@ if (location.origin.toLowerCase() === productionConfiguration.app.webOrigin.toLo
 return this.download();
 ```
 
-If so then a hard coded configuration object is used instead:
-
-```typescript
-export const productionConfiguration = {
-    bffBaseUrl: 'https://bff.authsamples.com',
-} as Configuration; 
-```
-
 ### Web Content Uploads
 
-Now that the app is built in the preferred way we can focus on the actual cloud deployment, which starts with creating an S3 bucket. I followed the AWS wizard and used a subdomain of `www.authsamples.com`:
+After building static content I created an S3 bucket named after the *www.authsamples.com* subdomain:
 
-![s3 bucket creation](../images/610/s3-bucket-creation.jpg)
+![s3 bucket creation](../images/610/s3-bucket.jpg)
 
-I then activated *Static Website Hosting* and chose *index.html* as the default document. In this initial state, the web static content is not yet publicly accessible.
+I then activated *Static Website Hosting* and chose *index.html* as the default document:
 
-![s3 website hosting](../images/610/s3-website-hosting.jpg)
+![s3 website hosting](../images/610/s3-website-hosting.jpg?v=20241224)
 
 When the *deploy.sh* script is run, it simply invokes *aws s3 cp* to copy the *dist* folder containing HTML assets up to AWS:
 
 ```markdown
 upload: .package/favicon.ico to s3://www.authsamples.com/favicon.ico
-upload: .package/spa/app.css to s3://www.authsamples.com/spa/app.css
 upload: .package/spa/index.html to s3://www.authsamples.com/spa/index.html
+upload: .package/spa/app.css to s3://www.authsamples.com/spa/app.css
 upload: .package/spa/bootstrap.min.css to s3://www.authsamples.com/spa/bootstrap.min.css
 upload: .package/spa/app.bundle.js to s3://www.authsamples.com/spa/app.bundle.js
-upload: .package/spa/react.bundle.js to s3://www.authsamples.com/spa/react.bundle.js
 upload: .package/spa/vendor.bundle.js to s3://www.authsamples.com/spa/vendor.bundle.js
+upload: .package/spa/react.bundle.js to s3://www.authsamples.com/spa/react.bundle.js
 ```
 
-Once the upload completes a number of files exist in the S3 bucket, where the SPA files are located in an *spa* folder. Other micro-frontends could be hosted alongside these as the web architecture grows.
+Once the upload completes a number of files exist in the S3 bucket, where the SPA files are located in an *spa* folder. Other micro frontends could be hosted in parallel folders at a later time.
 
-![spa subfolder](../images/610/spa-subfolder.jpg)
+![spa subfolder](../images/610/spa-subfolder.jpg?v=20241224)
 
-Our SPA's default URL has this generated HTTP URL:
+The SPA uses the following default domain and serves content over plain HTTP:
 
 - *http://www.authsamples.com.s3-website.eu-west-2.amazonaws.com*
 
-If we try to browse to the SPA we get an access denied error, since only AWS CloudFront will be authorized to access S3 resources directly:
+If you try to browse to the SPA you get an access denied error, since only AWS CloudFront is granted access:
 
 ![direct access denied](../images/610/direct-access-denied.jpg)
 
 ### Web SSL Certificates
 
-Next I provisioned SSL certificates for the web domain. CloudFront has a prerequisite of requiring SSL Certificates to be configured in the master *us-east-1* (North Virginia) region. So the managed certificate creation described in the domain setup needed repeating for this region:
+During the <a href='/posts/cloud-domain-setup.mdx'>Cloud Domain Setup</a> post I explained how I provisioned SSL certificates for the *us-east-1* (North Virginia) region. The wildcard certificate for **.authsamples.com* is used to serve the SPA's content over HTTPS:
 
-![managed certs](../images/610/managed-certs.jpg)
+![managed certs](../images/610/managed-certs.jpg?v=20241224)
 
 ### CloudFront Distribution
 
-Next I created a CloudFront distribution and selected the S3 bucket:
+Next I created a CloudFront distribution and selected the S3 bucket. I then added *www.authsamples.com* as an alternative name and assigned the certificate:
 
-![cloudfront distro](../images/610/cloudfront-distro.jpg)
+![cloudfront distro](../images/610/cloudfront-distro.jpg?v=20241224)
 
-I used the most standard and up to date options for the distribution:
+Next I edited *Origin Settings* and chose the *Create new OAC* option to create a policy that grants the CloudFront distribution access to the S3 bucket:
 
-![cloudfront distro options](../images/610/cloudfront-distro-options.jpg)
+![cloudfront origin settings](../images/610/cloudfront-origin-settings.jpg?v=20241224)
 
-I then added `www.authsamples.com` as an alternative name and assigned the certificate created earlier:
-
-![cloudfront dns](../images/610/cloudfront-dns.jpg)
-
-Next I selected the distribution and edited its *Origin Settings* to apply the following values. I used the *Create new OAC* option to create a policy that grants the CloudFront distribution access to the S3 bucket:
-
-![cloudfront origin settings](../images/610/cloudfront-origin-settings.jpg)
-
-I then selected *Copy Policy* and pasted the following JSON data into the permissions for the S3 bucket:
+I then selected the *Copy Policy* option and pasted the following JSON data into the permissions for the S3 bucket:
 
 ```json
 {
@@ -188,21 +166,17 @@ I then selected *Copy Policy* and pasted the following JSON data into the permis
 
 ### Web External URL
 
-Once all CloudFront distributions are created, the web assets are available over generated domain names shown in the *Origins* column:
+After creation of the CloudFront distributions, I returned to Route 53 and added an *A Record* for the CloudFront generated URL:
 
-![distros](../images/610/distros.jpg)
-
-To use the friendly domain named I returned to Route 53 and added an *A Record* for the CloudFront generated URL:
-
-![arecord](../images/610/arecord.jpg)
+<div className='smallimage'>
+    <img src='../images/610/arecord.jpg?v=20241224' alt='web arecord' />
+</div>
 
 ### Initial SPA Usage
 
-The deployed SPA is then available at this cloud URL:
+The deployed SPA is then available at the following public URL. By default though, navigating to React paths results in *404 Not Found* errors. To resolve this, a small amount of *web backend code* needs to run in the CDN.
 
 - [https://www.authsamples.com](https://www.authsamples.com)
-
-By default though, navigating to React paths will lead to *404 Not Found* errors. To resolve this, a small amount of *web backend code* needs to run in the CDN as one of its behaviours.
 
 ### CDN Behaviours
 
@@ -210,16 +184,16 @@ There are four essential behaviours that the CDN host needs to provide, summaris
 
 | Behaviour | Description |
 | --------- | ----------- |
-| Compression | Web resources should be compressed by default to improve performance |
-| Security Headers | Security headers should be set to provide a security policy to the browser |
-| Performance Headers | The cache-control header should be set to prevent redundant requests from the browser to the CDN |
-| Document Serving | Serve the index.html, static resources like JavaScript bundles and handle invalid paths |
+| Compression | Web resources should be compressed to reduce download sizes and improve performance. |
+| Security Headers | Security headers should be set to provide a security policy to the browser. |
+| Performance Headers | The cache-control header should be set to prevent redundant requests from the browser to the CDN. |
+| Document Serving | Serve the *index.html*, static resources like JavaScript bundles and handle invalid paths. |
 
-These are configured under the *Behaviours* settings of the CloudFront distribution. Compression is simply a setting that you can enable. The security headers is mostly visual:
+These are configured under the *Behaviors* settings of the CloudFront distribution, which can link to CloudFront policies or functions. I created a *Response Headers Policy* and activated compression and most security headers using the visual user interface:
 
-![csp](../images/610/csp.jpg)
+![csp](../images/610/csp.jpg?v=20241224)
 
-The most interesting setting is the [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) which I set to this string to protect against common threats and to only allow the SPA's JavaScript to make remote calls to its web host and backend for frontend:
+The most interesting setting is the [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) which protects against common threats and only allow the SPA's JavaScript to make remote calls to its web host and backend for frontend. I use the same settings in both CloudFront and the webpack development server:
 
 ```markdown
 default-src 'none';
@@ -236,7 +210,7 @@ form-action 'self'
 
 This protects against certain web security vulnerabilities, and also ensures a good security score on online sites such as [Mozilla Observatory](https://observatory.mozilla.org):
 
-![mozilla observatory](../images/610/mozilla-observatory.jpg)
+![mozilla observatory](../images/610/mozilla-observatory.jpg?vb=20241224)
 
 I implemented the final two behaviours using [CloudFront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html). The *cache-control* header is set using a *Viewer Response* function. This instructs the browser to perform local browser caching of all web static content files except  the *index.html* file.
 
@@ -263,7 +237,7 @@ function handler(event) {
 }
 ```
 
-Document serving uses a *Viewer Request* function with the following logic to serve the *index.html* file for all React routes, so that React works correctly in the browser. This function also handles paths outside the React app by redirecting to the web domain's default location:
+Document serving uses a *Viewer Request* function with the following logic to serve the *index.html* file for all React routes, so that client side navigation works correctly in the browser. This function also handles paths outside the React app by redirecting to the web domain's default location:
 
 ```javascript
 function handler(event) {
@@ -279,8 +253,8 @@ function handler(event) {
     if (!requestUri.startsWith(spaBasePath)) {
 
         return {
-            statusCode: 301,
-            statusDescription: 'Moved Permanently',
+            statusCode: 302,
+            statusDescription: 'Found',
             headers: {
                 'location': {
                   value: spaBasePath,
@@ -307,29 +281,21 @@ function handler(event) {
 }
 ```
 
-The code running within a CDN only manages web concerns. I avoid activities such as calling APIs, since CDNs may impose short code timeouts and small HTTP message sizes.
-
-The behaviour settings for the final SPA are configured in the AWS console as follows, to apply the finishing touches to the SPA's web architecture:
+The code running within a CDN only manages web concerns. I avoid activities such as calling APIs, since CDNs may impose short code timeouts and small HTTP message sizes. In the AWS console, the behaviour settings for the final SPA are configured as follows:
 
 ![cloudfront functions](../images/610/cloudfront-functions.jpg)
 
 ### Upgrading the SPA
 
-When new HTML assets are uploaded, they are not by default deployed to all of the global edge locations, and users will receive old content. To force edge locations to pull updated content from the S3 origin, a CloudFront invalidation must be issued.
+When you deploy updated HTML assets they are not automatically deployed to all of the global edge locations. To prevent users from receiving old content, force edge locations to pull updated content from the S3. The *deploy.sh* script does so by executing a CloudFront invalidation for all web resources. In larger deployments you could instead only invalidate modified resources.
 
-The *deploy.sh* script performs a full invalidation of all web resources on every deployment. In larger deployments you would instead only invalidate modified resources.
-
-The *index.html* file must always be invalidated. This is requested every time the browser reloads and most commonly results in a 304 response from the server. When it is upgraded a new download is triggered, which in turn  triggers downloads of other static resources that the HTML file references.
-
-While edge locations are being updated, the AWS Console UI shows an *In Progress* status for a few minutes:
-
-![upgrade](../images/610/upgrade.jpg)
+The *index.html* file must always be invalidated. It is requested every time the browser reloads and most commonly results in a 304 response from the server. After an upgrade, users download a new *index.html* file and its cache busting timestamps trigger downloads of other static resources.
 
 ### Where Are We?
 
-We have implemented our SPA's global deployment, to achieve good global performance in a low cost and easy to manage way.
+I completed this blog's SPA work by deploying its static content to ~400 global locations while also following some security and reliability best practices. Web deployments within an OAuth architecture should be technically simple and entirely separated from the API side of the architecure. You then provide good performance to all users in an easy to manage way.
 
 ### Next
 
-- Next we will provide an overview of our <a href='serverless-api-overview.mdx'>Serverless API</a>
-- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>
+- Next I provide an overview of this blog's <a href='serverless-api-overview.mdx'>Serverless API</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.
