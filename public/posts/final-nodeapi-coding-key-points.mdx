@@ -320,7 +320,7 @@ public execute(exception: any, request: Request, response: Response, next: NextF
 }
 ```
 
-This is very standard, but the art of good error handling is to design good error objects that contain useful fields to both callers of the API and your technical support staff. Development error output has a productive and readable format that matches the rendering of production logs. Each log entry includes context like the current user, session, API and operation.
+The art of good error handling is to design good error objects that contain useful fields to both callers of the API and technical support staff. Development error output has a productive and readable format that matches the rendering of production logs. Each log entry includes context like the current user, session, API and operation.
 
 ```json
 {
@@ -392,7 +392,7 @@ private unauthorizedError(companyId: number): ClientError {
 
 ### Portability
 
-The API uses some techniques not seen in many example Node.js APIs. However, the design is very mainstream and commonly used in other API technologies, to enable a productive code setup. The code for this blog's .NET and Java APIs is almost identical.
+The API uses some techniques that are a little different to many online Node.js examples. However, the design is very mainstream and provides a productive code setup. The code for this blog's .NET and Java APIs is almost identical.
 
 ### Where Are We?
 
