@@ -19,9 +19,9 @@ A technical blog with a focus on productive and reliable OAuth development setup
 
 The blog is primarily written using MDX markdown and has minimal JavaScript logic:
 
-- MDX files render in this GitHub repository
+- MDX files render directly if this GitHub repository's files are browsed.
 - MDX content renders in the NEXT.js development host.
-- MDX content built to HTML renders from any web static content host
+- MDX content built to HTML renders from any web static content host.
 
 I use the following plugins so that standard GitHub behaviours work in NEXT.js:
 
