@@ -1,10 +1,10 @@
 # Java API – Code Details
 
-In our previous post we described our <a href='spring-boot-api-oauth-integration.mdx'>Spring Boot API OAuth Integration</a>. We will now drill into some final implementation details.
+The previous post described this blog's <a href='spring-boot-api-oauth-integration.mdx'>Spring Boot API OAuth Integration</a>. Next I explain some final implementation details.
 
 ### Code Structure
 
-Our advanced Java API consists of three main areas:
+The example Java API consists of three main areas:
 
 - REST Host
 - API Business Logic
@@ -18,22 +18,22 @@ In a real API platform, much of the plumbing folder could be extracted into one 
 
 ### Application Startup Logic
 
-Our API entry point is the below *FinalApiApplication* class:
+The API entry point is defined in the *SampleApiApplication* class:
 
 <div className='smallimage'>
     <img src='../images/370/startup-logic.jpg' alt='startup logic' />
 </div>
 
-We use standard Spring Boot extensibility points via the following classes, which run when our API starts:
+I use Spring Boot extensibility points via the following classes, which are instantiated when the API starts:
 
 | Class | Description |
 | ----- | ----------- |
-| ApplicationInitializer | Logic before Spring's component system is initialised |
-| HttpServerConfiguration | Logic after Spring's component system is initialised |
+| ApplicationInitializer | Logic before Spring's component system is initialised. |
+| HttpServerConfiguration | Logic after Spring's component system is initialised. |
 
 ### Dependency Composition
 
-The main responsibility of these classes is to read the API's JSON configuration and to set up *Cross Cutting Concerns* which includes registering dependencies:
+The main responsibility of these objects is to read the API's JSON configuration and to set up *Cross Cutting Concerns*, including the registration of dependencies:
 
 ```java
 @Override
@@ -79,17 +79,17 @@ Startup code creates various middleware classes and Spring calls most of them *i
 }
 ```
 
-The role of each of these middleware classes is summarised below:
+The role of each middleware object is summarised below:
 
 | Middleware Class | Responsibility |
 | ---------------- | -------------- |
-| LoggingInterceptor | Manage the log entry for each API request, then log request and response details |
-| CustomHeaderInterceptor | Allow advanced client side testing of APIs via custom headers |
-| UnhandledExceptionHandler | A central place for handling exceptions, adding error details to logs, and producing the client error response |
+| LoggingInterceptor | Manages the log entry for each API request, then logs request and response details. |
+| CustomHeaderInterceptor | Allows advanced client side testing of APIs via custom headers. |
+| UnhandledExceptionHandler | A central place for handling exceptions, adding error details to logs, and producing the client error response. |
 
 ### Single Threaded Code
 
-For APIs with small dependency graphs, I like to reduce the likelihood of parallel requests  impacting each other. I do this by giving each request its own independent object instances. The API uses a request scope for REST specific objects, or a prototype scope for domain logic classes:
+For APIs with small dependency graphs, I like to reduce the likelihood of parallel requests impacting each other. I do this by giving each request its own independent object instances. The API uses a request scope for REST specific objects, or a prototype scope for domain logic classes:
 
 ```java
 @RestController()
@@ -108,11 +108,7 @@ public class CompanyService {
 
 ### High Throughput Requirement
 
-Our earlier Node.js and .NET APIs were [Non Blocking](https://medium.com/@vimalma1093/java-springboot-blocking-vs-non-blocking-rest-api-implementation-fe5643840287) via an async await syntax, to prevent threads being tied up during I/O completion, and the same requirement exists for our Java API:
-
-![throughput](../images/370/throughput.jpg)
-
-Our Node.js API used *Promises* to achieve this, with only a small impact on its overall code. In Java we will aim for an equivalent solution.
+This blog's earlier Node.js and .NET APIs were *Non Blocking* and used an async await syntax, to prevent threads being tied up during I/O completion. The Node.js and .NET APIs used *Promises* and *Tasks* to achieve this, with only a small impact on its overall code. In Java, the same requirement exists.
 
 ### Java Non Blocking API Solutions
 
@@ -120,9 +116,9 @@ There are a few approaches to using async await code in Java, summarised below. 
 
 | Solution | Characteristics |
 | -------- | --------------- |
-| [Reactor](https://projectreactor.io/docs/core/release/reference/#context) | A streaming interface to return large collections of resources to clients in chunks |
-| [Completable Futures](https://www.baeldung.com/java-completablefuture) | Non blocking I/O in line with Node.js and .NET |
-| [Virtual Threads](https://www.azul.com/blog/jdk-21-delivers-virtual-threads-other-new-features-and-long-term-support/) | Virtual threads in Java 21+ are used to only block a lightweight thread and return the main OS thread to the thread pool |
+| [Reactor](https://projectreactor.io/docs/core/release/reference/#context) | A streaming interface to return large collections of resources to clients in chunks. |
+| [Completable Futures](https://www.baeldung.com/java-completablefuture) | Non blocking I/O in line with Node.js and .NET. |
+| [Virtual Threads](https://www.azul.com/blog/jdk-21-delivers-virtual-threads-other-new-features-and-long-term-support/) | Virtual threads in Java 21+ are used to only block a lightweight thread and return the main OS thread to the thread pool. |
 
 The code sample uses virtual threads, with the following setting in the *application properties file*:
 
@@ -174,7 +170,7 @@ public CompletableFuture<CompanyTransactions> getCompanyTransactions(final int c
 }
 ```
 
-With virtual threads the code is written synchronously and is much more readable, yet continues to manage I/O efficiently:
+With virtual threads the code is written synchronously and is much more readable, yet continues to manage I/O efficiently. Ideally though, I would prefer to use the same async design pattern for Node.js, .NET and Java APIs.
 
 ```java
 public CompanyTransactions getCompanyTransactions(final int companyId) {
@@ -192,27 +188,21 @@ public CompanyTransactions getCompanyTransactions(final int companyId) {
 
 ### Custom Request Scope
 
-When using completable futures, the code switched threads during the lifecycle of a request, whereas with virtual threads the thread ID remains the same for the entire request.
-
-When using completable futures, the default request scope does not work after async completion, when a thread with a different ID will resume processing. This is because the *RequestContextHolder* class uses thread local storage for request scoped objects:
-
-![thread local](../images/370/thread-local.jpg)
-
-This means you can never resolve request scoped objects when an await call resumes on another thread. If you try to do so you will receive the following cryptic error:
+When you use completable futures, the code switches threads when code resumes after an async operation. When the new thread tries to resolve objects, it fails because the *RequestContextHolder* class uses thread local storage for request scoped objects, resulting in the following cryptic error: 
 
 ![cryptic error](../images/370/cryptic-error.jpg)
 
-To solve this problem I created a [Spring Boot Custom Scope](https://www.baeldung.com/spring-custom-scope) that stores request scoped objects in the *HttpServletRequest* object. The custom scope is no longer strictly needed, but I left it in place, so that the API manages  request scoped objects in the same way as Node.js and .NET APIs.
+To solve this problem I created a [Spring Boot Custom Scope](https://www.baeldung.com/spring-custom-scope) that stores request scoped objects in the *HttpServletRequest* object. Now that the API uses virtual threads, the custom scope is no longer strictly needed, but I left it in place, so that the API manages  request scoped objects in the same way as Node.js and .NET APIs.
 
 ### Logging Implementation
 
-API logging is also implemented via plumbing code, and the end goal is to enable <a href='api-technical-support-analysis.mdx'>platform wide technical support queries by people</a>.
+I implement API logging with some plumbing code and the end goal is to enable <a href='api-technical-support-analysis.mdx'>useful technical support queries by people</a>.
 
 <div className='smallimage'>
     <img src='../images/370/logging-classes.jpg' alt='logging classes' />
 </div>
 
-The log entry is a natural request scoped object so we use the following factory method to create it when another class first accesses it during the lifetime of an API request, then make it injectable:
+The *LogEntry* is a natural request scoped object so I use the following factory method to create it and make it injectable when another object first accesses the *LogEntry* during the lifetime of an API request:
 
 ```java
 @Component
@@ -233,7 +223,7 @@ public class LogEntryInjector {
 }
 ```
 
-The log entry is then accessed by interceptor classes, which contribute data to logs at various points during the request life-cycle:
+The *LogEntry* is then accessed by interceptor objects which contribute data to logs at various points during the request lifecycle:
 
 ```java
 public final class LoggingInterceptor implements HandlerInterceptor {
@@ -256,8 +246,7 @@ public final class LoggingInterceptor implements HandlerInterceptor {
 }
 ```
 
-It is also possible to inject the log entry into business logic, so that extra data can be included in logs, as for the  below repository class, which contributes performance instrumentation:
-
+It is also possible to inject the *LogEntry* into business logic. For example, the below repository object contributes performance instrumentation:
 
 ```java
 @Repository
@@ -283,11 +272,11 @@ public class CompanyRepository {
 }
 ```
 
-The logging classes write to a log file and, if this blog's <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</a> is followed, logs will automatically flow to Elasticsearch:
+The logging object write to a log file and, if you follow this blog's <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</a>, logs will automatically flow to Elasticsearch:
 
 ![log queries](../images/370/log-queries.jpg)
 
-The sample API uses fixed appenders and fixed JSON output formats. In a real API you may instead prefer to use [logback XML configuration](https://logback.qos.ch/manual/configuration.html), to enable logging behaviour to be dynamically altered without code changes.
+The sample API uses fixed appenders and fixed JSON output formats. In a real API you may instead prefer to use [logback XML configuration](https://logback.qos.ch/manual/configuration.html) to declaratively control logging output.
 
 ### Error Handling Implementation
 
@@ -318,9 +307,7 @@ public final class UnhandledExceptionHandler {
 }
 ```
 
-This is very standard, but the art of good error handling is to design good error objects that contain useful fields to both callers of the API and your technical support staff.
-
-Error output has a productive and readable format, and production logs will also be rendered like this, including context such as which user, session, API and operation was involved:
+The art of good error handling is to design good error objects that are useful to both callers of the API and technical support staff. Error output has a *productive and readable* format, and production logs are rendered as follows, including context such as the user, session, API and operation:
 
 ```json
 {
@@ -380,7 +367,7 @@ Error output has a productive and readable format, and production logs will also
 }
 ```
 
-By default our exception handler treats unknown errors as general exceptions and returns a 500 response. For closer control of the response, the API's code can throw a *ServerError* or *ClientError* derived instance:
+By default the exception handler treats unknown errors as general exceptions and returns a 500 response. For closer control of the response, the API's code can throw a *ServerError* or *ClientError* derived instance:
 
 ```java
 private ClientError unauthorizedError(final int companyId) {
@@ -395,13 +382,13 @@ private ClientError unauthorizedError(final int companyId) {
 
 ### Portability
 
-The Java code has met some common and mainstream requirements, with code that should be easy to port to other technologies. This blog's Node.js and .NET APIs were coded almost identically.
+The API uses some techniques that are a little different to many online Java examples. However, the design is very mainstream and provides a productive code setup. The code for this blog's Node.js and .NET APIs is almost identical.
 
 ### Where Are We?
 
-We have implemented some foundational code in Java. The plumbing is separated from other code, and in a real API we would next focus on growing the business logic.
+I implemented some foundational code in Java without any blocking issues, and separated plumbing from other code. In a real API I could then focus on growing the business logic.
 
 ### Next
 
-- Next we will run some <a href='api-automated-tests.mdx'>API Automated Tests</a>
-- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>
+- Next I explain how to run some <a href='api-automated-tests.mdx'>API Automated Security Tests</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

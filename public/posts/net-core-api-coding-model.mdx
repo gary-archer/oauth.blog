@@ -1,10 +1,10 @@
 # .NET API – Code Details
 
-The previous post described some details of this blog's <a href='net-core-api-oauth-integration.mdx'>.NET API OAuth Integration</a>. Next I explain some final implementation details.
+The previous post described this blog's <a href='net-core-api-oauth-integration.mdx'>.NET API OAuth Integration</a>. Next I explain some final implementation details.
 
 ### Code Structure
 
-Our advanced C# API consists of three main areas:
+The example C# API consists of three main areas:
 
 - REST Host
 - API Business Logic
@@ -91,7 +91,7 @@ The role of each of these middleware classes is summarised below:
 | Middleware Class | Responsibility |
 | ---------------- | -------------- |
 | LoggerMiddleware | Manages the log entry for each API request, then logs request related data. |
-| CustomHeaderMiddleware | Allow advanced client side testing of APIs via custom headers. |
+| CustomHeaderMiddleware | Allows advanced client side testing of APIs via custom headers. |
 | UnhandledExceptionMiddleware | A central place for handling exceptions, adding error details to logs, and producing the client error response. |
 
 ### Single Threaded Code
@@ -252,7 +252,7 @@ The art of good error handling is to design good error objects that are useful t
 }
 ```
 
-By default tghe exception handler treats unknown errors as general exceptions and returns a 500 response. For closer control of the response, the API's code can throw a *ServerError* or *ClientError* derived instance:
+By default the exception handler treats unknown errors as general exceptions and returns a 500 response. For closer control of the response, the API's code can throw a *ServerError* or *ClientError* derived instance:
 
 ```csharp
 [HttpGet("{id}/transactions")]
