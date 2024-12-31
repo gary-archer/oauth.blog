@@ -9,9 +9,9 @@ I first chose a domain name of *authsamples.com* on which to host OAuth related 
 | Domain | Usef For |
 | ------ | -------- |
 | *authsamples.com* | The initial cloud domain that runs in AWS and uses serverless hosting for the API side of the architecture. |
-| *authsamples-dev.com* | A local computer domain that I use when developing API code. |
+| *authsamples-dev.com* | A local computer domain that I use when changing the code for the demo applications and APIs. |
 | *authsamples-k8s.com* | A cloud domain that runs in AWS and uses Kubernetes hosting for the API side of the architecture. |
-| *authsamples-k8s-dev.com* | A local computer domain that I use to rehearse local Kubernetes deployments. |
+| *authsamples-k8s-dev.com* | A local computer domain that I use to practice deployments to Kubernetes clusters. |
 
 ### Design Application Base URLs
 
@@ -81,7 +81,7 @@ In Kubernetes you typically terminate TLS at the API gateway before routing to c
 
 ### Where Are We?
 
-I showed how developers can create low cost HTTPS application URLs in a cloud system. To do so you follow equivalent DNS and SSL technical steps to those that this blog uses on a development computer. You can use serverless building blocks which provide low cost for my online code samples. For a real company you could use cloud native building blocks to get finer control over technical behaviours.
+I showed how developers can create low cost HTTPS application URLs in a cloud system. To do so you follow equivalent DNS and SSL technical steps to those that this blog uses on a development computer. I use serverless building blocks to provide online code samples at low cost. At a real organization I would prefer cloud native building blocks that provide finer control over technical behaviours.
 
 ### Next
 
