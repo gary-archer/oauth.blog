@@ -71,7 +71,7 @@ AWS API gateway requires certificates issued in the hosting region, which is Lon
 
 ### Deploy Kubernetes Clusters
 
-The API side of this blog's architecture can also run in a Kubernetes environment. In AWS I can use the [Elastic Kubernetes Service (EKS)](https://docs.aws.amazon.com/whitepapers/latest/overview-deployment-options/amazon-elastic-kubernetes-service.html) to create a managed cluster. This is a more expensive hosting option, so I avoid permanently running Kubernetes clusters for my online code samples and use serverless hosting instead.
+The API side of this blog's architecture can also run in a Kubernetes environment. In AWS I can use the [Elastic Kubernetes Service (EKS)](https://docs.aws.amazon.com/whitepapers/latest/overview-deployment-options/amazon-elastic-kubernetes-service.html) to create a managed cluster. The cloud platform provides compute, storage and networking and also does the low level Kubernetes work. I get greater control over APIs and their supporting components and can deploy the overall system to any Kubernetes host.
 
 When you use Kubernetes hosting you can create a static IP address, called an [Elastic IP](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) in AWS. That IP address can resolve to a load balancer placed in front of a cloud native API gateweay that manages all ingress into the cluster. In Route 53 the addressability is therefore more stable, if for example I recreate the cluster. Note also that I continue to use AWS CloudFront for the web side of the architecture.
 
@@ -81,7 +81,7 @@ In Kubernetes you typically terminate TLS at the API gateway before routing to c
 
 ### Where Are We?
 
-I showed how developers can create low cost HTTPS application URLs in a cloud system. To do so you follow equivalent DNS and SSL technical steps to those that this blog uses on a development computer. I use serverless building blocks to provide online code samples at low cost. At a real organization I would prefer cloud native building blocks that provide finer control over technical behaviours.
+I showed how developers can create low cost HTTPS application URLs in a cloud system. To do so you follow equivalent DNS and SSL technical steps to those that this blog uses on a development computer. I use serverless building blocks to provide online code samples with low personal costs. At a real organization I would prefer cloud native building blocks that provide finer control over technical behaviours.
 
 ### Next
 
