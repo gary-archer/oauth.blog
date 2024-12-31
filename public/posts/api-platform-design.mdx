@@ -8,7 +8,7 @@ Often the main high level goal for an organization is a fast and predictable tim
 
 ### Productive API Development
 
-APIs should have a predictable way to deal with non-functional requirements like security, error handling and logging. First you need to understand the behaviors you want and then implement the foundational work. If you follow modern design patterns you should be able to separate concerns to implement those behaviors with clean code.
+APIs should have a predictable way to deal with non-functional requirements like security, error handling and logging. First you need to understand the behaviours you want and then implement the foundational work. If you follow modern design patterns you should be able to separate concerns to implement those behaviours with clean code.
 
 ### Strong API Security
 
@@ -36,7 +36,7 @@ I also like to follow a requirements first approach to software rather than bein
 
 ### Cost Effective Hosting
 
-The API hosting platform should provide features to keep your APIs available, healthy and performant. You be able to integrate your preferred best of breed supporting components and write code without limitations. Hosting should also be portable so that you can deploy anywhere. My preferred hosting model for APIs is to use a cloud native platform like Kubernetes.
+The API hosting platform should provide features to keep your APIs available, healthy and performant. You be able to integrate your preferred best of breed supporting components and write code without limitations. Hosting should also be portable so that you can deploy anywhere. I prefer to deploy APIs in a cloud native platform like Kubernetes.
 
 In this blog's second theme I provide three cloud native APIs in different technology stacks, with a focus on foundational code, to illustrate how I like to meet the goals articulated on this page:
 
@@ -44,12 +44,12 @@ In this blog's second theme I provide three cloud native APIs in different techn
 - <a href='net-core-code-sample-overview.mdx'>.NET API</a>
 - <a href='java-spring-boot-api-overview.mdx'>Java API</a>
 
-In the final theme of this blog I deploy my final APIs to a cloud Kubernetes cluster that runs under my AWS account. On the web side of the architecture I use a <a href='cdn-static-content-delivery.mdx'>content delivery network</a>. More generally I mix and match hosting depending on my requirements. 
-For low cost demo APIs that I host online I use <a href='serverless-api-overview.mdx'>Serverless APIs</a>. These are cheaper than Kubernetes clusters but meet my goals less well.
+For the demo online API endpoints that I host in this blog, <a href='serverless-api-overview.mdx'>Serverless APIs</a> are a useful alternative option for developers, since their immediate costs are less than running an entire Kubernetes cluster in the cloud. They are a useful option to become familiar with, but they only partially meet my API architecture requirements.
+
 
 ### Where Are We?
 
-I have summarised some foundations to aim for when designing a modern API platform. In this blog's second theme I demonstrate some techniques for meeting my API requirements.
+I have summarised some foundations to aim for when designing a modern API platform. In this blog's second theme I demonstrate some techniques for meeting the goals and requirements from this blog post.
 
 ### Next
 
