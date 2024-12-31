@@ -1,6 +1,6 @@
 # User Authentication Behaviour
 
-Previously I explained this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. Next I provide a brief overview of some key points that you should understand about OAuth and user authentication.
+Previously I explained this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. Next I provide a brief and simplified overview of some key points that developers should understand about OAuth and user authentication.
 
 ### The OpenID Connect Code Flow
 
@@ -44,9 +44,18 @@ The exact details may vary depending on particular systems, the security standar
 - AS returns its own authorization code to the client
 - Client posts the AS code back to the AS to get AS tokens
 
+### User Authentication Events
+
+The authorization server provides an authentication toolbox. During an authorization code flow, the user may perform options like account creation or recovering a lost password in addition to signing in. Therefore, various user actions may trigger the user to authenticate, and all of these events occur during a code flow:
+
+- User Login
+- User Registration
+- Account Recovery
+- Re-Authentication before a High Privilege Operation
+
 ### Consistent API User Identity
 
-The deeper behaviour when you integrate authentication can be control over user attributes during the authentication flow. For example, you must ensure that access token claims, including user identities, remain the same when the user's primary authentication factor changes.
+The deeper behaviour is that user attributes from authentication flow into token issuance. For example, you use the authorization server's toolbox to ensure that access token claims, including user identities, remain the same of the user's primary authentication factor changes.
 
 ![token identity](../images/140/token-identity.jpg)
 
