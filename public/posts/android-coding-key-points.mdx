@@ -1,4 +1,4 @@
-# Android Code Sample – Code Details
+# Android Code Sample - Code Details
 
 Previously we described our <a href='android-infrastructure-setup.mdx'>Android Infrastructure Setup</a> and we will now look at some key areas of our sample's code. See also the <a href='api-journey-client-side.mdx'>Client Side API Journey</a> to understand the background and the requirements being met.
 
@@ -334,7 +334,7 @@ private fun handleErrorsAfterLoad() {
 
 The ViewModelCoordinator class also deals with invalid token errors, such as incorrect scope, claims or audience configurations. For these errors, the app clears its login state to enable retries where the OAuth configuration has been fixed. The app then receives new tokens and the user can recover.
 
-### AppAuth Library – Login Requests
+### AppAuth Library - Login Requests
 
 The authenticator implementation uses [AppAuth Android Classes](https://github.com/openid/AppAuth-Android) to implement standards-based OpenID Connect behaviour:
 
@@ -384,7 +384,7 @@ At runtime the properties of AppAuth objects are set based on our OAuth configur
 }
 ```
 
-### AppAuth Library – Login Responses
+### AppAuth Library - Login Responses
 
 Our manifest file tells AppAuth's login activity to use a claimed HTTPS scheme to receive login responses at the path provided:
 
@@ -426,7 +426,7 @@ Upon return from login an intermediate page runs in the Chrome custom tab window
 </script>
 ```
 
-### AppAuth Library – Cancelled Logins
+### AppAuth Library - Cancelled Logins
 
 It is possible for users to cancel logins if they are having trouble logging in. AppAuth libraries are well designed and provide error codes that we can use to determine cancellation and other conditions:
 
@@ -459,7 +459,7 @@ override suspend fun finishLogin(intent: Intent) {
 }
 ```
 
-### AppAuth Library – Authorization Code Grant
+### AppAuth Library - Authorization Code Grant
 
 After successfully receiving the login response, the authorization code flow continues by swapping the received code for tokens:
 
@@ -507,7 +507,7 @@ After login, the app stores OAuth tokens using a *TokenStorage* object, which sa
 
 When the app starts, it loads OpenID Connect metadata and also any tokens that have been saved to Android storage. This prevents the user needing to re-authenticate on every application restart.
 
-### AppAuth Library – Refreshing Access Tokens
+### AppAuth Library - Refreshing Access Tokens
 
 AppAuth objects are also used to send a *Refresh Token Grant* message, via the *TokenRequest* class. The AppAuth error codes allow us to reliably detect the *Invalid Grant* response when the refresh token finally expires:
 
@@ -659,7 +659,7 @@ android:name=".plumbing.oauth.logout.LogoutRedirectUriReceiverActivity"
 </activity>
 ```
 
-### AppAuth Library – Error Codes
+### AppAuth Library - Error Codes
 
 The *Error Category and Code* from the [AppAuth Errors Enumeration](https://github.com/openid/AppAuth-Android/blob/master/library/java/net/openid/appauth/AuthorizationException.java) can be useful if you need to better understand any AppAuth error codes reported by the app:
 

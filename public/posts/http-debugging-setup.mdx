@@ -23,7 +23,7 @@ By default, you can follow the [installation guides](https://docs.mitmproxy.org/
 sudo mitmweb -p 8888 --web-port 8889 --ssl-insecure
 ```
 
-I use the *–ssl-insecure* option when upstream components use my own OpenSSL generated certificates. When the proxy runs you can browse to the web interface at *http://127.0.0.1:8889*, which renders traffic from both browser and non-browser components:
+I use the *-ssl-insecure* option when upstream components use my own OpenSSL generated certificates. When the proxy runs you can browse to the web interface at *http://127.0.0.1:8889*, which renders traffic from both browser and non-browser components:
 
 ![proxy web interface](../images/100/proxy-web-interface.jpg?v=20240714)
 
@@ -161,7 +161,7 @@ On Linux, run the network tool for the operating system and configure equivalent
 
 ### Browser Proxy Settings
 
-Browsers usually inherit the system proxy settings, though command line overrides may exist, such as Chrome's [–proxy-server option](https://www.linuxbabe.com/desktop-linux/configure-proxy-chromium-google-chrome-command-line). Firefox does not inherit the system settings, and instead you must set proxy details explicitly, under *Options / Network Settings*:
+Browsers usually inherit the system proxy settings, though command line overrides may exist, such as Chrome's [-proxy-server option](https://www.linuxbabe.com/desktop-linux/configure-proxy-chromium-google-chrome-command-line). Firefox does not inherit the system settings, and instead you must set proxy details explicitly, under *Options / Network Settings*:
 
 ![firefox proxy flags](../images/100/firefox-proxy-settings.jpg)
 

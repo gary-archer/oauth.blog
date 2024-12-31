@@ -1,4 +1,4 @@
-# iOS Code Sample – Code Details
+# iOS Code Sample - Code Details
 
 Previously we described our <a href='ios-code-sample-infrastructure.mdx'>iOS Infrastructure Setup</a> and we will now look at some key areas of our sample's code. See also the <a href='api-journey-client-side.mdx'>Client Side API Journey</a> to understand the background and the requirements being met.
 
@@ -364,7 +364,7 @@ private func handleErrorsAfterLoad() {
 
 The ViewModelCoordinator class also deals with invalid token errors, such as incorrect scope, claims or audience configurations. For these errors, the app clears its login state to enable retries where the OAuth configuration has been fixed. The app then receives new tokens and the user can recover.
 
-### AppAuth Library – Login Requests
+### AppAuth Library - Login Requests
 
 Our implementation uses [AppAuth iOS Classes](https://github.com/openid/AppAuth-iOS) to implement standards-based OpenID Connect behaviour.
 
@@ -424,7 +424,7 @@ At runtime the properties of AppAuth objects are set based on our OAuth configur
 }
 ```
 
-### AppAuth Library – Login Responses
+### AppAuth Library - Login Responses
 
 Upon return from login we present the below *Web Hosted Post Login Page* in the system browser window. This screen receives the authorization code in a response query parameter. JavaScript code in the web page invokes the login receiver activity when the continue button is pressed. This forwards any received query parameters, including the authorization code, to the app:
 
@@ -463,7 +463,7 @@ func resumeOperation(responseUrl: URL) {
 }
 ```
 
-### AppAuth Library – Cancelled Logins
+### AppAuth Library - Cancelled Logins
 
 It is possible for users to quit the login attempt if they are having trouble signing in. AppAuth libraries are well designed and provide error codes that we can use to determine cancellation and other conditions:
 
@@ -478,7 +478,7 @@ private func isCancelledError(error: Error) -> Bool {
 }
 ```
 
-### AppAuth Library – Authorization Code Grant
+### AppAuth Library - Authorization Code Grant
 
 After successfully receiving the login response, the authorization code flow continues by swapping the received code for tokens:
 
@@ -530,7 +530,7 @@ private func saveTokenData() {
 
 When the app starts, it loads OpenID Connect metadata and also any tokens that have been saved to iOS storage. This prevents the user needing to re-authenticate on every application restart.
 
-### AppAuth Library – Refreshing Access Tokens
+### AppAuth Library - Refreshing Access Tokens
 
 AppAuth classes are also used to send a *Refresh Token Grant* message, via the *OIDTokenRequest* class. The AppAuth error codes allow us to reliably detect the *Invalid Grant* response when the refresh token finally expires:
 
@@ -676,7 +676,7 @@ func startLogoutRedirect(viewController: UIViewController) throws {
 
 Logout request messages include a *Post Logout Redirect URI* that points to our *Web Hosted Post Logout Page*. When the user continues, the web page again invokes the app's claimed HTTPS scheme, which completes the operation in the same manner as for login redirects.
 
-### AppAuth Library – Error Codes
+### AppAuth Library - Error Codes
 
 The *Error Domain and Code* from the [AppAuth Errors Enumeration](https://github.com/openid/AppAuth-iOS/blob/master/Source/AppAuthCore/OIDError.h) can be useful if you need to better understand any AppAuth error codes reported by the app:
 

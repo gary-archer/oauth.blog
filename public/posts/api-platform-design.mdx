@@ -1,73 +1,51 @@
-# API Platform Overview
+# API Architecture Goals
 
-Previously I completed this blog's SPA theme with some <a href='reactjs-codingkeypoints.mdx'>Final SPA Code Details</a>. Next, I summarise what I consider to be the most essential technical behaviours for a platform of many APIs in an OAuth architecture.
+Previously I completed this blog's SPA theme with some <a href='reactjs-codingkeypoints.mdx'>Final SPA Code Details</a>. Next, I summarise what I consider to be the most essential goals and requirements for a platform of many APIs in an OAuth architecture.
 
-### API Technical Goals
+### Time to Market
 
-There are many technical goals you might articulate for an API platform. In this post I focus only on the following qualities:
+Often the main high level goal for an organization is a fast and predictable time to market for end user functionality. Yet often in software there are hidden complexities that prevent that from being a reality. Time to market is enabled by solid foundations so that the majority of future development is business focused.
 
-| Behaviour | Description |
-| --------- | ----------- |
-| Productive | The overall design reduces complexity and encourages a business focus for most API work. |
-| Secure | APIs implement security in the same way for requests from any type of client, with low-level security externalised. |
-| Supportable | Errors or slowness can be diagnosed quickly in most cases, due to solid logging and error handling designs. |
-| Scalable | Design patterns can scale across many APIs, clients and development teams. |
+### Productive API Development
 
-### Components
+APIs should have a predictable way to deal with non-functional requirements like security, error handling and logging. First you need to understand the behaviors you want and then implement the foundational work. If you follow modern design patterns you should be able to separate concerns to implement those behaviors with clean code.
 
-The API flows in this blog serve web and mobile clients and consist of the following components. This type of separation externalizes most security behaviours from application code and also provides applications with the best security features:
+### Strong API Security
 
-| Component Type | Key Behaviour |
-| -------------- | ------------- |
-| Single Page Application | Clients that follow browser best practices and use cookies to transport access tokens to APIs. |
-| Native Application | Desktop and mobile clients that follow native best practices and call APIs with access tokens. |
-| API | APIs receive secure values in JWT access tokens and use them for business authorizion. |
-| API Gateway | The API gateway handles client-specific security differences, to handle concerns like cookies, CORS and CSRF for web clients. |
-| Authorization Server | The main security component that issues access tokens and implements user authentication. |
-| Log Aggregation System | Captures API logs and enables people to make sense of API activity under load. |
+OAuth enables strong API security where every request to every API requires a JWT access token from the authorization server. APIs must implement <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a> and then implement <a href='api-authorization-design.mdx'>Claims Based Authorization</a> to enforce business rules. The basic programming model is straightforward but there are some subtleties when dealing with user attributes from multiple data sources.
 
-### Scalable API Security
+### Unified API Security
 
-Each API should perform the following steps to securely handle incoming requests. You can then expose any API endpoint to the internet, to maximise business value:
+In the past, API security was often dictated by client requirements. APIs might need to process cookies from web clients or client certificates from business partners. A correct OAuth implementation enables you to use a unified security model where APIs only ever process JWT access tokens. The token data should be extensible, and the use of access tokens provides interoperability with other APIs.
 
-- <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a>
-- <a href='api-authorization-design.mdx'>Claims Based Authorization</a>
+### Best Supporting Components
 
-The API security architecture is scalable if you can add more clients and APIs without adding overall complexity. In OAuth, you need to scale your use of *scopes and claims* and avoid manageability problems.
+To enable productive API security you need supporting components. The authorization server deals with user authentication and token issuance so that APIs do not need to. An API gateway should deal with client specific security concerns like validating cookies and client certificates. The API gateway can then forward JWT access tokens to APIs.
 
-APIs should also call each other securely, using either synchronous or asynchronous requests. In either case it is desirable to flow the user identity and other claims in a verifiable way, by sharing a JWT access token. OAuth gives you design patterns to help enable this.
+### Reliable APIs
 
-### Authorization Server
+APIs must use solid error handling and logging designs, to return useful client error responses and enable fast incident resolution. You should also ensure that you can <a href='api-technical-support-analysis.mdx'>measure failures by type over time</a> so that you can see where you need to improve. Design good quality log data and aggregate API logs to high quality logging subsystem. This blog uses the Elastic Stack.
 
-This is the key security component, and you should choose one that provides the following capabilities:
+### Scalable Designs
 
-| Capabilities | Description |
-| ------------ | ----------- |
-| Support for Standards | There should be up-to-date support for many security standards, which map to your use cases. This includes recent authentication methods. |
-| Extensibility | It must be possible to take control over core behaviours and user attributes, so that you can authenticate users in your preferred ways and then issue your preferred access tokens. |
-| Reliability | The authorization server is a critical component. It should therefore align with your API deployments and have good troubleshooting support, to enable fast incident resolution. |
+Once you have separated concerns across components and completed the foundational work in API code, the same patterns and practices should scale easily to many APIs, without much increase in complexity. You should be able to keep code bases modular, and JWT access tokens enable you to connect APIs together securely.
 
-### Observability
+### Portable Designs
 
-Since OAuth is a distributed architecture, you need solid approaches to logging, error handling and technical support. You then have confidence that the system runs reliably. Therefore this blog takes particular care over the following areas, using third-party components that provide the best visibility:
+I also like to follow a requirements first approach to software rather than being dictated to by particular API technology stacks. When I implement an API coding task it should work in the same way across all API technologies and API hosting platforms. This ensures that adopting newer technologies in future does not change the architecture.
 
-- <a href='effective-api-logging.mdx'>Effective API Logging</a>
-- <a href='error-handling-and-supportability.mdx'>Error Handling and Supportability</a>
-- <a href='api-technical-support-analysis.mdx'>Technical Support Analysis</a>
+### Cost Effective Hosting
 
-### Final APIs
+The API hosting platform should provide features to keep your APIs available, healthy and performant. You be able to integrate your preferred best of breed supporting components and write code without limitations. Hosting should also be portable so that you can deploy anywhere. My preferred hosting model for APIs is to use a cloud native platform like Kubernetes.
 
-I provide 3 final REST APIs whose code is almost identical. Each API uses both *core identity user attributes* and *volatile business user attributes*, so that each API could evolve its use of claims in future. The APIs also implement the above observability behaviours.
+In this blog's second theme I provide three cloud native APIs in different technology stacks, with a focus on foundational code, to illustrate how I like to meet the goals articulated on this page:
 
 - <a href='api-architecture-node.mdx'>Node.js API</a>
 - <a href='net-core-code-sample-overview.mdx'>.NET API</a>
 - <a href='java-spring-boot-api-overview.mdx'>Java API</a>
 
-### Cloud Hosting
-
-This blog uses portable design patterns that work for any type of deployment. I use <a href='cloud-hosting.mdx'>Serverless Hosting</a> for some deployed API components, to minimise my personal hosting costs. Yet the final APIs are cloud native and can run in platforms like Kubernetes, where you can use best-of-breed supporting components for APIs.
-
-In all cases though, I use different hosting for the web and API sides of the architecture. The web side of the architecture is only static content and is deployed to many global locations by a low cost content delivery network. The API side of the architecture is more intricate so I prefer to run it wherever the API supporting components provide the best capabilities.
+In the final theme of this blog I deploy my final APIs to a cloud Kubernetes cluster that runs under my AWS account. On the web side of the architecture I use a <a href='cdn-static-content-delivery.mdx'>content delivery network</a>. More generally I mix and match hosting depending on my requirements. 
+For low cost demo APIs that I host online I use <a href='serverless-api-overview.mdx'>Serverless APIs</a>. These are cheaper than Kubernetes clusters but meet my goals less well.
 
 ### Where Are We?
 
@@ -75,5 +53,5 @@ I have summarised some foundations to aim for when designing a modern API platfo
 
 ### Next
 
-- I describe an <a href='api-journey-server-side.mdx'>API Journey – Server Side</a>.
+- I describe an <a href='api-journey-server-side.mdx'>API Journey - Server Side</a>.
 - For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.
