@@ -1,41 +1,27 @@
-# Cloud Hosting Overview
+# Cloud Domain Setup
 
-Previously we completed our mobile theme by discussing <a href='ios-code-sample-coding-key-points.mdx'>Code Details</a> for our iOS code sample. Next we will begin a theme on modern deployment, and describe how the corresponding cloud infrastructure was created.
+Previously I articulated some <a href='cloud-hosting.mdx'>Cloud Deployment Goals</a>. Next I show how a developer can get started with a cloud platform to deploy applications with working OAuth flows. I use AWS and start with creating domains and external base URLs on which to expose APIs, web static content and an authorization server to the outside world.
 
-### URL Design
+### Design Domains
 
-I started by <a href='oauth-infrastructure-setup.mdx'>Defining Base URLs</a>, and this blog uses a subdomain approach, to represent component separation on a small scale. Each subdomain can point to a particular cloud hosting feature, for APIs, web static content or the authorization server.
+I first chose a domain name of *authsamples.com* on which to host OAuth related code samples. My domain design accounts for both local development URLs and cloud URLs. The cloud URLs can use serverless or cloud native hosting, to keep my options open. In total I use the following domains:
+
+| Domain | Usef For |
+| ------ | -------- |
+| *authsamples.com* | The initial cloud domain that runs in AWS and uses serverless hosting for the API side of the architecture. |
+| *authsamples-dev.com* | A local computer domain that I use when developing API code. |
+| *authsamples-k8s.com* | A cloud domain that runs in AWS and uses Kubernetes hosting for the API side of the architecture. |
+| *authsamples-k8s-dev.com* | A local computer domain that I use to rehearse local Kubernetes deployments. |
+
+### Design Application Base URLs
+
+Within each domain I use subdomains for the <a href='oauth-infrastructure-setup.mdx'>three main OAuth base URLs</a>. Each subdomain can point to a particular cloud hosting feature, for APIs, web static content or the authorization server. I chose the following options:
 
 | Domain | Description |
 | ------ | ----------- |
-| https://www.authsamples.com | The base URL for Single Page Apps |
-| https://api.authsamples.com | The API gateway base URL |
-| https://login.authsamples.com | The authorization server base URL |
-| https://mobile.authsamples.com | Hosts assets for mobile apps |
-
-Each subdomain can be either a Serverless or cloud native endpoint. This blog follows a mix and match approach, depending on the cloud hosting option best meets our overall requirements.
-
-### DNS Setup
-
-The AWS cloud is used, which starts with registering a parent domain of *authsamples.com* using the [Route 53](https://aws.amazon.com/route53/) DNS service:
-
-![parent domain](../images/580/parent-domain.jpg)
-
-Multiple internet accessible subdomains can then be registered as *A Records* under a *Hosted Zone*:
-
-![subdomains](../images/580/subdomains.jpg)
-
-If you have your own cloud domain and subdomains, you could follow similar steps to those described by blog posts, to create your own cloud hosting.
-
-### Managed Internet SSL Certificates
-
-[AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) issues TLS 1.3 certificates for the domain and its subdomains, using the same wildcard certificate concept we've used on a local computer in earlier posts:
-
-![certs](../images/580/certs.jpg)
-
-For this blog's online demo apps I only need to manage a single certificate, and AWS automatically renews it when it before expiry.
-
-### Web and API Separation
+| *https://www.authsamples.com* | The base URL for web static content, using [AWS CloudFront](https://aws.amazon.com/cloudfront/). |
+| *https://api.authsamples.com* | The API gateway base URL, using [AWS API Gateway](https://aws.amazon.com/api-gateway/). |
+| *https://login.authsamples.com* | The authorization server base URL, using [AWS Cognito](https://aws.amazon.com/cognito/). |
 
 The API base URL supports multiple microservices hosted behind the same API gateway:
 
@@ -43,204 +29,62 @@ The API base URL supports multiple microservices hosted behind the same API gate
 - *https://api.authsamples.com/api2*
 - *https://api.authsamples.com/api3*
 
-The web base URL supports hosting multiple micro-frontends for the same business area:
+The web base URL supports hosting multiple micro-frontends for the same business area in the same web domain:
 
 - *https://www.authsamples.com/spa1*
 - *https://www.authsamples.com/spa2*
 - *https://www.authsamples.com/spa3*
 
-### SPA Deployment
+### AWS Account Setup
 
-The SPA deployment model simply involves copying built web resources to a `www.authsamples.com` S3 bucket:
+I first used the [AWS Sign Up](https://aws.amazon.com/free) option and selected the *Create a Free Account* option. I submitted registration details and then processed the confirmation email. Next I signed into the [AWS Management Console](https://aws.amazon.com/console/) and started administering resources under my account. I navigated to *IAM / Users* and created a user called *aws-upload*, which this blog uses use for uploading built applications to AWS. 
 
-![s3 bucket](../images/580/s3-bucket.jpg)
+I then granted permissions to enable the user to upload files to AWS and made a note of the *Access Key ID* and *Secret Access Key* values. To complete the setup, I followed the [AWS CLI Installation Instructions](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html). I configured the CLI to populate configuration files in my local *~/.aws* directory, so that I can run *aws* commands to deploy my applications.
 
-I then use AWS CloudFront as a content delivery network for the bucket's static content:
+### Create Cloud Domains
 
-![cdn](../images/580/cdn.jpg)
+After activating the account I used the [Route 53](https://aws.amazon.com/route53/) DNS service to create my cloud domains. Each of these costs 14 USD per year and provides low cost hosting for my hosted code samples.
 
-CloudFront pushes web content to [many global locations](https://aws.amazon.com/cloudfront/features), to enable globally equal web performance, in an easy to manage way:
+![parent domain](../images/580/parent-domain.jpg?v=20241231)
 
-### Serverless APIs
+Multiple internet accessible subdomains can then be registered as *A Records* under the domain's *Hosted Zone*. In the following screenshot, I first created an AWS CloudFront distribution for web content, an AWS API gateway through which clients call serverless APIs and an AWS Cognito authorization server. Each of these produce generated URLs that you can map to your own preferred URLs in Route 53.
 
-Initial cloud API endpoints will use the [Serverless Framework](https://serverless.com/framework). This enables us to host APIs as low cost lambda functions, with minimal infrastructure to manage:
+![serverless subdomains](../images/580/serverless-subdomains.jpg)
 
-![lambdas](../images/580/lambdas.jpg)
+After creating domains and A records you can contact domains at the networking level with commands such as the following:
 
-The [AWS API Gateway](https://aws.amazon.com/api-gateway/) is used to expose lambda functions to the internet as REST endpoints:
+```bash
+dig api.authsamples.com
+```
 
-![apigateway](../images/580/apigateway.jpg)
+### Create Managed SSL Certificates
 
-### Initial Cloud Authorization Server
+I then created a <a href='developer-ssl-setup.mdx'>wildcard certificate</a> in a similar way to those I use on a development computer. For managed services I use [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) to request a wildcard certificate, which AWS automatically renews and applies to managed components. 
 
-Earlier in this blog we chose AWS Cognito as an initial low-cost authorization server. We will explain the AWS setup shortly:
+AWS CloudFront and AWS Cognito both require certificates issued in the North Virginia region. I expressed each subdomain as a certificate subject alternative names and also selected the *Create records in Route 53* option to enable certificate manager to verify my ownership of the domain.
 
-![cognito](../images/580/cognito.jpg)
+![north virginia certs](../images/580/north-virginia-certs.jpg)
 
-### Cloud Connected Code Samples
+AWS API gateway requires certificates issued in the hosting region, which is London in my deployment. I therefore followed the same steps for the London region for AWS API gateway subdomains:
 
-Use of cloud hosting enables any reader of this blog to run this blog's OAuth code samples. The <a href='quick-start.mdx'>Code Samples Quick Start</a> page provides details of online URLs and guest credentials for running the demo apps.
+![london certs](../images/580/london-certs.jpg)
 
-<div className='smallimage'>
-    <img src='../images/580/cloud-login.jpg' alt='cloud login' />
-</div>
+### Deploy Kubernetes Clusters
 
-### Centralized API Logs
+The API side of this blog's architecture can also run in a Kubernetes environment. In AWS I can use the [Elastic Kubernetes Service (EKS)](https://docs.aws.amazon.com/whitepapers/latest/overview-deployment-options/amazon-elastic-kubernetes-service.html) to create a managed cluster. This is a more expensive hosting option, so I avoid permanently running Kubernetes clusters for my online code samples and use serverless hosting instead.
 
-APIs will use this blog's <a href='effective-api-logging.mdx'>Effective API Logging</a> design to write immediate log data to AWS CloudWatch. These logs could then be aggregated and queried using <a href='api-technical-support-analysis.mdx'>Technical Support Queries</a>.
+When you use Kubernetes hosting you can create a static IP address, called an [Elastic IP](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) in AWS. That IP address can resolve to a load balancer placed in front of a cloud native API gateweay that manages all ingress into the cluster. In Route 53 the addressability is therefore more stable, if for example I recreate the cluster. Note also that I continue to use AWS CloudFront for the web side of the architecture.
 
-### Lost Cost Initial Hosting
+![subdomains](../images/580/cloudnative-subdomains.jpg)
 
-The AWS costs for the above setup are around 13 USD per year to register the base domain, along with a further 0.60 USD per month. This is an attractive option when getting started with cloud hosting:
-
-![low cost](../images/580/low-cost.jpg)
-
-### Kubernetes Hosting
-
-The API side of the architecture can also run in a Kubernetes environment. In AWS this would be managed by spinning up an [EKS](https://docs.aws.amazon.com/whitepapers/latest/overview-deployment-options/amazon-elastic-kubernetes-service.html) cluster, that hosts this blog's final APIs, along with any suppporting components. This is more expensive than Serverless hosting but enables richer choices, so can sometimes be a better choice on the API side of the architecture.
+In Kubernetes you typically terminate TLS at the API gateway before routing to cloud native APIs or a cloud native authorization server. You cannot use managed certificates and it is common to use components like [cert-manager and Lets Encrypt](https://cert-manager.io/docs/tutorials/acme/nginx-ingress/) to issue and automatically renew API gateway certificates. The API gateway's controller detects changes and applies the new certificate to gateway routes that use it.
 
 ### Where Are We?
 
-We have provided an overview of this blog's cloud hosting, and the following blog posts will describe some implementation details. In all cases our application code will remain portable so that we can switch hosting in future if ever needed.
+I showed how to create low cost subdomains in a cloud system by following equivalent DNS and SSL technical steps to those that this blog uses on a development computer. You can do so using serverless building blocks, which are cheaper for my online code samples. For a real company you could use cloud native building blocks to get finer control over technical behaviours.
 
 ### Next
 
-- Next we will explain details of our <a href='cloud-domain-setup.mdx'>Cloud Domain Setup</a>
+- Next I explain this blog's <a href='managed-authorization-server-setup.mdx'>Managed Authorization Server Setup</a>
 - For a list of all blog posts see the <a href='index.mdx'>Index Page</a>
-
-# Cloud Domain Setup
-
-Previously we described a <a href='cloud-hosting.mdx'>Cloud Hosting Overview</a>, to summarise the overall behaviour of the cloud deployment. Next I will explain the steps I took to enable an initial *AWS Cloud Setup for Development*, including purchasing an internet domain.
-
-### Create an AWS Developer Account
-
-I first used the [AWS Sign Up](https://aws.amazon.com/free) option and selected the *Create Free Account* option. I submitted registration details and then processed the confirmation email.
-
-![aws signup](../images/590/aws-signup.jpg)
-
-### Log in to the AWS Console
-
-Next I signed into the [AWS Developer Console](https://aws.amazon.com/console/) and started using features:
-
-![aws console](../images/590/aws-console.jpg)
-
-### Create a Custom Domain
-
-I selected *Route 53* in the developer console and requested a domain, which of course must not already exist on the internet:
-
-![create domain](../images/590/create-domain.jpg)
-
-After confirmation the domain first shows up under *Pending Requests* while the DNS details are being registered. Once complete, the domain shows up under *Registered Domains*.
-
-![registered domains](../images/590/registered-domains.jpg)
-
-Under *Hosted Zones* I was able to see some initial *Name Server* and *Start of Address* networking details.
-
-![base domain details](../images/590/base-domain-details.jpg)
-
-After a few minutes I could issue the following command to query DNS details:
-
-```bash
-whois authsamples.com
-```
-
-This results in technical output similar to the following:
-
-```markdown
-Domain Name: AUTHSAMPLES.COM
-Registry Domain ID: 2550276719_DOMAIN_COM-VRSN
-Registrar WHOIS Server: whois.registrar.amazon.com
-Registrar URL: http://registrar.amazon.com
-Updated Date: 2023-01-07T17:13:55Z
-Creation Date: 2020-08-02T10:42:26Z
-Registry Expiry Date: 2023-08-02T10:42:26Z
-Registrar: Amazon Registrar, Inc.
-Registrar IANA ID: 468
-Registrar Abuse Contact Email: abuse@amazonaws.com
-Registrar Abuse Contact Phone: +1.2067406200
-Domain Status: ok https://icann.org/epp#ok
-Name Server: NS-1473.AWSDNS-56.ORG
-Name Server: NS-1848.AWSDNS-39.CO.UK
-Name Server: NS-385.AWSDNS-48.COM
-Name Server: NS-543.AWSDNS-03.NET
-DNSSEC: unsigned
-URL of the ICANN Whois Inaccuracy Complaint Form: https://www.icann.org/wicf/
-```
-
-### Create Sub Domains
-
-On this blog we use custom subdomains as follows, and getting each of these working is covered in subsequent posts:
-
-| Subdomain | Points To |
-| --------- | --------- |
-| login.authsamples.com | Cognito URL |
-| www.authsamples.com | CloudFront URL for the SPA and other static web content |
-| api.authsamples.com | API Gateway URL for APIs |
-| bff.authsamples.com | API Gateway URL for the SPA's backend for frontend |
-| mobile.authsamples.com | CloudFront URL for mobile deep linking assets |
-
-### Create a Wildcard SSL Certificate
-
-Next I visited *AWS Certificate Manager* for my London region, then selected the *Request a Public Certificate* option:
-
-![create cert](../images/590/create-cert.jpg)
-
-I selected the *Add another name to this certificate* option and then entered a wildcard domain, followed by the parent domain, followed by subdomains:
-
-![cert subdomains](../images/590/cert-subdomains.jpg)
-
-For each of the domain names, I selected *Create Record in Route 53*, which creates *CNAME* records needed for certification validation checks to pass:
-
-![cnames](../images/590/cnames.jpg)
-
-In *Hosted Zones* in Route 53 I could then see the following details:
-
-![cname records](../images/590/cname-records.jpg)
-
-The certificate validation then succeeded, so that we have a single wildcard SSL certificate ready to use. Later, this blog's final SPA was able to use the SSL certificate. AWS also renews the certificate when it is close to expiry, so that there is no certificate infrastructure to manage.
-
-![wildcard cert](../images/590/wildcard-cert.jpg)
-
-### Enable AWS Uploads
-
-From the AWS console, I navigated to *IAM / Users* and created a user called *aws-upload*, which this blog uses use for uploading assets to AWS:
-
-![upload user](../images/590/upload-user.jpg)
-
-I then granted permissions to enable the user to upload files to AWS and made a note of the *Access Key ID* and *Secret Access Key* values:
-
-![access key](../images/590/access-key.jpg)
-
-### Install the AWS CLI
-
-To complete the setup, I ensured that I could automatically push built code to the above subdomains. I followed the [AWS CLI Installation Instructions](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) and could then run the following command successfully:
-
-```bash
-aws --version
-```
-
-Next I configured the CLI and provided details when prompted:
-
-```bash
-aws configure
-```
-
-Results were saved to my profile directory, at *~/.aws/credentials*.
-
-```markdown
-AWS Access Key ID [****************QXLM]: 
-AWS Secret Access Key [****************XLQg]: 
-Default region name [eu-west-2]: 
-Default output format [None]:
-```
-
-### Where Are We?
-
-Subdomains were created to enable *Real World Internet URLs* for our demo apps, and this also prepared my local computer for uploading applications to AWS.
-
-### Next
-
-- Next we complete the <a href='managed-authorization-server-setup.mdx'>Cloud Authorization Server Setup</a>
-- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>
-
 

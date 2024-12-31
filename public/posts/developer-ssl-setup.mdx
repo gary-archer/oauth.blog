@@ -10,7 +10,7 @@ When using OAuth, security components may require you to run an SSL setup on you
 
 Later in this blog I create a <a href="cloud-domain-setup.mdx">Cloud Domain Setup</a> for a deployed domain of *authsamples.com*, which runs in AWS. I then use [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) to create AWS issued certificates for these subdomains, that are trusted by clients that call the SSL endpoints.
 
-![managed certificates](../images/110/managed-certificates.jpg?v=20240728)
+![managed certificates](../images/110/managed-certificates.jpg?v=20241231)
 
 I use a similar approach for a development computer, for an *authsamples-dev.com* domain. I create a wildcard certificate for the domain and its subdomains. Be aware though that in real deployed environments, your APIs may not directly use HTTPS. Instead, you configure SSL certificates in an *HTTP Reverse Proxy* placed in front of APIs. An API gateway implements this HTTP proxy role.
 
