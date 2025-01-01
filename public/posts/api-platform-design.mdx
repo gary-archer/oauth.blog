@@ -26,11 +26,11 @@ To enable productive API security you need supporting components. The authorizat
 
 APIs must use solid error handling and logging designs, to return useful client error responses and enable fast incident resolution. You should also ensure that you can <a href='api-technical-support-analysis.mdx'>measure failures by type over time</a> so that you can see where you need to improve. Design good quality log data and aggregate API logs to high quality logging subsystem. This blog uses the Elastic Stack.
 
-### Scalable Designs
+### Scalability
 
 Once you have separated concerns across components and completed the foundational work in API code, the same patterns and practices should scale easily to many APIs, without much increase in complexity. You should be able to keep code bases modular, and JWT access tokens enable you to connect APIs together securely.
 
-### Portable Designs
+### Portability
 
 I also like to follow a requirements first approach to software rather than being dictated to by particular API technology stacks. When I implement an API coding task it should work in the same way across all API technologies and API hosting platforms. This ensures that adopting newer technologies in future does not change the architecture.
 
@@ -38,17 +38,13 @@ I also like to follow a requirements first approach to software rather than bein
 
 The API hosting platform should provide features to keep your APIs available, healthy and performant. You be able to integrate your preferred best of breed supporting components and write code without limitations. Hosting should also be portable so that you can deploy anywhere. I prefer to deploy APIs in a cloud native platform like Kubernetes.
 
-In this blog's second theme I provide three cloud native APIs in different technology stacks, with a focus on foundational code, to illustrate how I like to meet the goals articulated on this page:
+### Where Are We?
+
+I have summarised some foundations to aim for when designing a modern API platform. In this blog's second theme I provide three cloud native APIs in different technology stacks, with a focus on foundational code:
 
 - <a href='api-architecture-node.mdx'>Node.js API</a>
 - <a href='net-core-code-sample-overview.mdx'>.NET API</a>
 - <a href='java-spring-boot-api-overview.mdx'>Java API</a>
-
-For the demo online API endpoints that I host in this blog, <a href='serverless-api-overview.mdx'>Serverless APIs</a> are a useful alternative option for developers, since their immediate costs are less than running an entire Kubernetes cluster in the cloud. They are a useful option to become familiar with, but they only partially meet my API architecture requirements.
-
-### Where Are We?
-
-I have summarised some foundations to aim for when designing a modern API platform. In this blog's second theme I demonstrate some techniques for meeting the goals and requirements from this blog post.
 
 ### Next
 
