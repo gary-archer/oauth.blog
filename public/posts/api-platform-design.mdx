@@ -16,7 +16,9 @@ OAuth enables strong API security where every request to every API requires a JW
 
 ### Unified API Security
 
-In the past, API security was often dictated by client requirements. APIs might need to process cookies from web clients or client certificates from business partners. A correct OAuth implementation enables you to use a unified security model where APIs only ever process JWT access tokens. The token data should be extensible, and the use of access tokens provides interoperability with other APIs.
+In the past, API security was often dictated by client requirements. APIs might need to process cookies from web clients or client certificates from business partners. 
+
+A correct OAuth implementation enables you to use a unified security model where API gateways perform tasks like translating cookies to tokens, so that APIs only ever need to process JWT access tokens.
 
 ### Best Supporting Components
 
@@ -34,7 +36,7 @@ Once you have separated concerns across components and completed the foundationa
 
 I also like to follow a requirements first approach to software rather than being dictated to by particular API technology stacks. When I implement an API coding task it should work in the same way across all API technologies and API hosting platforms. This ensures that adopting newer technologies in future does not change the architecture.
 
-### Cost Effective Hosting
+### Best API Capabilities
 
 The API hosting platform should enable you to integrate your preferred best of breed supporting components and write code without limitations. Hosting should also be portable so that you can deploy anywhere. I prefer to deploy APIs in a cloud native platform like Kubernetes.
 
