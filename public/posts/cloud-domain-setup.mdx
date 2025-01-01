@@ -61,7 +61,7 @@ dig api.authsamples.com
 
 I then created a <a href='developer-ssl-setup.mdx'>wildcard certificate</a> in a similar way to those I use on a development computer. For managed services I use [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) to request a wildcard certificate, which AWS automatically renews and applies to managed components. 
 
-AWS CloudFront and AWS Cognito both require certificates issued in the North Virginia region. I expressed each subdomain as a certificate subject alternative names and also selected the *Create records in Route 53* option to enable certificate manager to verify my ownership of the domain.
+AWS CloudFront and AWS Cognito both require certificates issued in the North Virginia region. I expressed each subdomain as a certificate subject alternative name and also selected the *Create records in Route 53* option to enable certificate manager to verify my ownership of the domain.
 
 ![north virginia certs](../images/580/north-virginia-certs.jpg)
 
