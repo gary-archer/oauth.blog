@@ -159,8 +159,6 @@ The issuing of mock tokens is easily done using the JOSE library. Various types 
 ```typescript
 public async issueAccessToken(options: MockTokenOptions): Promise<string> {
 
-    const now = Date.now();
-
     return await new SignJWT( {
             iss: options.issuer,
             aud: options.audience,
