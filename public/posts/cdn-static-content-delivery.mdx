@@ -12,7 +12,7 @@ To deploy the SPA I simply upload web assets to S3 after which CloudFront distri
 
 ### CloudFront Domains
 
-In total I use the following domains for web content, each of which has an S3 buckets and a CloudFront distributions:
+In total I use the following domains for web content, each of which has an S3 bucket and a CloudFront distribution:
 
 | Domain | Usage |
 | ------ | ----- |
@@ -208,11 +208,11 @@ base-uri 'self';
 form-action 'self'
 ```
 
-The web security headers protect against certain web security vulnerabilities, and also ensures a good security score on online sites such as [Mozilla Observatory](https://observatory.mozilla.org):
+The web security headers protect against certain web security vulnerabilities and also ensure a good security score on online sites such as [Mozilla Observatory](https://observatory.mozilla.org):
 
 ![mozilla observatory](../images/610/mozilla-observatory.jpg?vb=20241224)
 
-I implemented the final two behaviours using [CloudFront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html). The *cache-control* header is set using a *Viewer Response* function. This instructs the browser to perform local browser caching of all web static content files except  the *index.html* file.
+I implemented the final two behaviours using [CloudFront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html). The *cache-control* header is set using a *Viewer Response* function. This instructs the browser to perform local browser caching of all web static content files except the *index.html* file.
 
 ```javascript
 function handler(event) {
@@ -281,7 +281,7 @@ function handler(event) {
 }
 ```
 
-In then configure the CloudFront functions against the distribution:
+I then configure the CloudFront functions against the distribution:
 
 ![cloudfront functions](../images/610/cloudfront-functions.jpg)
 
@@ -289,7 +289,7 @@ A key point to understand is the separation of concerns. The code that runs with
 
 ### Upgrading the SPA
 
-When you upload changes to HTML assets they do not automatically deploy to all of the global edge locations. To prevent users from receiving old content, force edge locations to pull updated content from the S3. The *deploy.sh* script does so by executing a CloudFront invalidation for all web resources. In larger deployments you could instead only invalidate modified resources.
+When you upload changes to HTML assets they do not automatically deploy to all of the global edge locations. To prevent users from receiving old content, force edge locations to pull updated content from S3. The *deploy.sh* script does so by executing a CloudFront invalidation for all web resources. In larger deployments you could instead only invalidate modified resources.
 
 The *index.html* file must always be invalidated. It is requested every time the browser reloads and most commonly results in a 304 response from the server. After an upgrade, users download a new *index.html* file and its cache busting timestamps trigger downloads of other static resources.
 
