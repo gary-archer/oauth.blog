@@ -34,9 +34,9 @@ To get visibility into the underlying behaviour of the Spring classes and to tro
 logging.level.org.springframework.security=DEBUG
 ```
 
-When getting started with OAuth secured APIs these are good defaults, but this blog's Java API focuses on some deeper requirements.
+When getting started with OAuth secured APIs these are good defaults to get up and running. However, they hide the details from API developers. This blog's Java API instead aims for an educational approach that makes the important requirements visible.
 
-### Deeper Requirements
+### Key Requirements
 
 This blog's Java API customises default behaviour to meet the following requirements:
 
@@ -54,9 +54,7 @@ In Java the OAuth code uses the same main phases as other APIs in this blog:
 | <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a> | Downloading a JSON Web Key Set and verifying received JWT access tokens. |
 | <a href='api-authorization-design.mdx'>API Authorization</a> | Creating a ClaimsPrincipal that includes useful claims, then applying them during authorization. |
 
-### Your Java Secured API?
-
-The API contains quite a bit of plumbing code, to make the API code feel the same across technology stacks. For your own solution you may be able to meet similar requirements in simpler ways.
+This blog's Java API contains plumbing code that I write in the same way the same across three different technology stacks. For your own solution you may be able to meet similar requirements in simpler ways.
 
 ### OAuth API Configuration
 
