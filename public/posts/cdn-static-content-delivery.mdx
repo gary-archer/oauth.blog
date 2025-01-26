@@ -8,7 +8,7 @@ In this post I demonstrate meeting performance goals from the earlier post on <a
 
 ![cdn](../images/610/cdn.jpg)
 
-To deploy the SPA I simply upload web assets to S3 after which CloudFront distributes them to many global *edge* locations, so that all users receive roughly equal web performance.
+To deploy the SPA I simply upload web assets to S3 after which CloudFront distributes them to many global *Edge Locations*, so that all users receive roughly equal web performance.
 
 ### CloudFront Domains
 
@@ -16,11 +16,11 @@ In total I use the following domains for web content, each of which has an S3 bu
 
 | Domain | Usage |
 | ------ | ----- |
-| www.authsamples.com | Serves web content for an online SPA that connects to Serverless APIs. |
-| www.authsamples-k8s.com | Serves web content for an online SPA that connects to Kubernetes APIs. |
-| mobile.authsamples.com | Serves assets used of native mobile logins and mobile deep linking. |
+| www.authsamples.com | Serves web content for an online SPA that connects to APIs that use Serverless hosting. |
+| www.authsamples-k8s.com | Serves web content for an online SPA that connects to APIs that use Kubernetes hosting. |
+| mobile.authsamples.com | Serves assets used for native mobile logins and mobile deep linking. |
 
-This post covers the details for the first domain, and the steps for other domains are equivalent. First though I briefly summarise some build related steps that help to enable a good deployment architecture.
+This post covers the details for the first domain, and the steps for other domains are equivalent. First though I briefly summarise some build related steps that help to enable a good web deployment architecture.
 
 ### Automated Deployment
 
@@ -34,7 +34,7 @@ cd oauth.websample.final/deployment/cloudfront
 
 ### SPA Release Builds
 
-The build script for the final SPA produces a root level *dist* folder containing static content to deploy. A real build system could provide content for multiple micro frontends within the same web domain. I build the release JavaScript bundles with minification enabled. I also use the [purgecss command line tool](https://github.com/FullHuman/purgecss) to reduce the size of the Bootstrap CSS file. The following screenshot shows the final assets. I do not deploy source map files but in a real system they could be used later to resolve production stack traces.
+The build script for the final SPA produces a root level *dist* folder containing static content to deploy. A real build system could provide content for multiple micro frontends within the same web domain. I build the release JavaScript bundles with minification enabled. I also use the [purgecss command line tool](https://github.com/FullHuman/purgecss) to reduce the size of the Bootstrap CSS file. The following screenshot shows the final assets. I do not deploy source map files but in a real system I would save them to help diagnose production stack traces.
 
 <img src='../images/610/release-bundles.jpg' alt='release bundles' />
 
@@ -79,7 +79,7 @@ In development, the SPA downloads an *spa.config.json* file, whose content would
 ```
 
 
-I instead hard code the production configuration, to avoid the need for configuration downloads, and because JSON files do not have subresource integrity protection. When getting configuration, the SPA first checks its web origin and uses hard coded configuration when it runs in a production domain:
+I instead hard code the production configuration, to avoid the need for configuration downloads, partly because JSON files do not have subresource integrity protection. When getting configuration, the SPA first checks its web origin and uses hard coded configuration when it runs in a production domain:
 
 ```typescript
 if (location.origin.toLowerCase() === productionConfiguration.app.webOrigin.toLowerCase()) {
@@ -111,7 +111,7 @@ upload: .package/spa/vendor.bundle.js to s3://www.authsamples.com/spa/vendor.bun
 upload: .package/spa/react.bundle.js to s3://www.authsamples.com/spa/react.bundle.js
 ```
 
-Once the upload completes a number of files exist in the S3 bucket, where the SPA files are located in an *spa* folder. Other micro frontends could be hosted in parallel folders at a later time.
+Once the upload completes a number of files exist in the S3 bucket, where the SPA files are located in an *spa* folder. Other micro frontends could be added in parallel folders, so that the deployment allows for future growth.
 
 ![spa subfolder](../images/610/spa-subfolder.jpg?v=20241224)
 
@@ -119,13 +119,13 @@ The SPA uses the following default domain and serves content over plain HTTP:
 
 - *http://www.authsamples.com.s3-website.eu-west-2.amazonaws.com*
 
-If you try to browse to the SPA you get an access denied error, since only AWS CloudFront is granted access:
+If you try to browse to the SPA you get an access denied error, since only AWS CloudFront is granted access to the S3 bucket's content:
 
 ![direct access denied](../images/610/direct-access-denied.jpg)
 
 ### Web SSL Certificates
 
-During the <a href='/posts/cloud-domain-setup.mdx'>Cloud Domain Setup</a> post I explained how I provisioned SSL certificates for the *us-east-1* (North Virginia) region. The wildcard certificate for **.authsamples.com* is used to serve the SPA's content over HTTPS:
+During the <a href='/posts/cloud-domain-setup.mdx'>Cloud Domain Setup</a> post I explained how I provisioned SSL certificates for the *us-east-1* (North Virginia) region. Web downloads use the wildcard certificate for that region:
 
 ![managed certs](../images/610/managed-certs.jpg?v=20241224)
 
@@ -187,13 +187,13 @@ There are four essential behaviours that the CDN host needs to provide, summaris
 | Compression | Web resources should be compressed to reduce download sizes and improve performance. |
 | Security Headers | Security headers should be set to provide a security policy to the browser. |
 | Performance Headers | The cache-control header should be set to prevent redundant requests from the browser to the CDN. |
-| Document Serving | Serve the *index.html*, static resources like JavaScript bundles and handle invalid paths. |
+| Document Serving | Serve the *index.html* and static resources like JavaScript bundles while also handling invalid paths. |
 
 These are configured under the *Behaviors* settings of the CloudFront distribution, which can link to CloudFront policies or functions. I created a *Response Headers Policy* and activated compression and most security headers using the visual user interface:
 
 ![csp](../images/610/csp.jpg?v=20241224)
 
-The most interesting setting is the [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) which protects against common threats and only allow the SPA's JavaScript to make remote calls to its web host and backend for frontend. I use the same settings in both CloudFront and the webpack development server:
+The most interesting setting is the [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) which protects against common threats and only allow the SPA's JavaScript to make remote calls to its web host and backend for frontend. I use settings of the following form in both CloudFront and the webpack development server that I use for development:
 
 ```markdown
 default-src 'none';
@@ -208,7 +208,7 @@ base-uri 'self';
 form-action 'self'
 ```
 
-This protects against certain web security vulnerabilities, and also ensures a good security score on online sites such as [Mozilla Observatory](https://observatory.mozilla.org):
+The web security headers protect against certain web security vulnerabilities, and also ensures a good security score on online sites such as [Mozilla Observatory](https://observatory.mozilla.org):
 
 ![mozilla observatory](../images/610/mozilla-observatory.jpg?vb=20241224)
 
@@ -281,19 +281,21 @@ function handler(event) {
 }
 ```
 
-The code running within a CDN only manages web concerns. I avoid activities such as calling APIs, since CDNs may impose short code timeouts and small HTTP message sizes. In the AWS console, the behaviour settings for the final SPA are configured as follows:
+In then configure the CloudFront functions against the distribution:
 
 ![cloudfront functions](../images/610/cloudfront-functions.jpg)
 
+A key point to understand is the separation of concerns. The code that runs within the CDN only manages web concerns and never deals with data security. If the code was to call APIs it would add considerable complexity to both deployment systems and developer setups. CDNs may also impose short HTTP request timeouts and small message sizes leading to reliability problems. 
+
 ### Upgrading the SPA
 
-When you deploy updated HTML assets they are not automatically deployed to all of the global edge locations. To prevent users from receiving old content, force edge locations to pull updated content from the S3. The *deploy.sh* script does so by executing a CloudFront invalidation for all web resources. In larger deployments you could instead only invalidate modified resources.
+When you upload changes to HTML assets they do not automatically deploy to all of the global edge locations. To prevent users from receiving old content, force edge locations to pull updated content from the S3. The *deploy.sh* script does so by executing a CloudFront invalidation for all web resources. In larger deployments you could instead only invalidate modified resources.
 
 The *index.html* file must always be invalidated. It is requested every time the browser reloads and most commonly results in a 304 response from the server. After an upgrade, users download a new *index.html* file and its cache busting timestamps trigger downloads of other static resources.
 
 ### Where Are We?
 
-I completed this blog's SPA work by deploying its static content to ~400 global locations while also following some security and reliability best practices. Web deployments within an OAuth architecture should be technically simple and entirely separated from the API side of the architecure. You then provide good performance to all users in an easy to manage way.
+I completed this blog's SPA work by deploying its static content to ~400 global locations while also following some security and reliability best practices. Web deployments within an OAuth architecture should be technically simple and entirely separated from the API side of the architecure. You then provide good web performance to all users in an easy to manage way.
 
 ### Next
 

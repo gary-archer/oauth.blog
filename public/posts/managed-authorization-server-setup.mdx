@@ -1,40 +1,40 @@
 # Managed Authorization Server Setup
 
-Previously we explained our <a href='cloud-domain-setup.mdx'>Cloud Domain Setup</a> and next we will describe the more advanced configuration of AWS Cognito as a managed authorization server.
+Previously I explained this blog's <a href='cloud-domain-setup.mdx'>Cloud Domain Setup</a>. Next I explain some advanced configuration details when using AWS Cognito as a managed authorization server.
 
 ### Create the Authorization Server
 
-In this blog I only use the standards-based authorization server role. In AWS terms this means I am using a *User Pool* with a *Hosted UI*. I started by navigating to Cognito in the AWS Console and created a user pool:
+In this blog I only use standards based OAuth security and avoid any vendor specific behaviour that departs from that. Therefore I use AWS Cognito solely as an authorization server. In AWS terms this means you create a *User Pool* with a *Hosted UI*. I started in the AWS Console by creating a Cognito user pool:
 
 ![user pool](../images/600/user-pool.jpg)
 
-The basic configuration was described in the earlier post on <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a>. This included creating a user schema with custom fields used for authorization in APIs.
+I explained the basic configuration in the earlier post on <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a>. A key part of the initial setup was the creation of a user schema with custom user fields that APIs use later for their business authorization.
 
 ### Create a Custom Domain
 
-For this blog, I wanted the authorization server to run at an internet URL of *https://login.authsamples.com*. For this to work in AWS, the root domain, located at *https://www.authsamples.com*, also has to be contactable. To enable this I first created an S3 bucket as a source for HTTP requests:
+For this blog I designed an authorization server base URL of *https://login.authsamples.com*. AWS requires the root domain, located at *https://authsamples.com*, to also be contactable. I therefore created an S3 bucket as a source for HTTP requests to the base domain:
 
 ![root bucket](../images/600/root-bucket.jpg)
 
-I then created a CloudFront Distribution for the root domain. We will cover further details of configuring S3 and CloudFront in the following post on SPA deployment.
+I then created a CloudFront distribution for the root domain, which results in a generated base URL. I explain more about S3 and CloudFront configuration in the next post, on SPA deployment.
 
 ![distro](../images/600/distro.jpg)
 
-Next I updated the user pool with the *Custom Authorization Server Subdomain* we defined in the previous post, and also referenced the *AWS Managed SSL Certificate*:
+Next I updated the user pool with the custom domain and also referenced the *AWS Managed SSL Certificate*:
 
 ![custom domain](../images/600/custom-domain.jpg)
 
-I then returned to Route 53 and added an *A Record* to associate the authorization server's subdomain to the above *Alias Target*. AWS then takes 15 minutes or so to make the domain available.
+I then added an A record to Route 53 to associate the authorization server's subdomain to the generated URL, expressed as an *Alias Target*. AWS then takes 15 minutes or so to make the domain available.
 
 ![arecord](../images/600/arecord.jpg)
 
 ### Activate Advanced Features
 
-I then activated Cognito advanced features, which did not add any noticeable increase in costs to my deployment. I chose the following options:
+I then activated Cognito advanced features, which did not add any noticeable increase in costs to my development deployment. I chose the following options:
 
 ![advanced](../images/600/advanced.jpg)
 
-My only motivation for activating advanced features is to enable *Access Token Customisation* and issue fields from the user schema as claims. This is an essential OAuth behaviour for protecting data in APIs.
+My only motivation for activating advanced features is to enable *Access Token Customisation* and issue fields from the user schema as claims. This is an essential OAuth behaviour to correctly protect data in APIs.
 
 ### Define Custom API Scopes
 
@@ -83,17 +83,13 @@ export const handler = function(event, context) {
 };
 ```
 
-The *claimsToSuppress* section is used to remove personal data from ID tokens, since my code samples instead get personal data from the Cognito user info endpoint.
-
-The *claimsToAddOrOverride* section is used to customise access tokens. Claims are issued based on the client's scope so that different custom claims can be issued to different clients.
-
-These claims provide convenient fields for APIs and produce a more complete access token. In many cases this helps to lock down the access token and reduce its privileges. This blog's use of claims is further explained in the blog post on <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>.
+The *claimsToSuppress* loigc removes personal data from ID tokens, since my code samples instead get personal data from the Cognito user info endpoint. The *claimsToAddOrOverride* section customises access tokens. Claims issued depend on the client's scope, to enable different clients to receive distinct claims when required. Custom claims can help to lock down access tokens and reduce their privileges. This blog's use of claims is further explained in the <a href='api-authorization-design.mdx'>API Authorization Behaviour</a> post.
 
 ### Where Are We?
 
-We have completed the configuration of a low maintenance cloud authorization server and activated some advanced but essential features. Next we will describe how the SPA's static content is deployed globally.
+I explained the infrastructure configuration of a low maintenance cloud authorization server and activated token customization. This provides the setup I use throughout the blog for standards based OAuth development.
 
 ### Next
 
-- Next we will explain this blog's <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a>
-- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>
+- I explain this blog's <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a> for Single Page Applications.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

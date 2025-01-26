@@ -1,6 +1,6 @@
 # Cloud Domain Setup
 
-Previously I articulated some <a href='cloud-hosting.mdx'>Cloud Deployment Goals</a>. Next I show how a developer can get started with a cloud platform to deploy applications with working OAuth flows. I use AWS and start with creating domains and external base URLs on which to expose APIs, web static content and an authorization server to the outside world.
+Previously I articulated some <a href='cloud-hosting.mdx'>Cloud Deployment Goals</a>. Next I show how a developer can get started with a cloud platform to deploy applications with working OAuth flows. I use AWS to expose internet base URLs for APIs, web static content and an authorization server.
 
 ### Design Domains
 
@@ -9,9 +9,9 @@ I first chose a domain name of *authsamples.com* on which to host OAuth related 
 | Domain | Usef For |
 | ------ | -------- |
 | *authsamples.com* | The initial cloud domain that runs in AWS and uses serverless hosting for the API side of the architecture. |
-| *authsamples-dev.com* | A local computer domain that I use when changing the code for the demo applications and APIs. |
+| *authsamples-dev.com* | A local computer domain that I use when changing the code for my demo applications and APIs. |
 | *authsamples-k8s.com* | A cloud domain that runs in AWS and uses Kubernetes hosting for the API side of the architecture. |
-| *authsamples-k8s-dev.com* | A local computer domain that I use to practice deployments to Kubernetes clusters. |
+| *authsamples-k8s-dev.com* | A local computer domain that I use to run local end-to-end Kubernetes deployments. |
 
 ### Design Application Base URLs
 
@@ -34,6 +34,8 @@ The web base URL supports hosting multiple micro-frontends for the same business
 - *https://www.authsamples.com/spa1*
 - *https://www.authsamples.com/spa2*
 - *https://www.authsamples.com/spa3*
+
+I also use a *https://bff.authsamples.com* domain as a backend for frontend base URL for this blog's final SPA. This uses an additional custom domain in the AWS API Gateway.
 
 ### AWS Account Setup
 
@@ -61,11 +63,11 @@ dig api.authsamples.com
 
 I then created a <a href='developer-ssl-setup.mdx'>wildcard certificate</a> in a similar way to those I use on a development computer. For managed services I use [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) to request a wildcard certificate, which AWS automatically renews and applies to managed components. 
 
-AWS CloudFront and AWS Cognito both require certificates issued in the North Virginia region. I expressed each subdomain as a certificate subject alternative name and also selected the *Create records in Route 53* option to enable certificate manager to verify my ownership of the domain.
+AWS CloudFront and AWS Cognito both require certificates issued in the North Virginia region. I expressed each subdomain as a certificate subject alternative name and also used the *Create records in Route 53* option to enable certificate manager to verify my ownership of the domain.
 
 ![north virginia certs](../images/580/north-virginia-certs.jpg)
 
-AWS API gateway requires certificates issued in the hosting region, which is London in my deployment. I therefore followed the same steps for the London region for AWS API gateway subdomains:
+AWS API Gateway requires certificates issued in the hosting region, which is London in my deployment. I therefore followed the same steps for the London region for AWS API gateway subdomains:
 
 ![london certs](../images/580/london-certs.jpg)
 

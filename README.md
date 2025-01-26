@@ -5,6 +5,7 @@ A technical blog with a focus on productive and reliable OAuth development setup
 - [Home Page](public/posts/home.mdx)
 - [Index Page](public/posts/index.mdx)
 - [Code Samples](public/posts/quick-start.mdx)
+- [About](public/posts/about.mdx)
 
 ## Running the Blog
 
