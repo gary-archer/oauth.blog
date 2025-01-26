@@ -221,33 +221,28 @@ export class SampleExtraClaims extends ExtraClaims {
 
 ### API Integration Tests
 
-The API has a set of integration tests that use utility classes to mock the authorization server. This enables me to productively test the API with user level access tokens. During tests, I use temporary files named *input.txt* and *output.txt* that contain request and response data in the lambda format:
+The API has a set of integration tests that use utility classes to mock the authorization server. This enables me to productively test the API with user level access tokens. Tests create temporary files named *input.txt* and *output.txt* that contain the API's request and response data in lambda format.
 
-The following test tries to get a resource for a particular region, when the user's access token does not allow it. The test asserts the expected error response. Some utility code deals with boiler plate code such as running *sls invoke* as a child process. Tests work correctly but run slow when invoking local lambdas.
+The following test tries to get a resource for a particular region, when the user's access token does not allow it. The test asserts the expected error response. Some utility code runs *sls invoke* as a child process and captures output. Tests basically work but are more complex than I would like. They also run slow since they need to wait for local lambda startup and shutdown.
 
 ```typescript
 it ('Get transactions returns 404 for companies that do not match the regions claim', async () => {
 
-    const accessToken = await tokenIssuer.issueAccessToken(guestUserId);
+    const jwtOptions = new MockTokenOptions();
+    jwtOptions.useStandardUser();
+    const accessToken = await authorizationServer.issueAccessToken(jwtOptions);
 
-    const mockUserInfo = {
-        given_name: 'Guest',
-        family_name: 'User',
-        email: 'guestuser@example.com',
-    };
-    await wiremockAdmin.registerUserInfo(JSON.stringify(mockUserInfo));
-
-    const options = {
+    const lambdaOptions = {
         httpMethod: 'GET',
         apiPath: '/investments/companies/3/transactions',
         lambdaFunction: 'getCompanyTransactions',
-        accessToken,
         sessionId,
+        accessToken: accessToken,
         pathParameters: {
             id: '3',
-        }
+        },
     };
-    const response = await LambdaChildProcess.invoke(options);
+    const response = await LambdaChildProcess.invoke(lambdaOptions);
 
     assert.strictEqual(response.statusCode, 404, 'Unexpected HTTP status code');
     assert.strictEqual(response.body.code, 'company_not_found', 'Unexpected error code');
@@ -257,7 +252,13 @@ it ('Get transactions returns 404 for companies that do not match the regions cl
 
 ### Lambda Code Debugging
 
-On a development computer, running *npm run build* produces *Source Maps* to enable debugging. The *launch.json* file can then point to a particular lambda to debug:
+Debugging the API in my lanbda setup is also non trivial. To debug a particular method I use the following steps:
+
+- Disable integration tests except for a single test case that uses the lambda function that I want to debug.
+- Run the test to produce an *input.txt* file with the access token for the test.
+- Leave the mock authorization server running after the test run completes.
+
+I then launch the lambda from Visual Studio Code with a *launch.json* file that references the lambda function to debug:
 
 ```json
 {
@@ -280,10 +281,10 @@ On a development computer, running *npm run build* produces *Source Maps* to ena
     ]
 }
 ```
- 
-I can supply the *input.txt* file from a particular test, then step through the original lines of TypeScript code and view the state of variables, such as OAuth and claims data:
 
-![debug](../images/640/debug.jpg)
+Due to the use of source maps, I can step through the original lines of TypeScript code and view the state of variables, including OAuth and claims data:
+
+![debug](../images/640/debug.jpg?v=20250126)
 
 ### Where Are We?
 
