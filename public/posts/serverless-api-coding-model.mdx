@@ -1,23 +1,21 @@
 # Serverless API Code Details
 
-Previously I described this blog's <a href='serverless-api-deployment.mdx'>Serverless API Deployment</a>. Next we will explain how we have coded this blog's lambda based APIs, to include the behaviours from this blog's <a href='api-journey-server-side.mdx'>API Journey - Server Side</a> blog post.
+Previously I explained this blog's <a href='serverless-api-deployment.mdx'>Serverless API Deployment</a>. Next I describe some code details for this blog's lambda based APIs, to implement cross cutting concerns in clean ways. The code includes integration tests that call the API's lambda functions with user level access tokens.
 
 ### Portable Code
 
-In our earlier Node.js API we used the Express HTTP Server. As part of migrating to AWS Serverless, we have only changed the API's host layer. The API logic classes are identical to the earlier API:
+The earlier <a href='api-architecture-node.mdx'>Node.js API</a> used the Express HTTP Server. As part of migrating to AWS Serverless I changed the API's host layer but the API logic classes are identical to those in the Express API:
 
 <div className='smallimage'>
     <img src='../images/640/code-layout.jpg' alt='code layout' />
 </div>
 
-Since the code is largely the same as our earlier Express based sample, this post will primarily explain the differences in setup and OAuth processing.
-
 ### Lambda Entry Points
 
-The entry point to lambda functions is equivalent to our earlier *Rest Controller Classes* and looks like this:
+The entry point to lambda functions is equivalent to earlier *Rest Controller Classes*:
 
-- A service class is resolved and asked to do the work
-- Cross cutting concerns execute before and after the lambda function's body
+- The lambda resolves the service instance for the request and asks it to do the work.
+- Cross cutting concerns execute before and after the lambda base handler.
 
 ```typescript
 const container = new Container();
@@ -40,7 +38,7 @@ export {handler};
 
 ### Applying Cross Cutting Concerns
 
-Lambdas are enriched by injecting middleware classes to manage aspects such as authorization, logging and error handling:
+I enrich lambdas with middleware classes to manage aspects such as authorization, logging and error handling:
 
 ```typescript
 public enrichHandler(baseHandler: AsyncHandler, container: Container)
@@ -72,11 +70,11 @@ public enrichHandler(baseHandler: AsyncHandler, container: Container)
 }
 ```
 
-Earlier Node.js samples used middleware built into Express, whereas for AWS Lambdas we are using the [Middy Library](https://github.com/middyjs/middy), to separate plumbing code from the API's logic classes:
+Earlier Node.js samples used middleware built into Express, whereas for AWS Lambdas I use the [Middy Library](https://github.com/middyjs/middy) to separate plumbing code from the API's business logic:
 
 ![middy](../images/640/middy.jpg)
 
-Middy provides interception points called before, after and error. As an example, our *LoggerMiddleware* class updates log entries using the following code:
+Middy provides interception points called *before*, *after* and *error*. The *LoggerMiddleware* class demonstrates the syntax:
 
 ```typescript
 export class LoggerMiddleware implements middy.MiddlewareObj<APIGatewayProxyEvent, APIGatewayProxyResult> {
@@ -110,18 +108,18 @@ export class LoggerMiddleware implements middy.MiddlewareObj<APIGatewayProxyEven
 
 ### Middleware Classes
 
-Our sample uses the following middleware classes, which are equivalent to those in our earlier Node.js code:
+The API uses the following middleware classes, which are equivalent to those in the Express API:
 
 | Middleware Class | Responsibility |
 | ---------------- | -------------- |
-| LoggerMiddleware | Manages the log entry for each request, by logging request and response details
-| OAuthFilter | JWT access token validation, creating the claims principal and identity logging
-| CustomHeaderMiddleware | Allows advanced client side testing of APIs, to enable error rehearsal
-| UnhandledExceptionHandler | A central place for adding error details to logs, and producing the client error
+| LoggerMiddleware | Manages the log entry for each request, to log request and response details. |
+| OAuthFilter | JWT access token validation, creating the claims principal and identity logging. |
+| CustomHeaderMiddleware | Allows advanced client side testing of APIs, such as error rehearsal. |
+| UnhandledExceptionHandler | A central place to add error details to logs and produce the client error. |
 
 ### Dependency Injection
 
-With Serverless lambdas I continue to use modern and productive code based on dependency injection. This has benefits around code clarity, extensibility and testing:
+With Serverless lambdas I continue to use modern and productive code based on dependency injection, which benefits code clarity, extensibility and testing:
 
 ```typescript
 @injectable()
@@ -140,25 +138,25 @@ export class CompanyService {
 }
 ```
 
-In AWS, the entire API is spun up on every single HTTP request. There is no need to implement the *Child Container Per Request* pattern, as used by the earlier Node.js API. If ever needed in future, the same technique of storing the child container in the request object would be used.
+In AWS, a new API instance gets created on every HTTP request. Therefore I no longer need to implement the *Child Container Per Request* pattern that the Express API uses.
 
 ### JWT Access Token Validation
 
-Previously we explained this blog's approach to <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a>, which involves caching the token signing public keys in-memory. For the Serverless API I needed to provide a custom key retriever to the JOSE library:
+An earlier post explained this blog's approach to <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a>, where a JWT library caches token signing public keys in memory. For the Serverless API I followed the same approach, but supplied a custom key retriever to the JOSE library:
 
 ```typescript
 const result = await jwtVerify(accessToken, this.jwksRetriever.getKey, options);
 ```
 
-A function with the following method signature is required, and this blog's implementation gets cached keys from DynamoDB, to avoid needing to call the authorization server on every API request:
+The library requires a function with the following method signature. The implementation gets cached keys from DynamoDB on every request rather than putting the critical authorization server under load:
 
 ```typescript
 async getKey(
-        protectedHeader: JWSHeaderParameters,
-        token: FlattenedJWSInput): Promise<Uint8Array | KeyLike>;
+    protectedHeader: JWSHeaderParameters,
+    token: FlattenedJWSInput): Promise<Uint8Array | KeyLike>;
 ```
 
-This required a custom cache class to wrap DynamoDB, some of whose code is shown below:
+I implemented a DynamoDB wrapper class to encapsulate the logic:
 
 ```typescript
 export class AwsCache implements Cache {
@@ -210,9 +208,9 @@ export class AwsCache implements Cache {
 }
 ```
 
-### OAuth Middleware Customisation
+### Claims Based Authorization
 
-The API authorizes using this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. This involves looking up and caching the following extra claims when an access token is first received.
+After processing JWT access tokens, the API uses claims according to this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. The API looks up additional authorization values when it first receives a particular access token and stores these extra claims in the AWS cache. The cache key is the SHA256 hash of the access token. The earlier <a href='updated-api-coding-key-points.mdx'>Updated API Code Sample</a> post explains the mechanics.
 
 ```typescript
 export class SampleExtraClaims extends ExtraClaims {
@@ -221,19 +219,11 @@ export class SampleExtraClaims extends ExtraClaims {
 }
 ```
 
-The earlier <a href='updated-api-coding-key-points.mdx'>Updated API Code Sample</a> blog post described how this was implemented in Node.js. To cache extra authorization values not included in the access token, the *AwsCache* class is again used.
+### API Integration Tests
 
-Although DynamoDB caching works well enough for my demo purposes, it would be suboptimal for a real company, and also adds to code complexity. The ability to easily cache data in-memory between requests is an important API behaviour.
+The API has a set of integration tests that use utility classes to mock the authorization server. This enables me to productively test the API with user level access tokens. During tests, I use temporary files named *input.txt* and *output.txt* that contain request and response data in the lambda format:
 
-### Test Code
-
-The API has some integration tests and utility classes to enable the API to be tested without an authorization server. During tests, the *input.txt* and *output.txt* files are updated with requests and responses in the lambda format:
-
-<div className='smallimage'>
-    <img src='../images/640/test-code.jpg' alt='test code' />
-</div>
-
-The following test verifies authorization to data based on the *regions* array value. The utility classes deal with boiler plate code such as running *sls invoke* as a child process:
+The following test tries to get a resource for a particular region, when the user's access token does not allow it. The test asserts the expected error response. Some utility code deals with boiler plate code such as running *sls invoke* as a child process. Tests work correctly but run slow when invoking local lambdas.
 
 ```typescript
 it ('Get transactions returns 404 for companies that do not match the regions claim', async () => {
@@ -267,39 +257,39 @@ it ('Get transactions returns 404 for companies that do not match the regions cl
 
 ### Lambda Code Debugging
 
-On a development computer, running *npm run build* produces *Source Maps* to enable debugging. The *launch.json* file can then point to a particular lambda to be debugged:
+On a development computer, running *npm run build* produces *Source Maps* to enable debugging. The *launch.json* file can then point to a particular lambda to debug:
 
 ```json
 {
     "version":"0.2.0",
-    "configurations":[
+    "configurations": [
         {
             "type":"node",
             "request":"launch",
             "name":"Launch API",
-            "program":"${workspaceFolder}/node_modules/serverless/bin/serverless",
+            "program":"${workspaceFolder}/node_modules/.bin/serverless",
             "args":[
-                "invoke",
-                "local",
-                "-f",
-                "getCompanyList",
-                "-p",
-                "test/input.txt"
+                 "invoke",
+                 "local",
+                 "-f",
+                 "getCompanyTransactions",
+                 "-p",
+                 "test/input.txt"
             ]
         }
     ]
 }
 ```
-
-This enables the *input.txt* file produced from a mocha test to be used to debug a lambda, then step through the original lines of TypeScript code and view the state of variables, such as OAuth and claims fields:
+ 
+I can supply the *input.txt* file from a particular test, then step through the original lines of TypeScript code and view the state of variables, such as OAuth and claims data:
 
 ![debug](../images/640/debug.jpg)
 
 ### Where Are We?
 
-We have a productive setup for our cloud API, with modern techniques for coding, testing and deployment. This enables low cost cloud hosting, though earlier cloud native APIs had better API capabilities.
+I invested in a productive test setup for the Serverless API, with modern techniques for coding, testing and deployment. A big plus point of lambda technology is the low cost hosting it provides for developer demos. However, I prefer the more complete developer experience that I get from cloud native APIs.
 
 ### Next
 
-- Next I briefly summarise the benefits of combining <a href='cloud--native-updates.mdx'>Cloud Native and OAuth</a>.
+- I briefly summarise the benefits of combining <a href='cloud--native-updates.mdx'>Cloud Native and OAuth</a>.
 - For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.
