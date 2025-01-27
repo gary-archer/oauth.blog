@@ -93,7 +93,7 @@ On all subsequent logins I only enter the username and password, until I am agai
 
 ### Step 4. Register an OAuth Client for the API
 
-My SPA client uses scopes and in Entra ID you create scopes within an OAuth client. Since scopes are an API concern that should be shareable across multiple clients, I created a dedicated API client. I added a client called *BasicAPI*, without selecting a platform. I use this client to represent a logical collection of one or more APIs for an *investments* business area. Access tokens later use the below *Client ID* in their *audience* claim:
+My SPA client uses scopes and in Entra ID you create scopes within an OAuth client. Since scopes are an API concern that should be shareable across multiple clients I created an API client called *BasicAPI*, without selecting a platform. I use this client to represent a logical collection of one or more APIs for an *investments* business area. Access tokens later use the below *Client ID* in their *audience* claim:
 
 ![api client](../images/190/api-client.jpg)
 

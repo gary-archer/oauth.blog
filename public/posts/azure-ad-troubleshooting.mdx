@@ -4,7 +4,7 @@ Previously I explained the <a href='azure-active-directory-setup.mdx'>Microsoft 
 
 ### 1. SPA and API
 
-The SPA implements OpenID Connect and its lifecycle events. The API validate access tokens and uses claims-based authorization to protect its fictional data. The correct data is then rendered based on the logged in user:
+The SPA implements OpenID Connect and its lifecycle events. The API validates access tokens and uses claims-based authorization to protect its fictional data. The correct data is then rendered based on the logged in user:
 
 ![spa](../images/200/spa.jpg?v=20240822)
 
@@ -22,11 +22,11 @@ Login completes when the SPA swaps the code for tokens:
 
 ![redeem code for tokens](../images/200/redeem-code-for-tokens.jpg?v=20240822)
 
-The SPA uses the traditional JavaScript-only flow with <a href='user-sessions-and-token-renewal.mdx'>Iframe-Based Token Renewal</a>, so I would rather and I would rather not receive a refresh token in the token response.
+The SPA uses the traditional JavaScript-only flow with <a href='user-sessions-and-token-renewal.mdx'>Iframe-Based Token Renewal</a>, but I would rather not receive a refresh token in the token response.
 
 ### 3. ID Tokens Issued to the SPA
 
-The <a href='id-tokens.mdx'>ID Tokens</a> blog post describes how I avoid issuing personal data to ID tokens. In Entra ID you can ensure this by omitting the *profile* scope from the client configuration. In the SPA configuration I included the *openid* scope so that the SPA receives an ID token that contains contains only protocol claims. The [oidc-client-ts](https://github.com/authts/oidc-client-ts) library implements ID token validation when it receives the token response.
+The <a href='id-tokens.mdx'>ID Tokens</a> blog post describes how I avoid issuing personal data to ID tokens. In Entra ID you can ensure this by omitting the *profile* scope from the client configuration. In the SPA configuration I included the *openid* scope so that the SPA receives an ID token that contains only protocol claims. The [oidc-client-ts](https://github.com/authts/oidc-client-ts) library implements ID token validation when it receives the token response.
 
 ![id token](../images/200/id-token.jpg)
 
@@ -47,9 +47,7 @@ I therefore updated to the scope and permission settings from the previous blog 
 
 ![final access token](../images/200/final-access-token.jpg)
 
-The access token contains a couple of technical user identifiers. The *oid* claim is the permanent user account ID, which is the same across all Entra ID applications. The *sub* claim is issued as a unique identifier private to the client.
-
-The access token contains the custom claims explained in the previous post to enable the API to implement authorization in a convenient way. I was unable to exclude personal data from the access token though, even if I removed all Graph permissions from the API's registered client.
+The access token contains a couple of technical user identifiers. The *oid* claim is the permanent user account ID, which is the same across all Entra ID applications. The *sub* claim is issued as a unique identifier private to the client. The access token contains the custom claims explained in the previous post to enable the API to implement authorization in a convenient way. I was unable to exclude personal data from the access token, even if I removed all Graph permissions from the API's registered client.
 
 ### 5. SPA OpenID Connect Configuration Changes
 
@@ -84,7 +82,7 @@ export class Authenticator {
 
 ### 6. Built-In v Custom Scopes
 
-It is common in OAuth for a client to request a mix of built-in and custom scopes. Yet since the SPA gets user info via its API I configured only the *openid* built-in scope, so that the SPA receives an ID token. If a client uses a mix of built-in and custom scopes, Entra ID omits built-in scopes from the access tokens it issues.
+It is common in OAuth for a client to request a mix of OpenID Connect and custom scopes. Yet since the SPA gets user info via its API I configured only the *openid* built-in scope, so that the SPA receives an ID token. If a client uses a mix of built-in and custom scopes, Entra ID omits built-in scopes from the access tokens it issues.
 
 ```json
 {
@@ -101,16 +99,16 @@ It is common in OAuth for a client to request a mix of built-in and custom scope
 }
 ```
 
-### 7. Userinfo Flow
+### 7. User Info Flow
 
-The SPA downloads personal data from the OpenID Connect userinfo endpoint. This requires a Graph access token. The [On Behalf Of Flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-on-behalf-of-flow) swaps the SPA's access token for a Graph access token. However, this requires a client credential, and you cannot safely store one in an SPA. Therefore, the SPA cannot use this flow directly. Instead the SPA routes its userinfo request via its API.
+The SPA downloads personal data from the OpenID Connect userinfo endpoint. This requires a Graph access token so I use the [On Behalf Of Flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-on-behalf-of-flow) to swap the SPA's access token for a Graph access token. However, that flow requires a client credential, and you cannot safely store one in an SPA. Therefore, the SPA cannot use this flow directly. Instead the SPA routes its userinfo request via its API.
 
 The SPA calls the first URL below. The API performs the token exchange request and sends the Graph access token to the second URL to get userinfo. The API returns the resulting userinfo to the SPA:
 
 - *https://api.authsamples-dev.com/oauthuserinfo*
 - *https://graph.microsoft.com/oidc/userinfo*
 
-The API then sends a request to the Entra ID token endpoint with the following grant type to get a Graph access token. This request is based on the [RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523) specification and is sometimes called a *User Assertion*:
+To implement the *On Behalf Of* flow, the API sends a request to the Entra ID token endpoint with the following grant type to get a Graph access token. This request is based on the [RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523) specification and is sometimes called a *User Assertion*:
 
 - grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer
 
@@ -158,7 +156,7 @@ private async getGraphAccessToken(accessToken: string): Promise<string> {
 
 ### 8. Iframe Token Renewal
 
-The SPA uses almost identical code to the previous code sample, which used AWS Cognito as the default authorization server. The oidc-client-ts library continues to perform the security work in a portable manner, as described in these earlier blog posts:
+The SPA uses almost identical code to the previous code sample, which used AWS Cognito as the default authorization server. The *oidc-client-ts* library continues to perform the security work in a portable manner, as described in these earlier blog posts:
 
 - <a href='basicspa-codingkeypoints.mdx'>SPA 1 - Code Details</a>
 - <a href='basicapi-codingkeypoints.mdx'>SPA 2 - Code Details</a>
@@ -169,7 +167,7 @@ In the SPA you can click *Expire Access Token* followed by *Reload Data* to forc
 
 ![iframe token renewal](../images/200/iframe-token-renewal.jpg?v=20240822)
 
-This flow is no longer reliable in all browsers though. Some browsers, like Safari, may refuse to send the SSO cookie from an iframe.
+This flow is no longer reliable in all browsers though. Some browsers, like Safari, refuse to send the SSO cookie from an iframe with default browser settings.
 
 ### 9. Multi-Tab Browsing
 
@@ -177,13 +175,11 @@ Since the SPA uses in-memory token storage, opening a new tab / window, or reloa
 
 ### 10. Multi-Tab Logout
 
-Entra ID supports RP-initiated logout in the standard way, so oidc-client-ts implements this and sends an end-session request. The code sample implements multi-tab logout in a similar manner to the previous code sample. This and other related behaviours for ending sessions are described in this blog's <a href='logout.mdx'>Logout</a> page.
+Entra ID supports RP-initiated logout in the standard way, so I use the *oidc-client-ts* implementation to send an end session request. The Entra ID code sample implements multi-tab logout in a similar manner to this blog's previous SPA.
 
 ### 11. Extensible API Claims
 
 The API follows this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a> and uses some values for authorization that are not contained in the Entra ID access token. These are included in the *ClaimsPrincipal* object injected into the API's business logic. The earlier <a href='updated-api-coding-key-points.mdx'>API Code Details</a> blog post explained the techniques.
-
-![extensible claims](../images/200/extensible-claims.jpg)
 
 ### 12. Code Portability
 
