@@ -93,37 +93,29 @@ On all subsequent logins I only enter the username and password, until I am agai
 
 ### Step 4. Register an OAuth Client for the API
 
-By default, APIs are not OAuth clients. Microsoft have some rules around data protection that relate to the [RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707) proposed standard, which requires an API registration. I added a client called BasicAPI, without selecting a platform. I use this client to represent a logical collection of one or more related APIs. Access tokens issued later will use the below *Client ID* in their *audience* claim:
+My SPA client uses scopes and in Entra ID you create scopes within an OAuth client. Since scopes are an API concern that should be shareable across multiple clients, I created a dedicated API client. I added a client called *BasicAPI*, without selecting a platform. I use this client to represent a logical collection of one or more APIs for an *investments* business area. Access tokens later use the below *Client ID* in their *audience* claim:
 
 ![api client](../images/190/api-client.jpg)
 
-I then switched to the *Owners* tab and added my personal Microsoft user account as the owner of the application registration:
-
-![api owner](../images/190/api-owner.jpg)
-
-The API client registration define scopes. I navigated to *Expose an API* and created a custom scope called *investments*:
+The API client registration defines scopes. I navigated to *Expose an API* and created a custom scope called *investments*:
 
 ![api custom scope](../images/190/api-custom-scope.jpg)
 
-The API acts as a client to the Microsoft Graph endpoint, to get userinfo. Under *API Permissions*, I selected *Add a permission / Microsoft Graph / Delegated permissions* and added the *openid* and *profile* built-in OpenID Connect scopes. I also selected the *Grant Admin Consent for Default Directory* option:
+The API later acts as a client to the Microsoft Graph endpoint, to get userinfo. Under *API Permissions*, I selected *Add a permission / Microsoft Graph / Delegated permissions* and added the *openid* and *profile* built-in OpenID Connect scopes. I also selected the *Grant Admin Consent for Default Directory* option:
 
 ![api permissions](../images/190/api-permissions.jpg)
 
-Next, I created a client secret which the API will use when it connects to Microsoft Graph:
+Next, I created a client secret which the API uses when it connects to Microsoft Graph:
 
 ![api client secret](../images/190/api-client-secret.jpg)
 
-Finally, I edited the manifest data to use the latest access token version:
-
-![api manifest](../images/190/api-manifest.jpg)
-
 ### Step 5. Register an OAuth Client for the SPA
 
-Under *Applications / App Registrations*, I selected *New Registration* and added a client called BasicSPA, selecting the *Single Page Application* platform type.
+Under *Applications / App Registrations*, I selected *New Registration* and added a client called *BasicSPA*, selecting the *Single Page Application* platform type.
 
 ![spa client](../images/190/spa-client.jpg?v=20240816)
 
-I made my personal account the owner of this application registration and again updated to the latest access token format. Next, I navigated to API Permissions, selected *Add a permission / My APIs* and chose the investments scope. Again I selected the *Grant Admin Consent for Default Directory* option:
+Next, I navigated to *API Permissions*, selected *Add a permission / My APIs* and chose the *investments* scope. Again I selected the *Grant Admin Consent for Default Directory* option:
 
 ![spa permissions](../images/190/spa-permissions.jpg)
 
@@ -136,34 +128,32 @@ Next I defined two custom attributes to store against user accounts in the ident
 | manager_id | A business user identity that the API receives in access tokens. |
 | role | A user role that the API uses in its authorization logic. |
 
-I navigated to the *Cross-Tenant Synchronization* screen and added these fields to the user accounts schema:
+I navigated to the *Custom User Attributes* screen and added the fields to the user accounts schema:
 
 ![custom user attributes](../images/190/custom-user-attributes.jpg)
 
-Populating these values for my two test user accounts was a little cryptic. First I created a new client called *UserAdmin* without setting a platform. I then generated a client secret. Again I made my Microsoft account the owner and updated to the access token version 2 format. In total I created the following registrations:
+Populating these values for my two test user accounts was a little convoluted and took me some time to understand. Eventually, I created a new client called *UserAdmin* without setting a platform. I then generated a client secret. In total my account uses the following registrations:
 
 ![app registrations](../images/190/app-registrations.jpg)
 
-Entra ID automatically creates the extensions app ands store custom user attributes there. The *UserAdmin* app administers all user accounts using the client credentials flow. Therefore I granted it *User.ReadWriteAll* application permissions (not delegated permissions). To populate the values for my two test user accounts I had to write some client code to call the Graph API. I did this as a bash script that uses the [jq](https://github.com/jqlang/jq) tool. The code sample repository contains the script:
+Entra ID automatically creates the extensions app and stores custom user attributes there. The *UserAdmin* app is a backend client for administering all user accounts with the client credentials flow. Therefore I granted it *User.ReadWriteAll* application permissions (not delegated permissions). To populate the values for my two test user accounts I had to write some client code to call the Graph API. I did this as a bash script that uses the [jq](https://github.com/jqlang/jq) tool. The code sample repository contains the script:
 
 - [utils/populate_custom_user_attributes.sh](https://github.com/gary-archer/oauth.websample.azure/blob/master/utils/populate-custom-user-attributes.sh)
 
-My two custom user attributes are extension attributes with the following full technical names. The middle part is the *client_id* of the extensions app registration with hyphens removed:
+My two custom user attributes are extension attributes with the following full technical names. The middle part is the client ID of the extensions app registration with hyphens removed:
 
 - extension_32ee1b779fea4ee2be2dcaf30f23d83a_manager_id
 - extension_32ee1b779fea4ee2be2dcaf30f23d83a_role
 
 ### Step 7. Issue Custom Access Token Claims
 
-To customise access tokens you edit the API client registration, starting by selecting the following link. My code sample avoids customising ID tokens, but to do so you would follow an equivalent process for the SPA client registration:
+To customise access tokens you edit the API client registration, starting by selecting the following link:
 
 ![edit api client](../images/190/edit-api-client.jpg)
 
-This makes a *Single Sign On* tab available from which you can select *Attributes & Claims*. Here I added the custom claims using a source location of *Directory Schema Extension*. I used a *custom_* prefix to avoid conflicts with the built-in *role* claim:
+A *Single Sign On* tab is then available from which you can select *Attributes & Claims*. Here I added the custom claims using a source location of *Directory Schema Extension*. I used a *custom_* prefix to avoid conflicts with the built-in *role* claim:
 
 ![directory schema extensions](../images/190/directory-schema-extensions.jpg)
-
-Next you need to return to the API manifest and make a change to set *accessTokenMappedClaims=true*. This avoids cryptic warnings about the API needing its own signing key.
 
 ### Step 8. Download the Code Sample
 
@@ -200,7 +190,7 @@ For the SPA update both the *Tenant ID* and the SPA's *Client ID* to your own va
 
 ### Step 10. Update API Configuration
 
-For the API configuration, replace the *Tenant ID* with your own value, and also update the *Audience* and *Client ID* values with those for the API:
+For the API configuration, replace the *Tenant ID* with your own value. Also update the *Audience* and *Client ID* values with those for the API:
 
 ```json
 {
@@ -241,9 +231,11 @@ Update the hosts file on your computer to include this blog's local development 
 127.0.0.1 www.authsamples-dev.com api.authsamples-dev.com
 ```
 
-The API and web static content hosting use SSL so you must create development certificates. Ensure that OpenSSL 3+ is installed and then run the following script:
+The API and web static content hosting use SSL so you must create development certificates. Ensure that OpenSSL 3+ is installed and then run the following commands:
 
 ```bash
+export SECRETS_FOLDER="$HOME/secrets"
+mkdir "$SECRETS_FOLDER"
 ./certs/create.sh
 ```
 
@@ -255,13 +247,13 @@ certs/authsamples-dev.ca.crt
 
 ### Step 12. Build and Run the SPA and API
 
-Next run the following script, to build the code and run the API over SSL on port 443. The default browser then runs at *https://www.authsamples-dev.com/spa*. The SPA redirects to Microsoft online and you can sign in with one of the test user accounts:
+Next run the following script, to build the code and run the API over SSL on port 443. The default browser then runs at *https://www.authsamples-dev.com/spa/*. The SPA redirects to Entra ID and you can sign in with one of the test user accounts:
 
 ```bash
 ./build.sh && ./run.sh
 ```
 
-Login completes successfully and you can run the same SPA and API that was previously run against AWS Cognito. There are some minor OAuth differences but both apps use essentially the same code.
+Login completes successfully and you can run the same SPA and API that I previously ran against AWS Cognito. There are some minor OAuth differences but both apps use essentially the same code.
 
 ### Where Are We?
 

@@ -46,9 +46,11 @@ First add the following logging domain name to your computer's hosts file:
 127.0.0.1 logs.authsamples-dev.com
 ```
 
-Kibana runs using an HTTPS URL so you must create development certificates. Ensure that OpenSSL 3+ is installed and then run the following script:
+Kibana runs using an HTTPS URL so you must create development certificates. Ensure that OpenSSL 3+ is installed and then run the following commands:
 
 ```bash
+export SECRETS_FOLDER="$HOME/secrets"
+mkdir "$SECRETS_FOLDER"
 ./certs/create.sh
 ```
 

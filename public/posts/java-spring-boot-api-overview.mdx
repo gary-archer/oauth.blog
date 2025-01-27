@@ -63,9 +63,11 @@ git clone https://github.com/gary-archer/oauth.apisample.javaspringboot
 
 ### Step 2: Create SSL Certificates
 
-Run the following command, which creates some OpenSSL development certificates:
+Run the following commands, to create some OpenSSL development certificates:
 
 ```bash
+export SECRETS_FOLDER="$HOME/secrets"
+mkdir "$SECRETS_FOLDER"
 ./certs/create.sh
 ```
 To prevent SSL trust problems from tests or the browser you may need to <a href='developer-ssl-setup.mdx'>Configure Java and Browser Trust</a> for the root certificate at the following location. 
