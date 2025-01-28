@@ -38,36 +38,41 @@ openssl req \
     -key $DOMAIN.ca.key \
     -out $DOMAIN.ca.crt \
     -subj "/CN=Example Development CA" \
-    -days 3650 \
-    -addext 'basicConstraints=critical,CA:TRUE'
+    -days 3650
 ```
 
-Next, run commands to create a second asymmetric private key and public certificate. You use the root certificate to issue the SSL server certificate. You can create domains for development by just editing your */etc/hosts* file. To ensure that these are trusted domains when you use them in SSL connections, include them in the *subjectAltName* extension field. 
+You can create domains for development by just editing your */etc/hosts* file. To ensure that these are trusted domains when you use them in SSL connections, create an *extensions.cnf* file that references them as subject alternative names:
 
+```markdown
+[ server_ext ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName=DNS:example.com,DNS:api.example.com,DNS:www.example.com
+```
+
+Next, run commands to create a second asymmetric private key and public certificate. You use the private key to sign a certificate signing request (CSR) and then request an X509 certificate with the CSR:
 
 ```bash
 openssl ecparam -name prime256v1 -genkey -noout -out $DOMAIN.ssl.key
 
 openssl req \
-    -x509 \
     -new \
-    -CA $DOMAIN.ca.crt \
-    -CAkey $DOMAIN.ca.key \
     -key $DOMAIN.ssl.key \
-    -out $DOMAIN.ssl.crt \
-    -subj "/CN=*.$DOMAIN.com" \
-    -days 365 \
-    -addext 'basicConstraints=critical,CA:FALSE' \
-    -addext 'extendedKeyUsage=serverAuth' \
-    -addext "subjectAltName=DNS:$DOMAIN.com,DNS:www.$DOMAIN.com,DNS:api.$DOMAIN.com"
+    -out $DOMAIN.ssl.csr \
+    -subj "/CN=*.$DOMAIN.com"
 
-openssl pkcs12 \
-    -export \
-    -inkey $DOMAIN.ssl.key \
-    -in $DOMAIN.ssl.crt \
-    -name *.$DOMAIN.com \
-    -out $DOMAIN.ssl.p12 \
-    -passout pass:Password1
+openssl x509 -req \
+    -in "$DOMAIN.ssl.csr" \
+    -CA "$DOMAIN.ca.crt" \
+    -CAkey "$DOMAIN.ca.key" \
+    -out "$DOMAIN.ssl.crt" \
+    -sha256 \
+    -days 365 \
+    -extfile extensions.cnf \
+    -extensions server_ext
+
+rm example.ssl.csr
 ```
 
 In total this results in the following files:
