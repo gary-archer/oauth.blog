@@ -28,15 +28,15 @@ Doing so simplifies trust administration, since you only need to deploy root CAs
 I use the OpenSSL command line tool to create certificates for development. I first create an asymmetric private key and long-lived public certificate for a root authority:
 
 ```bash
-DOMAIN=example
+DOMAIN='example'
 
 openssl ecparam -name prime256v1 -genkey -noout -out $DOMAIN.ca.key
 
 openssl req \
     -x509 \
     -new \
-    -key $DOMAIN.ca.key \
-    -out $DOMAIN.ca.crt \
+    -key "$DOMAIN.ca.key" \
+    -out "$DOMAIN.ca.crt" \
     -subj "/CN=Example Development CA" \
     -days 3650
 ```
@@ -51,15 +51,20 @@ extendedKeyUsage = serverAuth
 subjectAltName=DNS:example.com,DNS:api.example.com,DNS:www.example.com
 ```
 
-Next, run commands to create a second asymmetric private key and public certificate. You use the private key to sign a certificate signing request (CSR) and then request an X509 certificate with the CSR:
+Next, run commands to create an SSL private key and public certificate:
+
+- Use the private key to sign a certificate signing request (CSR).
+- Request an X509 certificate with the CSR.
+- Act as a certificate authority that accepts the request and applies a policy to issue a certificate.
+- Save the SSL key and certificate to a password protected PKCS#12 file with a *.p12* or *.pfx* extension.
 
 ```bash
 openssl ecparam -name prime256v1 -genkey -noout -out $DOMAIN.ssl.key
 
 openssl req \
     -new \
-    -key $DOMAIN.ssl.key \
-    -out $DOMAIN.ssl.csr \
+    -key "$DOMAIN.ssl.key" \
+    -out "$DOMAIN.ssl.csr" \
     -subj "/CN=*.$DOMAIN.com"
 
 openssl x509 -req \
@@ -72,6 +77,14 @@ openssl x509 -req \
     -extfile extensions.cnf \
     -extensions server_ext
 
+openssl pkcs12 \
+    -export \
+    -inkey "$DOMAIN.ssl.key" \
+    -in "$DOMAIN.ssl.crt" \
+    -name "*.$DOMAIN.com" \
+    -out "$DOMAIN.ssl.p12" \
+    -passout "pass:Password1"
+
 rm example.ssl.csr
 ```
 
@@ -83,7 +96,7 @@ In total this results in the following files:
 | example.ca.key | The root CA's private key. |
 | example.ssl.crt | The SSL certificate. |
 | example.ssl.key | The SSL certificate's private key. |
-| example.ssl.p12 | The protected key and certificate, used by APIs. |
+| example.ssl.p12 | The protected key and certificate, that can be used by APIs. |
 
 You can use an [Online Certificate Decoder](https://certlogik.com/decoder/) and paste in the *example.ssl.crt* contents to see how recipients view the server's SSL certificate:
 
