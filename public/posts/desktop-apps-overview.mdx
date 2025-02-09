@@ -4,7 +4,7 @@ Previously I summarised this blog's <a href='native-architecture-goals.mdx'>Nati
 
 ### Features
 
-The behaviour provided in our initial sample is summarised below:
+The behaviour provided in the initial sample is summarised below:
 
 | Feature | Description |
 | ------- | ----------- |
@@ -41,28 +41,50 @@ A web client runs in a browser and has an addressable URL on which to receive lo
 | Private URI Scheme | *x-authsamples-myapp:/callback* | Mobile or desktop apps |
 | Claimed HTTPS Scheme | *https://mobile.authsamples.com/appname/callback* | Mobile apps |
 
-### The AppAuth-JS Code Sample
+### Run the Minimal AppAuth-JS Code Sample
 
-The app uses the [AppAuth-JS Library](https://github.com/openid/AppAuth-JS) to implement the OpenID Connect authorization code flow. Before running this blog's desktop app, you can quickly run the AppAuth-JS Electron code sample. To do so, run the following commands:
+Before running this blog's code sample you can run a minimal app that uses the [AppAuth-JS Library](https://github.com/openid/AppAuth-JS) to implement the OpenID Connect authorization code flow. First run the following commands:
 
 ```bash
 git clone https://github.com/googlesamples/appauth-js-electron-sample
 cd appauth-js-electron-sample
 npm install
-npm start
 ```
 
-A minimal desktop app runs and you can click the *Sign In* option to invoke an OAuth login on the system browser:
+Then edit the following details in the *flow.ts* module to point the app to my test AWS Cognito client:
+
+| Field | Value |
+| ---- | ----- |
+| openIdConnectUrl | *https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9* |
+| clientId | 53osemtot8tp3n3qct5r2hijk3 |
+| redirectUri | *http://localhost:8000* |
+| scope | openid email profile |
+
+In the *app.ts* module, use *https://login.authsamples.com/oauth2/userInfo* as the userInfo URL and then edit the *updateUI* function:
+
+```typescript
+private updateUi() {
+    this.handleSignIn.textContent = SIGN_OUT;
+    this.fetchUserInfo.style.display = '';
+    if (this.userInfo) {
+        this.userName.textContent = `Welcome ${this.userInfo.given_name} ${this.userInfo.family_name}`
+        this.userCard.style.display = '';
+    }
+}
+```  
+
+Then run *npm start* to run the minimal desktop app:
 
 ![appauth unauthenticated](../images/410/appauth-unauthenticated.jpg)
 
-When the *Sign In* link is clicked, the desktop app opens the system browser, using Google as the authorization server. If the user is not already signed in to the browser there is a prompt to authenticate:
+Click the *Sign In* option to invoke an OAuth login on the system browser and sign in with the following credentials:
 
-![appauth login](../images/410/appauth-login.jpg)
+- User: *guestuser@example.com*
+- Password: *GuestPassword1*
 
-The desktop app supplies a *loopback* value of *http://127.0.0.1:8000* for the OAuth redirect URI, and runs an HTTP server on this network interface and port, to listen for the response. After login, the HTTP server receives the authorization response and notifies the desktop app. The desktop app then extracts the authorization code and swaps it for tokens, after which it can call APIs. The login user experience for the desktop view is not ideal. After login there is a disconnected browser window with a blank page.
+The app opens the system browser at the authorization server and then runs an HTTP server at *http://localhost:8000* that receives the login response. The desktop app extracts the authorization code from the login response and swaps it for tokens, after which it can call APIs.
 
-![appauth authenticated](../images/410/appauth-authenticated.jpg)
+![appauth authenticated](../images/410/appauth-authenticated.jpg?v=20250209)
 
 ### Where Are We?
 
