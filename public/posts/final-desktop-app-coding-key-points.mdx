@@ -116,7 +116,7 @@ public handleDeepLink(deepLinkUrl: string): boolean {
     const url = UrlParser.tryParse(deepLinkUrl);
     if (url && url.pathname) {
         const path = url.pathname.replace(this.configuration.oauth.privateSchemeName + ':', '');
-        this.window!.webContents.send(IpcEventNames.ON_DEEP_LINK, path);
+        this.window!.webContents.send(IpcEventNames.ON_DEEP_LINK, {path});
     }
 
     return false;
@@ -180,7 +180,7 @@ The OAuth processing code calls the TokenStorage class after the following event
 - When the desktop app starts, to load tokens.
 - After the authorization code grant, to save tokens.
 - After the refresh token grant, to update tokens.
-- When the user signs out, to remove tokens.
+- When the user signs out or the session expires, to remove tokens.
 
 ### Concurrent Operations
 
@@ -188,11 +188,13 @@ React renders the desktop app's views in a non-deterministic sequence, so the fo
 
 ![concurrent api requests](../images/450/concurrent-api-requests.jpg)
 
-This can lead to the following scenarios and the desktop app handles concurrency correctly in all cases:
+This can lead to the following scenarios:
 
 - One or both views could experience a technical error.
 - One or both views may need to refresh an access token.
 - One or both views may need to trigger a login redirect.
+
+The desktop code sample handles these conditions in the same manner with the same React code as this blog's final SPA code sample. See the <a href='reactjs-codingkeypoints.mdx'>Final SPA - Code Details</a> blog post to understand the API client logic.
 
 ### AppAuth Libraries
 

@@ -81,7 +81,7 @@ The final desktop app's configuration no longer uses HTTP ports, and now uses lo
 }
 ```
 
-I created a new OAuth client for the final desktop app, which uses these updated redirect URIs:
+I created a new OAuth client for the final desktop app, which uses updated redirect URIs:
 
 ![oauth client](../images/440/oauth-client.jpg?v=20240925)
 
@@ -116,7 +116,7 @@ The [Electron Packager](https://github.com/electron/packager) then builds a bina
 
 ![built binary](../images/440/built-binary.jpg?v=20240925)
 
-The following screenshots show the appearance of the user prompt in the four main desktop browsers. This prompt may be a usability issue, so you may prefer loopback redirect URIs, which avoids this type of prompt when used correctly.
+The following screenshots show the appearance of the user prompt in the four main desktop browsers. The user can select the *Always Allow* option to avoid continual prompts on every login:
 
 **Google Chrome**
 
@@ -157,11 +157,11 @@ MimeType=x-scheme-handler/x-authsamples-desktopapp
 
 ### Secure Token Storage
 
-The desktop app stores OAuth tokens in a text file. I use [Electron safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage) to create an operating system encryption key private to the user and app, to avoid storing tokens in plain text. On macOS the encryption key is saved to the Keychain. On Windows and Linux the key is less visible. Windows uses the *DPAPI* subsystem, and my Ubuntu Linux system uses the *GNOME libsecret* subsystem. Further details on the underlying security are discussed in [this online thread](https://github.com/microsoft/vscode-discussions/discussions/748).
+The desktop app stores OAuth tokens in a text file. I use [Electron safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage) to create an operating system encryption key that only the app and user can access. On macOS the encryption key is saved to the Keychain. On Windows and Linux the key is less visible. Windows uses the *DPAPI* subsystem, and my Ubuntu Linux system uses the *GNOME libsecret* subsystem. Further details on the underlying security are discussed in [this online thread](https://github.com/microsoft/vscode-discussions/discussions/748).
 
 ![encryption key](../images/440/encryption-key.jpg)
 
-The actual tokens are stored as base64 encrypted bytes in a JSON file at one of the following locations:
+The text file contains base64 encoded encrypted bytes produced with the encryption key. The overall file has a JSON structure and the app stores it at one of the following locations:
 
 | Operating System | Stored Tokens Location |
 | ---------------- | ---------------------- |
