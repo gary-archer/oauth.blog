@@ -75,7 +75,7 @@ The renderer process runs an SPA in the Chromium browser host, with the followin
 
 ### Electron Builds
 
-The desktop app uses TypeScript and builds to ECMAScript modules, which is a little tricky to get working. Two webpack builds run, to produce the following bundle files from the code layout and the *node_modules* folder:
+I wanted to use modern TypeScript code, which Electron does not easily support. Therefore, I used Webpack to build to ECMAScript modules, which is a little tricky to get working in both main and renderer processes. Two webpack builds run, to produce the following bundle files from the code layout and the *node_modules* folder:
 
 <div className='smallimage'>
     <img src='../images/430/bundles.jpg?v=20240922' alt='bundles' />
@@ -129,7 +129,7 @@ export default config;
 
 ### Inter Process Communication
 
-The Electron app follows Electron's [Security Best Practices](https://www.electronjs.org/docs/latest/tutorial/security) so that the renderer process runs with least privilege. It therefore does not have permissions to perform operations like running an HTTP server or opening the system browser. Instead, to initiate this type of operation, the desktop app uses Electron's [Inter-Process Communication](https://www.electronjs.org/docs/latest/tutorial/ipc). I also proxy API requests via the backend to keep tokens out of the Chromium browser. The main process registers some IPC event handlers for the following event names:
+The Electron app follows Electron's [Security Best Practices](https://www.electronjs.org/docs/latest/tutorial/security) so that the renderer process runs with least privilege. It therefore does not have permissions to perform OAuth operations like running an HTTP server or opening the system browser. Instead, to initiate this type of operation, the desktop app uses Electron's [Inter-Process Communication](https://www.electronjs.org/docs/latest/tutorial/ipc). I also proxy API requests via the backend to keep tokens out of the Chromium browser. The main process registers some IPC event handlers for the following event names:
 
 ```typescript
 export class IpcEventNames {
@@ -224,7 +224,7 @@ The main and renderer process can send JavaScript objects to each other. I wrote
 
 ### OAuth and API Classes
 
-The following main classes are used to handle OAuth and API logic. The strategy is to drive behaviour from the renderer process so that the frontend is in control. The interplay is a little intricate, since the app also handles many error conditions. Since the frontend only uses forwarders, the following sections focus on the backend classes.
+The following main classes are used to handle OAuth and API logic. The strategy is to drive behaviour from the renderer process so that the frontend is in control. Since the frontend only uses forwarders, the following sections focus on the backend classes.
 
 | Class | Responsibilities |
 | ----- | ---------------- |
@@ -235,7 +235,7 @@ The following main classes are used to handle OAuth and API logic. The strategy 
 
 ### Debugging HTTP Requests
 
-One consequence of this design is that you cannot easily view HTTP requests that the renderer process initiates. To view the requests you can use an <a href='http-debugging-setup.mdx'>HTTP proxy tool</a>. The easiest option is to run the tool and change your network settings, then edit the *desktop.config.json* file to activate the proxy, then run the desktop app with the following commands:
+One consequence of this design is that you cannot easily view HTTP requests that the renderer process initiates. To view the requests you can use an <a href='http-debugging-setup.mdx'>HTTP proxy tool</a>. The easiest option is to run the tool and change your network settings, then edit the *desktop.config.json* file to activate the proxy, then run the desktop app with the following commands to trust the HTTP proxy's man in the middle certificate:
 
 ```bash
 export NODE_TLS_REJECT_UNAUTHORIZED=0
@@ -419,10 +419,9 @@ private async startServer(): Promise<void> {
             this.configuration.loopbackMaxPort),
         host: this.configuration.loopbackHostname,
     };
+
     LoopbackWebServer.runtimePort = await getPort(options);
-
     LoopbackWebServer.server = Http.createServer(this.handleBrowserRequest);
-
     LoopbackWebServer.server.listen(LoopbackWebServer.runtimePort);
 }
 ```
@@ -468,7 +467,7 @@ private async endLogin(result: LoginRedirectResult): Promise<void> {
 }
 ```
 
-The initial desktop app simply stores its tokens in-memory. Every time the app restarts the user is prompted to re-login. I show how to improve this user experience in the final desktop code sample.
+The initial desktop app simply stores its tokens in-memory. Every time the app restarts the user must re-authenticate. I show how to improve this user experience in the final desktop code sample.
 
 ### Handling Re-Entrancy
 
@@ -556,7 +555,7 @@ private async performTokenRefresh(): Promise<void> {
 }
 ```
 
-When the refresh token finally expires, the app receives an error  res[pmse with an *invalid_grant* error code. The desktop app then removes tokens from memory and redirects the user back to the login required view.
+When the refresh token finally expires, the app receives an error response with an *invalid_grant* error code. The desktop app then removes tokens from memory and redirects the user back to the login required view.
 
 ### Token Expiry Testing
 
