@@ -51,7 +51,11 @@ cd appauth-js-electron-sample
 npm install
 ```
 
-Then edit the following details in the *flow.ts* module to point the app to my test AWS Cognito client:
+In this post I point the AppAuth code sample to a client that I registered in my personal instance of AWS Cognito, which you can use as this blog's default authorization server:
+
+![oauth client](../images/410/oauth-client.jpg)
+
+You can update the app to the following OAuth client settings:
 
 | Field | Value |
 | ---- | ----- |
@@ -60,7 +64,7 @@ Then edit the following details in the *flow.ts* module to point the app to my t
 | redirectUri | *http://localhost:8000* |
 | scope | openid email profile |
 
-In the *app.ts* module, use *https://login.authsamples.com/oauth2/userInfo* as the userInfo URL and then edit the *updateUI* function:
+To do so, edit the details in the *flow.ts* module. Also, in the *app.ts* module, use *https://login.authsamples.com/oauth2/userInfo* as the userInfo URL and then replace the *updateUI* function with the following code:
 
 ```typescript
 private updateUi() {

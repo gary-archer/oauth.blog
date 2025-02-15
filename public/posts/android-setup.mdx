@@ -1,10 +1,10 @@
 # Android Setup and AppAuth Sample
 
-Previously we discussed <a href='final-desktop-app-coding-key-points.mdx'>Code Details</a> for the final desktop code sample. Next we will get a basic Android OAuth setup working, by running the AppAuth Android code sample.
+Previously I explained some <a href='final-desktop-app-coding-key-points.mdx'>Code Details</a> for the final desktop code sample. Next I show how to get a basic Android OAuth setup working, by running the AppAuth Android code sample.
 
 ### Step 1: Install Android Studio
 
-First I downloaded and installed an up to date version of [Android Studio](https://developer.android.com/studio/index.html), which installs the Android SDK to a location such as *~/Android/sdk*. Also update the *PATH* environment variable to enable use of Android tools from the command line:
+First use an up to date version of [Android Studio](https://developer.android.com/studio/index.html), which installs the Android SDK to a location such as *~/Android/sdk*. Optionally, update the *PATH* environment variable to enable use of Android tools from the command line:
 
 ```bash
 export PATH="$HOME/Android/Sdk/tools:$HOME/Android/Sdk/platform-tools"
@@ -12,7 +12,7 @@ export PATH="$HOME/Android/Sdk/tools:$HOME/Android/Sdk/platform-tools"
 
 ### Step 2: Get the AppAuth Android Sample
 
-Download the code sample via the following command. From Android Studio's home screen select *Open* and navigate to the downloaded folder:
+Download the code sample with the following command. From Android Studio's home screen select *Open* and navigate to the downloaded folder:
 
 ```bash
 git clone https://github.com/openid/AppAuth-Android
@@ -20,17 +20,17 @@ git clone https://github.com/openid/AppAuth-Android
 
 Ignore prompts to update the Gradle plugin and wait a couple of minutes for dependencies to download. You will then see two projects, for the library and the app:
 
-![demo app](../images/460/demo-app.jpg)
+![demo app](../images/460/demo-app.jpg?v=20250215)
 
 ### Step 3: Understand Mobile OAuth Client Settings
 
-In this post we will point the AppAuth code sample to a client that I registered in this blog's AWS Cognito authorization server:
+In this post I point the AppAuth code sample to a client that I registered in my personal instance of AWS Cognito, which you can use as this blog's default authorization server:
 
-![oauth client1](../images/460/oauth-client1.jpg)
+![oauth client](../images/460/oauth-client.jpg)
 
-![oauth client2](../images/460/oauth-client2.jpg)
+### Step 4: Update OAuth Application Configuration
 
-The AppAuth settings are summarised below:
+You can update the app to the following OAuth client settings:
 
 | Field | Value |
 | ----- | ----- |
@@ -39,9 +39,7 @@ The AppAuth settings are summarised below:
 | Scope | openid email profile |
 | Discovery URI | [https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/openid-configuration](https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/openid-configuration) |
 
-### Step 4: Update OAuth Application Configuration
-
-Navigate to *app/res/raw/auth_config.json* and update the settings, pasting in the *Client ID* and *Discovery URI*:
+To do so, navigate to the file at *app/res/raw/auth_config.json* and paste in the values:
 
 ```json
 {
@@ -58,48 +56,46 @@ Navigate to *app/res/raw/auth_config.json* and update the settings, pasting in t
 }
 ```
 
-Note that login redirects are configured to use a *Private URI Scheme*, and the scheme used is configured in the app's *build.gradle* file::
+Note that login redirects use a *Private URI Scheme*, with the scheme value from the app's *build.gradle* file::
 
-![oauth settings](../images/460/oauth-settings.jpg)
+![oauth settings](../images/460/oauth-settings.jpg?v=20250215)
 
 ### Step 5. Run the Sample App on an Emulator
 
-From Android Studio. navigate to *Device Manager*, then create an emulator if required. The emulator must have the *Play Store* icon enabled, so that Google Chrome is installed:
+From Android Studio. navigate to *Device Manager*, then create an emulator if required. Ensure that the emulator shows the *Play Store* icon so that it has a working Google Chrome browser:
 
-![emulator](../images/460/emulator.jpg)
+![emulator](../images/460/emulator.jpg?v=20250215)
 
-Run the app using the emulator, which will result in this display:
+Run the app using the emulator, which results in the following display:
 
 <div className='smallimage'>
     <img src='../images/460/emulator-app.jpg?v=20240804' alt='emulator app' />
 </div>
 
-When prompted you can login with this blog's cloud test credential:
+Click *Start Authorization* and sign in with this blog's test user credential:
 
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
 
-During login the system browser is invoked as a [Chrome Custom Tab](https://developer.chrome.com/multidevice/android/customtabs), which renders the AWS Cognito login screen:
+During login the system browser runs as a [Chrome Custom Tab](https://developer.chrome.com/multidevice/android/customtabs), which renders the AWS Cognito login screen:
 
 <div className='smallimage'>
     <img src='../images/460/chrome-custom-tab.jpg?v=20240804' alt='chrome custom tab' />
 </div>
 
-After login you will be returned to the app, which displays information about tokens. You can also send the access token to Cognito's User Info endpoint, to get name details for the test user account:
+After login, control returns to the app, which displays information about OAuth tokens issued. You can also send the access token to Cognito's user info endpoint, to get name details for the test user account:
 
 <div className='smallimage'>
     <img src='../images/460/logged-in.jpg?v=20240804' alt='logged in' />
 </div>
 
-To get the refresh token on some authorization servers, an additional scope called *offline_access* may need to be specified in both the OAuth client registration and the app's JSON configuration.
-
-At the time of writing, you will get an error if you try to use the *Sign Out* option when using AWS Cognito, since it uses a vendor specific logout solution, as described in the <a href='logout.mdx'>Logout</a> post.
+At the time of writing, you will get an error if you try to use the *Sign Out* option when using AWS Cognito, since that authorization server requires a vendor specific logout solution.
 
 ### Where Are We?
 
-We have gained an initial understanding of how to run an OAuth-secured mobile app from Android Studio. Shortly we will run this blog's <a href='android-code-sample-overview.mdx'>Android Code Sample</a>, which demonstrates much more complete OAuth behaviour.
+I showed the basics of running an OAuth-secured mobile app from Android Studio. Shortly I will explain this blog's <a href='android-code-sample-overview.mdx'>Android Code Sample</a>, which demonstrates much more complete OAuth behaviour.
 
 ### Next
 
-- Next we will demonstrate <a href='android-https-debugging.mdx'>Android HTTPS Tracing of OAuth Messages</a>
-- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>
+- Next I explain <a href='android-https-debugging.mdx'>Android HTTPS Tracing of OAuth Messages</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.
