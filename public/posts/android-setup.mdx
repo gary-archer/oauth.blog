@@ -60,7 +60,7 @@ Note that login redirects use a *Private URI Scheme*, with the scheme value from
 
 ![oauth settings](../images/460/oauth-settings.jpg?v=20250215)
 
-### Step 5. Run the Sample App on an Emulator
+### Step 5. Run the App on an Emulator
 
 From Android Studio. navigate to *Device Manager*, then create an emulator if required. Ensure that the emulator shows the *Play Store* icon so that it has a working Google Chrome browser:
 
@@ -77,7 +77,7 @@ Click *Start Authorization* and sign in with this blog's test user credential:
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
 
-During login the system browser runs as a [Chrome Custom Tab](https://developer.chrome.com/multidevice/android/customtabs), which renders the AWS Cognito login screen:
+During login the system browser runs as a [Chrome Custom Tab](https://developer.chrome.com/multidevice/android/customtabs), which overlays the mobile view and the app itself cannot access the user's credentials:
 
 <div className='smallimage'>
     <img src='../images/460/chrome-custom-tab.jpg?v=20240804' alt='chrome custom tab' />
@@ -93,7 +93,7 @@ At the time of writing, you will get an error if you try to use the *Sign Out* o
 
 ### Where Are We?
 
-I showed the basics of running an OAuth-secured mobile app from Android Studio. Shortly I will explain this blog's <a href='android-code-sample-overview.mdx'>Android Code Sample</a>, which demonstrates much more complete OAuth behaviour.
+I showed how to run an OAuth-secured mobile app from Android Studio. Shortly I will explain this blog's <a href='android-code-sample-overview.mdx'>Android Code Sample</a>, which demonstrates much more complete OAuth behaviour.
 
 ### Next
 

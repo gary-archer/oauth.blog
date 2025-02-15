@@ -1,18 +1,16 @@
 # iOS Setup and AppAuth Code Sample
 
-Previously we completed our <a href='android-https-debugging.mdx'>Android HTTP Debugging Setup</a>. Next we will get a basic iOS OAuth setup working, via the AppAuth iOS code sample.
+Previously I explained an <a href='android-https-debugging.mdx'>Android HTTP Debugging Setup</a>. Next I show how to get a basic iOS OAuth setup working, by running the AppAuth iOS code sample.
 
-### Step 1: Sign up with Apple
+### Step 1: Apple Setup
 
-I signed up for a *Personal Apple Account* so that I could get development tools and run mobile apps on real iOS devices:
+I first signed up for a *Personal Apple Account* so that I could get development tools and run mobile apps on real iOS devices:
 
 ![apple account](../images/480/apple-account.jpg)
 
-### Step 2: Install Xcode
+I then downloaded the latest [Xcode](https://developer.apple.com/xcode/) development tool, with support for the most recent iOS operating systems and the latest version of the Swift programming language.
 
-I next downloaded and installed the latest [Xcode](https://developer.apple.com/xcode/) development tool, with support for the most recent iOS operating systems and the latest version of the Swift programming language.
-
-### Step 3: Get the AppAuth iOS Sample
+### Step 2: Get the AppAuth iOS Sample
 
 Download the code sample via the following command:
 
@@ -24,30 +22,31 @@ From Xcode's home screen, select *File / Open* and navigate to the *AppAuth-iOS/
 
 ![xcode build](../images/480/xcode-build.jpg)
 
-### Step 4: Add the AppAuth Dependency
+### Step 3: Add the AppAuth Dependency
 
 By default the code sample uses the Carthage dependency tool, which I prefer to avoid. Therefore, I start with some cleanup, by removing the following items:
 
-- The *Example_Extension* folder
-- The *AppAuth* entries under *Frameworks*
-- The *Carthage* section under *Build Phases*
-- The project should then look like this:
+- The *Example_Extension* folder.
+- The *AppAuth* entries under *Frameworks*.
+- The *Carthage* section under *Build Phases*.
+
+The Xcode project should then contain the following content:
 
 ![xcode project](../images/480/xcode-project.jpg)
 
-I then add AppAuth using the Swift dependency manager, from the above screen, by providing the URL of the AppAuth iOS repo. When prompted, I add the *AppAuth* and *AppAuthCore* packages to the code sample's target:
+I then add AppAuth using the Swift dependency manager, from the above screen, by providing the URL of the AppAuth iOS GitHub repository. When prompted, I add the *AppAuth* and *AppAuthCore* packages to the code sample's target:
 
 ![xcode dependencies](../images/480/xcode-dependencies.jpg?v=20240804)
 
-### Step 5: Understand Mobile OAuth Client Settings
+### Step 4: Understand Mobile OAuth Client Settings
 
-In this post we will point the AppAuth code sample to a client that I registered in this blog's AWS Cognito authorization server:
+In this post I point the AppAuth code sample to a client that I registered in my personal instance of AWS Cognito, which you can use as this blog's default authorization server:
 
-![oauth client 1](../images/480/oauth-client1.jpg)
+![oauth client](../images/460/oauth-client.jpg)
 
-![oauth client 2](../images/480/oauth-client2.jpg)
+### Step 5: Update OAuth Client Settings
 
-The AppAuth settings are summarised below:
+You can update the app to the following OAuth client settings:
 
 | Field | Value |
 | ----- | ----- |
@@ -56,9 +55,7 @@ The AppAuth settings are summarised below:
 | Scope | openid email profile |
 | Issuer URI | *https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9* |
 
-### Step 6: Update OAuth Client Settings
-
-Before running the app, make the edits documented in the [Example README](https://github.com/openid/AppAuth-iOS/tree/master/Examples/Example-iOS_Swift-Carthage), to change the below settings in the *AppAuthExampleViewController.swift* module:
+To do so, make the edits from the [Example README](https://github.com/openid/AppAuth-iOS/tree/master/Examples/Example-iOS_Swift-Carthage), to change the below settings in the *AppAuthExampleViewController.swift* module:
 
 ```swift
 let kIssuer: String = "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9";
@@ -70,48 +67,36 @@ You must also register the *Redirect URI Scheme* in the mobile app's *info.plist
 
 ![info plist](../images/480/info-plist.jpg)
 
-Note also the contents of the OAuth scopes array. For some providers you will need to add the *offline_access* scope in order to get a refresh token, though Cognito does not require this.
+### Step 6: Run the App on a Simulator
 
-```swift
-let request = OIDAuthorizationRequest(configuration: configuration,
-                                      clientId: clientID,
-                                      clientSecret: clientSecret,
-                                      scopes: [OIDScopeOpenID, OIDScopeProfile],
-                                      redirectURL: redirectURI,
-                                      responseType: OIDResponseTypeCode,
-                                      additionalParameters: nil)
-```
-
-### Step 7: Run the Sample App on an Emulator
-
-We can run the app using Xcode's build and run option in the top left of the IDE. I always first select the latest emulator version:
+Use Xcode's build and run option in the top left of the IDE and select an up to date simulator version:
 
 ![xcode run](../images/480/xcode-run.jpg)
 
-This renders the following view. You can click *Auto* to run an entire OpenID Connect authorization redirect. Alternatively, do it in two stages, by using *Manual*, where step 1(A) is the front channel redirect, and step 1(B) is the back channel operation to swap the authorization code for tokens:
+You then see the following view. Click *Auto* to run an OpenID Connect authorization flow. Alternatively, use the *Manual* option, where step 1(A) is the front channel redirect, and step 1(B) is the back channel operation to swap the authorization code for tokens:
 
 <div className='smallimage'>
     <img src='../images/480/unauthenticated-app.jpg' alt='unauthenticated app' />
 </div>
 
-Next an [ASWebAuthenticationSession](https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsession) window is shown, which first involves informing the user which app they are logging into:
+During the code flow an [ASWebAuthenticationSession](https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsession) window informs the user of the domain requesting authentication:
 
 <div className='smallimage'>
     <img src='../images/480/app-login.jpg' alt='app login' />
 </div>
 
-You can then sign in to the app using this blog's cloud test credential:
+You can sign in using this blog's test user credential:
 
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
 
-The login is done using the system browser, which overlays the mobile view and prevents the sample app from having direct access to the password:
+During login the system browser overlays the mobile view and the app itself cannot access the user's credentials:
 
 <div className='smallimage'>
     <img src='../images/480/aswebauthenticationsession.jpg?v=20240804' alt='aswebauthenticationsession' />
 </div>
 
-After login, control returns to the mobile app, which has an ID token, an access token and a refresh token. You can then test OAuth lifecycle operations, including refreshing the access token:
+After login, control returns to the mobile app, which has an ID token, an access token and a refresh token. You can then test OAuth lifecycle operations, including access token refresh:
 
 <div className='smallimage'>
     <img src='../images/480/authenticated-app.jpg' alt='authenticated app' />
@@ -119,9 +104,9 @@ After login, control returns to the mobile app, which has an ID token, an access
 
 ### Where Are We?
 
-We have gained an initial understanding of how to run an OAuth-secured mobile app from Xcode. Shortly we will describe this blog's <a href='ios-code-sample-overview.mdx'>iOS Code Sample</a>, which demonstrates much more complete behaviour.
+I showed how to run an OAuth-secured mobile app from Xcode. Shortly I will explain this blog's <a href='ios-code-sample-overview.mdx'>iOS Code Sample</a>, which demonstrates much more complete behaviour.
 
 ### Next
 
-- Next we will focus on <a href='ios-https-debugging.mdx'>HTTPS Debugging on iOS</a>
-- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>
+- Next I explain <a href='ios-https-debugging.mdx'>iOS HTTPS Tracing of OAuth Messages</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.
