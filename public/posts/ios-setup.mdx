@@ -20,7 +20,7 @@ git clone https://github.com/openid/AppAuth-iOS
 
 From Xcode's home screen, select *File / Open* and navigate to the *AppAuth-iOS/Examples/Example-iOS_Swift-Carthage* folder:
 
-![xcode build](../images/480/xcode-build.jpg)
+![xcode build](../images/480/xcode-build.jpg?v=20250215)
 
 ### Step 3: Add the AppAuth Dependency
 
@@ -32,11 +32,11 @@ By default the code sample uses the Carthage dependency tool, which I prefer to 
 
 The Xcode project should then contain the following content:
 
-![xcode project](../images/480/xcode-project.jpg)
+![xcode project](../images/480/xcode-project.jpg?v=20250215)
 
 I then add AppAuth using the Swift dependency manager, from the above screen, by providing the URL of the AppAuth iOS GitHub repository. When prompted, I add the *AppAuth* and *AppAuthCore* packages to the code sample's target:
 
-![xcode dependencies](../images/480/xcode-dependencies.jpg?v=20240804)
+![xcode dependencies](../images/480/xcode-dependencies.jpg?v=20250215)
 
 ### Step 4: Understand Mobile OAuth Client Settings
 
@@ -71,7 +71,7 @@ You must also register the *Redirect URI Scheme* in the mobile app's *info.plist
 
 Use Xcode's build and run option in the top left of the IDE and select an up to date simulator version:
 
-![xcode run](../images/480/xcode-run.jpg)
+![xcode run](../images/480/xcode-run.jpg?v=20250215)
 
 You then see the following view. Click *Auto* to run an OpenID Connect authorization flow. Alternatively, use the *Manual* option, where step 1(A) is the front channel redirect, and step 1(B) is the back channel operation to swap the authorization code for tokens:
 
