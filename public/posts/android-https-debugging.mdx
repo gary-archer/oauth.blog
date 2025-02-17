@@ -1,16 +1,6 @@
 # Android HTTPS Debugging Setup
 
-Previously I ran an initial Android setup using the <a href='android-setup.mdx'>AppAuth Android Code Sample</a>. Next I explain a way to view HTTPS mobile traffic from Android emulators and devices on a development computer, to provide a productive troubleshooting setup.
-
-### Mobile Proxying Solutions
-
-On mobile, one type of proxying solution is an HTTP tunnelling component like [localtunnel](https://github.com/localtunnel/localtunnel). You run a local API on a port like 3000, then expose that port to the internet. The tunnel then prints details of requests that pass through it.
-
-```bash
-npx localtunnel --port 3000 --print-requests
-```
-
-Typically, you have to work with generated host names like *https://some.generated.api.hostname.lt* and there may be limitations on the HTTP request details you can view. Instead, I prefer to take more complete control over local URLs and visibility of HTTP requests.
+Previously I ran an initial Android setup using the <a href='android-setup.mdx'>AppAuth Android Code Sample</a>. Next I explain a way to view outgoing HTTPS mobile traffic from Android emulators and devices on a development computer, to provide a productive troubleshooting setup.
 
 ### Run an HTTP Proxy on the Host
 
