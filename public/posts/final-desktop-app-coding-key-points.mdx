@@ -104,12 +104,12 @@ private handleDeepLink(deepLinkUrl: string): void {
 }
 ```
 
-The main process first asks its authenticator service to process the deep link if it represents a login or logout response. Otherwise, the notification is a general deep link that the main process forwards to the React app:
+The main process first asks its *OAuthService* to process the deep link if it represents a login or logout response. Otherwise, the notification is a general deep link that the main process forwards to the React app:
 
 ```typescript
 public handleDeepLink(deepLinkUrl: string): boolean {
 
-    if (this.authenticatorService.handleDeepLink(deepLinkUrl)) {
+    if (this.oauthService.handleDeepLink(deepLinkUrl)) {
         return true;
     }
 
@@ -123,7 +123,7 @@ public handleDeepLink(deepLinkUrl: string): boolean {
 }
 ```
 
-For OAuth responses, the authenticator service uses Node.js events to resume the flow:
+For OAuth responses, the *OAuthService* uses Node.js events to resume the flow:
 
 ```typescript
 public handleDeepLink(deepLinkUrl: string): boolean {
@@ -198,7 +198,7 @@ The desktop code sample handles these conditions in the same manner with the sam
 
 ### AppAuth Libraries
 
-This blog completes this blog's desktop integration using the recommendations from RFC 8252. Doing so does not mandate use of the AppAuth libraries though. For example, if you run into a blocking issue, you could implement the code flow messages manually in the app's *AuthenticatorServiceImpl* class.
+This blog completes this blog's desktop integration using the recommendations from RFC 8252. Doing so does not mandate use of the AppAuth libraries though. For example, if you run into a blocking issue, you could implement the code flow messages manually in the app's *OAuthServiceImpl* class.
 
 ### Where Are We?
 

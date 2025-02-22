@@ -54,7 +54,7 @@ The access token contains a couple of technical user identifiers. The *oid* clai
 Entra ID uses Microsoft Graph as the OpenID Connect userinfo endpoint. Yet Graph requires access tokens with a *nonce* in the JWT header, so the SPA's access token cannot be sent to get userinfo in the standard way. In the SPA's *oidc-client-ts* configuration I set *loadUserInfo=false* and the SPA gets user info by routing the request via its API, as explained shortly.
 
 ```typescript
-export class Authenticator {
+export class OAuthClient {
 
     private readonly userManager: UserManager;
 

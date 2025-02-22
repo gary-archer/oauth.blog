@@ -206,7 +206,7 @@ export class MainIpcEvents {
         return this.handleAsyncOperation(
             event,
             IpcEventNames.ON_LOGIN,
-            () => this.authenticatorService.login());
+            () => this.oauthService.login());
     }
 
     private async onTokenRefresh(event: IpcMainInvokeEvent): Promise<any> {
@@ -214,7 +214,7 @@ export class MainIpcEvents {
         return this.handleAsyncOperation(
             event,
             IpcEventNames.ON_TOKEN_REFRESH,
-            () => this.authenticatorService.refreshAccessToken());
+            () => this.oauthService.refreshAccessToken());
     }
     ...
 }
@@ -230,8 +230,8 @@ The following main classes are used to handle OAuth and API logic. The strategy 
 | ----- | ---------------- |
 | ApClient | A forwarder to initiate API operations. |
 | ApiService | Does the main work to send API requests with access tokens to the remote API endpoints. |
-| AuthenticatorClient | A forwarder to initiate login and token-related operations. |
-| AuthenticatorService | Does the main work to integrate with the AppAuth-JS library to trigger login and token requests, then handle responses. |
+| OAuthClient | A forwarder to initiate login and token-related operations. |
+| OAuthService | Does the main work to integrate with the AppAuth-JS library to trigger login and token requests, then handle responses. |
 
 ### Debugging HTTP Requests
 
@@ -254,8 +254,8 @@ The renderer process begins when it creates an *App* class, which acts as the ap
 private async initialiseApp(): Promise<void> {
 
     this.ipcEvents = new IpcRendererEvents(window);
-    this.authenticatorClient = new AuthenticatorClientImpl(this.ipcEvents);
-    this.apiClient = new ApiClient(this.ipcEvents, this.authenticatorClient);
+    this.oauthClient = new OAuthClientImpl(this.ipcEvents);
+    this.apiClient = new ApiClient(this.ipcEvents, this.oauthClient);
     this.router = new Router(this.apiClient);
     this.isInitialised = true;
 }
@@ -272,22 +272,22 @@ this.httpProxy = new HttpProxy(
     this.configuration.app.useProxy,
     this.configuration.app.proxyUrl);
 
-this.authenticatorService = new AuthenticatorServiceImpl(
+this.oauthService = new OAuthServiceImpl(
     this.configuration.oauth,
     this.httpProxy);
 
 this.apiService = new ApiService(
     this.configuration,
-    this.authenticatorService,
+    this.oauthService,
     this.httpProxy);
 ```
 
 ### OAuth Operations
 
-The main process exposes the following OAuth operations in its *AuthenticatorService* interface:
+The main process exposes the following OAuth operations in its *OAuthService* interface:
 
 ```typescript
-export interface AuthenticatorService {
+export interface OAuthService {
     isLoggedIn(): boolean;
     getUserInfoEndpoint(): Promise<string | null>;
     getAccessToken(): Promise<string | null>;
@@ -311,7 +311,7 @@ private async callApi(
 
     try {
 
-        const accessToken = await this.authenticatorService.getAccessToken();
+        const accessToken = await this.oauthService.getAccessToken();
         if (!accessToken) {
             throw ErrorFactory.fromLoginRequired();
         }
@@ -358,7 +358,7 @@ private async getDataFromApi(callback: () => Promise<any>): Promise<any> {
             throw error1;
         }
 
-        await this.authenticatorClient.refreshAccessToken();
+        await this.oauthClient.refreshAccessToken();
         return await callback();
     }
 }
@@ -559,7 +559,7 @@ When the refresh token finally expires, the app receives an error response with 
 
 ### Token Expiry Testing
 
-The *AuthenticatorService* also has some test methods to enable simulation of token expiry responses. As for the earlier SPA, the desktop app simply adds text to corrupt the token values sent to the API. This mechanism helps to ensure that the app reliably handles expiry conditions.
+The *OAuthService* also has some test methods to enable simulation of token expiry responses. As for the earlier SPA, the desktop app simply adds text to corrupt the token values sent to the API. This mechanism helps to ensure that the app reliably handles expiry conditions.
 
 ```typescript
 public async expireAccessToken(): Promise<void> {

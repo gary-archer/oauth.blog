@@ -87,9 +87,9 @@ init {
     this.fetchCache = FetchCache()
     this.eventBus = EventBus.getDefault()
 
-    this.authenticator = AuthenticatorImpl(this.configuration.oauth, this.app.applicationContext)
-    this.fetchClient = FetchClient(this.configuration, this.fetchCache, this.authenticator)
-    this.viewModelCoordinator = ViewModelCoordinator(this.eventBus, this.fetchCache, this.authenticator)
+    this.oauthClient = OAuthClientImpl(this.configuration.oauth, this.app.applicationContext)
+    this.fetchClient = FetchClient(this.configuration, this.fetchCache, this.oauthClient)
+    this.viewModelCoordinator = ViewModelCoordinator(this.eventBus, this.fetchCache, this.oauthClient)
 
     this.isLoaded = false
     this.isTopMost = true
@@ -256,7 +256,7 @@ We implement the same OAuth client side behaviour that we have used in all of ot
 ```kotlin
 private suspend fun <T> getDataFromApi(url: String, responseType: Class<T>, options: FetchOptions): T? {
 
-    var accessToken = this.authenticator.getAccessToken()
+    var accessToken = this.oauthClient.getAccessToken()
     if (accessToken.isNullOrBlank()) {
         throw ErrorFactory().fromLoginRequired()
     }
@@ -272,18 +272,18 @@ private suspend fun <T> getDataFromApi(url: String, responseType: Class<T>, opti
             throw error
         }
 
-        accessToken = this.authenticator.synchronizedRefreshAccessToken()
+        accessToken = this.oauthClient.synchronizedRefreshAccessToken()
         return this.callApiWithToken("GET", url, null, accessToken, responseType, options)
     }
 }
 ```
 
-### Authenticator Interface
+### OAuthClient Interface
 
-The *ApiClient* uses an *Authenticator* reference and calls *getAccessToken* in order to retrieve a message credential for API calls:
+The *ApiClient* uses an *OAuthClient* reference and calls *getAccessToken* in order to retrieve a message credential for API calls:
 
 ```kotlin
-interface Authenticator {
+interface OAuthClient {
     suspend fun initialize()
     suspend fun getAccessToken(): String?
     suspend fun synchronizedRefreshAccessToken(): String
@@ -326,7 +326,7 @@ private fun handleErrorsAfterLoad() {
         }
 
         if (oauthConfigurationError != null) {
-            this.authenticator.clearLoginState()
+            this.oauthClient.clearLoginState()
         }
     }
 }
@@ -336,7 +336,7 @@ The ViewModelCoordinator class also deals with invalid token errors, such as inc
 
 ### AppAuth Library - Login Requests
 
-The authenticator implementation uses [AppAuth Android Classes](https://github.com/openid/AppAuth-Android) to implement standards-based OpenID Connect behaviour:
+The OAuth client implementation uses [AppAuth Android Classes](https://github.com/openid/AppAuth-Android) to implement standards-based OpenID Connect behaviour:
 
 ```kotlin
 override fun startLogin(launchAction: (i: Intent) -> Unit) {
@@ -756,7 +756,7 @@ This produces warnings that help to keep the code base maintainable:
 
 ### AppAuth Libraries
 
-This blog demonstrates mobile integration using the recommendations from RFC 8252. Doing so does not mandate use of the AppAuth libraries though. If you run into any library blocking issues, the code flow  could be implemented fairly easily in the *AuthenticatorImpl* object.
+This blog demonstrates mobile integration using the recommendations from RFC 8252. Doing so does not mandate use of the AppAuth libraries though. If you run into any library blocking issues, the code flow  could be implemented fairly easily in the *OAuthClientImpl* object.
 
 ### Where Are We?
 

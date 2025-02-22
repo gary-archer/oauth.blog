@@ -185,7 +185,7 @@ When frontends first make API requests, they do not have an API message credenti
 
 To get a correct access token for the user, the client must run an OpenID Connect authorization code flow, to initiate user authentication. To do the work, I aim to plug in a respected standards-based third-party library, or backend for frontend in the case of the SPA.
 
-I wrap the use of libraries in an *Authenticator* interface that is useful to the rest of the application's code. In the event of library limitations or problems you could swap out the implementation without impacting the rest of the app. If required, it is fairly easy to write your own logic that implements a code flow and other lifecycle operations.
+I wrap the use of libraries in an *OAuthClient* interface that is useful to the rest of the application's code. In the event of library limitations or problems you could swap out the implementation without impacting the rest of the app. If required, it is fairly easy to write your own logic that implements a code flow and other lifecycle operations.
 
 ### Login User Experience
 

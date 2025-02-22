@@ -356,7 +356,7 @@ private handleErrorsAfterLoad(): void {
 The final SPA continues to drive its own authentication flow, with the help of a remote OAuth agent. The SPA uses the following operations and this blog's earlier SPA code examples used pretty much the same interface.
 
 ```typescript
-export interface Authenticator {
+export interface OAuthClient {
     isLoggedIn(): boolean;
     login(currentLocation: string): Promise<void>;
     handlePageLoad(): Promise<string | null>;
@@ -465,7 +465,7 @@ private async callApiWithCredential(
 When the current access token expires, the SPA makes a token refresh request to get new tokens and rewrite cookies with new tokens. The SPA then retries the original API request with updated cookies. It is also possible that the user could close all browser windows when the *isLoggedIn=true* flag is set. The next time the user runs the app, session cookies are no longer present and APIs return 401 responses. The SPA, and this blog's native apps, cope reliably with these conditions using the following overall algorithm for API requests:
 
 ```typescript
-if (!this.authenticator.isLoggedIn()) {
+if (!this.oauthClient.isLoggedIn()) {
     throw loginRequiredError;
 }
 
@@ -480,7 +480,7 @@ try {
     }
 
     try {
-        await this.authenticator.synchronizedRefresh();
+        await this.oauthClient.synchronizedRefresh();
 
     } catch (e2: any) {
 

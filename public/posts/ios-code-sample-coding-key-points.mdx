@@ -59,7 +59,7 @@ struct SampleApp: App {
                 .environmentObject(self.eventBus)
                 .onOpenURL(perform: { url in
 
-                    if self.authenticator.isOAuthResponse(responseUrl: url) {
+                    if self.oauthClient.isOAuthResponse(responseUrl: url) {
 
                         self.model.resumeOAuthResponse(url: url)
 
@@ -126,9 +126,9 @@ init(eventBus: EventBus) {
     self.eventBus = eventBus
 
     self.configuration = try! ConfigurationLoader.load()
-    self.authenticator = AuthenticatorImpl(configuration: self.configuration.oauth)
-    self.fetchClient = try! FetchClient(configuration: self.configuration, fetchCache: self.fetchCache, authenticator: self.authenticator)
-    self.viewModelCoordinator = ViewModelCoordinator(eventBus: eventBus, fetchCache: self.fetchCache, authenticator: self.authenticator)
+    self.oauthClient = OAuthClientImpl(configuration: self.configuration.oauth)
+    self.fetchClient = try! FetchClient(configuration: self.configuration, fetchCache: self.fetchCache, oauthClient: self.oauthClient)
+    self.viewModelCoordinator = ViewModelCoordinator(eventBus: eventBus, fetchCache: self.fetchCache, oauthClient: self.oauthClient)
 
     self.isLoaded = false
     self.isDeviceSecured = DeviceSecurity.isDeviceSecured()
@@ -272,7 +272,7 @@ We implement the same OAuth client side behaviour that we have used in all of ot
 ```swift
 private func getDataFromApi(url: URL, options: FetchOptions) async throws -> Data? {
 
-    var accessToken = authenticator.getAccessToken()
+    var accessToken = oauthClient.getAccessToken()
     if accessToken == nil {
         throw loginRequiredError
     }
@@ -292,7 +292,7 @@ private func getDataFromApi(url: URL, options: FetchOptions) async throws -> Dat
             throw error
         }
 
-        accessToken = try await authenticator.synchronizedRefreshAccessToken()
+        accessToken = try await oauthClient.synchronizedRefreshAccessToken()
         return try await self.callApiWithToken(
             method: "GET",
             url: url,
@@ -303,12 +303,12 @@ private func getDataFromApi(url: URL, options: FetchOptions) async throws -> Dat
 }
 ```
 
-### Authenticator Interface
+### OAuthClient Interface
 
-The ApiClient uses an *Authenticator* reference and calls *getAccessToken* in order to retrieve a message credential for API calls:
+The ApiClient uses an *OAuthClient* reference and calls *getAccessToken* in order to retrieve a message credential for API calls:
 
 ```swift
-protocol Authenticator {
+protocol OAuthClient {
     func initialize() async throws
     func getAccessToken() async throws -> String
     func synchronizedRefreshAccessToken() async throws -> String
@@ -356,7 +356,7 @@ private func handleErrorsAfterLoad() {
         }
 
         if oauthConfigurationError != nil {
-            self.authenticator.clearLoginState()
+            self.oauthClient.clearLoginState()
         }
     }
 }
@@ -447,7 +447,7 @@ Upon return from login we present the below *Web Hosted Post Login Page* in the 
 </script>
 ```
 
-For claimed HTTPS scheme based logins the response is then received as a deep link in the *SampleApp* class, then forwarded to the authenticator class, which resumes the AppAuth session:
+For claimed HTTPS scheme based logins the response is then received as a deep link in the *SampleApp* class, then forwarded to the *OAuthClient* class, which resumes the AppAuth session:
 
 ```swift
 func resumeOperation(responseUrl: URL) {
@@ -794,7 +794,7 @@ At build time we use the [SwiftLint code analyzer tool](https://github.com/realm
 
 ### AppAuth Libraries
 
-This blog demonstrates mobile integration using the recommendations from RFC 8252. Doing so does not mandate use of the AppAuth libraries though. If you run into any library blocking issues, the code flow  could be implemented fairly easily in the *AuthenticatorImpl* class.
+This blog demonstrates mobile integration using the recommendations from RFC 8252. Doing so does not mandate use of the AppAuth libraries though. If you run into any library blocking issues, the code flow  could be implemented fairly easily in the *OAuthClientImpl* class.
 
 ### Where Are We?
 

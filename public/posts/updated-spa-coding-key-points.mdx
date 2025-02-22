@@ -10,7 +10,7 @@ I use additional settings from the *oidc-client-ts* library to use the following
 - Silent token renewal via iframes.
 - Logout.
 
-The SPA's authenticator class therefore supplies additional settings to the *oidc-client-ts* library:
+The SPA's OAuthClient class therefore supplies additional settings to the *oidc-client-ts* library:
 
 ```typescript
 public constructor(configuration: OAuthConfiguration) {
@@ -139,10 +139,10 @@ private async callApi(path: string, method: Method, dataToSend?: any): Promise<a
 
     const url = `${this.apiBaseUrl}${path}`;
 
-    let token = await this.authenticator.getAccessToken();
+    let token = await this.oauthClient.getAccessToken();
     if (!token) {
 
-        await this.authenticator.startLogin(null);
+        await this.oauthClient.startLogin(null);
         throw ErrorFactory.getFromLoginRequired();
     }
 
@@ -157,10 +157,10 @@ private async callApi(path: string, method: Method, dataToSend?: any): Promise<a
             throw error;
         }
 
-        token = await this.authenticator.refreshAccessToken();
+        token = await this.oauthClient.refreshAccessToken();
         if (!token) {
 
-            await this.authenticator.startLogin(error);
+            await this.oauthClient.startLogin(error);
             throw ErrorFactory.getFromLoginRequired();
         }
 
@@ -234,9 +234,9 @@ Eventually, you come to realise that to solve the security, usability and reliab
 Once the SPA has an access token it uses it to get two sources of user information. The SPA now explicitly sends the access token to the OpenID connect userinfo endpoint. Yet the SPA also renders user attributes not stored in the authorization server. It gets them by calling the API, then renders data from both sources in the top right of the view.
 
 ```typescript
-public async load(authenticator: Authenticator, apiClient: ApiClient): Promise<void> {
+public async load(oauthClient: OAuthClient, apiClient: ApiClient): Promise<void> {
 
-    const oauthUserInfo = await authenticator.getUserInfo();
+    const oauthUserInfo = await oauthClient.getUserInfo();
     const apiUserInfo = await apiClient.getUserInfo();
 
     if (oauthUserInfo && apiUserInfo) {
@@ -299,7 +299,7 @@ private onStorageChange(event: StorageEvent): void {
 
     if (HtmlStorageHelper.isLoggedOutEvent(event)) {
 
-        this.authenticator!.onExternalLogout();
+        this.oauthClient!.onExternalLogout();
         location.hash = '#loggedout';
     }
 }

@@ -87,16 +87,16 @@ public async execute(): Promise<void> {
 
 ### Application Startup
 
-The startup logic downloads the SPA's configuration from the server, then creates an *Authenticator* object that wraps usage of the oidc-client-ts library and an *ApiClient* object to encapsulate the logic for API requests:
+The startup logic downloads the SPA's configuration from the server, then creates an *OAuthClient* object that wraps usage of the oidc-client-ts library and an *ApiClient* object to encapsulate the logic for API requests:
 
 ```typescript
 private async initialiseApp(): Promise<void> {
 
     this.configuration = await ConfigurationLoader.download('spa.config.json');
 
-    this.authenticator = new Authenticator(this.configuration.oauth);
+    this.oauthClient = new OAuthClient(this.configuration.oauth);
 
-    this.apiClient = new ApiClient(this.configuration.app.apiBaseUrl, this.authenticator);
+    this.apiClient = new ApiClient(this.configuration.app.apiBaseUrl, this.autheoauthClientnticator);
 
     this.router = new Router(this.apiClient, this.errorView);
 
@@ -122,10 +122,10 @@ The SPA configuration contains the following values, to enable the SPA to connec
 }
 ```
 
-The *Authenticator* instance creates a *UserManager* object from the oidc-client-ts library, which does the main OAuth work:
+The *OAuthClient* instance creates a *UserManager* object from the oidc-client-ts library, which does the main OAuth work:
 
 ```typescript
-export class Authenticator {
+export class OAuthClient {
 
     private readonly userManager: UserManager;
 
@@ -190,15 +190,15 @@ public async load(): Promise<void> {
 }
 ```
 
-The *ApiClient* asks the *Authenticator* for an access token so that it can make the API request. If it cannot get one, the *ApiClient* triggers a login redirect. The in-flight API call is also terminated, with a *login_required* error. The SPA's error handling code does not render errors with this error code.
+The *ApiClient* asks the *OAuthClient* for an access token so that it can make the API request. If it cannot get one, the *ApiClient* triggers a login redirect. The in-flight API call is also terminated, with a *login_required* error. The SPA's error handling code does not render errors with this error code.
 
 ```typescript
 private async callApi(path: string, method: Method, dataToSend?: any): Promise<any> {
 
     const url = `${this.apiBaseUrl}${path}`;
-    let token = await this.authenticator.getAccessToken();
+    let token = await this.oauthClient.getAccessToken();
     if (!token) {
-        await this.authenticator.startLogin(null);
+        await this.oauthClient.startLogin(null);
         throw ErrorHandler.getFromLoginRequired();
     }
 }
@@ -206,7 +206,7 @@ private async callApi(path: string, method: Method, dataToSend?: any): Promise<a
 
 The initial SPA only sends a single API request at a time. This blog's final UI code samples will show a way to trigger login redirects when the frontend makes concurrent requests to APIs.
 
-The *Authenticator* object first stores the SPA's location in session storage and then performs a full screen redirect. In this blog, I only use full-screen redirects, since that is the most standard way to implement logins on both desktop and mobile devices. Popup windows are also possible, though they tend to have more user experience issues due to blocked or hidden windows.
+The *OAuthClient* object first stores the SPA's location in session storage and then performs a full screen redirect. In this blog, I only use full-screen redirects, since that is the most standard way to implement logins on both desktop and mobile devices. Popup windows are also possible, though they tend to have more user experience issues due to blocked or hidden windows.
 
 ```typescript
 private async startLogin(): Promise<void> {
@@ -271,7 +271,7 @@ The above code demonstrates *deep linking*, where a user bookmarks a location li
 
 ### Rendering User Info
 
-After login, the SPA renders the logged in user's name, and this information is stored in the *UserManager* class of the oidc-client-ts library, The *Authenticator* retrieves the user profile using the following code:
+After login, the SPA renders the logged in user's name, and this information is stored in the *UserManager* class of the oidc-client-ts library, The *OAuthClient* retrieves the user profile using the following code:
 
 ```typescript
 public async getUserInfo(): Promise<UserInfo | null> {
@@ -392,9 +392,9 @@ private async callApi(path: string, method: Method, dataToSend?: any): Promise<a
 
     const url = `${this.apiBaseUrl}${path}`;
 
-    const token = await this.authenticator.getAccessToken();
+    const token = await this.oauthClient.getAccessToken();
     if (!token) {
-        await this.authenticator.startLogin(null);
+        await this.oauthClient.startLogin(null);
         throw ErrorHandler.getFromLoginRequired();
     }
 
@@ -408,7 +408,7 @@ private async callApi(path: string, method: Method, dataToSend?: any): Promise<a
         if (error.statusCode !== 401)
             throw e;
 
-        await this.authenticator.startLogin(error);
+        await this.oauthClient.startLogin(error);
         throw ErrorHandler.getFromLoginRequired();
     }
 }
