@@ -405,7 +405,7 @@ Our manifest file tells AppAuth's login activity to use a claimed HTTPS scheme t
 </activity>
 ```
 
-Upon return from login an intermediate page runs in the Chrome custom tab window. This screen receives the authorization code in a response query parameter. JavaScript code in the web page invokes the login receiver activity when the continue button is pressed. This forwards any received query parameters, including the authorization code, to the app:
+Upon return from login an intermediate page runs in the Chrome Custom Tab window. This screen receives the authorization code in a response query parameter. JavaScript code in the web page invokes the login receiver activity when the continue button is pressed. This forwards any received query parameters, including the authorization code, to the app:
 
 ```javascript
 <script>
@@ -609,7 +609,7 @@ The app's logout logic involves these two actions:
 - Removing the refresh token from Android secure storage
 - Removing the authorization server's session cookie
 
-The second step requires a redirect on a Chrome custom tab, since the authorization server session cookie can only be removed via the system browser. To make this work with AWS Cognito's custom logout endpoint, the following code was used:
+The second step requires a redirect on a Chrome Custom Tab, since the authorization server session cookie can only be removed via the system browser. To make this work with AWS Cognito's custom logout endpoint, the following code was used:
 
 ```kotlin
 override fun startLogout(launchAction: (i: Intent) -> Unit) {
@@ -703,7 +703,7 @@ By coding in Kotlin, our Android sample requires fewest technical layers to inte
 
 ### Deep Linking
 
-Our Android app can also use deep linking. An additional *Forwarding Activity* is used, to control whether deep links are allowed to execute. The app ignores deep links when a Chrome custom tab window is top most:
+Our Android app can also use deep linking. An additional *Forwarding Activity* is used, to control whether deep links are allowed to execute. The app ignores deep links when a Chrome Custom Tab window is top most:
 
 ```kotlin
 private fun handleIntent(receivedIntent: Intent) {

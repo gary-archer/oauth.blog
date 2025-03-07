@@ -72,15 +72,15 @@ Use of the system browser provides some useful login usability options. The resu
 - Single sign on can work across multiple apps
 - Passwords can be remembered and re-used for multiple apps
 
-### Logins via iOS Web Views are Problematic
+### Logins via Webviews
 
-The following problems exist if you perform login redirects on a normal mobile web view. This is because the result is a *Browser Session Private to the App*:
+The following problems exist if you perform login redirects on a normal mobile webview. This is because the result is a *Browser Session Private to the App*:
 
 | Problem Area | Description |
 | ------------ | ----------- |
-| Password Autofill | This feature will generally work less reliably in a web view, resulting in a poor login experience |
+| Password Autofill | This feature will generally work less reliably in a webview, resulting in a poor login experience |
 | Single Sign On | Cookies will not be shared with other apps and are likely to be dropped more aggressively within your own app |
-| Could be Blocked | Google is an example of an identity provider that [blocks logins on a mobile web view](https://auth0.com/blog/google-blocks-oauth-requests-from-embedded-browsers) |
+| Could be Blocked | Google is an example of an identity provider that [blocks logins on a mobile webview](https://auth0.com/blog/google-blocks-oauth-requests-from-embedded-browsers) |
 
 ### Our Sample's Login Usability Features
 
