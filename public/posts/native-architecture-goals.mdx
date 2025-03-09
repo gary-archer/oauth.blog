@@ -35,7 +35,7 @@ This blog follows the best practices from [OAuth for Native Apps](https://datatr
 
 ### Mobile Web Interoperability
 
-For mobile apps, it used to be common to reuse views from a web app, to provide part of the user experience. Webviews could be used to ensure that any bug fixes were rolled out to users immediately. Yet this type of design is now problematic because of security. Both apps should receive separate access tokens with different privileges. Web apps should also use HttpOnly cookies as API credentials.
+For mobile apps, it used to be common to reuse views from a web app, to provide part of the user experience. Webviews could be used to ensure that any bug fixes were rolled out to users immediately. Yet this type of design is now problematic because of security. Both apps should receive separate access tokens with different privileges. Web apps should use HttpOnly cookies to transport access tokens.
 
 These days it is therefore recommended to share data using APIs, and to implement views multiple times. This requires additional development, but ultimately results in the best user experience, since each frontend uses the optimal view technology. You can achieve such an outcome with lowest costs when you write web code with similar classes to mobile code. 
 
