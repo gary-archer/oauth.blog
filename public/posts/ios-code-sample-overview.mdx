@@ -1,6 +1,6 @@
 # iOS Code Sample - Overview
 
-Previously we covered <a href='android-coding-key-points.mdx'>Android Code Details</a> for our initial mobile app. Next we will provide the same OAuth secured app for iOS, using Xcode and SwiftUI, with AppAuth libraries and a modern coding style. The app connects to <a href='cloud-hosting.mdx'>HTTPS endpoints hosted in AWS</a>, so that you only need to run the mobile app's code to get a fully integrated solution.
+Previously I explained <a href='android-coding-key-points.mdx'>Android Code Details</a> for this blog's Android app. Next I implement the same OAuth secured app for iOS with Xcode and SwiftUI, using AppAuth libraries and a modern coding style. The app connects to <a href='cloud-hosting.mdx'>HTTPS endpoints hosted in AWS</a>, so that you only need to run the mobile app's code to get a fully integrated solution.
 
 ### Features
 
@@ -8,16 +8,16 @@ The following table summarises the main features of the code sample, some of whi
 
 | Feature | Description |
 | ------- | ----------- |
-| AppAuth Integration | We will implement the essential OpenID Connect behaviour by integrating the standard libraries |
-| Claimed HTTPS Schemes | The login result is returned to the app over HTTPS URLs, which is the most secure option according to security guidance |
-| Secure Token Storage | Tokens are stored securely on the device after login, so that users don't need to authenticate on every app restart |
-| Deep Linking | The app also supports HTTPS Universal Links, so that users can bookmark locations within the app |
+| OpenID Connect Integration | I integrate the standards-based AppAuth libraries to implement the essential security behaviour. |
+| Claimed HTTPS Schemes | The login result returns to the app over HTTPS URLs, which is the most secure option according to security guidance. |
+| Secure Token Storage | The device stores tokens after login that are not accessible to other apps, so that users avoid reauthentication on every app restart. |
+| Deep Linking | The app uses HTTPS deep links so that users can bookmark locations within the app. |
 
 ### Code Download
 
-The code for the mobile app can be downloaded from [here](https://github.com/gary-archer/oauth.mobilesample.ios), and we will cover full details of how to run it in the next post:
+The code for the mobile app can be downloaded from [here](https://github.com/gary-archer/oauth.mobilesample.ios) and I explain how to run it in the next post:
 
-![repo](../images/540/repo.jpg)
+![code repo](../images/540/repo.jpg?v=20250309)
 
 ### Basic Mobile User Interface
 
