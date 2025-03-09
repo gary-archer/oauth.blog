@@ -37,7 +37,7 @@ There is also a details view which exists primarily to demonstrate navigation an
 
 The mobile views have identical functionality to those in the final React SPA, where the main view is swapped out as the user navigates. This is more efficient than replacing entire activities and makes the app feel faster for users.
 
-### Modern UI Technology
+### Modern Frontend Technology
 
 I develop the Android App in Kotlin and use [Jetpack Compose](https://developer.android.com/jetpack) for its views. This mobile technology choice simplifies the implementation of views, data binding and navigation.
 
@@ -51,7 +51,7 @@ There are risks with mobile apps that a malicious third party could install an a
 
 ![mobile login methods](../images/500/mobile-login-methods.jpg)
 
-Using App Links for redirect URIs prevents a fake app from receiving a login result since the attacker would not be able to make deep links for the redirect URI work for their app.
+Android apps implement HTTPS redirect URIs as *App Links*. Doing so prevents a fake app from receiving a login result since the attacker would not be able to make deep links for the redirect URI work for their app.
 
 ### Logins via the System Browser
 
@@ -61,7 +61,7 @@ Users sign in via a [Chrome Custom Tab](https://developer.chrome.com/docs/androi
     <img src='../images/500/custom-tab-login.jpg?v=20240912' alt='custom tab login' />
 </div>
 
-AppAuth libraries deal with selecting the window at runtime. The result is that cookies and passwords can often be shared between web apps and mobile apps, to improve usability:
+AppAuth libraries create the Chrome Custom Tab instance. The result is that multiple web and mobile apps can share cookies and passwords to improve usability:
 
 - Single sign on can work across multiple web / mobile apps.
 - Passwords can be remembered and used for multiple apps.
@@ -90,7 +90,7 @@ I also mitigate risks related to stolen mobile devices. The app requires the dev
 
 ### Password Autofill
 
-On the initial login on a device or emulator the user must type an email and password. By default the Chrome Custom Tab will immediately disappear after login and the user cannot use Chrome's *Save Password* feature. I resolve this problem with a *Post Login Page* that displays after authentication but before the browser window closes.
+On the initial login on a device or emulator the user must type an email and password. By default the Chrome Custom Tab abruptly disappears after login and the user cannot use its *Save Password* feature. I resolve this problem with a *Post Login Page* that displays after authentication but before the browser window closes.
 
 <div className='smallimage'>
     <img src='../images/500/save-password-prompt.jpg?v=20240912' alt='save password prompt' />
@@ -114,7 +114,7 @@ The app uses session-related buttons to *Rehearse Expiry Events* to verify that 
 
 ### Navigation with Expired Tokens
 
-The session buttons help to ensure that the app copes with the built-in *Back Stack Navigation* after the user swaps out the main view. Navigation may include *user authentication* or *refreshing an access token* before presenting the view.
+The session buttons help to ensure that the app handles navigation correctly, where a new view initiates its own API requests with access tokens. Navigation may include *user authentication* or *refreshing an access token* before presenting the new view. For Android, the navigation must also account for the platform's built-in *Back Stack Navigation*.
 
 ### Logout
 
@@ -122,7 +122,7 @@ The app also implements <a href='logout.mdx'>Open ID Connect RP-Initiated Logout
 
 ### Deep Linking
 
-The app supports navigation via deep linking where a user can follow a link with an *HTTPS App Link URL* to activate the app at specific locations. For example, I can send myself an email that contains deep links:
+The app supports navigation via deep linking where a user can follow an *HTTPS App Link* to activate the app at specific locations. For example, I can send myself an email that contains deep links:
 
 ![deep linking email](../images/500/deep-linking-email.jpg)
 
@@ -142,11 +142,11 @@ https://mobile.authsamples.com/finalmobileapp/deeplink/companies/3
 https://mobile.authsamples.com/finalmobileapp/deeplink/companies/abc
 ```
 
-The API enables the mobile app to handle unauthorized access gracefully by returning useful error codes. The app detects particular error codes and navigates back to the home page, to avoid presenting an error to the user.
+When the mobile app calls its API, unauthorized responses contain useful error codes to enable the mobile app to handle unauthorized access gracefully. The app detects particular error codes and navigates back to the home page, to avoid presenting an error to the user.
 
 ### Handling Redirect Responses
 
-When integrating OAuth into a mobile app you may run into an issue where the system browser does not execute the deep link containing the authorization response. Instead, the Chrome Custom Tab falls back to running a web request, resulting in a 404 not found error. The browser may require a user gesture before it runs a deep link, to protect against malicious automatic execution of deep links.
+When integrating OAuth into a mobile app you may run into an issue where the system browser does not execute the deep link containing the authorization response. Instead, the Chrome Custom Tab runs a web request, resulting in a 404 not found error. The browser may require a user gesture before it runs a deep link, to protect against malicious automatic execution of deep links.
 
 <div className='smallimage'>
     <img src='../images/500/not-found-login-response.jpg?v=20240912' alt='not found login response' />
@@ -183,7 +183,7 @@ Chrome Custom Tab logins improve usability, but they also add some complexity du
 | Test Case | Description |
 | --------- | ----------- |
 | Change Orientation | The user switches between portrait and landscape before completing a login. |
-| Reactivate App | The user switches to another app and then re-runs our app from the home screen via the app's launcher icon. |
+| Reactivate App | The user switches to another app and then re-runs our app from the home screen via the app's launch icon. |
 | Deep Link | The user runs the app and then runs a deep link from an email. |
 
 ### Where Are We?
