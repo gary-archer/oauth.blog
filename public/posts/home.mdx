@@ -2,11 +2,9 @@
 
 This blog focuses on productive and reliable code setups when developing APIs, browser based apps and mobile apps within a distributed architecture. Although the use of modern technology stacks may seem straightforward, end-to-end flows require technical foundations before they are production-ready.
 
-The content combines my experience as an architect with my experience as a coder. I start with goals and requirements, then demonstrate my preferred techniques to meet them. Of course there are many possible ways to build solutions from requirements, so you should treat my opinions only as suggestions.
+### API Technical Foundations
 
-### API Technical Qualities
-
-Before most APIs and API clients can run in production, they need a number of technical behaviours:
+When APIs and API clients run in production, they need a number of technical qualities. I usually start with those listed below.
 
 | Quality | Description |
 | ------- | ----------- | 
@@ -19,11 +17,13 @@ Before most APIs and API clients can run in production, they need a number of te
 
 To enable future-proof security, this blog uses OAuth 2.0 to secure APIs and clients. OAuth is a [family of specifications](https://datatracker.ietf.org/doc/html/rfc6749) for protecting data. Solutions are JSON-based and enable you to use the latest and most productive API, web and mobile technologies. A solid OAuth setup empowers developers with modern and extensible security capabilities.
 
-Yet I have often seen people struggle to implement OAuth and realise its benefits, since it is a distributed architecture with many moving parts. An organization needs to introduce an intricate new component called the *Authorization Server* that outsources the deeper security from applications. You also need to make design choices that require insight, at both an architecture level and a code level.
+However, I have often seen people struggle to implement OAuth and realise its benefits, since it is a distributed architecture with many moving parts. An organization needs to introduce an intricate new component called the *Authorization Server* that outsources the deeper security from applications. You also need to make design choices that require insight, at both an architecture level and a code level.
 
-### Blog Goals
+### Blog Content
 
-I explain a setup that enables you to run secure end-to-end API and client flows. I only use basic OAuth security, but once you have the right setup and separation you are well-placed to implement more advanced use cases. In addition to OAuth integration I explain some lessons I've learned to enable resilient API and client journeys:
+I first provide my opinions on the most important goals and requirements. I then  explain my preferences for meeting them, with setups that enables anyone new to OAuth to easily run secure end-to-end API and client flows. 
+
+I only use basic OAuth security, but once you have the right setup and separation you are well-placed to implement more advanced use cases. In addition to OAuth integration I explain some lessons I've learned to enable resilient API and client journeys:
 
 - Coding with portability to keep future options open.
 - Designing for manageability to avoid pain points.
