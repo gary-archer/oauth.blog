@@ -308,12 +308,11 @@ Our app has two views that load concurrently and fire three concurrent API reque
 A *ViewModelCoordinator* object is used to wait for all views to load. In the event of any view receiving a permanent 401 response from the API, a single OAuth redirect is triggered by the main activity:
 
 ```kotlin
-private fun handleErrorsAfterLoad() {
+private fun handleAllViewsLoaded() {
 
     if (this.loadedCount == this.loadingCount) {
 
         val errors = this.getLoadErrors()
-
         val loginRequired = errors.find { e -> e.errorCode == ErrorCodes.loginRequired }
         if (loginRequired != null) {
             this.eventBus.post(LoginRequiredEvent())

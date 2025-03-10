@@ -336,12 +336,11 @@ Our app has two views that load concurrently and fire three concurrent API reque
 A *ViewModelCoordinator* object is used to wait for all views to load. In the event of any view receiving a permanent 401 response from the API, a single OAuth redirect is triggered by the main view:
 
 ```swift
-private func handleErrorsAfterLoad() {
+private func handleAllViewsLoaded() {
 
     if self.loadedCount == self.loadingCount {
 
         let errors = self.getLoadErrors()
-
         let loginRequired = errors.first { error in
                 error.errorCode == ErrorCodes.loginRequired
         }

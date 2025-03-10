@@ -336,12 +336,11 @@ Clients that use tokens can determine whether the user is authenticated by the p
 The fetch client throws an error with a *login_required* error code when it is asked to call APIs but *isLoggedIn* is not set to true. For the final SPA this error could occur concurrently, so the SPA handles the condition using a *ViewModelCoordinator* object. After all view models have tried to load, if there is one or more errors with a *login_required* error code, an event is published. This main application view subscribes to this event and then triggers a login redirect.
 
 ```typescript
-private handleErrorsAfterLoad(): void {
+private handleAllViewsLoaded(): void {
 
     if (this.loadedCount === this.loadingCount) {
 
         const errors = this.getLoadErrors();
-
         const loginRequired = errors.find((e) => e.errorCode === ErrorCodes.loginRequired);
         if (loginRequired) {
             this.eventBus.emit(EventNames.LoginRequired, new LoginRequiredEvent());
