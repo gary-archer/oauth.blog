@@ -340,6 +340,9 @@ private handleAllViewsLoaded(): void {
 
     if (this.loadedCount === this.loadingCount) {
 
+        this.loadedCount = 0;
+        this.loadingCount = 0;
+
         const errors = this.getLoadErrors();
         const loginRequired = errors.find((e) => e.errorCode === ErrorCodes.loginRequired);
         if (loginRequired) {

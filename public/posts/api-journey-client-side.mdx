@@ -299,16 +299,6 @@ Clicking an *Error Summary* link invokes an *Error Details* dialog that provides
 
 The *API Session ID* shown in the browser is nothing to do with OAuth or security. Instead, it enables a technical user of the SPA to query the API logs their session generates. See the <a href='api-technical-support-analysis.mdx'>Technical Support Analysis</a> post for details.
 
-### Clients Handle Advanced Failures
-
-OAuth clients can experience some advanced failure scenarios that can be difficult to reason about, due to the three way relationship between the client, the  APIs it calls and the authorization server. The best way to deal with error events reliably is to rehearse them.
-
-| Failure Scenario | Resilient Application Behaviour |
-| ---------------- | ------------------------------- |
-| Key Renewal | Token signing keys, or cookie encryption keys used by SPAs, are sometimes renewed in an abrupt way. This blog's clients handle 401 API responses after which token refresh would fail with a session expired error. This causes a new login redirect and avoids user errors. |
-| Redirect Loops | This blog's apps don't trigger an authorization redirect when APIs return permanent 401 errors. Instead, redirects only occur when there is no access token yet or if token refresh fails with a session expired error. Doing so prevents the possibility of redirect loops. |
-| Invalid Tokens | OAuth configuration mistakes can result in access tokens that APIs permanently reject, even though token refresh works. The client should then present an error, but clear token state. The client can then prompt the user to run a new authorization redirect. This enables the client to get a corrected access token and avoids the user being stuck. |
-
 ### Client Responsibilities are Separated
 
 To provide the behaviours that I articulate, this blog's API require some plumbing code. A folder structure classifies each class as *view* related or *plumbing* related. In real clients you might externalise some of the plumbing to one or more shared libraries. The goal in a real organization would be to use clean, scalable code for the valuable views and view models.

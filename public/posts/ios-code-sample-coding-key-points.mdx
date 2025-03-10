@@ -340,6 +340,10 @@ private func handleAllViewsLoaded() {
 
     if self.loadedCount == self.loadingCount {
 
+        self.loadedCount = 0
+        self.loadingCount = 0
+
+
         let errors = self.getLoadErrors()
         let loginRequired = errors.first { error in
                 error.errorCode == ErrorCodes.loginRequired
@@ -348,20 +352,9 @@ private func handleAllViewsLoaded() {
             self.eventBus.sendLoginRequiredEvent()
             return
         }
-
-        let oauthConfigurationError = errors.first { error in
-                (error.statusCode == 401 && error.errorCode == ErrorCodes.invalidToken) ||
-                (error.statusCode == 403 && error.errorCode == ErrorCodes.insufficientScope)
-        }
-
-        if oauthConfigurationError != nil {
-            self.oauthClient.clearLoginState()
-        }
     }
 }
 ```
-
-The ViewModelCoordinator class also deals with invalid token errors, such as incorrect scope, claims or audience configurations. For these errors, the app clears its login state to enable retries where the OAuth configuration has been fixed. The app then receives new tokens and the user can recover.
 
 ### AppAuth Library - Login Requests
 

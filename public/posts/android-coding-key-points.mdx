@@ -312,26 +312,18 @@ private fun handleAllViewsLoaded() {
 
     if (this.loadedCount == this.loadingCount) {
 
+        this.loadedCount = 0
+        this.loadingCount = 0
+
         val errors = this.getLoadErrors()
         val loginRequired = errors.find { e -> e.errorCode == ErrorCodes.loginRequired }
         if (loginRequired != null) {
             this.eventBus.post(LoginRequiredEvent())
             return
         }
-
-        val oauthConfigurationError = errors.find { e ->
-            (e.statusCode == 401 && e.errorCode == ErrorCodes.invalidToken) ||
-            (e.statusCode == 403 && e.errorCode == ErrorCodes.insufficientScope)
-        }
-
-        if (oauthConfigurationError != null) {
-            this.oauthClient.clearLoginState()
-        }
     }
 }
 ```
-
-The ViewModelCoordinator class also deals with invalid token errors, such as incorrect scope, claims or audience configurations. For these errors, the app clears its login state to enable retries where the OAuth configuration has been fixed. The app then receives new tokens and the user can recover.
 
 ### AppAuth Library - Login Requests
 
