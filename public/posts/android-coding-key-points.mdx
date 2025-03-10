@@ -89,7 +89,7 @@ init {
 
     this.oauthClient = OAuthClientImpl(this.configuration.oauth, this.app.applicationContext)
     this.fetchClient = FetchClient(this.configuration, this.fetchCache, this.oauthClient)
-    this.viewModelCoordinator = ViewModelCoordinator(this.eventBus, this.fetchCache, this.oauthClient)
+    this.viewModelCoordinator = ViewModelCoordinator(this.eventBus, this.fetchCache)
 
     this.isLoaded = false
     this.isTopMost = true

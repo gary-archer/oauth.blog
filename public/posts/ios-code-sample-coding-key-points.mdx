@@ -128,7 +128,7 @@ init(eventBus: EventBus) {
     self.configuration = try! ConfigurationLoader.load()
     self.oauthClient = OAuthClientImpl(configuration: self.configuration.oauth)
     self.fetchClient = try! FetchClient(configuration: self.configuration, fetchCache: self.fetchCache, oauthClient: self.oauthClient)
-    self.viewModelCoordinator = ViewModelCoordinator(eventBus: eventBus, fetchCache: self.fetchCache, oauthClient: self.oauthClient)
+    self.viewModelCoordinator = ViewModelCoordinator(eventBus: eventBus, fetchCache: self.fetchCache)
 
     self.isLoaded = false
     self.isDeviceSecured = DeviceSecurity.isDeviceSecured()
