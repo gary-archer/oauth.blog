@@ -4,7 +4,7 @@ Previously I showed how to enable an <a href='log-aggregation-setup.mdx'>OAuth L
 
 If you run an API and client you can use the client to initiate multiple requests to the API, then use the Kibana system to query the API logs you generate. The main focus of this post is control over log data, so I only use the *Dev Tools* console. I consider log queries for three roles of log user: *DevOps*, *Testers* and *Developers*.
 
-![logging system](../images/400/logging-system.jpg)
+![logging system](../images/400/logging-system.jpg?v=20250315)
 
 ### 1. DevOps Technical Support Queries
 
@@ -14,12 +14,12 @@ DevOps teams need effective filtering to understand systems under load, where th
 
 This blog's final frontend code samples enable you to simulate a user experiencing a problem due to a backend error, by long pressing the *Reload Data* button for a couple of seconds. This results in a frontend error display of the following form:
 
-![error display](../images/400/error-display.jpg)
+![error display](../images/400/error-display.jpg?v=20250315)
 
 You can quickly look up exception details for the exact incident with the following format of query. This matches the *Fairly Unique Identifier* that the frontend displays. You can design this identifier to be easy for users to read, write or say.
 
 ```markdown
-GET apilogs*/_search
+GET apilogs/_search
 { 
   "query":
   {
@@ -99,7 +99,7 @@ SELECT
   statusCode,
   userId 
 FROM
-  "apilogs*"
+  apilogs
 WHERE
   errorCode='exception_simulation' 
 AND
@@ -130,7 +130,7 @@ SELECT
   statusCode,
   errorCode
 FROM
-  "apilogs*"
+  apilogs
 WHERE
   sessionId='720078f3-bd50-e9f1-26d4-2b7c9e606402'
 ORDER BY
@@ -169,7 +169,7 @@ You can log the runtime values received in URL path segments in a *resourceId* f
 ```markdown
 POST _sql?format=txt
 {
-  "query": """SELECT * from "apilogs*" where resourceId like '%456-789%'"""
+  "query": "SELECT * from apilogs where resourceId like '%456-789%'"
 }
 ```
 
@@ -188,7 +188,7 @@ SELECT
   errorCode,
   COUNT(1) as frequency
 FROM
-  "apilogs*"
+  apilogs
 WHERE
   errorCode IS NOT NULL 
 AND
@@ -234,7 +234,7 @@ The session ID enables testers to focus only on logs for the entries that they g
 ```markdown
 POST _sql?format=txt
 {
-"query": """SELECT * from "apilogs*" where sessionId='196f31be-8a28-e0d6-3247-a29a4a3d86ca'"""
+"query": "SELECT * from apilogs where sessionId='196f31be-8a28-e0d6-3247-a29a4a3d86ca'"
 }
 ```
 
@@ -253,7 +253,7 @@ SELECT
   errorCode,
   COUNT(1) as frequency
 FROM
-  "apilogs*"
+  apilogs
 WHERE
   errorCode IS NOT NULL 
 AND
@@ -276,7 +276,7 @@ Other errors may need discussion. You expect occasional errors due to infrastruc
 Organizations sometimes use performance tests on real-world data sets before releasing a feature. The session ID sent to APIs is used in the same way for both load tests and frontend clients. To get the server side logs for the *5 slowest requests* in a load test, you might use the following type of advanced Lucene query:
 
 ```markdown
-POST apilogs*/_search
+POST apilogs/_search
 {
   "query": {
     "bool": {
@@ -332,7 +332,7 @@ The preferred place to find problems is at the earliest stage of the pipeline, w
 A good logging system empowers developers when there is an error with someone else's component. Any developer in any team should be able to quickly look up the cause of the upstream error via a basic query:
 
 ```markdown
-GET apilogs*/_search
+GET apilogs/_search
 {
   "query" : {
     "match" : { "errorId" : 97264 }
