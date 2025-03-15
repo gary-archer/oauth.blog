@@ -141,7 +141,7 @@ The test fires batches of 5 concurrent requests at a time and also intentionally
 
 The <a href='api-automated-tests.mdx'>API Automated Tests</a> post explains how tests get user level tokens without running a full authorization code flow.
 
-### Step 6: Run the SPA Client
+### Step 6: Run a Frontend Client
 
 You can run any of this blog's final frontend clients against the API:
 
@@ -150,18 +150,7 @@ You can run any of this blog's final frontend clients against the API:
 - <a href='android-code-sample-overview.mdx'>Final Android App</a>
 - <a href='ios-code-sample-overview.mdx'>Final iOS App</a>
 
-To run the final SPA as an API client, start in the API's folder, then run the SPA from a parallel folder:
-
-```bash
-cd ..
-git clone https://github.com/gary-archer/oauth.websample.final
-cd oauth.websample.final
-export LOCALAPI='true'
-./build.sh
-./run.sh
-```
-
-The *run.sh* script invokes the default browser at *https://www.authsamples-dev.com/spa* and you can sign in using this blog's test credential:
+To do so, follow the instructions, such as using a *LOCALAPI* environment variable to override the default frontend behavior of pointing to a cloud API. When the frontend runs a code flow you can authenticate with this blog's test credential:
 
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
@@ -215,7 +204,7 @@ The other main objective of the API code sample will be JSON logging of API requ
 
 Meanwhile, the API also writes text files to its *logs* folder in a bare JSON format, ready for log shipping:
 
-![bare logs](../images/350/bare-logs.jpg)
+![bare logs](../images/350/bare-logs.jpg?v=20250315)
 
 Optionally, you can follow the <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</a> to run a Docker-based deployment of the Elastic Stack. You can then run <a href='api-technical-support-analysis.mdx'>Technical Support Queries</a> against the API's logs. This would be useful in a production system, to make sense of large volumes of API requests.
 
