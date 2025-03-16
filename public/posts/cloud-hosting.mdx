@@ -1,0 +1,63 @@
+# Cloud Deployment Goals
+
+Previously I completed this blog's mobile theme by explaining <a href='ios-code-sample-coding-key-points.mdx'>Code Details</a> for the iOS code sample. Next I explain how this blog's code samples use cloud infrastructure. First though, I articulate some goals and requirements for a cloud platform.
+
+### Fast Time to Market
+
+Often the main high level goal for an organization is a fast and predictable time to market for end user functionality. Yet often in software there are hidden complexities that prevent that from being a reality. Solid cloud deployment patterns with a clean separation of concerns can reduce application responsibilities to enable business focused development that aligns with this goal.
+
+### Immediate Infrastructure
+
+Cloud platforms provide infrastructure as a service that makes people more productive. You can provision remote hardware on demand, for storage, compute and networking. In particular the networking provides HTTPS URLs for APIs, web static content and other endpoints. Organizations can upload application binaries to quickly provide working applications to users.
+
+### Productive Development
+
+Cloud platforms can empower developers to spin up infrastructure and build more powerful systems. For this blog I purchased an AWS development domain at *authsamples.com* at low cost, which I use to host applications. Developers no longer need to rely upon IT departments to enable addressable applications.
+
+### Technical Control
+
+The two main cloud deployment models are summarized in the following table. If you follow a requirements based approach you can mix and match approaches. My preference is to use a serverless approach for the web side of the architecture and a cloud native approach for the API side of the architecture.
+
+| Deployment Model | Description |
+| ---------------- | ----------- |
+| Serverless | You avoid managing any servers but give up control and accept any limitations the cloud provider imposes. |
+| Cloud Native | You take finer control over important technical behaviours but have to do more deployment related work. |
+
+### Best Supporting Components
+
+In an OAuth architecture, you should aim for the following capabilities on the API side of the architecture, as summarised in the previous post on <a href='api-platform-design.mdx'>API Architecture Goals</a>:
+
+- API code runs without limitations, in the same way as on a development computer.
+- An authorization server provides extensible user authentication and token issuance capabilities.
+- An API gateway can perform token translation to deliver JWT access tokens to APIs.
+- A log aggregation system enables you to understand the behaviour of the distributed system.
+
+Supporting components for APIs is an area where cloud native tends to perform better than serverless deployments. You choose your preferred supporting components and host them right next to your APIs. Conversely, the web side of the architecture is only static content so does not need supporting components.
+
+### Availability and Performance
+
+Both types of deployment use operational design patterns such as the following to keep your APIs available and performant:
+
+- APIs can provide health check endpoints so that the platform automatically replaces unhealthy instances.
+- APIs can provide metrics endpoints so that the platform automatically scales up the number of replicas when performance is slow.
+
+On the web side of the architecture, static content is best distributed to hundreds of global locations to ensure globally equal performance. API hosting is considerably more complex, since you may need to consider laws on where to store data and also deal with technical concerns like data replication.
+
+### Future Proof Hosting
+
+The big advantage of cloud native is that you avoid vendor lock in and retain the ability to deploy the same system anywhere, so that you have future business agility. This allows you to extend your reach to many countries, use multiple cloud providers or even decide to revert to on premise clusters.
+
+### Cost Effective
+
+Your hosting typically needs to account for multiple environments, including development, testing, staging and production. If all environments require cloud infraastructure you may incur considerable costs. Therefore it can be useful to retain the ability to run your APIs, clients and supporting components both with and without cloud infrastructure.
+
+In particular, with cloud native you can run some test environments on local computers, to save costs. Local deployments also have some benefits that you may not be able to quantify, such as the ability to rehearse upgrades of critical components or to train new employees on how the overall system works.
+
+### Where Are We?
+
+Cloud technology has many potential benefits but your goals and requirements should always come first. You then need to make technical choices that best meet your requirements. To get started on using cloud systems I begin in the same way as I began the OAuth content, with domain names and base URLs.
+
+### Next
+
+- Next I explain this blog's <a href='cloud-domain-setup.mdx'>Cloud Domain Setup</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

@@ -1,0 +1,152 @@
+# Final SPA - Overview
+
+Previously I explained the <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend</a> setup for the final SPA, where remote API components issue cookies on behalf of the SPA. Next I summarise the main frontend behaviours of the completed SPA, after which I show how to run it locally.
+
+### Key Features
+
+The final SPA improves on the previous <a href='improved-spa-code-sample-overview.mdx'>Updated SPA</a>, to meet some key requirements. It is difficult to satisfy all of these at the same time:
+
+| Requirement | Description |
+| ----------- | ----------- |
+| Best Browser Security | The SPA calls APIs using the strongest *HttpOnly SameSite=strict* cookies, with no tokens in the browser. |
+| Globally Equal Performance | Deploy the SPA to a content delivery network, so that web latency is roughly the same at any global location. |
+| Pure SPA Development | Web developers work productively on modern frontends, with small code bases and no security plumbing. |
+
+### Cloud Hosting
+
+I deploy the overall system of the SPA and APIs to AWS. I upload the SPA's web static content to S3, then CloudFront replicates the web resources to ~400 global locations, without the need to manage servers or containers:
+
+![aws technologies](../images/220/aws-technologies.jpg)
+
+I deploy the API code sample to AWS as <a href='serverless-api-overview.mdx'>Serverless Lambda Functions</a> that the AWS API Gateway exposes to the internet. I find this API technology a little suboptimal in some areas, including performance, but it provides low cost backend hosting for this blog's demo APIs.
+
+### Online Deployment
+
+Any reader can run the AWS deployed version of the SPA from this blog's <a href='quick-start.mdx'>Cloud Samples Quick Start</a> page. You can sign in to the SPA with a test user account, then test OAuth lifecycle events via the demo app's buttons:
+
+![online spa](../images/220/online-spa.jpg?v=20240713)
+
+### Code Sample
+
+The SPA code sample manages only frontend concerns. The resources in the *deployment* folder represent web static content hosting variations. The next post shows how to run the code sample locally.
+
+<div className='smallimage'>
+    <img src='../images/220/code-layout.jpg?v=20241222' alt='code layout' />
+</div>
+
+### Development URLs
+
+You use the following URLs during local development and only the first of these runs on the local computer:
+
+| Component | Base URL |
+| --------- | -------- |
+| SPA | *https://www.authsamples-dev.com/spa/* |
+| Investments API | *https://api.authsamples.com/investments* |
+| Investments API Web Route | *https://bff.authsamples-dev.com/investments* |
+| OAuth Agent | *https://bff.authsamples.com-dev/oauth-agent* |
+| Authorization Server | *https://login.authsamples.com* |
+
+### OAuth Client
+
+In AWS Cognito the deployed SPA registration points to an AWS CloudFront web origin. The SPA is upgraded to a confidential client, and its backend for frontend uses a client credential in grant requests for tokens:
+
+![oauth client production](../images/220/oauth-client-production.jpg?v=20240713)
+
+A second entry exists to run the SPA during development, which has an equivalent registration except that the configured web URLs use a local development web origin.
+
+![oauth client development](../images/220/oauth-client-development.jpg?v=20240713)
+
+### React Code
+
+The SPA's code now uses React as a web framework, to enable better features during coding of views. The SPA renders a tree of views which leads to concurrent API requests. The SPA must synchronise the triggering of both token renewal and user re-authentication when tokens expire.
+
+```jsx
+return (
+    <>
+        <TitleView {...getTitleProps()} />
+        <HeaderButtonsView {...getHeaderButtonProps()} />
+        {model.error && <ErrorSummaryView {...getErrorProps()} />}
+        {model.isLoaded &&
+            <>
+                <SessionView {...getSessionProps()} />
+                <Routes>
+                    <Route path='/companies/:id' element={<TransactionsContainer {...getTransactionsProps()} />} />
+                    <Route path='/loggedout'     element={<LoginRequiredView {...getLoginRequiredProps()} />} />
+                    <Route path='/*'             element={<CompaniesContainer {...getCompaniesProps()} />} />
+                </Routes>
+            </>
+        }
+    </>
+);
+```
+
+### Path Based Routing
+
+Earlier SPAs in this blog used hash-based routing. The final SPA instead uses React's support for path-based routes. The SPA continues to use a *base* path expressed in the index.html file:
+
+```html
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>
+
+        <base href='/spa/' />
+        <title>OAuth Demo App</title>
+
+        <link rel='stylesheet' href='bootstrap.min.css'>
+        <link rel='stylesheet' href='app.css'>
+    </head>
+    <body>
+        <div id='root' class='container'></div>
+
+        <script type='module' src='vendor.bundle.js'></script>
+        <script type='module' src='react.bundle.js'></script>
+        <script type='module' src='app.bundle.js'></script>
+    </body>
+</html>
+```
+
+When the app loads, the React application reads the base path from the *index.html* file and supplies it to the React router. The app then uses relative routes within the */spa/* base path.
+
+### Mobile First
+
+Since the SPA is now cloud-deployed, you can access it on small mobile devices, so I made the final SPA more presentable on smaller screens:
+
+<div className='smallimage'>
+    <img src='../images/220/mobile-view.jpg?v=20240713' alt='mobile view' />
+</div>
+
+### Web Performance
+
+The time to first render in a secured web application is not immediate and requires the following steps. The browser makes multiple static content and HTTP requests. Modern networks and the latest HTTP/2 functionality help to manage the steps efficiently:
+
+| Step | Description |
+| ---- | ----------- |
+| Unauthenticated Access | The time to download HTML resources and run code to detect the user's authentication status. |
+| OAuth Login | The time to redirect to the authorization server and present login screens, then return to the SPA. |
+| Secure SPA Access | The application reload, followed by API requests to get secured data specific to the user. |
+
+The final SPA uses the following mainstream techniques to ensure good performance:
+
+| Aspect | Responsibilities |
+| ------ | ---------------- |
+| Content Delivery | Web latency is roughly equal for all global users, since a CDN ensures that all web downloads are fairly local. |
+| Static Content Caching | The SPA uses cache control headers for web assets, to serve future requests from the browser cache. |
+| API Response Caching | The SPA caches HTTP GET responses to prevent redundant API requests, such as during back navigation. |
+| Download Sizes | As the SPA's code grows I would aim for medium-sized downloads using bundle splitting techniques and micro-frontends. |
+
+The final SPA's has a simple initial page to display a login button. Once rendered, all future SPA operations and page reloads use HTML resources from the browser's local cache.
+
+![first render](../images/220/first-render.jpg)
+
+The SPA uses CORS when it calls APIs, which is standard in any pure SPA architecture, but adds a small performance overhead. When a user first accesses an API endpoint, the browser sends preflight OPTIONS requests and then caches the CORS response for 24 hours.
+
+### Where Are We?
+
+I summarised the behaviour of the final SPA's web architecture. Development uses a modern web framework and there is an early focus on security, deployment, performance and reliability. You can scale both URLs and code as the web code base grows.
+
+### Next
+
+- I explain <a href='how-to-run-the-react-js-spa.mdx'>How to Run the Final SPA</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.
