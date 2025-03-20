@@ -16,9 +16,9 @@ The code for the example Node.js API consists of three main areas:
 
 In a real API platform, you could produce shared libraries with some of the contents of the plumbing folder. The API would then have far less code.
 
-### Use of Dependency Injection
+### Dependency Injection
 
-The API uses [InversifyJS](https://github.com/inversify/InversifyJS) to manage object creation and lifetimes. This includes injecting the request scoped claims principal and log entry instances into business logic:
+The API uses [InversifyJS](https://github.com/inversify/InversifyJS) to implement dependency injection. A container manages most object creation and lifetimes, including those of the claims principal and log entry for the current request. Use of constructor injection makes it easier to understand and swap out object relationships.
 
 ![inversifyjs](../images/310/inversifyjs.jpg)
 
@@ -28,7 +28,7 @@ The API's entry point is its *app.ts* file, which creates the container and then
 
 ```typescript
 const loggerFactory = LoggerFactoryBuilder.create();
-const container = new Container();
+const parentContainer = new Container();
 
 try {
 
@@ -36,7 +36,7 @@ try {
     const configuration = JSON.parse(configurationBuffer.toString()) as Configuration;
     loggerFactory.configure(configuration.logging);
 
-    const httpServer = new HttpServerConfiguration(configuration, container, loggerFactory);
+    const httpServer = new HttpServerConfiguration(configuration, parentContainer, loggerFactory);
     await httpServer.configure();
     httpServer.start();
 
@@ -49,7 +49,7 @@ try {
 The *HttpServerConfiguration* class configures HTTP routes using the [Routing Controllers](https://github.com/typestack/routing-controllers) library:
 
 ```typescript
-useContainer(new InversifyAdapter(this.container));
+useContainer(new InversifyAdapter());
 useExpressServer(this.expressApp, {
     defaultErrorHandler: false,
     routePrefix: apiBasePath,
@@ -62,7 +62,7 @@ This enables declarative routes for API requests, as is common in other API tech
 ```typescript
 @injectable()
 @Controller('/companies')
-export class CompanyController extends BaseHttpController {
+export class CompanyController {
 
     private readonly service: CompanyService;
 
@@ -107,13 +107,11 @@ Inversify uses the following type of syntax to register dependencies. Some objec
 ```typescript
 container.bind<OAuthConfiguration>(BASETYPES.OAuthConfiguration)
     .toConstantValue(this.oauthConfiguration!);
-container.bind<OAuthFilter>(BASETYPES.OAuthFilter)
-    .to(OAuthFilter).inRequestScope();
 container.bind<CompanyService>(SAMPLETYPES.CompanyService)
     .to(CompanyService).inTransientScope();
 ```
 
-For APIs with small dependency graphs, I reduce the likelihood of parallel requests impacting each other, by giving each request its own independent object instances. I use a request scope for REST specific objects, or a transient scope otherwise.
+For APIs with small dependency graphs, I reduce the likelihood of parallel requests impacting each other, by giving each request its own independent object instances.
 
 
 ### Middleware
@@ -121,7 +119,7 @@ For APIs with small dependency graphs, I reduce the likelihood of parallel reque
 As part of composing base dependencies, I create middleware classes for cross cutting concerns, and these are natural singletons:
 
 ```typescript
-const childContainerMiddleware = new ChildContainerMiddleware(this.container);
+const childContainerMiddleware = new ChildContainerMiddleware(this.parentContainer);
 const loggerMiddleware = new LoggerMiddleware(this.loggerFactory);
 const authorizerMiddleware = new AuthorizerMiddleware();
 const customHeaderMiddleware = new CustomHeaderMiddleware(this.configuration.logging.apiName);
@@ -140,20 +138,20 @@ I summarise the role of each of the API's middleware objects in the following ta
 
 ### Child Container Per Request
 
-Inversify supports a child container concept, and the first middleware creates a child container at the start of each HTTP request and tears it down at the end of an HTTP request. The child container can access all objects from the parent container:
+With Inversify I use a child container per request pattern to store request scoped objects. The first middleware creates a child container at the start of each HTTP request and tears it down at the end of the HTTP request. The child container can access all objects from the parent container:
 
 ```typescript
 export class ChildContainerMiddleware {
 
-    private readonly container: Container;
+    private readonly parentContainer: Container;
 
-    public constructor(container: Container) {
-        this.container = container;
+    public constructor(parentContainer: Container) {
+        this.parentContainer = parentContainer;
     }
 
     public execute(request: Request, response: Response, next: NextFunction): void {
 
-        response.locals.container = this.container.createChild();
+        response.locals.container = new Container({ parent: this.parentContainer });
         response.on('finish', () => {
             delete response.locals.container;
         });
@@ -163,18 +161,12 @@ export class ChildContainerMiddleware {
 }
 ```
 
-### Dependency Resolution
+### Controller Resolution
 
 The *InversifyAdapter* object uses the child container to resolve all objects when it autowires REST controllers. Inversify stores request and transient scoped objects for the current HTTP request only in the child container and not in the parent container:
 
 ```typescript
 export class InversifyAdapter implements IocAdapter {
-
-    private readonly container: Container;
-
-    constructor(container: Container) {
-        this.container = container;
-    }
 
     public get<T>(someClass: ClassConstructor<T>, action?: Action): T {
 
@@ -253,24 +245,14 @@ The API uses the same OAuth integration and claims handling techniques as this b
 public async execute(request: Request, response: Response, next: NextFunction): Promise<void> {
 
     const container = response.locals.container as Container;
+    const filter =  container.get<OAuthFilter>(BASETYPES.OAuthFilter);
+    const logEntry = container.get<LogEntryImpl>(BASETYPES.LogEntry);
 
-    try {
+    const claimsPrincipal = await filter.execute(request, response);
+    logEntry.setIdentity(ClaimsReader.getStringClaim(claimsPrincipal.getJwt(), 'sub'));
+    container.bind<ClaimsPrincipal>(BASETYPES.ClaimsPrincipal).toConstantValue(claimsPrincipal);
 
-        const filter =  container.get<OAuthFilter>(BASETYPES.OAuthFilter);
-        const logEntry = container.get<LogEntryImpl>(BASETYPES.LogEntry);
-
-        const claimsPrincipal = await filter.execute(request, response);
-        logEntry.setIdentity(ClaimsReader.getStringClaim(claimsPrincipal.getJwt(), 'sub'));
-        container.bind<ClaimsPrincipal>(BASETYPES.ClaimsPrincipal).toConstantValue(claimsPrincipal);
-
-        next();
-
-    } catch (e) {
-
-        const exceptionHandler = container.get<UnhandledExceptionHandler>(
-            BASETYPES.UnhandledExceptionHandler);
-        exceptionHandler.execute(e, request, response, next);
-    }
+    next();
 }
 ```
 
