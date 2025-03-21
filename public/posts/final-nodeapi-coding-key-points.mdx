@@ -90,8 +90,8 @@ Dependency injection works differently in Node.js to languages such as C# and Ja
 The startup logic registers dependencies, which consist of both plumbing objects and application objects:
 
 ```typescript
-new BaseCompositionRoot(this.container)
-    .useOAuth(this.configuration.oauth)
+new BaseCompositionRoot(this.parentContainer)
+    .useOAuth(this.parentContainer.oauth)
     .withExtraClaimsProvider(new SampleExtraClaimsProvider())
     .withLogging(this.configuration.logging, this.loggerFactory)
     .withExceptionHandler(exceptionHandler)
@@ -104,9 +104,9 @@ CompositionRoot.registerDependencies(this.container);
 Inversify uses the following type of syntax to register dependencies. Some objects are singletons, others are bound to the current request and others are transient, meaning the container creates a new instance whenever it resolves the type:
 
 ```typescript
-container.bind<OAuthConfiguration>(BASETYPES.OAuthConfiguration)
+parentContainer.bind<OAuthConfiguration>(BASETYPES.OAuthConfiguration)
     .toConstantValue(this.oauthConfiguration!);
-container.bind<CompanyService>(SAMPLETYPES.CompanyService)
+parentContainer.bind<CompanyService>(SAMPLETYPES.CompanyService)
     .to(CompanyService).inTransientScope();
 ```
 
@@ -183,7 +183,7 @@ I use a number of plumbing classes to implement API logging, whose end goal is t
     <img src='../images/310/logging-classes.jpg' alt='logging classes' />
 </div>
 
-The *LoggerMiddleware* creates a *LogEntry* and dynamically updates the stub object registered earlier:
+The *LoggerMiddleware* then creates a *LogEntry* to contain technical details about the request:
 
 ```typescript
 public execute(request: Request, response: Response, next: NextFunction): void {
