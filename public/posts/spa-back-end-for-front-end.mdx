@@ -29,6 +29,8 @@ In 2021 I adopted the *Token Handler Pattern* which consists of the following AP
 | OAuth Agent | A REST API that acts as a backend for frontend to simplify OAuth work for the SPA and manage a backend client credential. The BFF also issues cookies to the SPA that contain encrypted tokens. |
 | OAuth Proxy | A plugin that runs in a high-performance API gateway. During API requests the plugin decrypts cookies and forwards JWT access tokens to APIs. |
 
+This architecture requires extra moving parts. There is a learning curve to understand the deployment and its configuration settings. The reward once you get deployment working is to maintain a modern and productive frontend technical setup for all future web development.
+
 ### Security Components
 
 I illustrate the overall components here, where the token handler acts as an advanced reverse proxy. Calls from the SPA to APIs must be SameSite so that cookies are classified as first-party, to ensure that the browser does not drop them during API requests due to third-party cookie restrictions.
