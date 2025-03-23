@@ -35,6 +35,7 @@ The test configuration that points to a mock JWKS URI can be considered one of t
     "oauth": {
         "issuer":                        "testissuer.com",
         "audience":                      "api.authsamples.com",
+        "algorithm":                     "ES256",
         "scope":                         "investments",
         "jwksEndpoint":                  "https://login.authsamples-dev.com:447/.well-known/jwks.json",
         "userInfoEndpoint":              "https://login.authsamples-dev.com:447/oauth2/userInfo",
@@ -43,6 +44,8 @@ The test configuration that points to a mock JWKS URI can be considered one of t
     }
 }
 ```
+
+Where possible, such as for API tests, the API receives access tokens that use the ES256 token signing algorithm, since it a modern secure option that the vast majority of JWT libraries support. When my APIs integrate with AWS Cognito, which only supports the older *RS256* algorithm at the time of writing, I configure the API to expect that algorithm instead.
 
 ### Integration Tests
 
