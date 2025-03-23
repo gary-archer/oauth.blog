@@ -119,7 +119,7 @@ The desktop app has an OAuth client registration in AWS Cognito, with the follow
 
 ![oauth client](../images/420/oauth-client.jpg)
 
-At the time of writing, AWS Cognito does not properly support loopback redirect URI behaviors from RFC 8252. It requires a base URL of *http://localhost* instead of *http://127.0.0.1*, rejects path like */callback* and I also had to register all possible redirect URI values.
+At the time of writing, AWS Cognito does not properly support loopback redirect URI behaviours from RFC 8252. It requires a base URL of *http://localhost* instead of *http://127.0.0.1*, rejects path like */callback* and I also had to register all possible redirect URI values.
 
 ### Step 6: Login Completion Page
 

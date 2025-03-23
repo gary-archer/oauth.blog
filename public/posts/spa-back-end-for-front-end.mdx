@@ -26,8 +26,8 @@ In 2021 I adopted the *Token Handler Pattern* which consists of the following AP
 
 | Component | Description |
 | --------- | ----------- |
-| [OAuth Agent](https://github.com/curityio/oauth-agent-node-express) | An API-driven backend for frontend that simplifies OAuth  work for the SPA and manages a backend client credential. The BFF also issues cookies to the SPA that contain encrypted tokens. |
-| [OAuth Proxy](https://github.com/curityio/nginx-lua-oauth-proxy-plugin) | A plugin that runs in a high-performance API gateway. During API requests the plugin decrypts cookies and forwards JWT access tokens to APIs. |
+| OAuth Agent | A REST API that acts as a backend for frontend to simplify OAuth work for the SPA and manage a backend client credential. The BFF also issues cookies to the SPA that contain encrypted tokens. |
+| OAuth Proxy | A plugin that runs in a high-performance API gateway. During API requests the plugin decrypts cookies and forwards JWT access tokens to APIs. |
 
 ### Security Components
 
@@ -99,6 +99,25 @@ Developers must then also add the *bfflocal* subdomain to the hosts file. You ca
 ![spa and api](../images/210/spa-and-api.jpg?v=20240915)
 
 More generally there can be reliability and productivity benefits when you invest in setups that enable development and testing together. You can decide to run some components locally from code, with other components running in deployed environments or in docker.
+
+### Token Handlers
+
+I do not explain the token handler pattern in this blog, but you can study the following resources to understand the SPA's cookie layer. The full stack token handler demonstrates the preferred implementation, where the OAuth Proxy logic executes in a high performance API gateway:
+
+- [OAuth Agent](https://github.com/curityio/cloud-native-oauth-security-examples/tree/main/chapter-13-browser-based-apps/backend-for-frontend/oauth-agent)
+- [OAuth Proxy](https://github.com/curityio/cloud-native-oauth-security-examples/tree/main/resources/apigateway/curity-oauth-proxy)
+
+My online demo APIs use <a href='serverless-api-overview.mdx'>Serverless Hosting</a> due to its low costs. I must therefore use the AWS API gateway, whose authorizer logic does not support the following requirements:
+
+- At the web route, run logic in the API gateway to process cookies and enforce web specific security.
+- Then update the request's HTTP authorization header with a JWT access token and route to the API lambda.
+
+To work around this I implemented a [Serverless Token Handler](https://github.com/gary-archer/oauth.tokenhandler.serverless) that works as follows during API requests:
+
+- A wildcard lambda runs at *https://bff.authsamples.com/investments* to process cookies and enforce web specific security.
+- The wildcard lambda uses the Axios library to explicitly call *https://api.authsamples.com/investments* with an access token.
+
+Although this works well enough to meet this blog's basic requirements, it is in effect a home grown API gateway that is a little suboptimal in a number of areas, including performance, reliability and code complexity.
 
 ### Where Are We?
 
