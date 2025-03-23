@@ -48,7 +48,7 @@ I then created a [Pre-Token-Generation Lambda Trigger](https://docs.aws.amazon.c
 
 ![token lambda](../images/600/token-lambda.jpg)
 
-I added a lambda function with the following code:
+I created a lambda function with the following code, where the *claimsToAddOrOverride* customises access tokens. In the *claimsToSuppress* logic I removes personal data from ID tokens, since my code samples instead get personal data from the authorization server's user info endpoint.
 
 ```javascript
 export const handler = function(event, context) {
@@ -83,7 +83,7 @@ export const handler = function(event, context) {
 };
 ```
 
-The *claimsToSuppress* loigc removes personal data from ID tokens, since my code samples instead get personal data from the Cognito user info endpoint. The *claimsToAddOrOverride* section customises access tokens. Claims issued depend on the client's scope, to enable different clients to receive distinct claims when required. Custom claims can help to lock down access tokens and reduce their privileges. This blog's use of claims is further explained in the <a href='api-authorization-design.mdx'>API Authorization Behaviour</a> post.
+Claims issued to access tokens depend on the client's scope, to enable different clients to receive distinct claims. Custom claims can help to lock down access tokens and reduce their privileges. I would also like to set the access token audience claim to an API identity, as I explain in the <a href='api-authorization-design.mdx'>API Authorization Behaviour</a> post, but that is not possible at the time of writing.
 
 ### Where Are We?
 
