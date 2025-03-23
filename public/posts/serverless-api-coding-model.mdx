@@ -10,12 +10,23 @@ The earlier <a href='api-architecture-node.mdx'>Node.js API</a> used the Express
     <img src='../images/640/code-layout.jpg' alt='code layout' />
 </div>
 
+### Running Serverless Offline
+
+Serverless Offline provides HTTPS entry points to APIs, translates incoming requests to the lambda format and then calls lambda handlers. I run *sls offline* with HTTPS details, including certificates and keys from the API's *certs* folder:
+
+```bash
+npx sls offline \
+  --useInProcess \
+  --noPrependStageInUrl \
+  --prefix 'investments' \
+  --host '0.0.0.0' \
+  --httpPort 446 \
+  --httpsProtocol certs
+```
+
 ### Lambda Entry Points
 
-The entry point to lambda functions is equivalent to earlier *Rest Controller Classes*:
-
-- The lambda resolves the service instance for the request and asks it to do the work.
-- Cross cutting concerns execute before and after the lambda base handler.
+Serverless Offline calls lambda handlers which have an equivalent role to REST controller endpoints. During a request, the lambda resolves a service object that implements business logic. Cross cutting concerns execute before and after the lambda base handler.
 
 ```typescript
 const baseHandler = async (event: APIGatewayProxyExtendedEvent): Promise<APIGatewayProxyResult> => {
@@ -30,12 +41,11 @@ const handler = await instance.prepare(baseHandler);
 export {handler};
 ```
 
-Each lambda instance that AWS creates can process multiple API requests, where each receives an API gateway event object. I implement code so that each lambda could process concurrent HTTP requests, in the same manner as this blog's earlier cloud native APIs.
-
+AWS creates one or more lambda instances for each lambda function. A lambda instance can process multiple API requests, each of which receives an API gateway event object. I implement code so that each lambda instance could process concurrent HTTP requests, in the same manner as this blog's earlier cloud native APIs.
 
 ### Applying Cross Cutting Concerns
 
-During creation of a lambda instance I wire up middleware objects and use register objects with a container that provides dependency injection features:
+During creation of a lambda instance I wire up middleware objects and register objects with a container that provides dependency injection features:
 
 ```typescript
 export class LambdaInstance {
@@ -79,7 +89,7 @@ export class LambdaInstance {
 }
 ```
 
-Earlier Node.js samples used Express middleware whereas for AWS Lambdas I use the [Middy Library](https://github.com/middyjs/middy) to create middleware objects:
+Earlier Node.js samples used Express middleware whereas for AWS lambdas I use the [Middy Library](https://github.com/middyjs/middy) to create middleware objects:
 
 ![middy](../images/640/middy.jpg)
 
@@ -170,7 +180,6 @@ export class ChildContainerMiddleware implements
 }
 ```
 
-
 ### JWT Access Token Validation
 
 An earlier post explained this blog's approach to <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a>, where a JWT library caches token signing public keys. The Serverless API's in-memory caching is less efficient than for cloud native APIs, since there is a separate lambda instance for each API operation, and each lambda instance calls the authorization server's JWKS URI endpoint.
@@ -188,74 +197,71 @@ export class SampleExtraClaims extends ExtraClaims {
 
 ### API Integration Tests
 
-The API has a set of integration tests that use utility classes to mock the authorization server. This enables me to productively test the API with user level access tokens. Tests create temporary files named *input.txt* and *output.txt* that contain the API's request and response data in lambda format.
-
-The following test tries to get a resource for a particular region, when the user's access token does not allow it. The test asserts the expected error response. Some utility code runs *sls invoke* as a child process and captures output. Tests basically work but are more complex than I would like. They also run slow since they need to wait for local lambda startup and shutdown.
+As for this blog's cloud native APIs, there is a set of integration tests that use a mock authorization server. This enables me to productively test the API with user level access tokens. The following test demonstrates the API receiving an access token with an untrusted issuer.
 
 ```typescript
-it ('Get transactions returns 404 for companies that do not match the regions claim', async () => {
+it ('Call API returns 401 for invalid issuer', async () => {
 
     const jwtOptions = new MockTokenOptions();
     jwtOptions.useStandardUser();
+    jwtOptions.issuer = 'https://otherissuer.com';
     const accessToken = await authorizationServer.issueAccessToken(jwtOptions);
 
-    const lambdaOptions = {
-        httpMethod: 'GET',
-        apiPath: '/investments/companies/3/transactions',
-        lambdaFunction: 'getCompanyTransactions',
-        sessionId,
-        accessToken: accessToken,
-        pathParameters: {
-            id: '3',
-        },
-    };
-    const response = await LambdaChildProcess.invoke(lambdaOptions);
+    const options = new ApiRequestOptions(accessToken);
+    const response = await apiClient.getCompanyList(options);
 
-    assert.strictEqual(response.statusCode, 404, 'Unexpected HTTP status code');
-    assert.strictEqual(response.body.code, 'company_not_found', 'Unexpected error code');
-
-}).timeout(10000);
+    assert.strictEqual(response.statusCode, 401, 'Unexpected HTTP status code');
+    assert.strictEqual(response.body.code, 'invalid_token', 'Unexpected error code');
+});
 ```
 
-### Lambda Code Debugging
+### API Logs
 
-Debugging the API in my lambda setup is also non trivial. To debug a particular method I use the following steps:
+Serverless offers only limited control over log output, such as use of a *SLS_DEBUG=** environment variable which I rarely use, since it adds a lot of noise. To ensure that I look at my own preferred output I instead write logs to a file during development or as bare JSON to support log aggregation in AWS.
 
-- Disable integration tests except for a single test case that uses the lambda function that I want to debug.
-- Run the test to produce an *input.txt* file with the access token for the test.
-- Leave the mock authorization server running after the test run completes.
+```typescript
+public write(): void {
 
-I then launch the lambda from Visual Studio Code with a *launch.json* file that references the lambda function to debug:
+    if (this.prettyPrint) {
 
-```json
-{
-    "version":"0.2.0",
-    "configurations": [
-        {
-            "type":"node",
-            "request":"launch",
-            "name":"Launch API",
-            "program":"${workspaceFolder}/node_modules/.bin/serverless",
-            "args":[
-                 "invoke",
-                 "local",
-                 "-f",
-                 "getCompanyTransactions",
-                 "-p",
-                 "test/input.txt"
-            ]
-        }
-    ]
+        const data = JSON.stringify(this.data.toLogFormat(), null, 2);
+        fs.appendFileSync('./api.log', data);
+
+    } else {
+
+        process.stdout.write(JSON.stringify(this.data.toLogFormat()) + '\n');
+    }
 }
 ```
 
-Due to the use of source maps, I can step through the original lines of TypeScript code and view the state of variables, including OAuth and claims data:
+Use of a log file enables local verification of log aggregation. If I need to add additional log statements, I usually avoid *console.log* statements and also append such output to the log file instead.
+
+### Lambda Code Debugging
+
+If I need to debug the API's code, I use Visual Studio Code's debugging features to attach to the Serverless Offline process. The following configuration locates the Serverless Offline process running on port 446. I also need to set a *debugger;* statement at the location where I want the code to stop in the debugger. 
+
+```json
+{
+   "version": "0.2.0",
+   "configurations": [
+       {
+           "type": "node",
+           "request": "attach",
+           "name": "Attach to Serverless Offline",
+           "processId": "${command:PickProcess}",
+           "port": 446
+       }
+   ]
+}
+```
+
+Due to the use of source maps in debug builds, I can step through the original lines of TypeScript code and view the state of variables, including OAuth and claims data:
 
 ![debug](../images/640/debug.jpg?v=20250126)
 
 ### Where Are We?
 
-I invested in a productive test setup to develop Serverless APIs and use portable techniques for coding, testing and deployment whenever possible. The low cost lambda hosting and technology support is an interesting technology and works well enough to provide an API backend for my blog's code samples.
+I invested in a productive test setup to develop Serverless APIs and use portable techniques for coding, testing and deployment whenever possible. Although I quite like the Serverless framework, it is time consuming to ensure that all of the important behaviors work both in development and deployed systems. Instead, I prefer to be able to run more complete environments on a development computer, including security components like the API gateway and authorization server.
 
 ### Next
 
