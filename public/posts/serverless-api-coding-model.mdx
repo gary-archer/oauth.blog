@@ -18,88 +18,96 @@ The entry point to lambda functions is equivalent to earlier *Rest Controller Cl
 - Cross cutting concerns execute before and after the lambda base handler.
 
 ```typescript
-const container = new Container();
-const baseHandler = async (): Promise<APIGatewayProxyResult> => {
+const baseHandler = async (event: APIGatewayProxyExtendedEvent): Promise<APIGatewayProxyResult> => {
 
-    const baseClaims = container.get<BaseClaims>(BASETYPES.BaseClaims);
-    ScopeVerifier.enforce(baseClaims.scopes, 'transactions_read');
-
-    const service = container.get<CompanyService>(SAMPLETYPES.CompanyService);
+    const service = event.container.get<CompanyService>(SAMPLETYPES.CompanyService);
     const companies = await service.getCompanyList();
-
-    return ResponseWriter.objectResponse(200, companies);
+    return ResponseWriter.successResponse(200, companies);
 };
 
-const configuration = new LambdaConfiguration();
-const handler = configuration.enrichHandler(baseHandler, container);
-
+const instance = new LambdaInstance();
+const handler = await instance.prepare(baseHandler);
 export {handler};
 ```
 
+Each lambda instance that AWS creates can process multiple API requests, where each receives an API gateway event object. I implement code so that each lambda could process concurrent HTTP requests, in the same manner as this blog's earlier cloud native APIs.
+
+
 ### Applying Cross Cutting Concerns
 
-I enrich lambdas with middleware classes to manage aspects such as authorization, logging and error handling:
+During creation of a lambda instance I wire up middleware objects and use register objects with a container that provides dependency injection features:
 
 ```typescript
-public enrichHandler(baseHandler: AsyncHandler, container: Container)
-    : middy.MiddyfiedHandler<APIGatewayProxyEvent, APIGatewayProxyResult> | AsyncHandler {
+export class LambdaInstance {
 
-    const configuration = this.loadConfiguration();
+    public async prepare(baseHandler: LambdaHandler)
+        : Promise<middy.MiddyfiedHandler<APIGatewayProxyExtendedEvent, APIGatewayProxyResult> | LambdaHandler> {
 
-    const base = new BaseCompositionRoot(container)
-        .useLogging(configuration.logging, loggerFactory)
-        .useOAuth(configuration.oauth)
-        .withCustomClaimsProvider(new SampleCustomClaimsProvider(), configuration.cache)
-        .useHttpProxy(httpProxy)
-        .register();
+        const loggerFactory = LoggerFactoryBuilder.create();
+        const configuration = this.loadConfiguration();
 
-    const loggerMiddleware = base.getLoggerMiddleware();
-    const exceptionMiddleware = base.getExceptionMiddleware();
-    const authorizerMiddleware = base.getAuthorizerMiddleware();
-    const customHeaderMiddleware = base.getCustomHeaderMiddleware();
+        const parentContainer = new Container();
 
-    return middy(async (event: APIGatewayProxyEvent, context: Context) => {
-        return baseHandler(event, context);
+        const httpProxy = new HttpProxy(configuration.api.useProxy, configuration.api.proxyUrl);
+        await httpProxy.initialize();
 
-    })
-        .use(loggerMiddleware)
-        .use(exceptionMiddleware)
-        .use(authorizerMiddleware)
-        .use(customHeaderMiddleware);
+        const base = new BaseCompositionRoot(parentContainer)
+            .useOAuth(configuration.oauth)
+            .withExtraClaimsProvider(new SampleExtraClaimsProvider())
+            .withLogging(configuration.logging, loggerFactory)
+            .withHttpProxy(httpProxy)
+            .register();
 
+        CompositionRoot.register(parentContainer);
+
+        const childContainerMiddleware = base.getChildContainerMiddleware();
+        const loggerMiddleware = base.getLoggerMiddleware();
+        const exceptionMiddleware = base.getExceptionMiddleware();
+        const authorizerMiddleware = base.getAuthorizerMiddleware();
+        const customHeaderMiddleware = base.getCustomHeaderMiddleware();
+
+        return middy(async (event: APIGatewayProxyExtendedEvent, context: Context) => {
+            return baseHandler(event, context);
+
+        })
+            .use(childContainerMiddleware)
+            .use(loggerMiddleware)
+            .use(exceptionMiddleware)
+            .use(authorizerMiddleware)
+            .use(customHeaderMiddleware);
+    }
 }
 ```
 
-Earlier Node.js samples used middleware built into Express, whereas for AWS Lambdas I use the [Middy Library](https://github.com/middyjs/middy) to separate plumbing code from the API's business logic:
+Earlier Node.js samples used Express middleware whereas for AWS Lambdas I use the [Middy Library](https://github.com/middyjs/middy) to create middleware objects:
 
 ![middy](../images/640/middy.jpg)
 
 Middy provides interception points called *before*, *after* and *error*. The *LoggerMiddleware* class demonstrates the syntax:
 
 ```typescript
-export class LoggerMiddleware implements middy.MiddlewareObj<APIGatewayProxyEvent, APIGatewayProxyResult> {
+export class LoggerMiddleware implements middy.MiddlewareObj<APIGatewayProxyExtendedEvent, APIGatewayProxyResult> {
 
-    private readonly container: Container;
     private readonly loggerFactory: LoggerFactoryImpl;
 
-    public constructor(container: Container, loggerFactory: LoggerFactoryImpl) {
-        this.container = container;
+    public constructor(loggerFactory: LoggerFactoryImpl) {
         this.loggerFactory = loggerFactory;
     }
 
-    public before(request: middy.Request<APIGatewayProxyEvent, APIGatewayProxyResult>): void {
+    public before(request: middy.Request<APIGatewayProxyExtendedEvent, APIGatewayProxyResult>): void {
 
         const logEntry = this.loggerFactory.createLogEntry();
-        this.container.bind<LogEntryImpl>(BASETYPES.LogEntry).toConstantValue(logEntry);
+        request.event.container.bind<LogEntryImpl>(BASETYPES.LogEntry).toConstantValue(logEntry);
         logEntry.start(request.event, request.context);
     }
 
-    public after(request: middy.Request<APIGatewayProxyEvent, APIGatewayProxyResult>): void {
+    public after(request: middy.Request<APIGatewayProxyExtendedEvent, APIGatewayProxyResult>): void {
 
-        const logEntry = this.container.get<LogEntryImpl>(BASETYPES.LogEntry);
+        const logEntry = request.event.container.get<LogEntryImpl>(BASETYPES.LogEntry);
         if (request.response && request.response.statusCode) {
             logEntry.setResponseStatus(request.response.statusCode);
         }
+
         logEntry.end();
         logEntry.write();
     }
@@ -112,6 +120,7 @@ The API uses the following middleware classes, which are equivalent to those in 
 
 | Middleware Class | Responsibility |
 | ---------------- | -------------- |
+| ChildContainerMiddleware | Creates a child container per request to store request scoped objects. |
 | LoggerMiddleware | Manages the log entry for each request, to log request and response details. |
 | OAuthFilter | JWT access token validation, creating the claims principal and identity logging. |
 | CustomHeaderMiddleware | Allows advanced client side testing of APIs, such as error rehearsal. |
@@ -119,7 +128,7 @@ The API uses the following middleware classes, which are equivalent to those in 
 
 ### Dependency Injection
 
-With Serverless lambdas I continue to use modern and productive code based on dependency injection, which benefits code clarity, extensibility and testing:
+With Serverless lambdas I continue to use [InversifyJS](https://github.com/inversify/InversifyJS) with constructor injection, to benefit code clarity, extensibility and testing:
 
 ```typescript
 @injectable()
@@ -138,79 +147,37 @@ export class CompanyService {
 }
 ```
 
-In AWS, a new API instance gets created on every HTTP request. Therefore I no longer need to implement the *Child Container Per Request* pattern that the Express API uses.
-
-### JWT Access Token Validation
-
-An earlier post explained this blog's approach to <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a>, where a JWT library caches token signing public keys in memory. For the Serverless API I followed the same approach, but supplied a custom key retriever to the JOSE library:
+To manage request scoped objects, the *ChildContainerMiddleware* adds a child container to each request's *event* object:
 
 ```typescript
-const result = await jwtVerify(accessToken, this.jwksRetriever.getKey, options);
-```
+export class ChildContainerMiddleware implements
+    middy.MiddlewareObj<APIGatewayProxyExtendedEvent, APIGatewayProxyResult> {
 
-The library requires a function with the following method signature. The implementation gets cached keys from DynamoDB on every request rather than putting the critical authorization server under load:
+    private readonly parentContainer: Container;
 
-```typescript
-async getKey(
-    protectedHeader: JWSHeaderParameters,
-    token: FlattenedJWSInput): Promise<CryptoKey | Uint8Array>;
-```
-
-I implemented a DynamoDB wrapper class to encapsulate the logic:
-
-```typescript
-export class AwsCache implements Cache {
-
-    private readonly configuration: CacheConfiguration;
-    private readonly extraClaimsProvider: ExtraClaimsProvider;
-    private readonly database: DynamoDBClient;
-
-    public constructor(configuration: CacheConfiguration, extraClaimsProvider: ExtraClaimsProvider) {
-
-        try {
-
-            this.configuration = configuration;
-            this.extraClaimsProvider = extraClaimsProvider;
-            this.database = new DynamoDBClient({region: configuration.region});
-
-        } catch (e) {
-
-            throw ErrorUtils.fromCacheError(BaseErrorCodes.cacheConnect, e);
-        }
+    public constructor(parentContainer: Container) {
+        this.parentContainer = parentContainer;
+        this.setupCallbacks();
     }
 
-    public async setJwksKeys(jwksText: string): Promise<void> {
-
-        const params = {
-            TableName: this.configuration.tableName,
-            Item: {
-                'CACHE_KEY' : {S: 'JWKS'},
-                'CACHE_VALUE' : {S: jwksText},
-                'TTL_VALUE': {N: `${this.getExpiry()}`},
-            }
-        };
-
-        await this.putItem(params);
+    public before(request: middy.Request<APIGatewayProxyExtendedEvent, APIGatewayProxyResult>): void {
+        request.event.container = new Container({ parent: this.parentContainer });
     }
 
-    private async putItem(params: PutItemInput): Promise<void> {
-
-        try {
-
-            const command = new PutItemCommand(params);
-            await this.database.send(command);
-
-        } catch (e: any) {
-
-            throw ErrorUtils.fromCacheError(BaseErrorCodes.cacheWrite, e);
-        }
+    public after(request: middy.Request<APIGatewayProxyExtendedEvent, APIGatewayProxyResult>): void {
+        delete (request.event as any).container;
     }
 }
 ```
 
+
+### JWT Access Token Validation
+
+An earlier post explained this blog's approach to <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a>, where a JWT library caches token signing public keys. The Serverless API's in-memory caching is less efficient than for cloud native APIs, since there is a separate lambda instance for each API operation, and each lambda instance calls the authorization server's JWKS URI endpoint.
+
 ### Claims Based Authorization
 
-After processing JWT access tokens, the API uses claims according to this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. The API looks up additional authorization values when it first receives a particular access token and stores these extra claims in the AWS cache. The cache key is the SHA256 hash of the access token. The earlier <a href='updated-api-coding-key-points.mdx'>Updated API Code Sample</a> post explains the mechanics.
+After processing JWT access tokens, the API uses claims according to this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. The API looks up additional authorization values when it first receives a particular access token and stores these extra claims in an in-memory cache. The cache key is the SHA256 hash of the access token. The earlier <a href='updated-api-coding-key-points.mdx'>Updated API Code Sample</a> post explains the mechanics.
 
 ```typescript
 export class SampleExtraClaims extends ExtraClaims {
@@ -288,7 +255,7 @@ Due to the use of source maps, I can step through the original lines of TypeScri
 
 ### Where Are We?
 
-I invested in a productive test setup for the Serverless API, with modern techniques for coding, testing and deployment. A big plus point of lambda technology is the low cost hosting it provides for developer demos. However, I prefer the more complete developer experience that I get from cloud native APIs.
+I invested in a productive test setup to develop Serverless APIs and use portable techniques for coding, testing and deployment whenever possible. The low cost lambda hosting and technology support is an interesting technology and works well enough to provide an API backend for my blog's code samples.
 
 ### Next
 

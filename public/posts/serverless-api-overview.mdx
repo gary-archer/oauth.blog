@@ -89,12 +89,6 @@ Tests create an asymmetric keypair and expose the token signing public key at a 
 
 ![integration tests](../images/620/integration-tests.jpg)
 
-### Lambdas and In-Memory Caching
-
-JWT validation requires in-memory caching of token signing public keys, and this blog's APIs also use in-memory caching of extra authorization values. Yet with lambda technology this is not possible, since a new lambda instance is spun up on every request. Therefore I use DynamoDB as a low cost distributed cache, to work around the lack of an in-memory cache. DynamoDB supports saving data with a time to live, similar to the in-process caches that this blog's cloud native APIs use:
-
-![dynamodb](../images/620/dynamodb.jpg)
-
 ### Client Specific Security Differences
 
 The API serves this blog's final frontend code samples that I summarize in the <a href='quick-start.mdx'>Quick Start</a> page. Each frontend has its own client best practices. The SPA uses *HttpOnly SameSite=strict Secure* cookies when calling the Serverless API. The Serverless API does not contain any cookie logic though, so that its code is identical for web and native clients. Instead, an *OAuth Proxy* component processes cookies during API requests. You can read more about that in the <a href='spa-back-end-for-front-end.mdx'>SPA Backend for Frontend</a> post.
@@ -144,20 +138,6 @@ The Serverless API also implements this blog's <a href='error-handling-and-suppo
   "millisecondsTaken": 19,
   "correlationId": "1fe8296d-37a1-943a-c33e-3464191d1a79",
   "sessionId": "931f42c1-9060-786e-2c9a-d4f07335814e",
-  "performance": {
-    "name": "total",
-    "millisecondsTaken": 19,
-    "children": [
-      {
-        "name": "validateToken",
-        "millisecondsTaken": 14
-      },
-      {
-        "name": "userInfoLookup",
-        "millisecondsTaken": 3
-      }
-    ]
-  },
   "errorData": {
     "statusCode": 500,
     "clientError": {
@@ -182,13 +162,9 @@ The Serverless API also implements this blog's <a href='error-handling-and-suppo
 }
 ```
 
-### API Architecture
-
-The Serverless API aims to meet requirements articulated in the <a href='API Architecture Goals'>API Architecture Goals</a> post. Non-functional logic uses portable code in line with that from this blog's other API code samples. The Serverless API shows that, while a *Platform as a Service* approach for APIs is useful to know about and can reduce initial hosting costs, it also adds deeper costs for developers that may be more difficult to quantify.
-
 ### Where Are We?
 
-I summarized the Serverless API's key behaviours, which follow the same portable concepts as earlier APIs. Next I explain how the Serverless lambdas are deployed to AWS and how I use the AWS API gateway.
+The Serverless API uses portable code to meet requirements articulated in the <a href='API Architecture Goals'>API Architecture Goals</a> post. Next I explain how I deploy the Serverless lambdas to AWS and expose endpoints using the AWS API gateway.
 
 ### Next
 
