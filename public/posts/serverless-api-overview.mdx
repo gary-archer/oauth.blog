@@ -2,29 +2,44 @@
 
 Previously I explained this blog's <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a> to many AWS regions. Next I provide an overview of a Node.js API with low cost cloud hosting, that I implement using the [Serverless Framework](https://github.com/serverless/serverless). I also show how to take control over OAuth security in a zero trust manner and test the API productively with user level access tokens.
 
-### API Features
+### Serverless API Overview
 
-I continue to meet this blog's essential API behaviours. The code is as close as possible to that in the earlier <a href='api-architecture-node.mdx'>Node.js Express API</a>:
-
-| Requirement | Description |
-| ----------- | ----------- |
-| Zero Trust | The API implements JWT access token validation on every request using a JOSE security library. |
-| Standards Based | I use the same standards-based design patterns for OAuth security across Node.js, .NET and Java APIs. |
-| Best Security | The [jose](https://github.com/panva/jose) library enables the most up to date and specialised security algorithms when dealing with JWTs. |
-| Extensible Claims | APIs are in full control of the claims principal and are not forced to only use the authorization server's claims. |
-| Supportable | Errors and logs use custom formats and identity-related error details are included in the API's logs. |
-
-### Preferred Local Setup
-
-Ideally I would like the same local setup as this blog's cloud native APIs, to listen for HTTP requests on a development computer and run frontend clients against the API when required. I should also be able to test reliability concerns, like views making concurrent API requests to the API.
+The Serverless API behaves equivalently to the earlier <a href='api-architecture-node.mdx'>Node.js Express API</a>. The API has a couple of simple endpoints that return mock data for a money-based theme of investments. The API aims to be visual and serves this blog's apps, such as the <a href='how-to-run-the-react-js-spa.mdx'>Final SPA</a> below. Running both together ensures that the API is client-focused and enables you to focus on API logs that the client generates.
 
 ![spa and api](../images/620/spa-and-api.jpg?v=20240915)
 
-Technologies such as [Serverless Offline](https://github.com/dherault/serverless-offline) do not fully support this. Developer end-to-end testing therefore requires frequent cloud redeployments. When working locally I am limited to local execution of lambda functions and must deploy to AWS to run an integrated setup.
+### API URLs
 
-### Get the API
+During development the API runs as a standalone component. You can use either mocha tests or a load test as the API client. These tests get user-level access tokens to call the API and verify some OAuth security use cases. The API accepts mock access tokens when you point it to a mock authorization server:
 
-The Serverless API project is available [here](https://github.com/gary-archer/authguidance.apisample.serverless) and can be downloaded / cloned to your local computer with the following command:
+| Component | Base URL |
+| --------- | -------- |
+| API | *https://api.authsamples-dev.com:446* |
+| Mock Authorization Server | *https://login.authsamples-dev.com:447* |
+
+### Prerequisite 1: Domain Setup
+
+First update your computer's hosts file to create domains for local development. Include the web domain and local backend-for-frontend domain if you run the SPA and API together:
+
+```markdown
+127.0.0.1 api.authsamples-dev.com login.authsamples-dev.com www.authsamples-dev.com bfflocal.authsamples-dev.com
+```
+
+### Prerequisite 2: Install OpenSSL
+
+Install OpenSSL 3+ so that you can create development certificates and run the API over HTTPS.
+
+### Prerequisite 3: Install Node.js
+
+Download [Node.js](https://nodejs.org/en/download) for your operating system, which runs the API and also builds the SPA's JavaScript bundles.
+
+### Prerequisite 4: Install Docker
+
+To run API tests, or the full SPA and API solution, you use Docker utility components, so install a local engine such as [Docker Desktop](https:/www/.docker.com/products/docker-desktop).
+
+### Step 1: Get the Code
+
+Close the GitHub repository with the following command:
 
 ```bash
 git clone https://github.com/gary-archer/oauth.apisample.serverless
@@ -32,7 +47,7 @@ git clone https://github.com/gary-archer/oauth.apisample.serverless
 
 ![repo](../images/620/repo.jpg)
 
-### View the Code
+### Step 2: View the Code
 
 The code structure matches that used in all of this blog's earlier cloud native APIs, developed in <a href='api-architecture-node.mdx'>Node.js</a>, <a href='net-core-code-sample-overview.mdx'>.NET</a> and <a href='java-spring-boot-api-overview.mdx'>Java</a>:
 
@@ -71,96 +86,127 @@ functions:
                 id: true
 ```
 
-With the Serverless Framework you run lambdas on a development computer with the *sls invoke* command. This requires input and output payloads that use a lambda specific format. When the API runs in the cloud, real clients instead send standard HTTP requests.
+By default, the Serverless Framework requires you to use the *sls invoke* command to run lambdas on a development computer. Input and output payloads must use a lambda specific format. When the API runs in the cloud, real clients instead send standard HTTP requests.
 
-### Zero Trust API Security
+### Step 3: Understand OAuth Security
 
-In AWS it is common to use a [Lambda Authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-jwt-authorizer.html) to implement security only at the internet entry point. Secure values such as claims are then simply forwarded to lambdas in plain HTTP headers. This is not the most secure design. APIs also lose track of the incoming access token, so the security does not scale correctly, since a lambda cannot call an upstream lambda with the correct access token. To resolve these issues the serverless API code sample implements OAuth security within the lambda function's code.
+In AWS it is common to use a [Lambda Authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-jwt-authorizer.html) to implement security only at the internet entry point. Secure values such as claims are then simply forwarded to lambdas in plain HTTP headers. This is not the most secure design. APIs also lose track of the incoming access token, so the security does not scale correctly, since a lambda cannot call an upstream API with the correct access token. To resolve these issues the serverless API code sample implements OAuth security within the lambda function's code.
 
-### Test the API
+### Step 4: Run the API
 
-The post on <a href='api-automated-tests.mdx'>API Automated Tests</a> explains some techniques for testing OAuth secured APIs. Providing the input for an API request is tricky, since requests must contain a user level access token. Therefore, the API tests mock the authorization server to enable productive integration testing. The tests also wire up *sls invoke* with request and response payloads. To run the tests, ensure that a Docker engine is installed in addition to an up to date version of Node.js, then run the following command:
+Rather than working with *sls invoke* I follow the same approach as for this blog's cloud native APIs. I use [Serverless Offline](https://github.com/dherault/serverless-offline) to expose local HTTPS endpoints. You can run the API locally with the following command:
 
 ```bash
 ./start.sh
 ```
 
-Tests create an asymmetric keypair and expose the token signing public key at a JWKS URI provided by a Docker instance of [Wiremock](https://github.com/tomasbjerre/wiremock-npm). The API's JWKS URI then points to Wiremock. Integration tests use a JWT library and the corresponding private key  to issue access tokens for tests, to send to the API. The API then runs a suite of tests to test its security logic, though lambda execution is a little slow.
+Serverless Offline then exposes the API's HTTPS endpoints on port 446:
 
-![integration tests](../images/620/integration-tests.jpg)
+![running api](../images/620/running-api.jpg?v=20240915)
 
-### Client Specific Security Differences
+You can then use local URLs such as the following to call the API:
 
-The API serves this blog's final frontend code samples that I summarize in the <a href='quick-start.mdx'>Quick Start</a> page. Each frontend has its own client best practices. The SPA uses *HttpOnly SameSite=strict Secure* cookies when calling the Serverless API. The Serverless API does not contain any cookie logic though, so that its code is identical for web and native clients. Instead, an *OAuth Proxy* component processes cookies during API requests. You can read more about that in the <a href='spa-back-end-for-front-end.mdx'>SPA Backend for Frontend</a> post.
+```markdown
+https://api.authsamples-dev.com:446/investments/companies
+```
 
-### API Request Logging
+### Step 5: Run Integration Tests
 
-The API uses this blog's <a href='effective-api-logging.mdx'>Effective API Logging</a> design and writes JSON logs in a schema based manner. When tests run, the API writes its logging output to a *lambdatest.log* file with a readable format. In AWS these log entries are instead output as a bare JSON line and saved to CloudWatch. Logs could be shipped from CloudWatch to a log aggregation system like Elasticsearch. The end result is to enable useful <a href='api-technical-support-analysis.mdx'>Technical Support Queries</a> on the log data.
+To run mocha tests, you must run the API with a configuration that points to a mock authorization server. Stop the API if it is running, then re-run it via this command:
+
+```bash
+npm run testsetup
+```
+
+Then run tests with the following command:
+
+```bash
+npm test
+```
+
+The test setup spins up a JWKS URI with an HTTPS endpoint that the Wiremock utility provides. A number of tests then make OAuth-secured API requests. These tests focus on the API's main security behaviours:
+
+![test results](../images/620/tests.jpg)
+
+### Step 6: Run a Basic Load Test
+
+While the API runs with a test configuration you can also run a basic load test that sends parallel API requests. This helps to ensure that the API code has no concurrency bugs:
+
+```bash
+npm run loadtest
+```
+
+The test fires batches of 5 concurrent requests at a time and also intentionally rehearses certain types of error. The expected result is 3 errors from a total of 100 requests:
+
+![load test](../images/620/loadtest.jpg)
+
+The <a href='api-automated-tests.mdx'>API Automated Tests</a> post explains how tests get user level tokens without running a full authorization code flow.
+
+### Step 6: Run a Frontend Client
+
+You can run any of this blog's final frontend clients against the API:
+
+- <a href='final-spa-overview.mdx'>Final SPA</a>
+- <a href='final-desktop-sample-overview.mdx'>Final Desktop App</a>
+- <a href='android-code-sample-overview.mdx'>Final Android App</a>
+- <a href='ios-code-sample-overview.mdx'>Final iOS App</a>
+
+To do so, follow the instructions to run the client against a local API, for example by using a *LOCALAPI* environment variable to override the default usage of a cloud API. When the frontend runs a code flow you can authenticate with this blog's test credential:
+
+- User: *guestuser@example.com*
+- Password: *GuestPassword1*
+
+### Main Feature 1: Extensible Authorization
+
+The API implements its security according to these two blog posts, using a JOSE library and some custom claims handling:
+
+- <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a>
+- <a href='api-authorization-design.mdx'>API Authorization Design</a>
+
+The overall behaviour manages OAuth security correctly while setting up the API's business logic with the authorization values it needs. These values may originate from multiple data sources and may not always be issued to tokens:
+
+```typescript
+@injectable()
+export class CompanyService {
+
+    private readonly repository: CompanyRepository;
+    private readonly claims: ClaimsPrincipal;
+
+    public constructor(
+        @inject(SAMPLETYPES.CompanyRepository) repository: CompanyRepository,
+        @inject(BASETYPES.ClaimsPrincipal) claims: ClaimsPrincipal) {
+
+        this.repository = repository;
+        this.claims = claims;
+    }
+}
+```
+
+The API uses the same OAuth integration and claims handling techniques as this blog's second code sample, explained earlier in the <a href='updated-api-coding-key-points.mdx'>Updated API Code Details</a> blog post.
+
+### Main Feature 2: Production Supportability
+
+The other main objective of the API code sample is JSON logging of API requests, to include useful technical support fields. Logging output writes to a file called *api.log* on a local computer or to Cloudwatch in AWS.
 
 ```json
 {
-  "id": "14d694e1-d7dd-fa46-7fd5-7cef812e4a6a",
-  "utcTime": "2023-03-20T18:19:55.674Z",
+  "id": "57b5b054-55bc-2515-65f9-cd7f66919788",
+  "utcTime": "2022-12-10T12:57:52.451Z",
   "apiName": "FinalApi",
-  "operationName": "getCompanyTransactions",
+  "operationName": "getUserInfo",
   "hostName": "UBUNTU",
   "method": "GET",
-  "path": "/investments/companies/2/transactions",
-  "resourceId": "2",
-  "clientName": "ServerlessTest",
+  "path": "/investments/userinfo",
+  "clientName": "FinalSPA",
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 200,
-  "millisecondsTaken": 21,
-  "correlationId": "88686b82-f578-2e64-d716-9e1f35c6e1f0",
-  "sessionId": "931f42c1-9060-786e-2c9a-d4f07335814e"
+  "millisecondsTaken": 372,
+  "correlationId": "8debe475-41bb-6c9f-7fc6-7395d79a4b67",
+  "sessionId": "f54f1734-aeba-d9a5-550c-e8c74ad3fbf9"
 }
 ```
 
-### API Supportability
-
-The Serverless API also implements this blog's <a href='error-handling-and-supportability.mdx'>Error Handling and Supportability</a> design. One interesting behaviour is the ability to perform error rehearsal, by sending in a custom header that allows testers to *choose an API to break*. One of the integration tests exercises this behaviour and results in the following log entry. The error returned to the API client includes a *fairly unique error identifier*. This enables fast lookup of API logs to reduce problem resolution times:
-
-```json
-{
-  "id": "faa151ac-6006-8b4d-4c11-8a2e0b6a4aa8",
-  "utcTime": "2023-03-20T18:19:58.376Z",
-  "apiName": "FinalApi",
-  "operationName": "getCompanyTransactions",
-  "hostName": "UBUNTU",
-  "method": "GET",
-  "path": "/investments/companies/4/transactions",
-  "resourceId": "4",
-  "clientName": "ServerlessTest",
-  "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
-  "statusCode": 500,
-  "errorCode": "exception_simulation",
-  "errorId": 28603,
-  "millisecondsTaken": 19,
-  "correlationId": "1fe8296d-37a1-943a-c33e-3464191d1a79",
-  "sessionId": "931f42c1-9060-786e-2c9a-d4f07335814e",
-  "errorData": {
-    "statusCode": 500,
-    "clientError": {
-      "code": "exception_simulation",
-      "message": "An exception was simulated in the API",
-      "id": 28603,
-      "area": "FinalApi",
-      "utcTime": "2023-03-20T18:19:58.395Z"
-    },
-    "serviceError": {
-      "details": "",
-      "stack": [
-        "Error: An exception was simulated in the API",
-        "at ErrorFactory.createServerError (file:///home/gary/dev/oauth.apisample.serverless/dist/plumbing/errors/errorFactory.js:12:16)",
-        "at CustomHeaderMiddleware.before (file:///home/gary/dev/oauth.apisample.serverless/dist/plumbing/middleware/customHeaderMiddleware.js:21:40)",
-        "at runMiddlewares (file:///home/gary/dev/oauth.apisample.serverless/node_modules/@middy/core/index.js:119:27)",
-        "at process.processTicksAndRejections (node:internal/process/task_queues:95:5)",
-        "at async runRequest (file:///home/gary/dev/oauth.apisample.serverless/node_modules/@middy/core/index.js:79:9)"
-      ]
-    }
-  }
-}
-```
+You could follow the <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</a> to run a Docker-based deployment of the Elastic Stack that aggregates the API's logs to Elasticsearch. You can then run <a href='api-technical-support-analysis.mdx'>Technical Support Queries</a> against the API's logs. This would be useful in a production system, to make sense of large volumes of API requests.
 
 ### Where Are We?
 

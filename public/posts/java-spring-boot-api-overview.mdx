@@ -25,7 +25,7 @@ First update your computer's hosts file to create domains for local development.
 127.0.0.1 api.authsamples-dev.com login.authsamples-dev.com www.authsamples-dev.com bfflocal.authsamples-dev.com
 ```
 
-### Prerequisite 2
+### Prerequisite 2: Install OpenSSL
 
 Install OpenSSL 3+ so that you can create development certificates and run the API over HTTPS.
 
@@ -150,7 +150,7 @@ You can run any of this blog's final frontend clients against the API:
 - <a href='android-code-sample-overview.mdx'>Final Android App</a>
 - <a href='ios-code-sample-overview.mdx'>Final iOS App</a>
 
-To do so, follow the instructions to run the client against a local API, for example by using a *LOCALAPI* environment variable to override the default behavior of a cloud API. When the frontend runs a code flow you can authenticate with this blog's test credential:
+To do so, follow the instructions to run the client against a local API, for example by using a *LOCALAPI* environment variable to override the default usage of a cloud API. When the frontend runs a code flow you can authenticate with this blog's test credential:
 
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
