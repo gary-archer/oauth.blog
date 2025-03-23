@@ -2,9 +2,9 @@
 
 Previously I explained this blog's <a href='serverless-api-deployment.mdx'>Serverless API Deployment</a>. Next I describe some code details for this blog's lambda based APIs, to implement cross cutting concerns in clean ways. The code includes integration tests that call the API's lambda functions with user level access tokens.
 
-### Portable Code
+### View the Code
 
-The earlier <a href='api-architecture-node.mdx'>Node.js API</a> used the Express HTTP Server. As part of migrating to AWS Serverless I changed the API's host layer but the API logic classes are identical to those in the Express API:
+The earlier <a href='api-architecture-node.mdx'>Node.js API</a> used the Express HTTP Server. As part of migrating to AWS Serverless my main goal was code portability. I changed the API's host layer but most code, including all API logic, is identical to that in the Express API:
 
 <div className='smallimage'>
     <img src='../images/640/code-layout.jpg' alt='code layout' />
