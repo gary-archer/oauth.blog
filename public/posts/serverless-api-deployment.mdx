@@ -1,6 +1,6 @@
 # Serverless API Deployment
 
-Previously I provided a <a href='serverless-api-overview.mdx'>Serverless API Overview</a> and showed how to run its operations locally. Next I explain how I deploy the Serverless API to the AWS cloud, to run as lambda functions. The API then provides data to SPA, mobile and desktop clients. I use the [Serverless Framework](https://github.com/serverless/serverless) to implement the API and the overall deployment uses the Serverless stack:
+Previously I provided a <a href='serverless-api-overview.mdx'>Serverless API Overview</a> and showed how to call the API locally. Next I explain how I deploy the Serverless API to the AWS cloud, to run as lambda functions. The API then provides data to my final SPA, mobile and desktop clients. I use the [Serverless Framework](https://github.com/serverless/serverless) to implement the API and the overall deployment uses the Serverless stack:
 
 ![serverless stack](../images/630/serverless-stack.jpg)
 
@@ -11,18 +11,21 @@ The API has a number of commands in its *package.json* file, which point to scri
 ```json
 {
   "scripts": {
-    "lint": "npx eslint . --ext .ts,.tsx",
+    "login": "sls login",
+    "lint": "npx eslint . --ignore-pattern dist",
+    "start": "./start.sh",
+    "testsetup": "./test/scripts/testsetup.sh",
+    "test": "./test/scripts/test.sh",
     "build": "rm -rf dist && tsc",
     "buildRelease": "rm -rf dist && tsc --sourceMap false",
-    "start": "./start.sh",
-    "test": "./start.sh",
+    "loadtest": "./test/scripts/loadtest.sh",
     "deploy": "./deploy.sh",
     "remove": "sls remove --stage deployed"
   }
 }
 ```
 
-The *deploy.sh* script first runs *sls package* to build a ZIP file, then runs *sls deploy* to push resources to the cloud. The deployment creates lambda functions, configures API gateway endpoints and limits CloudWatch log retention. The *serverless.yml* file points to a custom domain that I precreated before the first deployment. There is a single AWS deployment stage of *deployed*, though I also use a *dev* stage used when I run lambdas locally:
+The *deploy.sh* script first runs *sls package* to build a ZIP file, then runs *sls deploy* to push resources to the cloud. The deployment creates lambda functions, configures API gateway endpoints and limits CloudWatch log retention. The *serverless.yml* file references a custom domain mapping that I precreated before the first deployment. There is a single AWS deployment stage of *deployed*, though I also use a *dev* stage when I run lambdas locally:
 
 ```yaml
 service: serverlessapi
@@ -50,19 +53,19 @@ The Serverless API uses the same JSON based approach to configuration as earlier
 {
     "api": {
         "useProxy": false,
-        "proxyUrl": "http://127.0.0.1:8888"
+        "proxyUrl": ""
     },
     "logging": {
         "apiName": "FinalApi",
-        "prettyPrint": true,
+        "prettyPrint": false,
         "performanceThresholdMilliseconds": 500
     },
     "oauth": {
-        "issuer":                       "https://login.authsamples-dev.com",
-        "audience":                     "api.authsamples.com",
-        "algorithm":                    "ES256",
+        "issuer":                       "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+        "audience":                     "",
+        "algorithm":                    "RS256",
         "scope":                        "https://api.authsamples.com/investments",
-        "jwksEndpoint":                 "http://login.authsamples-dev.com/.well-known/jwks.json",
+        "jwksEndpoint":                 "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json",
         "claimsCacheTimeToLiveMinutes": 15
     }
 }
@@ -156,7 +159,7 @@ You must activate [API Gateway CloudWatch Logs](https://aws.amazon.com/premiumsu
 
 ### Where Are We?
 
-I ported this blog's earlier Node.js API to run with low cost and zero maintenance in AWS. This blog's frontend code samples all get their data from the Serverless API, which works well enough for my cloud connected demo apps.
+I ported this blog's earlier Node.js API to run with low cost and zero maintenance in AWS, which works well for my code samples. Note however that I have to accept certain limitations, like the use of the AWS API gateway and Cloudwatch. In larger setups there can be benefits in choosing your own supporting components and avoiding vendor lock in.
 
 ### Next
 
