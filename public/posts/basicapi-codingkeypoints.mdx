@@ -37,8 +37,8 @@ When you run *npm start*, the *startup/app.ts* class executes, to configure the 
 const logger = new ApiLogger();
 try {
 
-    const configBuffer = await fs.readFile('api.config.json');
-    const configuration = JSON.parse(configBuffer.toString()) as Configuration;
+    const configJson = await fs.readFile('api.config.json', 'utf8');
+    const configuration = JSON.parse(configJson) as Configuration;
 
     const expressApp = express();
     const httpServer = new HttpServerConfiguration(expressApp, configuration, logger);

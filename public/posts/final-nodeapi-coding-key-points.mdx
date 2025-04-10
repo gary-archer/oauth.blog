@@ -32,8 +32,8 @@ const parentContainer = new Container();
 
 try {
 
-    const configurationBuffer = await fs.readFile('api.config.json');
-    const configuration = JSON.parse(configurationBuffer.toString()) as Configuration;
+    const configurationJson = await fs.readFile('api.config.json', 'utf8');
+    const configuration = JSON.parse(configurationJson) as Configuration;
     loggerFactory.configure(configuration.logging);
 
     const httpServer = new HttpServerConfiguration(configuration, parentContainer, loggerFactory);
