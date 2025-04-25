@@ -10,7 +10,7 @@ A technical blog with a focus on productive and reliable OAuth development setup
 ## Running the Blog
 
 By default, just read the blog's MDX pages in GitHub.\
-You can also run it as a [Next.js Application](TECHBOLOGY.md) in various other ways:
+You can also run it as a [Next.js Application](TECHNOLOGY.md) in various other ways:
 
 | Step | Description |
 | ---- | ----------- |
