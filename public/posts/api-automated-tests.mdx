@@ -65,7 +65,6 @@ A mock authorization server is created at the start of a test run, then torn dow
 
 ```typescript
 before( async () => {
-    ExtraCaCerts.initialize();
     await authorizationServer.start();
 });
 
