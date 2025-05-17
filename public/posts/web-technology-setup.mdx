@@ -32,7 +32,7 @@ You use the *npm* tool to specify libraries used by your application in its *pac
 ```json
 {
   "dependencies": {
-    "axios": "^1.8.3",
+    "axios": "^1.9.0",
     "mustache": "^4.2.0",
     "oidc-client-ts": "^3.2.0"
   },
@@ -69,15 +69,15 @@ import {UserManager, UserManagerSettings} from 'oidc-client';
 import mustache from 'mustache';
 ```
 
-This blog's APIs use Node.js 20 or later, with the following *tsconfig.json* configuration. You use some of these settings when you import modules and you use other settings when you build code:
+This blog's APIs use Node.js 22 or later, with the following *tsconfig.json* configuration. You use some of these settings when you import modules and you use other settings when you build code:
 
 ```json
 {
   "compilerOptions": {
     "strict": true,
-    "target": "ES2023",
-    "lib": ["ES2023"],
-    "module":"Node16",
+    "target": "ES2024",
+    "lib": ["ES2024"],
+    "module":"Node18",
     "moduleResolution": "Node16",
     "allowSyntheticDefaultImports": true,
     "outDir": "dist",
@@ -124,7 +124,7 @@ The *tsconfig.json* file for the SPA is a little different to that for the Node.
   "compilerOptions": {
     "strict": true,
     "target": "ES2017",
-    "lib": ["ES2023", "DOM"],
+    "lib": ["ES2024", "DOM"],
     "module":"ES2022",
     "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true,
