@@ -11,7 +11,7 @@ The code for the example Node.js API consists of three main areas:
 - Plumbing
 
 <div className='smallimage'>
-    <img src='../images/310/code-layout.jpg' alt='code layout' />
+    <img src='../images/310/code-layout.jpg?v=20250527' alt='code layout' />
 </div>
 
 In a real API platform, you could produce shared libraries with some of the contents of the plumbing folder. The API would then have far less code.
@@ -46,21 +46,9 @@ try {
 }
 ```
 
-The *HttpServerConfiguration* class configures HTTP routes using the [Routing Controllers](https://github.com/typestack/routing-controllers) library:
+The business logic for API requests begins in controller methods that are autowired with dependencies, in a similar way to .NET and Java technology stacks: 
 
 ```typescript
-useContainer(new InversifyAdapter());
-useExpressServer(this.expressApp, {
-    defaultErrorHandler: false,
-    routePrefix: apiBasePath,
-    controllers: [CompanyController, UserInfoController],
-});
-```
-
-This enables declarative routes for API requests, as is common in other API technology stacks:
-
-```typescript
-@Controller('/companies')
 export class CompanyController {
 
     private readonly service: CompanyService;
@@ -70,13 +58,11 @@ export class CompanyController {
         this.service = service;
     }
 
-    @Get('')
-    public async getCompanyList(): Promise<Company[]> {
+    public async getCompanyList(request: Request, response: Response): Promise<void> {
         ...
     }
 
-    @Get('/:id/transactions')
-    public async getCompanyTransactions(@requestParam('id') id: string): Promise<CompanyTransactions> {
+    public async getCompanyTransactions(request: Request, response: Response): Promise<void> {
 
         ...
     }
@@ -162,16 +148,54 @@ export class ChildContainerMiddleware {
 
 ### Controller Resolution
 
-The *InversifyAdapter* object uses the child container to resolve all objects when it autowires REST controllers. Inversify stores request and transient scoped objects for the current HTTP request only in the child container and not in the parent container:
+The *HttpServerConfiguration* class manages controller resolution by first declaring metadata for HTTP routes:
 
 ```typescript
-export class InversifyAdapter implements IocAdapter {
+private getApplicationRoutesMetadata(apiBasePath: string): RouteMetadata[] {
 
-    public get<T>(someClass: ClassConstructor<T>, action?: Action): T {
+    return [
+        {
+            method: 'get',
+            path: `${apiBasePath}/userinfo`,
+            controller: SAMPLETYPES.UserInfoController,
+            action: (c: UserInfoController) => c.getUserInfo,
+        },
+        {
+            method: 'get',
+            path: `${apiBasePath}/companies`,
+            controller: SAMPLETYPES.CompanyController,
+            action: (c: CompanyController) => c.getCompanyList,
+        },
+        {
+            method: 'get',
+            path: `${apiBasePath}/companies/:id/transactions`,
+            controller: SAMPLETYPES.CompanyController,
+            action: (c: CompanyController) => c.getCompanyTransactions,
+        },
+    ];
+}
+```
 
-        const childContainer = action?.response.locals.container as Container;
-        return childContainer?.get<T>(someClass, { autobind: true });
-    }
+I use a generic routine that creates an Express router with each route. At the start of an API request, the child container creates controller instances and autowires them with their dependencies. The action from the metadata is then called to handle the request.
+
+```typescript
+private createApplicationRoutes(routes: RouteMetadata[]): Router {
+
+    const router = Router();
+
+    routes.forEach((r) => {
+
+        router[r.method](r.path, async (request: Request, response: Response) => {
+
+            const container = response.locals.container as Container;
+            const instance = container.get(r.controller);
+
+            const handler = r.action(instance);
+            await handler(request, response);
+        });
+    });
+
+    return router;
 }
 ```
 
@@ -180,7 +204,7 @@ export class InversifyAdapter implements IocAdapter {
 I use a number of plumbing classes to implement API logging, whose end goal is to enable <a href='api-technical-support-analysis.mdx'>useful technical support queries by people</a>.
 
 <div className='smallimage'>
-    <img src='../images/310/logging-classes.jpg' alt='logging classes' />
+    <img src='../images/310/logging-classes.jpg?v=20250527' alt='logging classes' />
 </div>
 
 The *LoggerMiddleware* then creates a *LogEntry* to contain technical details about the request:
@@ -238,10 +262,10 @@ Logging objects write to a log file and, if you follow the <a href='log-aggregat
 
 ### Authorizer Middleware
 
-The API uses the same OAuth integration and claims handling techniques as this blog's second code sample, explained earlier in the <a href='updated-api-coding-key-points.mdx'>Updated API Code Details</a> blog post. The middleware replaces the stub claims principal object and also adds identity data to logs:
+The API uses the same OAuth integration and claims handling techniques as this blog's second code sample, explained earlier in the <a href='updated-api-coding-key-points.mdx'>Updated API Code Details</a> blog post. The middleware also adds the claims principal to the child container to make it resolvable, and adds identity data to logs:
 
 ```typescript
-public async execute(request: Request, response: Response, next: NextFunction): Promise<void> {
+public async onException(request: Request, response: Response, next: NextFunction): Promise<void> {
 
     const container = response.locals.container as Container;
     const filter =  container.get<OAuthFilter>(BASETYPES.OAuthFilter);
