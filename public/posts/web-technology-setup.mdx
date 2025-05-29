@@ -2,15 +2,15 @@
 
 Previously I suggested an <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a>. In this post I explain how this blog uses web technology, for Node.js APIs, browser based apps and Electron desktop apps. I summarise my preferred way to think about the requirements.
 
-### Modern Productive Code
+### Code Setup
 
-Single page applications should focus on frontend-only concerns. The goal should be modern, productive code that provides a great customer experience with a fast time to market. Your technology choices should enable this.
+Single page applications should focus on frontend-only concerns. The goal should be modern, productive code that provides a fast and modern customer experience with a fast time to market. Your technology choices should enable this.
 
 The main ingredient of an SPA is its logic. Choose a language that remains close to the browser's default language, to reduce complexity. Also use clean code and a separation of concerns. I use TypeScript since I like the extensions to JavaScript in these areas:
 
 - Expressive types including interfaces and private class members.
 - Data contracts can represent API requests and responses.
-- Convenient refactoring when you rename or removed items.
+- Convenient refactoring when you change types.
 
 ### Web Development Pipeline
 
@@ -27,7 +27,7 @@ I summarise the main stages of the web development pipeline in the below table. 
 
 ### Downloading Dependencies: Package Manager
 
-You use the *npm* tool to specify libraries used by your application in its *package.json* file. The built code uses the entries in the *dependencies* section at runtime. You typically require a number of plumbing entries in the *devDependencies* section to produce the built code.
+Node.js uses the *npm* tool to specify libraries used by your application in its *package.json* file. The built code uses the entries in the *dependencies* section at runtime. You typically require a number of plumbing entries in the *devDependencies* section to produce the built code.
 
 ```json
 {
@@ -50,7 +50,7 @@ You use the *npm* tool to specify libraries used by your application in its *pac
 }
 ```
 
-You need to think about the potential for security vulnerabilities when you include dependencies. Only use respected libraries, keep them up to date and ensure that you have a process for vulnerability scanning. Make technology choices that keep the number of dependencies to a minimum, since you are responsible for the correctness of each depdendency over time.
+You need to think about the potential for security vulnerabilities when you include dependencies. Only use respected libraries, keep them up to date and ensure that you have a process for vulnerability scanning. Make technology choices that keep the number of dependencies to a minimum, since you are responsible for the correctness of each dependency over time.
 
 ### Downloading Dependencies:  Node Modules
 
@@ -62,14 +62,14 @@ You consume each library as JavaScript, even if it is coded in TypeScript. Each 
 
 ### Writing Code: Resolving Imports
 
-You import libraries in our own source files using one of the following syntaxes. The first of these imports a newer *ECMAScript* module, whereas you use the second to import older *CommonJS* modules.
+You import libraries in source files using one of the following syntaxes. The first syntax imports a newer *ECMAScript* module, whereas you use the second syntax to import older *CommonJS* modules.
 
 ```typescript
 import {UserManager, UserManagerSettings} from 'oidc-client';
 import mustache from 'mustache';
 ```
 
-This blog's APIs use Node.js 22 or later, with the following *tsconfig.json* configuration. You use some of these settings when you import modules and you use other settings when you build code:
+This blog's APIs use Node.js 22 or later, with the following *tsconfig.json* configuration. You use some of these settings when you import modules and other settings when you build code:
 
 ```json
 {
@@ -109,7 +109,7 @@ import {CompanyRepository} from '../repositories/companyRepository.js';
 
 The *index.d.ts* file sometimes exists at a non-standard location. You then use options such as [typeRoots](https://www.typescriptlang.org/tsconfig#typeRoots) to resolve paths. In some cases, you use a separate type definitions file from [Definitely Typed](https://github.com/DefinitelyTyped/DefinitelyTyped). These are recognised by *package.json* entries that begin with *@types*.
 
-For libraries with no type definitions, you can add a typings.d.ts file at the root level, then use a *declare module* statement. This gets past compiler errors, though you lose type checking or intellisense. If you prefer, you can instead add your own type definitions for the library.
+For libraries with no type definitions, you can add a typings.d.ts file to the project and then use a *declare module* statement. This gets past compiler errors, though you lose type checking or intellisense. If you prefer, you can instead add your own type definitions for the library.
 
 ```typescript
 declare module 'some-js-lib';
@@ -148,7 +148,7 @@ You can find browser types under the *node_modules/typescript/lib* folder and th
 
 ### Writing Code: Efficient Imports
 
-When you import ECMAScript modules you should import only the functionality needed. This [reduces the size of built code](https://developers.google.com/web/fundamentals/performance/optimizing-javascript/tree-shaking/#finding_opportunities_to_shake_a_tree). For browser-based applications this reduces download times for users:
+When you import ECMAScript modules you should import only the functionality needed to [reduce the size of built code](https://developers.google.com/web/fundamentals/performance/optimizing-javascript/tree-shaking/#finding_opportunities_to_shake_a_tree). For browser-based applications that also reduces download times for users:
 
 ```typescript
 import {SmallUtility} from 'LargeLibrary';
@@ -175,7 +175,7 @@ export class CompaniesView {
 }
 ```
 
-Strong typing during coding allows the environment to make more checks during development. When using ECMAScript modules, the compiled code remains closest to the original TypeScript syntax.
+Strong typing during coding allows the environment to make more checks. When using ECMAScript modules, the compiled code remains closest to the original TypeScript syntax.
 
 ### Writing Code: Styling
 
@@ -254,7 +254,7 @@ My application CSS file is therefore small, containing only padding, colours and
 
 ### Executing Tasks
 
-My code samples also use *npm* as a task runner. Often, I use bash scripts to control the finer behaviour and to handle any differences across Linux, macOS and Windows:
+My code samples also use *npm* tasks that call bash scripts, which handle some finer details, including any environmental differences between Linux, macOS and Windows:
 
 ```bash
 cd "$(dirname "${BASH_SOURCE[0]}")"
@@ -270,7 +270,7 @@ read -n 1
 
 ### Building Code: Linting
 
-My first build task checks code quality. The [typescript-eslint](https://github.com/typescript-eslint/typescript-eslint) library is used. The underlying [eslint](https://eslint.org/) library requires its own JavaScript configuration file. I import recommended rulesets as well as activating rules that reflect my own coding preferences:
+My first build task checks code quality using the [typescript-eslint](https://github.com/typescript-eslint/typescript-eslint) library. The underlying [eslint](https://eslint.org/) library requires its own JavaScript configuration file. I import recommended rulesets as well as activating rules that reflect my coding preferences:
 
 ```javascript
 import eslint from '@eslint/js';
@@ -318,7 +318,7 @@ For the SPA, a build phase is essential, for the following reasons:
 | Browser Support | Produce JavaScript code that browsers can execute. |
 | Web Performance | Reduce code size so that bundle sizes stay small, and the SPA performs well. |
 
-The [webpack](https://webpack.js.org/) tool is used. I use it for one main task, to produce the JavaScript bundles expressed in the final *index.html* file:
+I use the [webpack](https://webpack.js.org/) tool, but only for one main task, to produce the JavaScript bundles expressed in the final *index.html* file:
 
 ```html
 <!DOCTYPE html>
@@ -391,7 +391,7 @@ export default {
 }
 ```
 
-Webpack has its own rules for resolving imports. You have to use *extensions* to tell it to include extensions from both the SPA's TypeScript code, and JavaScript code consumed from the *node_modules* folder.
+Webpack has its own rules for resolving imports. You have to use *extensions* to tell it to build both the SPA's TypeScript code, and JavaScript code consumed from the *node_modules* folder.
 
 ### Building Code: Processing TypeScript
 
@@ -572,11 +572,11 @@ I explained how to manage a web pipeline on a development computer. Later in thi
 
 ### Electron Desktop Apps
 
-In the native apps section of this blog I use [Electron](https://www.electronjs.org/) to develop OAuth-secured cross-platform desktop apps. An Electron app can also be built to ECMAScript modules, though doing so is a little tricky to figure out. The <a href='desktop-app-coding-key-points.mdx'>Desktop App - Code Details</a> post explains the techniques I use.
+In the native apps section of this blog I use [Electron](https://www.electronjs.org/) to develop OAuth-secured cross-platform desktop apps. An Electron app can also be built to ECMAScript modules, though doing so is a little tricky. The <a href='desktop-app-coding-key-points.mdx'>Desktop App - Code Details</a> post explains the techniques I use.
 
 ### Where Are We?
 
-I explained a modern and productive setup and aimed to keep the web technology understandable. I use the same technical approach when I switch to the React framework for this blog's <a href='final-spa-overview.mdx'>Final SPA</a>.
+I summarized a thought process to ensure a modern and productive setup that keeps the web technology understandable. I use the same technical approach when I switch to the React framework for this blog's <a href='final-spa-overview.mdx'>Final SPA</a>.
 
 ### Next
 
