@@ -1,6 +1,6 @@
 # Basic SPA - Code Details
 
-The <a href='basicspa-oauthworkflow.mdx'>SPA and API OAuth Messages</a> post explained the initial code sample's HTTP/S messages. In this post I drill into some identity-related code in the SPA.
+The <a href='basicspa-oauthworkflow.mdx'>SPA and API OAuth Messages</a> post explained the initial code sample's HTTP/S messages. Next I drill into some identity-related code in the SPA.
 
 ### SPA Code
 
@@ -58,7 +58,7 @@ I use the [Bootstrap Grid System](https://getbootstrap.com/docs/4.0/layout/grid/
 </html>
 ```
 
-As the user navigates between screens, a main element within the root element updates to render the current location's view.
+As the user navigates between screens, a *main* element within the *root* element updates to render the current location's view.
 
 ### SPA Entry Point
 
@@ -132,7 +132,6 @@ export class OAuthClient {
     public constructor(config: OAuthConfiguration) {
 
         const settings = {
-
             authority: config.authority,
             client_id: config.clientId,
             redirect_uri: config.redirectUri,
@@ -141,7 +140,6 @@ export class OAuthClient {
             loadUserInfo: true,
             automaticSilentRenew: false,
             monitorSession: false,
-
         };
 
         this.userManager = new UserManager(settings);
@@ -172,7 +170,7 @@ public async loadView(): Promise<void> {
 }
 ```
 
-This results in the view executing and attempting to call an API in order to get its data:
+This results in the view executing and attempting to call an API to get its data:
 
 ```typescript
 public async load(): Promise<void> {
@@ -206,7 +204,7 @@ private async callApi(path: string, method: Method, dataToSend?: any): Promise<a
 
 The initial SPA only sends a single API request at a time. This blog's final UI code samples will show a way to trigger login redirects when the frontend makes concurrent requests to APIs.
 
-The *OAuthClient* object first stores the SPA's location in session storage and then performs a full screen redirect. In this blog, I only use full-screen redirects, since that is the most standard way to implement logins on both desktop and mobile devices. Popup windows are also possible, though they tend to have more user experience issues due to blocked or hidden windows.
+The *OAuthClient* object first stores the SPA's location in session storage and then performs a full screen redirect. In this blog, I only use full-screen redirects, since that is the most standard way to implement logins with fewest user experience issues.
 
 ```typescript
 private async startLogin(): Promise<void> {
@@ -226,8 +224,8 @@ private async startLogin(): Promise<void> {
 
 When the login completes, the authorization server returns a response to the SPA's redirect URI. This causes the SPA's *index.html* to reload. The SPA must handle the login response as part of its application startup. If the SPA starts normally or as part of a page reload, *handleLoginResponse* is a no-op, but if it is an authorization response the current URL will have one of the following forms:
 
-- *https://localhost/spa?code=xxx&state=789024578*
-- *https://localhost/spa?error=invalid_request&state=789024578*
+- *https://localhost/spa?code=xxx&state=yyy*
+- *https://localhost/spa?error=invalid_request&state=yyy*
 
 An SPA can either use an explicit callback path like *https://localhost/spa/callback*, or it can inspect its query parameters, as in the code sample. Either way, the SPA detects an authorization response and asks the oidc-client-ts library to process it. The code sample then performs these actions:
 
@@ -267,7 +265,7 @@ public async handleLoginResponse(): Promise<void> {
 }
 ```
 
-The above code demonstrates *deep linking*, where a user bookmarks a location like *http://localhost/spa/#company=2*, then accesses it in a new browser session. After signing in, the user returns to their bookmarked location.
+The above code enables *deep linking*, where a user can bookmark a location like *http://localhost/spa/#company=2*, then access it in a new browser session. After signing in, the user returns to their bookmarked location.
 
 ### Rendering User Info
 
@@ -414,7 +412,7 @@ private async callApi(path: string, method: Method, dataToSend?: any): Promise<a
 }
 ```
 
-The SPA does not try to anticipate API 401 responses based on expiry times, since 401s can occur for multiple reasons. Example events that might cause 401s in some deployments are token revocation, cryptographic key renewal or load-balancing failovers. Note also that the SPA only even sends the access token and never reads it, since only APIs should read access token payloads.
+The SPA does not try to anticipate API 401 responses based on expiry times, since 401s can occur for multiple reasons. Example events that might cause 401s in some deployments are token revocation, cryptographic key renewal or load-balancing failovers.
 
 ### Preventing Redirect loops
 
@@ -470,7 +468,7 @@ public async startLogin(api401Error: UIError | null): Promise<void> {
 
 ### SPA Error Handling
 
-The SPA's code uses a number of error codes to represent failure causes. Some of these are returned from the API or the authorization server:
+The SPA's code uses a number of error codes to represent possible failure causes. Some of these can be returned from the API or the authorization server:
 
 ```typescript
 export class ErrorCodes {
@@ -486,7 +484,7 @@ export class ErrorCodes {
 }
 ```
 
-The SPA's *ErrorHandler* class translates errors into an object that contains error codes and other useful fields. When required, the SPA reads error payloads from HTTP responses, like the OAuth *error* and *error_description* fields from authorization server error responses. Backend components do not return sensitive error details to the SPA, so fields such as error codes can be safely displayed.
+The SPA's *ErrorHandler* class translates errors into an object that contains error codes and other useful fields. When required, the SPA reads error payloads from HTTP responses, like the OAuth *error* and *error_description* fields from authorization server error responses. This blog's backend components do not return sensitive error details to the SPA, so error response data can be safely displayed.
 
 ```typescript
 private static getOAuthExceptionMessage(exception: any): string {
