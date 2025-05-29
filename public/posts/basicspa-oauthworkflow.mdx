@@ -1,6 +1,6 @@
 # SPA and API - OAuth Messages
 
-In our last post I explained <a href='basicspa-execution.mdx'>How to Run the Basic SPA Sample</a>. This post takes a closer look at HTTP messages used by our SPA and API. I use these messages to provide a summary of the mainstream OAuth behaviours. Yet the main focus is the end-to-end flow within the distributed architecture, including practical behaviours like reliability.
+In the previous post I explained <a href='basicspa-execution.mdx'>How to Run the Basic SPA Sample</a>. This post takes a closer look at HTTP messages used by the SPA and API. I use these messages to provide a summary of the mainstream OAuth behaviours. The main focus is a reliable end-to-end flow across distributed components.
 
 ### Development Domains
 
@@ -20,11 +20,11 @@ Most of the time I trace HTTP/S messages using an HTTP development proxy rather 
 
 - <a href='http-debugging-setup.mdx'>HTTP Proxy Setup</a>
 
-The first code sample runs on HTTP URLs and technical restrictions force us to use a domain name of *localhost* for the SPA. To use more architecturally meaningful URLs, this post's messages use the <a href='improved-spa-code-sample-overview.mdx'>second code sample</a>.
+The first code sample runs on HTTP URLs and technical restrictions force the SPA to use a *localhost* domain name. To use more architecturally meaningful URLs, this post's messages use the <a href='improved-spa-code-sample-overview.mdx'>second code sample</a>.
 
 ### Step 1. SPA Downloads its Configuration
 
-The sample first downloads configuration settings from the server, to avoid hard coding these details in JavaScript. This includes OAuth settings, whose values are safe to download to the browser.
+The sample first downloads configuration settings from the server, to avoid hard coding these details in JavaScript. The configuration includes public OAuth settings sent in browser URLs, whose values are therefore safe to download to the browser.
 
 ![Configuration Download](../images/40/config-download.jpg?v=20240727)
 
@@ -34,7 +34,7 @@ The SPA client needs to get an access token with which to call its APIs, and nee
 
 ![Authorization Request](../images/40/authorization-request.jpg?v=20240727)
 
-Authorization servers contain a registration entry for the OAuth client containing allowed settings, and only allow the request if the SPA uses the correct *Client ID*, *Redirect URI* and *Scope*. The client uses the following scope parameters to request permissions to issue to the access token once user authentication completes:
+Authorization servers contain an OAuth client registration containing configuration settings, and only allow the request if the SPA uses the correct *Client ID*, *Redirect URI* and *Scope*. The client uses the following scope parameters to request permissions to issue to the access token once user authentication completes:
 
 | Scope | Meaning |
 | ----- | ------- |
@@ -54,11 +54,11 @@ The metadata response includes details about the authorization server capabiliti
 
 ### Step 4. User Authenticates at the Authorization Server
 
-When the authorization server receives the request, it validates the request parameters and presents login forms. The user could authenticate in many possible ways to provide proof of their identity. In this blog I provide pre-created test users and use simple passwords to allow anyone to sign in:
+When the authorization server receives the request, it validates the request parameters and presents login forms. The user could authenticate in many possible ways to provide proof of their identity. In this blog I provide pre-created test users and use simple passwords to allow any reader of this blog to sign in:
 
 ![User Authentication](../images/40/user-authentication.jpg?v=20240727)
 
-In some use cases, you can configure the authorization server to present a consent screen once user authentication completes. The user then grants third-party clients the requested access token permissions. In this blog's examples, there are no third-party clients. Instead, both APIs and clients are part of the same organization. That organzation owns the data and not the user.  Therefore, I do not configure user consent.
+In some use cases, you can configure the authorization server to present a consent screen once user authentication completes. The user then grants third-party clients the requested API permissions. In this blog's examples, there are no third-party clients. Instead, both APIs and clients are built by the same organization, which owns the data. Therefore, I do not configure user consent.
 
 ### Step 5. An Authenticated User Session Begins
 
@@ -68,9 +68,9 @@ Once a login completes successfully, the authorization server issues a SSO (sing
 
 There are a couple of issues with the way cookies are set:
 
-- I like to configure the authorization server to use *session cookies* that automatically expire when the user closes all browser windows. When the SSO cookie is persistent, as for AWS Cognito, the user is only signed out of the app qwhen the user closes the browser. When the app restarts, the user performs a *Single Sign On (SSO)* and is automatically signed in. This is not the behaviour I want.
+- I like to configure the authorization server to use *session cookies* that automatically expire when the user closes all browser windows. When the SSO cookie is persistent, as for AWS Cognito, the user is only signed out of the app when the user closes the browser. When the app restarts, the user performs a *Single Sign On (SSO)* and is automatically signed in. This is not the behaviour I want.
 
-- Identity systems issue cookies that are usually always third-party from the app's viewpoint. To work in the best ways for applications, they should use the *SameSite=none* cookie property. This instructs browsers to send the cookie when the app redirects to the authorization server. I say more about the impact in the <a href='user-sessions-and-token-renewal.mdx'>Iframe-Based Token Renewal</a> blog post.
+- Identity systems issue cookies that are usually always third-party from the viewpoint of the client's domain. To work in the best ways for applications, they should use the *SameSite=none* cookie property. This instructs browsers to send the cookie when the app redirects to the authorization server. I say more about this in the <a href='user-sessions-and-token-renewal.mdx'>Iframe-Based Token Renewal</a> blog post.
 
 ### Step 6. SPA Receives an Authorization Response
 
@@ -88,7 +88,7 @@ As part of its response processing, the library makes a direct HTTPS back channe
 
 In OAuth there are multiple grant messages and this is just one of them. When possible, your OAuth clients should provide a credential before they receive tokens, but an SPA has nowhere secure to store such a credential. The SPA is therefore considered a *public client* and gets tokens in a less secure way than *confidential clients*.
 
-The result of all grant messages is to receive tokens. I configure the authorization server to return access tokens with a short 15 minute expiry. Before accepting tokens, the security library validates the ID token to ensure that it is from the authorization server that the client trusts. 
+The result of all grant messages is to receive tokens. I configure the authorization server to return access tokens with a short 15 minute expiry. Before accepting tokens, the security library validates the ID token to ensure that it has the claims the client expects. 
 
 ![Token Response](../images/40/token-response.jpg?v=20240727)
 
@@ -130,7 +130,7 @@ If you run a new login redirect with the invalid configuration, you receive an e
 
 ![Authorization Response Error](../images/40/authorization-response-error.jpg?v=20240727)
 
-The security library reads error details and makes them available to the SPA. Since the SPA cannot recover, it presents an error display to the user, to help with problem resolution. In development mode, the SPA renders a stack trace to indicate the source location of the caught error.
+The security library reads error details and makes them available to the SPA. Since the SPA cannot recover, it presents an error display to the user, to help with problem resolution. In development mode, the SPA renders a stack trace to indicate the error's source location.
 
 ![Authorization Error Display](../images/40/authorization-error-display.jpg?v=20240727)
 
@@ -140,7 +140,7 @@ The authorization server only returns errors in an authorization response when t
 
 ### Step 10. View Access Token Claims
 
-After a successful user login, the SPA calls APIs with an access token. You can view access token claims if you paste the access token into an [Online JWT Viewer](https://jwt.io/). This information is only meant to be available to APIs. Some authorization servers issue this data in alternative token formats, so that clients like the SPA cannot read it.
+After a successful user login, the SPA calls APIs with an access token. You can view access token claims if you paste the access token into an [Online JWT Viewer](https://jwt.io/). This information is only meant to be available to APIs. Some authorization servers issue access tokens to clients in an opaque format, to avoid exposing API claims.
 
 ![Access Token Claims](../images/40/access-token-claims.jpg?v=20240727)
 
@@ -240,10 +240,50 @@ The API then returns a 500 error to the UI, since the technical problem is not t
 
 ![JWKS download error display](../images/40/jwks-download-error-display.jpg?v=20240727)
 
-Meanwhile,
- the API performs some basic but readable error logging. Its logged error includes the error returned to the client and the exception details that should explain the root cause of the problem. I explore API supportability in greater depth in future posts.
+Meanwhile, the API performs some basic but readable error logging. Its logged error includes the error returned to the client and the exception details that should explain the root cause of the problem. I explore API supportability in greater depth in future posts.
 
-![JWKS download error logs](../images/40/jwks-download-error-logs.jpg?v=20240727)
+```json
+{
+  "utcTime": "2025-05-29T17:12:23.969Z",
+  "path": "/api/companies",
+  "method": "GET",
+  "statusCode": 500,
+  "error": {
+    "statusCode": 500,
+    "clientError": {
+      "code": "jwks_download_error",
+      "message": "Problem downloading token signing keys",
+      "id": 94934,
+      "area": "BasicApi",
+      "utcTime": "2024-07-27T10:54:13.025Z"
+    },
+    "serviceError": {
+      "details": {
+        "code": "ERR_BAD_REQUEST",
+        "description": "Request failed with status code 400"
+      },
+      "stack": [
+        "AxiosError: Request failed with status code 400",
+        "at settle (file:///home/gary/dev/oauth.websample1/api/node_modules/axios/lib/core/settle.js:19:12)",
+        "at IncomingMessage.handleStreamEnd (file:///home/gary/dev/oauth.websample1/api/node_modules/axios/lib/adapters/http.js:599:11)",
+        "at IncomingMessage.emit (node:events:530:35)",
+        "at endReadableNT (node:internal/streams/readable:1698:12)",
+        "at process.processTicksAndRejections (node:internal/process/task_queues:90:21)",
+        "at Axios.request (file:///home/gary/dev/oauth.websample1/api/node_modules/axios/lib/core/Axios.js:45:41)",
+        "at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at async JwksRetriever.fetchJwks (/home/gary/dev/oauth.websample1/api/src/host/oauth/jwksRetriever.ts:50:26)",
+        "at async fetchJwks (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/webapi/jwks/remote.js:17:22)",
+        "at async RemoteJWKSet.reload (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/webapi/jwks/remote.js:143:9)",
+        "at async RemoteJWKSet.getKey (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/webapi/jwks/remote.js:110:13)",
+        "at async flattenedVerify (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/webapi/jws/flattened/verify.js:73:15)",
+        "at async compactVerify (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/webapi/jws/compact/verify.js:15:22)",
+        "at async jwtVerify (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/webapi/jwt/verify.js:5:22)",
+        "at async AccessTokenValidator.execute (/home/gary/dev/oauth.websample1/api/src/host/oauth/accessTokenValidator.ts:45:28)"
+      ]
+    }
+  }
+}
+```
 
 ### Step 16. API uses Claims for Authorization
 
@@ -255,11 +295,11 @@ Once token validation is complete, the API can trust claims from the JWT and use
 
 ### Step 17. API Returns 401 when the Token Expires
 
-The SPA continues to use the access token until it expires 15 minutes after login, or the user closes their browser. Access token expiry can be simulated by clicking *Expire Token* followed by *Reload Data*:
+The SPA continues to use the access token until it expires 15 minutes after login, or the user closes their browser. You can simulate access token expiry by clicking *Expire Token* followed by *Reload Data*:
 
 ![Access token expiry test](../images/40/access-token-expiry-test.jpg?v=20240727)
 
-Of course, I cannot really change time to expire a token, so this test operation simply adds characters to the token to cause the API token validation to fail with a 401:
+Of course, I cannot really change time to expire a token, so this test operation simply adds characters to the token to cause the API's token signature validation to fail and return a 401 status code to the client:
 
 ![Access token expiry response](../images/40/access-token-expiry-response.jpg?v=20240727)
 
@@ -267,13 +307,9 @@ Of course, I cannot really change time to expire a token, so this test operation
 
 The SPA code expects 401 responses and should recover with no impact on usability. In the first code sample there is no token renewal so the user is redirected to sign in again, which is not a good user experience. Due to the SSO session cookie issued earlier, a single sign-on event occurs and new tokens are issued to the SPA automatically. The SPA can then continue to call the API with its new access token.
 
-### Trace any OAuth Flow
-
-I explained only a partial application lifecycle and there are many other OAuth flows. Once you have a productive process for tracing HTTP requests in both browser and non-browser components, you can debug all of them in the same way.
-
 ### Where Are We?
 
-The code sample shows how an organization can integrate an SPA and API with its authorization server. I explained a partial application lifecycle in terms of HTTP requests. This includes OAuth and API flows, and some practical aspects that include configuration management and error handling.
+This post explained a basic flow to integrate a browser client and API with an authorization server, including practical aspects like configuration and error handling. There are many other OAuth flows. Once you have a productive process for tracing HTTP requests in both browser and non-browser components, you can debug all of them in the same way.
 
 ### Next
 

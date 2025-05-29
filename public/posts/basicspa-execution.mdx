@@ -151,11 +151,11 @@ The *start.sh* script then invokes a browser at *http://localhost/spa*, and the 
 
 ![Login](../images/30/login.jpg)
 
-Once user authentication completes, the SPA renders hard coded fictional data returned from the API. This data is secured using OAuth access tokens, and the SPA and API code use [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), to enable cross-origin requets.
+Once user authentication completes, the SPA renders hard coded fictional data returned from the API. This data is secured using OAuth access tokens, and the SPA and API code use [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), to enable cross-origin requests.
 
 ![List view](../images/20/list-view.jpg)
 
-The first API call is to *http://api.authsamples-dev.com/api/companies*, and if you browse there directly you  a 401 response, since direct browsing to APIs does not send an OAuth access token:
+The first API call is to *http://api.authsamples-dev.com/api/companies*, and if you browse there directly you get a 401 response, since direct browsing to APIs does not send an OAuth access token:
 
 ![API browser access](../images/30/api-browser-access.jpg)
 
@@ -175,7 +175,7 @@ Users can bookmark SPA locations. You can simulate this in a new browser tab or 
 
 ### Step 10: Run a User Session
 
-The SPA's session management is incomplete in the initial code sample. Every time the access token expires the user has to login again. You can simulated expiry if you click *Expire Token* followed by *Reload Data*.
+The SPA's session management is incomplete in the initial code sample. Every time the access token expires the user has to sign in again. You can simulated expiry if you click *Expire Token* followed by *Reload Data*.
 
 ![Session testing](../images/30/session-testing.jpg)
 
