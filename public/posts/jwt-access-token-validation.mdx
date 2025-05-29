@@ -28,9 +28,7 @@ This blog provides APIs developed in the following languages and in each case a 
 | .NET | [jose-jwt](https://github.com/dvsekhvalnov/jose-jwt) |
 | Java | [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) |
 
-JOSE libraries support a number of OAuth-related security specifications. The specification documents can be read by developers to strengthen their OAuth knowledge. JOSE libraries are also useful for <a href='api-automated-tests.mdx'>issuing mock access tokens</a> in API tests.
-
-![jose specs](../images/70/jose-specs.jpg?v=20240826)
+JOSE libraries support a number of OAuth-related security specifications like [RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519). The specification documents can be read by developers to strengthen their OAuth knowledge. JOSE libraries are also useful for <a href='api-automated-tests.mdx'>issuing mock access tokens</a> in API tests.
 
 ### JWT Validation Code
 
@@ -51,7 +49,7 @@ export class JwksRetriever {
 }
 ```
 
-In the access token validator object I then run the following code on every API request:
+In the access token validator object I then run code similar to the following on every API request:
 
 ```typescript
 const accessToken = this.readAccessToken(request);
@@ -66,10 +64,7 @@ const options = {
 } as JWTVerifyOptions;
 
 const result = await jwtVerify(accessToken, this.jwksRetriever.remoteJWKSet, options);
-
-const userId = this.getClaim(result.payload.sub, 'sub');
-const scope = this.getClaim(result.payload['scope'], 'scope');
-return new ClaimsPrincipal(userId, scope.split(' '));
+return new ClaimsPrincipal(result.payload);
 ```
 
 ### Viewing JWT Access Tokens
@@ -86,7 +81,7 @@ The authorization server uses an asymmetric private key to sign JWT access token
 eyJraWQiOiIyV01TWGcwekEydVFlTjE0ZWlma0o5Nk5TTURpUmdtSXNGcE9yNHNJVWRvPSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJhNmI0MDRiMS05OGFmLTQxYTItOGU3Zi1lNDA2MWRjMGJmODYiLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAuZXUtd2VzdC0yLmFtYXpvbmF3cy5jb21cL2V1LXdlc3QtMl9xcUpnVmV1VG4iLCJ2ZXJzaW9uIjoyLCJjbGllbnRfaWQiOiI2dGcwcWdsZGRwdnFoNzRrM2piZjFtbWo2NCIsIm9yaWdpbl9qdGkiOiI0NDNmNGMzNS1iNmRiLTQzYzktODgzYS0wMThmOWM5NzMzOGMiLCJldmVudF9pZCI6ImMyMGViMGI1LWJhODQtNDMzNC04M2NhLWI3NWExMGQ1ZmY0NyIsInRva2VuX3VzZSI6ImFjY2VzcyIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUiLCJhdXRoX3RpbWUiOjE2MzQ5NzgwNDQsImV4cCI6MTYzNDk4MTY0NCwiaWF0IjoxNjM0OTc4MDQ0LCJqdGkiOiI3Zjk0YzJhNC0zNWE3LTQ2NGItODFkMC05MDQ4YmUzODBhODkiLCJ1c2VybmFtZSI6ImE2YjQwNGIxLTk4YWYtNDFhMi04ZTdmLWU0MDYxZGMwYmY4NiJ9.CM5j3AXOGNL77AjW1-QImb6uwR8JE6ZojWOfKI-nZJhkCsDlSmG2qMpq6Ntkm-Pve6zA9TkWbCWSA1MHKwgQPMXobz5UDQSJSGwiEIa4L9Q6eCGIEDs5153DkXRD4KLYu-SGLOgSurzRuc-EUINDA7zyErNDKGbaFf8qPV5QuMTCQGO-h1SkvLU85yc8Xp6Q8MYv9ydf1oWukjCJdDSzlUdjP6Vsb3V5xKaTBWFvHpwoo5cwyD51Pu8Lsu7p7B-vQAfzXjfgPjnc5EQY_fNYZoh9MaB6b3EnGgZz0oY9gCZHhlr_cRxgZlR_-J9KeUIYcW5Mna-J5GYFe6eRcEePxw
 ```
 
-You can paste this into an [Online JWT Viewer](https://jwt.io) to view the details, and note the *Key Identifier (kid)* field in the JWT header:
+You can paste this into an [Online JWT Validator](https://jwt.io) to view the details, and note the *Key Identifier (kid)* field in the JWT header:
 
 ![jwt access token](../images/70/jwt-access-token.jpg)
 
@@ -140,7 +135,7 @@ In production systems, this type of error occurs frequently, since clients use s
 
 ### Token Signing Public Keys
 
-The API provides the JOSE library with the authorization server's JWKS URI, from which the library downloads token signing public keys. The API configures this value to point to its authorization server, so that malicious tokens are always rejected. For AWS Cognito I use the following JWKS URI:
+This blog's APIs provide their JOSE library with the authorization server's JWKS URI, from which the library downloads token signing public keys. The API rejects access tokens from any other source. For AWS Cognito I use the following JWKS URI:
 
 - [https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json](https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json)
 
@@ -171,7 +166,7 @@ This endpoint returns multiple public keys in a JSON Web Key Set and each of the
 
 ### JWT Signature Verification
 
-You can use a [JWT utility website](https://jwt.io/) to manually paste in an access token and the public JSON Web Key with which to validate its signature. If you paste in a value from the JWKS endpoint whose kid does not match that in the JWT header you get a verification failure:
+You can use an online JWT validator to manually paste in an access token and the public JSON Web Key with which to validate its signature. If you paste in a value from the JWKS endpoint whose kid does not match that in the JWT header you get a verification failure:
 
 ![jwt-verification-failure](../images/70/jwt-verification-failure.jpg)
 
@@ -188,7 +183,7 @@ Ideally, the JOSE library should also cache the JSON Web Key Set details in-memo
 
 ### Token Signing Key Renewal
 
-You should peridoically rotate the token signing public keys that your authorization server uses. The new private key then signs future JWTs and a new public key is added to the JSON Web Key Set. For a while the JSON Web Key Set contains both old and new public keys, until you remove the old one. APIs therefore cope seamlessly with token signing key renewal. When you use OAuth, you get a key management and renewal solution for applications and APIs. This reduces complexity as the number of components grows.
+You should periodically rotate the token signing public keys that your authorization server uses. The new private key then signs future JWTs and a new public key is added to the JSON Web Key Set. For a while the JSON Web Key Set contains both old and new public keys, until you remove the old one. APIs therefore cope seamlessly with token signing key renewal. When you use OAuth, you get a key management and renewal solution for applications and APIs. This reduces complexity as the number of components grows.
 
 ### API Authorization
 

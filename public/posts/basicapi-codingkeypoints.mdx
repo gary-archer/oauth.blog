@@ -4,7 +4,7 @@ The previous post explained some <a href='basicspa-codingkeypoints.mdx'>SPA Code
 
 ### Code Layout
 
-The API uses TypeScript code and the [Node.js Express](https://expressjs.com/) HTTP. The *logic* folder contains the API's functonality, which would be the area with business value in a real API. The API's plumbing code, including its OAuth handling, is separated from its logic:
+The API uses TypeScript code and endpoints are exposed using the [Node.js Express HTTP Server](https://expressjs.com/). The *logic* folder contains the API's functonality, which would be the area with business value in a real API. The API's plumbing code, including its OAuth handling, is separated from its logic:
 
 <div className='smallimage'>
     <img src='../images/60/api-layout.jpg' alt='API code layout' />
@@ -31,7 +31,7 @@ The API only uses a handful of third-party libraries, declared in its *package.j
 
 ### API Entry Point
 
-When you run *npm start*, the *startup/app.ts* class executes, to configure the Express HTTP server and starts listening for requests:
+When you run *npm start*, the *startup/app.ts* class executes, to configure the Express HTTP server, which then listens for API requests:
 
 ```typescript
 const logger = new ApiLogger();
@@ -56,7 +56,7 @@ try {
 
 The startup logic is in the *HttpServerConfiguration* class, whose main role is to express how to process API requests:
 
-- The *get* expressions handle HTTP requests.
+- The *get* expressions handle API requests.
 - The *use* expressions implement cross cutting concerns.
 
 ```typescript
@@ -183,7 +183,7 @@ There are two main responsibilities involved in authorization in an OAuth secure
 
 | Responsibility | Description |
 | -------------- | ----------- |
-| Authenticate Requests | Digitally verify received JWT access tokens and return a 401 response if not valid. |
+| Authenticate Requests | Digitally verify received JWT access tokens and return a 401 response for invalid tokens. |
 | Perform Authorization | Trust claims from the payload of the JWT and use them for authorization. |
 
 ### Authenticating Requests
@@ -222,7 +222,7 @@ public async execute(request: Request): Promise<ClaimsPrincipal> {
 }
 ```
 
-The API must provide correct inputs to the library, so it is important for API developers to understand the inputs. These are summarised in a separate <a href='jwt-access-token-validation.mdx'>Access Token Validation</a> post.
+The API must provide correct inputs to the library, so it is important for API developers to understand them. I explain the details in a separate <a href='jwt-access-token-validation.mdx'>Access Token Validation</a> post.
 
 ### Claims Principal
 
@@ -251,7 +251,7 @@ export class ClaimsPrincipal {
 
 ### Authorizing Requests
 
-After the access token validator reates the claims principal it is injected into business logic classes:
+After the access token validator creates the claims principal it is injected into business logic classes:
 
 ```typescript
 export class CompanyService {
@@ -279,7 +279,7 @@ private unauthorizedError(companyId: number): ClientError {
 
 ### Claims Based Authorization
 
-For the first code sample, the SPA does not implement any business authorization. Yet any real world API is liekely to need to use claims from business data in its authorization. I show how to manage this in the next code sample.
+For the first code sample, the SPA does not implement any business authorization. Yet any real world API is likely to need to use both access token claims and values from business data in its authorization. I show how to manage this in the next code sample.
 
 ### API Logs
 
@@ -356,7 +356,7 @@ public static handleError(exception: any, response: Response): ClientError {
 }
 ```
 
-Errors are included in logs, where I log backend errors, such as network errors calling OAuth endpoints, with a 500 status and details about the cause, to help with fast problem resolution:
+API logs include backend errors, like network errors calling OAuth endpoints, along with details about the cause, to help with fast problem resolution:
 
 ```json
 {
