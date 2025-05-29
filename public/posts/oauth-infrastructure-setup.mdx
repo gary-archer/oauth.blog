@@ -4,7 +4,7 @@ The previous post explained <a href='jwt-access-token-validation.mdx'>JWT Access
 
 ### Step 1: Define Base URLs
 
-When working with OAuth, I recommend designing URLs for a development computer, to enable the most productive setups. I use the following base URLs for this blog's code samples:
+When working with OAuth, I recommend designing URLs for a development computer, so that you operate similarly to deployed environments. I use the following base URLs for this blog's code samples:
 
 | Development Base URL | Description |
 | -------------------- | ----------- |
@@ -12,7 +12,7 @@ When working with OAuth, I recommend designing URLs for a development computer, 
 | *https://api.authsamples-dev.com* | A base URL for APIs |
 | *https://login.authsamples.com* | The authorization server |
 
-For this blog, I purchased a <a href='cloud-domain-setup.mdx'>cloud domain</a> called *authsamples.com* and used various subdomains for different purposes. When you run this blog's code samples, you use a mix of components, some of which run on your local computer and some of which run in the cloud.
+When I created this blog I purchased a <a href='cloud-domain-setup.mdx'>cloud domain</a> called *authsamples.com* and configured a number of subdomains. When you run this blog's code samples, you use a mix of components, some of which run on your local computer and some of which run in the cloud.
 
 The ones that run locally use a domain called *authsamples-dev.com*. This is a fictional domain that is an alias to your local loopback address of *http://127.0.0.1*. You configure subdomain aliases in your local computer's *hosts file*, at one of these locations:
 
@@ -21,7 +21,7 @@ The ones that run locally use a domain called *authsamples-dev.com*. This is a f
 | Windows | c:\system32\drivers\etc\hosts |
 | macOS / Linux | /etc/hosts |
 
-For the first code sample, you configure the following subdomains. By using real-world URLs on a development computer you can plan deployments and do early verification of their reliability:
+For the first code sample, you configure the following subdomains. By using real-world URLs on a development computer you can design deployments and do early verification of their reliability:
 
 ```markdown
 127.0.0.1 www.authsamples-dev.com api.authsamples-dev.com
@@ -54,7 +54,7 @@ In the authorization server I acted as an administrator to create two initial us
 
 ![user accounts](../images/80/user-accounts.jpg)
 
-The test logins for this blog use the following usernames and are intended to encourage thought about user rights. A user sometimes has both organizational and personal privileges that need to be managed by your OAuth security.
+The test logins for this blog use the following usernames and are intended to encourage thought about user rights. A user sometimes has both organizational and personal privileges that API authorization has to enforce.
 
 - *guestuser@example.com*
 - *guestadmin@example.com*
@@ -141,7 +141,7 @@ The *authority* URL is typically the base URL of the authorization server. You c
 }
 ```
 
-The OAuth configuration for an API focuses on how it validates OAuth access tokens, and downloads token signing public keys:
+The OAuth configuration for an API focuses on how it downloads token signing public keys and validates OAuth access tokens:
 
 ```json
 {
@@ -173,7 +173,7 @@ A key objective should be to use security libraries so that you integrate OAuth 
 
 ### Step 11: Clarify Requirements
 
-During the journey of integrating OAuth into apps, you will form a better idea of what you need from the authorization server. Before committing to a vendor, ensure there are no blocking issues in your end-to-end flows, in areas such as user account fields, claims issuance and the user authentication methods that you need to use.
+During the journey of integrating OAuth into apps, you will form a better idea of what you need from the authorization server. Before committing to an implementation, ensure there are no blocking issues in your end-to-end flows, in areas such as user account data, claims issuance and user authentication behaviours.
 
 If your initial choice of authorization server does not meet your requirements you can then spend some time reviewing alternative choices. When your clients and APIs integrate OAuth in a standards-based way, switching authorization servers requires only minimal changes to application code.
 
