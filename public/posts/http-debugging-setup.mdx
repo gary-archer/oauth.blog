@@ -37,7 +37,7 @@ You can then browse to internet sites and capture traffic. For this blog's compo
 
 ![mitm trace](../images/100/mitm-trace.jpg?v=20240714)
 
-The initial code sample uses HTTP so has to use *localhost* URLs, due to behaviours specific to AWS Cognito and the oidc-client-ts library. Yet proxy tools typically do not capture *localhost* requests. Although you may be able to get a capture working, the most productive option is to use HTTPS URLs with real-world domain names. I use this approach for all subsequent code samples.
+The initial code sample uses HTTP so has to use *localhost* URLs, due to behaviours specific to AWS Cognito and the oidc-client-ts library. However, proxy tools typically do not capture *localhost* requests. Although you may be able to get a capture working, the most productive option is to use HTTPS URLs with real-world domain names. I use this approach for all subsequent code samples.
 
 ### Automated Setup
 
@@ -97,7 +97,7 @@ First, edit the API configuration for this blog's <a href='basicspa-execution.md
 }
 ```
 
-Then run the code sample with the following commands so that mitmproxy captures outgoing OAuth requests from the API. Setting *NODE_TLS_REJECT_UNAUTHORIZED* is a quick way to get the sample's Node.js API to trust the proxy root certificate. I cover SSL trust in the next post.
+Then run the code sample with the following commands so that mitmproxy captures outgoing OAuth requests from the API. Setting *NODE_TLS_REJECT_UNAUTHORIZED* is a quick way to get the sample's Node.js API to trust outbound SSL connections that the proxy creates. I say more about SSL trust configuration in the next post.
 
 ```bash
 export NODE_TLS_REJECT_UNAUTHORIZED=0
@@ -138,7 +138,7 @@ The tricky part of using an HTTPS proxy is knowing how to configure it across di
 - Swift iOS Apps
 - Command Line Tools
 
-I also explain how to configure an HTTP proxy for all of the following operating systems:
+The HTTP proxy can intercept traffic from any of the following operating systems:
 
 - Windows
 - macOS
@@ -148,7 +148,7 @@ I also explain how to configure an HTTP proxy for all of the following operating
 
 ### System Proxy Configuration
 
-On Windows computers, you configure the system proxy under *Settings / Network and Internet / Proxy/ Manual Proxy Setup*:
+On Windows computers, you configure the system proxy under *Settings / Network and Internet / Proxy / Manual Proxy Setup*:
 
 ![proxy setup windows](../images/100/proxy-setup-windows.jpg)
 
@@ -162,13 +162,13 @@ On Linux, run the network tool for the operating system and configure equivalent
 
 ### Browser Proxy Settings
 
-Browsers usually inherit the system proxy settings, though command line overrides may exist, such as Chrome's [-proxy-server option](https://www.linuxbabe.com/desktop-linux/configure-proxy-chromium-google-chrome-command-line). Firefox does not inherit the system settings, and instead you must set proxy details explicitly, under *Options / Network Settings*:
+Browsers usually inherit the system proxy settings, though command line overrides may exist, such as Chrome's *-proxy-server* option. Firefox does not inherit the system settings, and instead you must set proxy details explicitly, under *Options / Network Settings*:
 
 ![firefox proxy flags](../images/100/firefox-proxy-settings.jpg)
 
 ### Proxy Settings for Node.js APIs
 
-In Node.js, this blog's APIs use a small [proxy-agent library](https://github.com/TooTallNate/proxy-agents). HTTP libraries such as [axios](https://github.com/axios/axios) allow you to configure an *httpAgent* or *httpsAgent* property and you use the option that corresponds to the scheme of the target URL. When connecting to HTTPS URLs I assign the value of the agent property from the following utility class:
+In Node.js, this blog's APIs use a small [https-proxy-agent library](https://github.com/TooTallNate/proxy-agents). HTTP libraries such as [axios](https://github.com/axios/axios) allow you to configure an *httpAgent* or *httpsAgent* property and you use the option that corresponds to the scheme of the target URL. When connecting to HTTPS URLs I assign the value of the agent property from the following utility class:
 
 ```typescript
 import HttpsProxyAgent from 'https-proxy-agent';
@@ -280,7 +280,7 @@ In later posts I use [Electron](https://electronjs.org/) to develop <a href='des
 | Area | Proxy Behaviour |
 | ---- | --------------- |
 | Main Process | The main process follows Node.js rules if it needs to make outgoing connections. |
-| Renderer Process | Uses the Chromium Browser, which by default inherits proxy settings from the system proxy. |
+| Renderer Process | The renderer process uses the Chromium Browser, which by default inherits proxy settings from the system proxy. |
 
 It is also possible to override the system proxy settings via [Electron Command Line Overrides](https://www.electronjs.org/docs/api/command-line-switches):
 
@@ -288,7 +288,7 @@ It is also possible to override the system proxy settings via [Electron Command 
 
 ### Command Line Tools
 
-I commonly use the *curl* and *openssl* tools, on Windows, macOS and Linux operating systems, to make HTTP/S requests. These command line tools look for one or both of the below environment variables, depending on the scheme of the target URL:
+I commonly use the *curl* and *openssl* tools to make HTTP/S requests, on Windows, macOS and Linux operating systems. These command line tools look for one or both of the below environment variables, depending on the scheme of the target URL:
 
 | Environment Variable | Used For |
 | -------------------- | -------- |
@@ -320,17 +320,17 @@ Use of HTTP proxy tools for mobile apps is more intricate, involving quirks of b
 
 An HTTP proxy tool also enables you to [modify in-flight OAuth requests and responses](https://docs.mitmproxy.org/stable/mitmproxytutorial-modifyrequests/), sometimes called *setting a breakpoint*. You do so by typing a filter expression into the *intercept* window.
 
-In the following screenshot I use the expression *~u /token*, for a request from the SPA to the authorization server's token endpoint. I then altered the client ID and submitted the request, to simulate a misconfigured client:
+In the following screenshot I used the expression *~u /token*, for a request from the SPA to the authorization server's token endpoint. I then altered the client ID and submitted the request, to simulate a misconfigured client:
 
 ![proxy breakpoint](../images/100/proxy-breakpoint.jpg?v=20240714)
 
-This type of technique can be used to verify that your OAuth client processes OAuth *error* and *error_description* fields correctly. The sample SPA renders these details in a way that helps to enable fast problem resolution:
+This type of technique can be used to verify that your OAuth client processes OAuth *error* and *error_description* fields correctly. The sample SPA receives and renders error details in a way that helps to enable fast problem resolution:
 
 ![breakpoint error result](../images/100/breakpoint-error-result.jpg?v=20240714)
 
 ### Where Are We?
 
-I showed how to use an HTTP proxy tool to capture HTTP/S messages from clients and APIs, regardless of technology. This provides good troubleshooting options during development and also promotes a solid understanding of the OAuth standards-based messages.
+I showed how to use an HTTP proxy tool to capture HTTP/S messages from clients and APIs, regardless of their technology. Doing so improves troubleshooting options during development and also promotes a solid understanding of the OAuth standards-based messages.
 
 ### Next
 
