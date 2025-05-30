@@ -220,9 +220,9 @@ public class ClaimsPrincipal implements AuthenticatedPrincipal {
     private final JwtClaims jwtClaims;
 
     @Getter
-    private final ExtraClaims extraClaims;
+    private final Object extraClaims;
 
-    public ClaimsPrincipal(final JwtClaims jwtClaims, final ExtraClaims extraClaims) {
+    public ClaimsPrincipal(final JwtClaims jwtClaims, final Object extraClaims) {
         this.jwtClaims = jwtClaims;
         this.extraClaims = extraClaims;
     }
@@ -234,7 +234,7 @@ When the filter runs successfully, it updates a holder object stored against the
 ```java
 private boolean isUserAuthorizedForCompany(final Company company) {
 
-    var claims = (SampleClaimsPrincipal) this.claimsHolder.getClaims();
+    var claims = (ClaimsPrincipal) this.claimsHolder.getClaims();
 
     var isAdmin = claims.getRole().equalsIgnoreCase("admin");
     if (isAdmin) {
@@ -246,8 +246,8 @@ private boolean isUserAuthorizedForCompany(final Company company) {
         return false;
     }
 
-    var extraClaims = (SampleExtraClaims) claims.getExtraClaims();
-    return Arrays.stream(extraClaims.getRegions()).anyMatch(ur -> ur.equals(company.getRegion()));
+    var extraClaims = (ExtraClaims) claims.getExtraClaims();
+    return Arrays.stream(extraClaims.regions).anyMatch(ur -> ur.equals(company.getRegion()));
 }
 ```
 
@@ -268,13 +268,13 @@ public ClaimsPrincipal execute(final HttpServletRequest request) {
     String accessTokenHash = DigestUtils.sha256Hex(accessToken);
     var extraClaims = this.cache.getExtraUserClaims(accessTokenHash);
     if (extraClaims != null) {
-        return this.extraClaimsProvider.createClaimsPrincipal(jwtClaims, extraClaims);
+        return new ClaimsPrincipal(jwtClaims, extraClaims);
     }
 
     extraClaims = this.extraClaimsProvider.lookupExtraClaims(jwtClaims);
     this.cache.setExtraUserClaims(accessTokenHash, extraClaims, ClaimsReader.getExpiryClaim(jwtClaims));
  
-    return this.extraClaimsProvider.createClaimsPrincipal(jwtClaims, extraClaims);
+    return new ClaimsPrincipal(jwtClaims, extraClaims);
 }
 ```
 

@@ -160,14 +160,14 @@ I inject the claims object produced by OAuth middleware into business logic clas
 export class CompanyService {
 
     private readonly repository: CompanyRepository;
-    private readonly claims: SampleClaimsPrincipal;
+    private readonly claims: ClaimsPrincipal;
 
     public constructor(
         @inject(SAMPLETYPES.CompanyRepository) repository: CompanyRepository,
         @inject(BASETYPES.ClaimsPrincipal) claims: ClaimsPrincipal) {
 
         this.repository = repository;
-        this.claims = claims as SampleClaimsPrincipal;
+        this.claims = claims;
     }
 
     public async getCompanyTransactions(companyId: number): Promise<CompanyTransactions> {

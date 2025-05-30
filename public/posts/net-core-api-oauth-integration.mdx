@@ -45,7 +45,8 @@ To get visibility into the underlying behaviour of the Microsoft classes and to 
  {
     "Logging": {
         "LogLevel": {
-            "Microsoft.AspNetCore.Authentication.JwtBearer": "Debug"
+            "Microsoft.AspNetCore.Authentication": "Debug",
+            "Microsoft.AspNetCore.Authorization": "Debug"
         }
     }
 }
@@ -245,7 +246,7 @@ In code the *ClaimsPrincipal* class is represented as follows, consisting of typ
 ```csharp
 public class CustomClaimsPrincipal : ClaimsPrincipal
 {
-    public CustomClaimsPrincipal(JwtClaims jwtClaims, ExtraClaims extraClaims)
+    public CustomClaimsPrincipal(JwtClaims jwtClaims, object extraClaims)
         : base(GetClaimsIdentity(jwtClaims, extraClaims))
     {
         this.JwtClaims = jwtClaims;
@@ -254,7 +255,7 @@ public class CustomClaimsPrincipal : ClaimsPrincipal
 
     public JwtClaims JwtClaims { get; private set; }
 
-    public ExtraClaims ExtraClaims { get; private set; }
+    public object ExtraClaims { get; private set; }
 }
 ```
 
@@ -275,7 +276,7 @@ private bool IsUserAuthorizedForCompany(Company company)
         return false;
     }
 
-    var extraClaims = this.claims.ExtraClaims as SampleExtraClaims;
+    var extraClaims = this.claims.ExtraClaims as ExtraClaims;
     return extraClaims.Regions.Any(ur => ur == company.Region);
 }
 ```
@@ -299,12 +300,12 @@ public async Task<CustomClaimsPrincipal> ExecuteAsync(HttpRequest request)
     var extraClaims = await this.cache.GetExtraUserClaimsAsync(accessTokenHash);
     if (extraClaims != null)
     {
-        return this.extraClaimsProvider.CreateClaimsPrincipal(jwtClaims, extraClaims);
+        return this.CreateClaimsPrincipal(jwtClaims, extraClaims);
     }
 
     extraClaims = await this.extraClaimsProvider.LookupExtraClaimsAsync(jwtClaims, request.HttpContext.RequestServices);
     await this.cache.SetExtraUserClaimsAsync(accessTokenHash, extraClaims, jwtClaims.Exp);
-    return this.extraClaimsProvider.CreateClaimsPrincipal(jwtClaims, extraClaims);
+    return this.CreateClaimsPrincipal(jwtClaims, extraClaims);
 }
 ```
 

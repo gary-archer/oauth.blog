@@ -16,8 +16,8 @@ The SPA's OAuthClient class therefore supplies additional settings to the *oidc-
 public constructor(configuration: OAuthConfiguration) {
 
     this.configuration = configuration;
-    const settings = {
 
+    const settings = {
         authority: configuration.authority,
         client_id: configuration.clientId,
         redirect_uri: configuration.redirectUri,
@@ -25,7 +25,6 @@ public constructor(configuration: OAuthConfiguration) {
         response_type: 'code',
         userStore: new WebStorageStateStore({ store: new InMemoryWebStorage() }),
         stateStore: new WebStorageStateStore({ store: sessionStorage }),
-
         silent_redirect_uri: configuration.redirectUri,
         automaticSilentRenew: false,
         loadUserInfo: false,

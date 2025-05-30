@@ -157,7 +157,7 @@ private isUserAuthorizedForCompany(company: Company): boolean {
         return false;
     }
 
-    const extraClaims = this.claims.extra as SampleExtraClaims;
+    const extraClaims = this.claims.extra as ExtraClaims;
     const found = extraClaims.regions.find((c) => c === company.region);
     return !!found;
 }
@@ -165,7 +165,7 @@ private isUserAuthorizedForCompany(company: Company): boolean {
 
 ### Claims Caching Algorithm
 
-This blog's APIs use an OAuth filter with the following overall algorithm, where a thread-safe memory cache stores a hash of the access token mapped to extra claims. This ensures that the extra claims data source lookup only occurs occasionally.
+This blog's APIs use an OAuth filter with the following overall algorithm, where a thread-safe memory cache stores extra claims with a time to live and with a cache key equal to the hash of the access token. The caching ensures that the extra claims data lookup only occurs occasionally.
 
 ```typescript
 export class OAuthFilter {
@@ -177,24 +177,24 @@ export class OAuthFilter {
             throw ErrorFactory.createClient401Error('No access token was supplied in the bearer header');
         }
 
-        const jwtClaims = await this.accessTokenValidator.execute(accessToken);
+        const tokenClaims = await this.accessTokenValidator.execute(accessToken);
 
         const accessTokenHash = createHash('sha256').update(accessToken).digest('hex');
         let extraClaims = await this.cache.getExtraUserClaims(accessTokenHash);
         if (extraClaims) {
-            this.extraClaimsProvider.createClaimsPrincipal(jwtClaims, extraClaims, request);
+            return new ClaimsPrincipal(tokenClaims, extraClaims);
         }
 
-        extraClaims = await this.extraClaimsProvider.lookupExtraClaims(jwtClaims, request);
+        extraClaims = await this.extraClaimsProvider.lookupExtraClaims(tokenClaims);
 
-        await this.cache.setExtraUserClaims(accessTokenHash, extraClaims!, jwtClaims.exp!);
+        await this.cache.setExtraUserClaims(accessTokenHash, extraClaims!, tokenClaims.exp!);
 
-        return this.extraClaimsProvider.createClaimsPrincipal(jwtClaims, extraClaims, request);
+        return new ClaimsPrincipal(tokenClaims, extraClaims);
     }
 }
 ```
 
-This technique adds complexity to API code, so avoid it when getting started with OAuth. Instead, focus on using claims from the access token payload. Understand though, that it is common for APIs to need to cache some extra authorization values not issued to the access token. Some claims-related plumbing code can set up your API's business logic classes to authorize in productive ways.
+This technique adds complexity to API code, so avoid it when getting started with OAuth. Instead, focus on using claims from the access token payload. Understand though, that it is common for APIs to need to cache some extra authorization-related values not issued to the access token. Some claims-related plumbing code can set up the API's business logic to authorize productively.
 
 ### Where Are We?
 

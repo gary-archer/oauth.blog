@@ -65,7 +65,7 @@ private void ConfigureBaseDependencies(IServiceCollection services)
 {
     new BaseCompositionRoot()
         .UseOAuth(this.configuration.OAuth)
-        .WithCustomClaimsProvider(new SampleCustomClaimsProvider())
+        .WithExtraClaimsProvider(new ExtraClaimsProviderImpl())
         .WithLogging(this.configuration.Logging, this.loggerFactory)
         .WithProxyConfiguration(this.configuration.Api.UseProxy, this.configuration.Api.ProxyUrl)
         .WithServices(services)
@@ -101,7 +101,6 @@ For APIs with small dependency graphs, I like to reduce the likelihood of parall
 ```csharp
 private void ConfigureApiDependencies(IServiceCollection services)
 {
-    services.AddTransient<SampleCustomClaimsProvider>();
     services.AddTransient<JsonReader>();
     services.AddTransient<CompanyRepository>();
     services.AddTransient<CompanyService>();

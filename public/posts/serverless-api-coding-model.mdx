@@ -63,7 +63,7 @@ export class LambdaInstance {
 
         const base = new BaseCompositionRoot(parentContainer)
             .useOAuth(configuration.oauth)
-            .withExtraClaimsProvider(new SampleExtraClaimsProvider())
+            .withExtraClaimsProvider(new ExtraClaimsProviderImpl())
             .withLogging(configuration.logging, loggerFactory)
             .withHttpProxy(httpProxy)
             .register();
@@ -145,11 +145,11 @@ With Serverless lambdas I continue to use [InversifyJS](https://github.com/inver
 export class CompanyService {
 
     private readonly repository: CompanyRepository;
-    private readonly claims: SampleCustomClaims;
+    private readonly claims: ClaimsPrincipal;
 
     public constructor(
         @inject(SAMPLETYPES.CompanyRepository) repository: CompanyRepository,
-        @inject(BASETYPES.CustomClaims) claims: SampleCustomClaims) {
+        @inject(BASETYPES.ClaimsPrincipal) claims: ClaimsPrincipal) {
 
         this.repository = repository;
         this.claims = claims;
@@ -187,13 +187,6 @@ An earlier post explained this blog's approach to <a href='jwt-access-token-vali
 ### Claims Based Authorization
 
 After processing JWT access tokens, the API uses claims according to this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. The API looks up additional authorization values when it first receives a particular access token and stores these extra claims in another in-memory cache that also cannot be shared between lambda instances. The cache key is the SHA256 hash of the access token. The earlier <a href='updated-api-coding-key-points.mdx'>Updated API Code Sample</a> post explains the mechanics.
-
-```typescript
-export class SampleExtraClaims extends ExtraClaims {
-    private readonly title: string;
-    private readonly regions: string[];
-}
-```
 
 ### API Integration Tests
 
