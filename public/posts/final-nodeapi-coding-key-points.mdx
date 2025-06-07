@@ -73,18 +73,16 @@ Dependency injection works differently in Node.js to languages such as C# and Ja
 
 ### Dependency Composition
 
-The startup logic registers dependencies, which consist of both plumbing objects and application objects:
+The startup logic implements dependency injection composition to enable objects to receive instances of other objects:
 
 ```typescript
-new BaseCompositionRoot(this.parentContainer)
-    .useOAuth(this.parentContainer.oauth)
-    .withExtraClaimsProvider(new ExtraClaimsProviderImpl())
-    .withLogging(this.configuration.logging, this.loggerFactory)
-    .withExceptionHandler(exceptionHandler)
-    .withProxyConfiguration(this.configuration.api.useProxy, this.configuration.api.proxyUrl)
+new CompositionRoot(this.parentContainer)
+    .addConfiguration(this.configuration)
+    .addExtraClaimsProvider(new ExtraClaimsProviderImpl())
+    .addLogging(this.configuration.logging, this.loggerFactory)
+    .addExceptionHandler(exceptionHandler)
+    .addProxyConfiguration(this.configuration.api.useProxy, this.configuration.api.proxyUrl)
     .register();
-
-CompositionRoot.registerDependencies(this.container);
 ```
 
 Inversify uses the following type of syntax to register dependencies. Some objects are singletons, others are bound to the current request and others are transient, meaning the container creates a new instance whenever it resolves the type:
@@ -101,11 +99,11 @@ For APIs with small dependency graphs, I reduce the likelihood of parallel reque
 
 ### Middleware
 
-As part of composing base dependencies, I create middleware classes for cross cutting concerns, and these are natural singletons:
+The startup logic also creates middleware objects for cross cutting concerns, and these are natural singletons:
 
 ```typescript
 const childContainerMiddleware = new ChildContainerMiddleware(this.parentContainer);
-const loggerMiddleware = new LoggerMiddleware(this.loggerFactory);
+const loggerMiddleware = new LoggerMiddleware(this.loggerFactory, routesMetadata);
 const authorizerMiddleware = new AuthorizerMiddleware();
 const customHeaderMiddleware = new CustomHeaderMiddleware(this.configuration.logging.apiName);
 const exceptionHandler = new UnhandledExceptionHandler(this.configuration.logging);

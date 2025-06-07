@@ -58,24 +58,20 @@ private static IWebHost BuildWebHost(ILoggerFactory loggerFactory)
 
 ### Dependency Composition
 
-The startup class configures *Cross Cutting Concerns* which includes registering dependencies in the Microsoft IOC container:
+The startup logic registers dependencies in the Microsoft IOC container:
 
 ```csharp
-private void ConfigureBaseDependencies(IServiceCollection services)
-{
-    new BaseCompositionRoot()
-        .UseOAuth(this.configuration.OAuth)
-        .WithExtraClaimsProvider(new ExtraClaimsProviderImpl())
-        .WithLogging(this.configuration.Logging, this.loggerFactory)
-        .WithProxyConfiguration(this.configuration.Api.UseProxy, this.configuration.Api.ProxyUrl)
-        .WithServices(services)
-        .Register();
-}
+new CompositionRoot(services)
+    .AddConfiguration(this.configuration)
+    .AddExtraClaimsProvider(new ExtraClaimsProviderImpl())
+    .AddLogging(this.configuration.Logging, this.loggerFactory)
+    .AddProxyConfiguration(this.configuration.Api.UseProxy, this.configuration.Api.ProxyUrl)
+    .Register();
 ```
 
 ### Middleware
 
-Startup code creates various middleware classes, which are natural singletons, and some of them need to be registered with the container:
+The startup logic also creates various middleware objects to manage cross cutting concerns:
 
 ```csharp
 private void ConfigureApiMiddleware(IApplicationBuilder api)
@@ -99,11 +95,12 @@ The role of each of these middleware classes is summarised below:
 For APIs with small dependency graphs, I like to reduce the likelihood of parallel requests  impacting each other. I do this by giving each request its own independent object instances. The API uses a request scope for REST specific objects, or a transient scope for domain logic classes:
 
 ```csharp
-private void ConfigureApiDependencies(IServiceCollection services)
+private void RegisterApplicationDependencies(IServiceCollection services)
 {
-    services.AddTransient<JsonReader>();
-    services.AddTransient<CompanyRepository>();
-    services.AddTransient<CompanyService>();
+    this.services.AddTransient<CompanyService>();
+    this.services.AddTransient<CompanyRepository>();
+    this.services.AddTransient<UserRepository>();
+    this.services.AddTransient<JsonReader>();
 }
 ```
 

@@ -45,7 +45,7 @@ AWS creates one or more lambda instances for each lambda function. A lambda inst
 
 ### Applying Cross Cutting Concerns
 
-During creation of a lambda instance I wire up middleware objects and register objects with a container that provides dependency injection features:
+During creation of a lambda instance I register objects with the Inversify container and also create middleware objects:
 
 ```typescript
 export class LambdaInstance {
@@ -53,38 +53,42 @@ export class LambdaInstance {
     public async prepare(baseHandler: LambdaHandler)
         : Promise<middy.MiddyfiedHandler<APIGatewayProxyExtendedEvent, APIGatewayProxyResult> | LambdaHandler> {
 
-        const loggerFactory = LoggerFactoryBuilder.create();
-        const configuration = this.loadConfiguration();
+        const loggerFactory = new LoggerFactoryImpl();
+        try {
 
-        const parentContainer = new Container();
+            const configuration = this.loadConfiguration();
+            const parentContainer = new Container();
 
-        const httpProxy = new HttpProxy(configuration.api.useProxy, configuration.api.proxyUrl);
-        await httpProxy.initialize();
+            const httpProxy = new HttpProxy(configuration.api.useProxy, configuration.api.proxyUrl);
+            await httpProxy.initialize();
 
-        const base = new BaseCompositionRoot(parentContainer)
-            .useOAuth(configuration.oauth)
-            .withExtraClaimsProvider(new ExtraClaimsProviderImpl())
-            .withLogging(configuration.logging, loggerFactory)
-            .withHttpProxy(httpProxy)
-            .register();
+            new CompositionRoot(parentContainer)
+                .addConfiguration(configuration)
+                .addExtraClaimsProvider(new ExtraClaimsProviderImpl())
+                .addLogging(configuration.logging, loggerFactory)
+                .addHttpProxy(httpProxy)
+                .register();
 
-        CompositionRoot.register(parentContainer);
+            const childContainerMiddleware = new ChildContainerMiddleware(parentContainer);
+            const loggerMiddleware = new LoggerMiddleware(loggerFactory);
+            const exceptionMiddleware = new ExceptionMiddleware(configuration.logging);
+            const authorizerMiddleware = new AuthorizerMiddleware();
+            const customHeaderMiddleware = new CustomHeaderMiddleware(configuration.logging.apiName);
 
-        const childContainerMiddleware = base.getChildContainerMiddleware();
-        const loggerMiddleware = base.getLoggerMiddleware();
-        const exceptionMiddleware = base.getExceptionMiddleware();
-        const authorizerMiddleware = base.getAuthorizerMiddleware();
-        const customHeaderMiddleware = base.getCustomHeaderMiddleware();
+            return middy(async (event: APIGatewayProxyExtendedEvent, context: Context) => {
+                return baseHandler(event, context);
 
-        return middy(async (event: APIGatewayProxyExtendedEvent, context: Context) => {
-            return baseHandler(event, context);
+            })
+                .use(childContainerMiddleware)
+                .use(loggerMiddleware)
+                .use(exceptionMiddleware)
+                .use(authorizerMiddleware)
+                .use(customHeaderMiddleware);
 
-        })
-            .use(childContainerMiddleware)
-            .use(loggerMiddleware)
-            .use(exceptionMiddleware)
-            .use(authorizerMiddleware)
-            .use(customHeaderMiddleware);
+        } catch (e) {
+
+            return this.handleStartupError(loggerFactory, e);
+        }
     }
 }
 ```

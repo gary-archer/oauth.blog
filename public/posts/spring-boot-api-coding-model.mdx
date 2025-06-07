@@ -33,7 +33,7 @@ I use Spring Boot extensibility points via the following classes, which are inst
 
 ### Dependency Composition
 
-The main responsibility of these objects is to read the API's JSON configuration and to set up *Cross Cutting Concerns*, including the registration of dependencies:
+The main responsibility of these objects is to read the API's JSON configuration settings and use them to configure the HTTP server and register dependencies with the Spring container:
 
 ```java
 @Override
@@ -51,13 +51,11 @@ public void initialize(final ConfigurableApplicationContext context) {
     var container = context.getBeanFactory();
     container.registerScope(CustomRequestScope.NAME, new CustomRequestScope());
 
-    new BaseCompositionRoot(container)
-            .useOAuth(configuration.getOauth())
-            .withExtraClaimsProvider(new ExtraClaimsProviderImpl())
-            .withLogging(configuration.getLogging(), loggerFactory)
-            .register();
-
-    container.registerSingleton("ApiConfiguration", configuration.getApi());
+    new CompositionRoot(container)
+        .addConfiguration(configuration)
+        .addExtraClaimsProvider(new ExtraClaimsProviderImpl(container))
+        .addLogging(configuration.getLogging(), loggerFactory)
+        .register();
 }
 ```
 

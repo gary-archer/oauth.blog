@@ -28,20 +28,20 @@ APIs start by loading their configuration, which includes OAuth settings needed 
 APIs often follow a dependency injection based model and register object instances and lifetimes when the API starts up:
 
 ```typescript
-public static registerDependencies(container: Container): void {
+public registerApplicationDependencies(): void {
 
-    container.bind<UserInfoController>(SAMPLETYPES.UserInfoController)
+    this.parentContainer.bind<UserInfoController>(SAMPLETYPES.UserInfoController)
         .to(UserInfoController).inRequestScope();
-    container.bind<CompanyController>(SAMPLETYPES.CompanyController)
+    this.parentContainer.bind<CompanyController>(SAMPLETYPES.CompanyController)
         .to(CompanyController).inRequestScope();
 
-    container.bind<CompanyService>(SAMPLETYPES.CompanyService)
+    this.parentContainer.bind<CompanyService>(SAMPLETYPES.CompanyService)
         .to(CompanyService).inTransientScope();
-    container.bind<CompanyRepository>(SAMPLETYPES.CompanyRepository)
+    this.parentContainer.bind<CompanyRepository>(SAMPLETYPES.CompanyRepository)
         .to(CompanyRepository).inTransientScope();
-    container.bind<UserRepository>(SAMPLETYPES.UserRepository)
+    this.parentContainer.bind<UserRepository>(SAMPLETYPES.UserRepository)
         .to(UserRepository).inTransientScope();
-    container.bind<JsonFileReader>(SAMPLETYPES.JsonFileReader)
+    this.parentContainer.bind<JsonFileReader>(SAMPLETYPES.JsonFileReader)
         .to(JsonFileReader).inTransientScope();
 }
 ```
@@ -63,12 +63,11 @@ export class UnhandledExceptionHandler {
 
 ### Entry Points
 
-I express entry points to API operations declaratively, using the HTTP path and method:
+I express API operation entry points that map to an HTTP path and method:
 
 ```typescript
 @injectable()
-@Controller('/companies')
-export class CompanyController extends BaseHttpController {
+export class CompanyController {
 
     private readonly service: CompanyService;
 
@@ -77,9 +76,10 @@ export class CompanyController extends BaseHttpController {
         this.service = service;
     }
 
-    @Get('/:id/transactions')
     public async getCompanyTransactions(@requestParam('id') id: string): Promise<CompanyTransactions> {
-        return this.service.getCompanyTransactions(id);
+        
+        const result = await this.service.getCompanyTransactions(companyId);
+        ResponseWriter.writeSuccessResponse(response, 200, result);
     }
 }
 ```
@@ -109,7 +109,7 @@ The API validates a JWT access token on every request, after which the API trust
 public async validateAccessToken(accessToken: string): JwtClaims {
 
     const options = {
-        algorithms: ['RS256'],
+        algorithms: [this.configuration.algorithm],
         issuer: this.configuration.issuer,
         options.audience = this.configuration.audience;
     } as JWTVerifyOptions;
@@ -136,7 +136,7 @@ APIs must collect values for their business authorization. This code often requi
 ```typescript
 export class ClaimsPrincipal {
     public jwtClaims: JWTPayload;
-    public extraClaims: ExtraClaims;
+    public extraClaims: any;
 }
 ```
 
