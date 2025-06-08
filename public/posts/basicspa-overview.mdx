@@ -1,0 +1,84 @@
+# Basic SPA - Overview
+
+In the <a href='web-architecture-goals.mdx'>Web Architecture Goals</a> post I summarised some desired qualities. The first step is to run an integrated code sample on a development computer, so that access tokens are sent between an SPA, API and authorization server.
+
+### Behaviours
+
+The behaviour provided in the initial code sample is summarised below:
+
+| Behaviour | Description |
+| --------- | ----------- |
+| Authorization Server | Developers can connect to a cloud authorization server from code running on their computer. |
+| SPA Security | The SPA uses the authorization code flow (PKCE) for logins and uses access tokens to call the API. |
+| API Security | The API validates JWT access tokens, then works with claims to implement authorization. |
+| Reliable | Both the SPA and API handle expiry and other failure conditions in a solid manner. |
+| Real World URLs | The SPA makes cross domain calls to the API on the local computer, and you can view its OAuth messages. |
+
+### Components
+
+The Basic SPA Code Sample will get the below components and endpoints talking to each other, using OAuth security:
+
+![Components](../images/20/components.jpg)
+
+### SPAs in 2021
+
+This sample uses the traditional SPA solution, with a JavaScript OpenID Connect implementation. It is now considered more secure for your production apps to instead use a <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend</a> approach.
+
+The traditional SPA flow remains useful when you first learn OAuth, and to represent a pure SPA architecture.
+
+### Code Download
+
+Clone the code for the SPA and API from [here](https://github.com/gary-archer/oauth.websample1). I explain how to run it in the next post:
+
+![Repo](../images/20/repo.jpg)
+
+### Security Libraries
+
+The SPA and API use the following respected open source libraries:
+
+| Component | Library | Features |
+| --------- | ------- | -------- |
+| SPA | [oidc-client-ts](https://github.com/authts/oidc-client-ts) | Implements OpenID Connect lifecycle events for a browser-based client, including logins, logouts and token renewal. |
+| API | [jose](https://github.com/panva/jose) | Validates JWT access tokens, returns claims and manages looking up and caching of token signing public keys. |
+
+### Programming Languages
+
+This blog uses multiple technologies, and they are all modern and cross platform. I start with these JavaScript based stacks, and use TypeScript for its extra language features and type checking benefits:
+
+| Component | Language | Platforms |
+| --------- | -------- | --------- |
+| SPA | TypeScript | Chrome / Edge / Firefox / Safari / Mobile |
+| API | Node.js + TypeScript | Windows / macOS / Linux |
+
+### Basic Web Technology for Early Samples
+
+I use modern web technology, but avoid web frameworks to start with, to establish requirements and techniques that would work with any technology stack:
+
+| Step | Details |
+| ---- | ------- |
+| SPA OAuth Code Integration | First show how to integrate standards-based OAuth support into an SPA with a focus on OAuth requirements. |
+| Modern SPA Framework | Avoid getting sidetracked by too much web technology initially, though this blog's <a href='final-spa-overview.mdx'>Final SPA</a> uses React. |
+
+### Code Sample Theme
+
+This blog's code samples represent a fictional financial scenario, that pretends to display sensitive investment details. In a real financial app you would need to protect this type of data carefully:
+
+![List View](../images/20/list-view.jpg)
+
+The actual data is just made up and does not represent anything real. The SPA receives fixed JSON data from the API and renders it. The SPA views include a basic *Transactions View* and you can imagine that this contains money transaction details.
+
+![Details View](../images/20/details-view.jpg)
+
+This view primarily exists to demonstrate navigation and deep linking, where an access token must be retrieved before the SPA can present its view. Users can bookmark URLs to secured resources, and the SPA may need to renew a token or re-authenticate the user before presenting the view:
+
+- *http://localhost/spa#company=1*
+- *http://localhost/spa#company=2*
+
+### Where Are We?
+
+I explained the initial code sample's behaviour, to integrate an SPA, the API and the authorization server.
+
+### Next
+
+- Next I explain <a href='basicspa-execution.mdx'>How to Run the Code Sample</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

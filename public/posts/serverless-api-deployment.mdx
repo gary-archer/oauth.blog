@@ -1,0 +1,167 @@
+# Serverless API Deployment
+
+Previously I provided a <a href='serverless-api-overview.mdx'>Serverless API Overview</a> and showed how to call the API locally. Next I explain how I deploy the Serverless API to the AWS cloud, to run as lambda functions. The API then provides data to my final SPA, mobile and desktop clients. I use the [Serverless Framework](https://github.com/serverless/serverless) to implement the API and the overall deployment uses the Serverless stack:
+
+![serverless stack](../images/630/serverless-stack.jpg)
+
+### Deployment Overview
+
+The API has a number of commands in its *package.json* file, which point to scripts that run Serverless framework commands:
+
+```json
+{
+  "scripts": {
+    "login": "sls login",
+    "lint": "npx eslint . --ignore-pattern dist",
+    "start": "./start.sh",
+    "testsetup": "./test/scripts/testsetup.sh",
+    "test": "./test/scripts/test.sh",
+    "build": "rm -rf dist && tsc",
+    "buildRelease": "rm -rf dist && tsc --sourceMap false",
+    "loadtest": "./test/scripts/loadtest.sh",
+    "deploy": "./deploy.sh",
+    "remove": "sls remove --stage deployed"
+  }
+}
+```
+
+The *deploy.sh* script first runs *sls package* to build a ZIP file, then runs *sls deploy* to push resources to the cloud. The deployment creates lambda functions, configures API gateway endpoints and limits CloudWatch log retention. The *serverless.yml* file references a custom domain mapping that I precreated before the first deployment. There is a single AWS deployment stage of *deployed*, though I also use a *dev* stage when I run lambdas locally:
+
+```yaml
+service: serverlessapi
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: eu-west-2
+  apiGateway:
+    shouldStartNameWithService: true
+
+custom:
+  customDomain:
+    domainName: 'api.authsamples.com'
+    certificateName: 'authsamples.com'
+    basePath: investments
+    endpointType: regional
+```
+
+### API Configuration
+
+The Serverless API uses the same JSON based approach to configuration as earlier APIs, and runs with the following settings in AWS:
+
+```json
+{
+    "api": {
+        "useProxy": false,
+        "proxyUrl": ""
+    },
+    "logging": {
+        "apiName": "FinalApi",
+        "prettyPrint": false,
+        "performanceThresholdMilliseconds": 500
+    },
+    "oauth": {
+        "issuer":                       "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+        "audience":                     "",
+        "algorithm":                    "RS256",
+        "scope":                        "https://api.authsamples.com/investments",
+        "jwksEndpoint":                 "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json",
+        "claimsCacheTimeToLiveMinutes": 15
+    }
+}
+```
+
+### Building API Code
+
+I use *tsc* to build the lambda code from TypeScript to JavaScript with the following *tsconfig.json* settings:
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2024",
+    "lib": ["ES2024"],
+    "module":"Node18",
+    "moduleResolution": "Node16",
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "outDir": "dist",
+    "sourceMap": true
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
+```
+
+The deployment package saves to a *.serverless* folder and excludes files deselected in the *package/patterns* section of the *serverless.yml* file. The deployment also excludes Node.js development dependencies:
+
+![deployment package](../images/630/deployment-package.jpg?v=20250126)
+
+The size of each lambda zip file is around 1.9MB. The Serverless framework includes [CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html) artifacts that automate the creation of AWS resources.
+
+### Registering an API Subdomain
+
+I created the main hosting domain of *authsamples.com* and its external HTTPS certificate in the earlier <a href='cloud-domain-setup.mdx'>Cloud Domain Setup</a>. I preconfigured the API subdomain in the AWS API Gateway and linked it to a deployment stage under *API Mappings*:
+
+![api subdomain](../images/630/api-subdomain.jpg?v=20250126)
+
+In *Route 53 / Hosted Zones* I then created an *A Record* to map the generated domain name to the API's custom subdomain:
+
+<div className='smallimage'>
+    <img src='../images/630/arecord.jpg?v=20250126' alt='API arecord' />
+</div>
+
+### API Deployment
+
+The *deploy.sh* script runs the *sls deploy* command to upload the zip file and CloudFormation resources to AWS:
+
+![deployment](../images/630/deployment.jpg?v=20250126)
+
+The serverless deployment registers HTTPS internet endpoints for the API's lambda functions in the AWS API Gateway:
+
+![endpoints](../images/630/endpoints.jpg?v=20250126)
+
+The deployment configures a *Lambda Integration* for each incoming HTTP request's REST path and method:
+
+![integration request](../images/630/integration-request.jpg?v=20250126)
+
+The API has three internet endpoints at the below URLs, where the third URL is a wildcard path with parameterised segments:
+
+- *https://api.authsamples.com/investments/userinfo*
+- *https://api.authsamples.com/investments/companies*
+- *https://api.authsamples.com/investments/companies/id/transactions*
+
+The CloudFormation deploys the API implementation to the *Lambda* AWS service for the London region. I can inspect and even edit the compiled JavaScript of each lambda.
+
+![compiled code](../images/630/compiled-code.jpg?v=20250126)
+
+Although in lambda technology each individual function is its own microservice, that is rarely the desired behaviour. Instead, you typically want to deploy medium sized services that can share code. To enable this I deploy all API code for each individual lambda, so shared code and dependencies upload multiple times. 
+
+Lambdas can be packaged in other ways. For example, you can use [Lambda Layers](https://docs.aws.amazon.com/lambda/latest/dg/chapter-layers.html) to share code, use [Serverless Plugin Scripts](https://github.com/mvila/serverless-plugin-scripts) to control logic, or build a separate [Zip Package Artifact](https://www.serverless.com/framework/docs/providers/aws/guide/packaging#artifact) for each lambda. However, some of these techniques may require non-portable code layouts that add complexity.
+
+### API Immediate Logs
+
+In CloudWatch, a log group is created for each lambda function and log retention is limited to a few days. The role of these logs is similar to that of the immediate log files in this blog's cloud native APIs. I can view log entries in the AWS console but CloudWatch is only used for immediate logging. In a real deployment, I would aggregate logs from CloudWatch to a more powerful log aggregation system with <a href='api-technical-support-analysis.mdx'>rich query capabilities</a>.
+
+![log entry](../images/630/log-entry.jpg?v=20250126)
+
+In order to write useful logs the API's code needs access to the full request and response details. Therefore I always use the [REST API Endpoint Type](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-vs-rest.html) since any API should have access to its incoming request details.
+
+### Troubleshooting Lambda Startup
+
+Occasionally during development I deploy an invalid lambda function. One cause is an invalid lambda response format and another is failing to upload a required Node.js dependency, such as by including it in *devDependencies* instead of *dependencies*. The lambda fails but there is no information in CloudWatch logs.
+
+You must activate [API Gateway CloudWatch Logs](https://aws.amazon.com/premiumsupport/knowledge-center/api-gateway-cloudwatch-logs) to get more information about the cause. First define an IAM role with log permissions and then activate extra logs under the *Logs/Tracing* tab for a particular stage. An extra CloudWatch log group then becomes available. Its log entries provide further information about the cause to enable problem resolution.
+
+### Where Are We?
+
+I ported this blog's earlier Node.js API to run with low cost and zero maintenance in AWS, which works well for my code samples. Note however that I have to accept certain limitations, like the use of the AWS API gateway and Cloudwatch. In larger setups there can be benefits in choosing your own supporting components and avoiding vendor lock in.
+
+### Next
+
+- Next I explain some <a href='serverless-api-coding-model.mdx'>Serverless API Code Details</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

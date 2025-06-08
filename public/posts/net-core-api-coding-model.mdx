@@ -1,0 +1,281 @@
+# .NET API - Code Details
+
+The previous post described this blog's <a href='net-core-api-oauth-integration.mdx'>.NET API OAuth Integration</a>. Next I explain some final implementation details.
+
+### Code Structure
+
+The example C# API consists of three main areas:
+
+- REST Host
+- API Business Logic
+- Common Code (plumbing)
+
+<div className='smallimage'>
+    <img src='../images/340/code-layout.jpg' alt='code layout' />
+</div>
+
+In a real API platform, much of the plumbing folder could be extracted into one or more shared library references and there would be far less code.
+
+### Application Startup Logic
+
+As is standard for a .NET API, the startup logic is coded primarily in the following two classes:
+
+| Class | Description |
+| ----- | ----------- |
+| Program | The application entry point |
+| Startup | Manages REST and security specific behaviour |
+
+The program class logic focuses on reading the configuration file, configuring the HTTP server and wiring up logging:
+
+```csharp
+private static IWebHost BuildWebHost(ILoggerFactory loggerFactory)
+{
+    var configuration = Configuration.Load("./api.config.json");
+
+    return new WebHostBuilder()
+        .ConfigureServices(services =>
+        {
+            services.AddSingleton(loggerFactory);
+            services.AddSingleton(configuration);
+        })
+        .ConfigureLogging(loggingBuilder =>
+        {
+            loggerFactory.Configure(loggingBuilder, configuration.Logging);
+        })
+        .UseKestrel(options =>
+        {
+            options.Listen(IPAddress.Any, configuration.Api.Port, listenOptions =>
+            {
+                listenOptions.UseHttps(
+                    configuration.Api.SslCertificateFileName,
+                    configuration.Api.SslCertificatePassword);
+            });
+        })
+        .UseStartup<Startup>()
+        .Build();
+}
+```
+
+### Dependency Composition
+
+The startup logic registers dependencies in the Microsoft IOC container:
+
+```csharp
+new CompositionRoot(services)
+    .AddConfiguration(this.configuration)
+    .AddLogging(this.configuration.Logging, this.loggerFactory)
+    .AddProxyConfiguration(this.configuration.Api.UseProxy, this.configuration.Api.ProxyUrl)
+    .AddExtraClaimsProvider(new ExtraClaimsProvider())
+    .Register();
+```
+
+### Middleware
+
+The startup logic also creates various middleware objects to manage cross cutting concerns:
+
+```csharp
+private void ConfigureApiMiddleware(IApplicationBuilder api)
+{
+    api.UseMiddleware<LoggerMiddleware>();
+    api.UseMiddleware<UnhandledExceptionMiddleware>();
+    api.UseMiddleware<CustomHeaderMiddleware>();
+}
+```
+
+The role of each of these middleware classes is summarised below:
+
+| Middleware Class | Responsibility |
+| ---------------- | -------------- |
+| LoggerMiddleware | Manages the log entry for each API request, then logs request related data. |
+| CustomHeaderMiddleware | Allows advanced client side testing of APIs via custom headers. |
+| UnhandledExceptionMiddleware | A central place for handling exceptions, adding error details to logs, and producing the client error response. |
+
+### Single Threaded Code
+
+For APIs with small dependency graphs, I like to reduce the likelihood of parallel requests  impacting each other. I do this by giving each request its own independent object instances. The API uses a request scope for REST specific objects, or a transient scope for domain logic classes:
+
+```csharp
+private void RegisterApplicationDependencies(IServiceCollection services)
+{
+    this.services.AddTransient<CompanyService>();
+    this.services.AddTransient<CompanyRepository>();
+    this.services.AddTransient<UserRepository>();
+    this.services.AddTransient<JsonReader>();
+}
+```
+
+### High Throughput Requirement
+
+All of this blog's APIs will be non blocking, to prevent threads being tied up during I/O completion. It is standard in .NET these days to be *async all the way*, starting at the controller entry point:
+
+```csharp
+[HttpGet("")]
+public async Task<IEnumerable> GetCompanyListAsync()
+{
+    return await this.service.GetCompanyListAsync();
+}
+```
+
+During API requests, async calls are chained together, all the way down to the actual I/O request, such as network calls to the authorization server or for data access:
+
+```csharp
+public async Task<T> ReadDataAsync<T>(string filePath)
+{
+    string jsonText = await File.ReadAllTextAsync(filePath);
+    return JsonConvert.DeserializeObject<T>(jsonText);
+}
+```
+
+### Logging Implementation
+
+API logging requires plumbing code to meet the end goal of enabling <a href='api-technical-support-analysis.mdx'>useful technical support queries by people</a>:
+
+<div className='smallimage'>
+    <img src='../images/340/logging-classes.jpg' alt='logging classes' />
+</div>
+
+The *LogEntry* is a natural request scoped object so I use the following factory method to create it, and make it injectable, when another object first accesses it during the lifetime of an API request:
+
+```csharp
+private void RegisterBaseDependencies()
+{
+    this.services.AddSingleton(this.loggingConfiguration);
+    this.services.AddScoped<ILogEntry>(
+        ctx =>
+        {
+            return this.loggerFactory.CreateLogEntry();
+        });
+
+    this.services.AddSingleton(this.httpProxy);
+    this.services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+}
+```
+
+The *LogEntry* is then injected into singleton middleware objects, which contribute data to logs at various points during the request lifecycle:
+
+```csharp
+public async Task Invoke(HttpContext context, ILogEntry logEntryParam)
+{
+    var logEntry = (LogEntry)logEntryParam;
+    logEntry.Start(context.Request);
+
+    await this.next(context);
+
+    logEntry.End(context.Request, context.Response);
+    logEntry.Write();
+}
+```
+
+It is also possible to inject the *LogEntry* into business logic. For example, the below repository object contributes performance instrumentation:
+
+```csharp
+public class CompanyRepository
+{
+    public CompanyRepository(JsonReader jsonReader, ILogEntry logEntry)
+    {
+        this.jsonReader = jsonReader;
+        this.logEntry = logEntry;
+    }
+
+    public async Task<IEnumerable<Company>> GetCompanyListAsync()
+    {
+        using (this.logEntry.CreatePerformanceBreakdown("getCompanyList"))
+        {
+            return await this.jsonReader.ReadDataAsync<IEnumerable<Company>>(@"./data/companyList.json");
+        }
+    }
+}
+```
+
+Logging objects write to a JSON log file and, if you follow the <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</a>, logs will automatically flow to Elasticsearch:
+
+![log queries](../images/340/log-queries.jpg)
+
+The sample API uses fixed appenders and fixed JSON output formats. In a real API you may instead prefer to use [log4net XML configuration](https://logging.apache.org/log4net/release/manual/configuration.html) to declaratively control logging output.
+
+### Error Handling Implementation
+
+The API implements this blog's <a href='error-handling-and-supportability.mdx'>Error Handling and Supportability</a> design. By default all errors escape to the global exception handler, whose role is to log errors and return an error response to the caller:
+
+```csharp
+public ClientError HandleException(Exception exception, HttpContext context)
+{
+    var logEntry = (LogEntry)context.RequestServices.GetService(typeof(ILogEntry));
+    var configuration = (LoggingConfiguration)context.RequestServices.GetService(typeof(LoggingConfiguration));
+
+    var error = ErrorUtils.FromException(exception);
+    if (error is ServerError)
+    {
+        var serverError = (ServerError)error;
+        logEntry.SetServerError(serverError);
+        return serverError.ToClientError(configuration.ApiName);
+    }
+    else
+    {
+        var clientError = (ClientError)error;
+        logEntry.SetClientError(clientError);
+        return clientError;
+    }
+}
+```
+
+The art of good error handling is to design good error objects that are useful to both callers of the API and technical support staff. Error output has a *productive and readable* format, and production logs are rendered as follows, including context such as the user, session, API and operation:
+
+```json
+{
+  "id": "0ff96924-1c02-469a-a5de-a1a6b7911ab2",
+  "utcTime": "2022-12-10T13:25:40",
+  "apiName": "FinalApi",
+  "operationName": "GetCompanyTransactions",
+  "hostName": "UBUNTU",
+  "method": "GET",
+  "path": "/investments/companies/4/transactions",
+  "resourceId": "4",
+  "clientName": "FinalSPA",
+  "statusCode": 200,
+  "errorCode": "unauthorized",
+  "millisecondsTaken": 12,
+  "correlationId": "d892c50e-c4fb-2e13-57c5-83389fc69c95",
+  "sessionId": "004d32bc-9755-b50e-6315-5be09f277ebe",
+  "errorData": {
+    "statusCode": 401,
+    "body": {
+      "code": "unauthorized",
+      "message": "Missing, invalid or expired access token"
+    },
+    "context": "JWT verification failed: Invalid signature."
+  }
+}
+```
+
+By default the exception handler treats unknown errors as general exceptions and returns a 500 response. For closer control of the response, the API's code can throw a *ServerError* or *ClientError* derived instance:
+
+```csharp
+[HttpGet("{id}/transactions")]
+public async Task<CompanyTransactions> GetCompanyTransactionsAsync(string id)
+{
+    int idValue;
+    if (!int.TryParse(id, NumberStyles.Any, CultureInfo.InvariantCulture, out idValue) || idValue <= 0)
+    {
+        throw ErrorFactory.CreateClientError(
+            HttpStatusCode.BadRequest,
+            SampleErrorCodes.InvalidCompanyId,
+            "The company id must be a positive numeric integer");
+    }
+
+    return await this.service.GetCompanyTransactionsAsync(idValue);
+}
+```
+
+### Portability
+
+The API uses some techniques that are a little different to many online .NET examples. However, the design is very mainstream and provides a productive code setup. The code for this blog's Node.js and Java APIs is almost identical.
+
+### Where Are We?
+
+I implemented some foundational code in .NET without any blocking issues, and separated plumbing from other code. In a real API I could then focus on growing the business logic.
+
+### Next
+
+- Next I implement the same <a href='java-spring-boot-api-overview.mdx'>API Architecture in Java</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

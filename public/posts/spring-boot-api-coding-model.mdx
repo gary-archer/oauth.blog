@@ -1,0 +1,392 @@
+# Java API - Code Details
+
+The previous post described this blog's <a href='spring-boot-api-oauth-integration.mdx'>Spring Boot API OAuth Integration</a>. Next I explain some final implementation details.
+
+### Code Structure
+
+The example Java API consists of three main areas:
+
+- REST Host
+- API Business Logic
+- Common Code (plumbing)
+
+<div className='smallimage'>
+    <img src='../images/370/code-layout.jpg' alt='code layout' />
+</div>
+
+In a real API platform, much of the plumbing folder could be extracted into one or more shared library references and there would be far less code.
+
+### Application Startup Logic
+
+The API entry point is defined in the *SampleApiApplication* class:
+
+<div className='smallimage'>
+    <img src='../images/370/startup-logic.jpg' alt='startup logic' />
+</div>
+
+I use Spring Boot extensibility points via the following classes, which are instantiated when the API starts:
+
+| Class | Description |
+| ----- | ----------- |
+| ApplicationInitializer | Logic before Spring's component system is initialised. |
+| HttpServerConfiguration | Logic after Spring's component system is initialised. |
+
+### Dependency Composition
+
+The main responsibility of these objects is to read the API's JSON configuration settings and use them to configure the HTTP server and register dependencies with the Spring container:
+
+```java
+@Override
+public void initialize(final ConfigurableApplicationContext context) {
+
+    var reader = new JsonFileReader();
+    var configuration = reader.readFile("api.config.json", Configuration.class).join();
+
+    loggerFactory.configure(configuration.getLogging());
+
+    this.configurePort(configuration.getApi());
+    this.configureHttpDebugging(configuration.getApi());
+    this.configureSsl(configuration);
+
+    var container = context.getBeanFactory();
+    container.registerScope(CustomRequestScope.NAME, new CustomRequestScope());
+
+     new CompositionRoot(container)
+        .addConfiguration(configuration)
+        .addLogging(configuration.getLogging(), loggerFactory)
+        .addExtraClaimsProvider(new ExtraClaimsProviderImpl(container))
+        .register();
+}
+```
+
+### Middleware
+
+Startup code creates various middleware classes and Spring calls most of them *interceptors*. These are natural singletons, and some of them need to be registered with the container:
+
+```java
+@Override
+    public void addInterceptors(final InterceptorRegistry registry) {
+
+        var loggingInterceptor = new LoggingInterceptor(this.context.getBeanFactory());
+        registry.addInterceptor(loggingInterceptor)
+                .addPathPatterns(ResourcePaths.ALL);
+
+        var headerInterceptor = new CustomHeaderInterceptor(this.loggingConfiguration.getApiName());
+        registry.addInterceptor(headerInterceptor)
+                .addPathPatterns(ResourcePaths.ALL);
+}
+```
+
+The role of each middleware object is summarised below:
+
+| Middleware Class | Responsibility |
+| ---------------- | -------------- |
+| LoggingInterceptor | Manages the log entry for each API request, then logs request and response details. |
+| CustomHeaderInterceptor | Allows advanced client side testing of APIs via custom headers. |
+| UnhandledExceptionHandler | A central place for handling exceptions, adding error details to logs, and producing the client error response. |
+
+### Single Threaded Code
+
+For APIs with small dependency graphs, I like to reduce the likelihood of parallel requests impacting each other. I do this by giving each request its own independent object instances. The API uses a request scope for REST specific objects, or a prototype scope for domain logic classes:
+
+```java
+@RestController()
+@Scope(value = CustomRequestScope.NAME)
+@RequestMapping(value = "api/companies")
+public class CompanyController {
+    ...    
+}
+
+@Service
+@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+public class CompanyService {
+    ...
+}
+```
+
+### High Throughput Requirement
+
+This blog's earlier Node.js and .NET APIs were *Non Blocking* and used an async await syntax, to prevent threads being tied up during I/O completion. The Node.js and .NET APIs used *Promises* and *Tasks* to achieve this, with only a small impact on its overall code. In Java, the same requirement exists.
+
+### Java Non Blocking API Solutions
+
+There are a few approaches to using async await code in Java, summarised below. Each of these has very different behaviour:
+
+| Solution | Characteristics |
+| -------- | --------------- |
+| [Reactor](https://projectreactor.io/docs/core/release/reference/#context) | A streaming interface to return large collections of resources to clients in chunks. |
+| [Completable Futures](https://www.baeldung.com/java-completablefuture) | Non blocking I/O in line with Node.js and .NET. |
+| [Virtual Threads](https://www.azul.com/blog/jdk-21-delivers-virtual-threads-other-new-features-and-long-term-support/) | Virtual threads in Java 21+ are used to only block a lightweight thread and return the main OS thread to the thread pool. |
+
+The code sample uses virtual threads, with the following setting in the *application properties file*:
+
+```markdown
+spring.threads.virtual.enabled=true
+```
+
+### Async Await
+
+Most languages, including Kotlin, have an await keyword, which creates a state machine object that captures variables in closures, but Java does not support this. In Kotlin you can write non-blocking code like this and code remains readable when there are multiple async calls.
+
+```kotlin
+import kotlinx.coroutines.future.await
+
+class JsonFileReader {
+
+    private suspend fun readJsonFromFile(filePath: String): String {
+
+        val path = Paths.get(filePath)
+        val bytes = AsyncFiles.readAllBytes(path).await()
+        return String(bytes)
+    }
+}
+```
+
+Before upgrading to Java 21 and Spring Boot 3.2, the API ran asynchronously using completable futures, which led to complex code with nested callbacks. Over time, this type of unreadable syntax would lead to bugs in a real API:
+
+```java
+public CompletableFuture<CompanyTransactions> getCompanyTransactions(final int companyId) {
+
+    var breakdown = this.logEntry.createPerformanceBreakdown("getCompanyTransactions");
+
+    return this.jsonReader.readFile("data/companyList.json", Company[].class)
+            .handle((companies, companiesException) ->
+                    this.getAndFilterCompanies(
+                            companyId,
+                            companies,
+                            breakdown,
+                            companiesException))
+            .thenCompose(foundCompany ->
+                    this.jsonReader.readFile("data/companyTransactions.json", CompanyTransactions[].class)
+                    .handle((transactions, transactionsException) ->
+                            this.getAndFilterTransactions(
+                                    companyId,
+                                    foundCompany,
+                                    transactions,
+                                    breakdown,
+                                    transactionsException)));
+}
+```
+
+With virtual threads the code is written synchronously and is much more readable, yet continues to manage I/O efficiently. Ideally though, I would prefer to use the same async design pattern for Node.js, .NET and Java APIs.
+
+```java
+public CompanyTransactions getCompanyTransactions(final int companyId) {
+
+    try (var breakdown = this.logEntry.createPerformanceBreakdown("getCompanyTransactions")) {
+
+        var companies = this.jsonReader.readFile("data/companyList.json", Company[].class);
+        var foundCompany = this.getAndFilterCompanies(companyId, companies);
+
+        var transactions = this.jsonReader.readFile("data/companyTransactions.json", CompanyTransactions[].class);
+        return this.getAndFilterTransactions(companyId, foundCompany, transactions);
+    }
+}
+```
+
+### Custom Request Scope
+
+When you use completable futures, the code switches threads when code resumes after an async operation. When the new thread tries to resolve objects, it fails because the *RequestContextHolder* class uses thread local storage for request scoped objects, resulting in the following cryptic error: 
+
+![cryptic error](../images/370/cryptic-error.jpg)
+
+To solve this problem I created a [Spring Boot Custom Scope](https://www.baeldung.com/spring-custom-scope) that stores request scoped objects in the *HttpServletRequest* object. Now that the API uses virtual threads, the custom scope is no longer strictly needed, but I left it in place, so that the API manages  request scoped objects in the same way as Node.js and .NET APIs.
+
+### Logging Implementation
+
+I implement API logging with some plumbing code and the end goal is to enable <a href='api-technical-support-analysis.mdx'>useful technical support queries by people</a>.
+
+<div className='smallimage'>
+    <img src='../images/370/logging-classes.jpg' alt='logging classes' />
+</div>
+
+The *LogEntry* is a natural request scoped object so I use the following factory method to create it and make it injectable when another object first accesses the *LogEntry* during the lifetime of an API request:
+
+```java
+@Component
+@Scope(value = ConfigurableBeanFactory.SCOPE_SINGLETON)
+public class LogEntryInjector {
+
+    private final LoggerFactoryImpl loggerFactory;
+
+    public LogEntryInjector(final LoggerFactoryImpl loggerFactory) {
+        this.loggerFactory = loggerFactory;
+    }
+
+    @Bean
+    @Scope(value = CustomRequestScope.NAME)
+    public LogEntryImpl createLogEntry() {
+        return this.loggerFactory.createLogEntry();
+    }
+}
+```
+
+The *LogEntry* is then accessed by interceptor objects which contribute data to logs at various points during the request lifecycle:
+
+```java
+public final class LoggingInterceptor implements HandlerInterceptor {
+
+    private final BeanFactory container;
+
+    public LoggingInterceptor(final BeanFactory container) {
+        this.container = container;
+    }
+
+    @Override
+    public boolean preHandle(
+            final @NonNull HttpServletRequest request,
+            final @NonNull HttpServletResponse response,
+            final @NonNull Object handler) {
+
+        var logEntry = this.container.getBean(LogEntryImpl.class);
+        logEntry.start(request);
+    }
+}
+```
+
+It is also possible to inject the *LogEntry* into business logic. For example, the below repository object contributes performance instrumentation:
+
+```java
+@Repository
+@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+public class CompanyRepository {
+
+    private final JsonFileReader jsonReader;
+    private final LogEntry logEntry;
+
+    public CompanyRepository(final JsonFileReader jsonReader, final LogEntry logEntry) {
+        this.jsonReader = jsonReader;
+        this.logEntry = logEntry;
+    }
+
+    public CompletableFuture<List<Company>> getCompanyList() {
+
+        try (var breakdown = this.logEntry.createPerformanceBreakdown("getCompanyList")) {
+
+            var companies = await(this.jsonReader.readFile("data/companyList.json", Company[].class));
+            return completedFuture(Arrays.stream(companies).collect(Collectors.toList()));
+        }
+    }
+}
+```
+
+The logging object write to a log file and, if you follow this blog's <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</a>, logs will automatically flow to Elasticsearch:
+
+![log queries](../images/370/log-queries.jpg)
+
+The sample API uses fixed appenders and fixed JSON output formats. In a real API you may instead prefer to use [logback XML configuration](https://logback.qos.ch/manual/configuration.html) to declaratively control logging output.
+
+### Error Handling Implementation
+
+The API implements this blog's <a href='error-handling-and-supportability.mdx'>Error Handling and Supportability</a> design. By default all errors escape to the global exception handler class, whose role is to log errors and return an error response to the caller:
+
+```java
+@RestControllerAdvice
+public final class UnhandledExceptionHandler {
+
+    private final BeanFactory container;
+    private final String apiName;
+
+    public UnhandledExceptionHandler(
+            final BeanFactory container,
+            final LoggingConfiguration configuration) {
+
+        this.container = container;
+        this.apiName = configuration.getApiName();
+    }
+
+    @ExceptionHandler(value = Throwable.class)
+    public ResponseEntity<String> handleException(final HttpServletRequest request, final Throwable ex) {
+
+        var logEntry = this.container.getBean(LogEntryImpl.class);
+        var clientError = this.handleError(ex, logEntry);
+        return new ResponseEntity<>(clientError.toResponseFormat().toString(), clientError.getStatusCode());
+    }
+}
+```
+
+The art of good error handling is to design good error objects that are useful to both callers of the API and technical support staff. Error output has a *productive and readable* format, and production logs are rendered as follows, including context such as the user, session, API and operation:
+
+```json
+{
+  "id" : "2bcf50e1-8a11-4c3e-ae59-c3265693de00",
+  "utcTime" : "2022-12-10T18:38:14.233698634Z",
+  "apiName" : "FinalApi",
+  "operationName" : "getCompanyTransactions",
+  "hostName" : "WORK",
+  "method" : "GET",
+  "path" : "/investments/companies/4/transactions",
+  "resourceId" : "4",
+  "clientName" : "FinalSPA",
+  "userId" : "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "statusCode" : 500,
+  "errorCode" : "exception_simulation",
+  "errorId" : 15203,
+  "millisecondsTaken" : 4,
+  "correlationId" : "37a79d57-2085-e024-37d8-d7adbd577175",
+  "sessionId" : "22139781-e2c1-9672-0712-ff46a72a8283",
+  "performance" : {
+    "name" : "total",
+    "millisecondsTaken" : 4,
+    "children" : [
+      {
+        "name" : "validateToken",
+        "millisecondsTaken" : 0
+      }
+    ]
+  },
+  "errorData" : {
+    "statusCode" : 500,
+    "clientError" : {
+      "code" : "exception_simulation",
+      "message" : "An exception was simulated in the API",
+      "area" : "FinalApi",
+      "id" : 15203,
+      "utcTime" : "2022-12-10T18:38:14.236384348Z"
+    },
+    "serviceError" : {
+      "errorCode" : "exception_simulation",
+      "stack" : [
+        "com.authsamples.api.plumbing.errors.ErrorFactory.createServerError(ErrorFactory.java:20)",
+        "com.authsamples.api.plumbing.interceptors.CustomHeaderInterceptor.preHandle(CustomHeaderInterceptor.java:35)",
+        "org.springframework.web.servlet.HandlerExecutionChain.applyPreHandle(HandlerExecutionChain.java:148)",
+        "org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1066)",
+        "org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:964)",
+        "org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1006)",
+        "org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:898)",
+        "javax.servlet.http.HttpServlet.service(HttpServlet.java:670)",
+        "org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:883)",
+        "javax.servlet.http.HttpServlet.service(HttpServlet.java:779)",
+        "org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:227)",
+        ...
+      ]
+    }
+  }
+}
+```
+
+By default the exception handler treats unknown errors as general exceptions and returns a 500 response. For closer control of the response, the API's code can throw a *ServerError* or *ClientError* derived instance:
+
+```java
+private ClientError unauthorizedError(final int companyId) {
+
+    var message = String.format("Transactions for company %d were not found for this user", companyId);
+    return ErrorFactory.createClientError(
+            HttpStatus.NOT_FOUND,
+            SampleErrorCodes.COMPANY_NOT_FOUND,
+            message);
+}
+```
+
+### Portability
+
+The API uses some techniques that are a little different to many online Java examples. However, the design is very mainstream and provides a productive code setup. The code for this blog's Node.js and .NET APIs is almost identical.
+
+### Where Are We?
+
+I implemented some foundational code in Java without any blocking issues, and separated plumbing from other code. In a real API I could then focus on growing the business logic.
+
+### Next
+
+- Next I explain how to run some <a href='api-automated-tests.mdx'>API Automated Security Tests</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

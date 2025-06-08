@@ -1,0 +1,361 @@
+# Java API - OAuth Integration
+
+In the previous post I explained how to run this blog's <a href='java-spring-boot-api-overview.mdx'>Final Java Code Sample</a> and summarized the main behaviours. Next I explain how to take finer control over technical behaviours in a Java Spring Boot API when you integrate OAuth security.
+
+### Spring API Defaults
+
+By default Spring Security uses a framework based approach to OAuth security. Add the *spring-boot-starter-oauth2-resource-server* and *spring-security-starter-web* dependencies to your project and configure the API in a fluent manner:
+
+```java
+@Configuration
+public class SecurityConfiguration {
+    
+	@Bean
+	public SecurityFilterChain filterChain(final HttpSecurity http) throws Exception {
+
+        http
+            .securityMatcher(new AntPathRequestMatcher("/**"))
+            .authorizeHttpRequests(authz -> authz
+                .anyRequest().authenticated()
+            )
+            .oauth2ResourceServer(rs -> rs
+                .jwt(jwt -> jwt
+                    .jwkSetUri(myJwksUri)
+                )
+            )
+        return http.build();
+    }
+}
+```
+
+To get visibility into the underlying behaviour of the Spring classes and to troubleshoot failures you can add entries like the following to your *application.properties* file.
+
+```markdown
+logging.level.org.springframework.security=DEBUG
+```
+
+When getting started with OAuth secured APIs these are good defaults to get up and running. However, they hide the details from API developers. This blog's Java API instead aims for an educational approach that makes the important requirements visible.
+
+### Key Requirements
+
+This blog's Java API customises default behaviour to meet the following requirements:
+
+| Requirement | Description |
+| ----------- | ----------- |
+| Standards Based | I use the same standards-based design patterns for OAuth security across Node.js, .NET and Java APIs. |
+| Best Security | The [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library enables the most up to date and specialised security algorithms when dealing with JWTs. |
+| Extensible Claims | APIs are in full control of the claims principal and are not forced to only use the authorization server's claims. |
+| Supportable | Errors and logs use custom formats and identity-related error details are included in the API's logs. |
+
+In Java the OAuth code uses the same main phases as other APIs in this blog:
+
+| Task | Description |
+| ---- | ----------- |
+| <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a> | Downloading a JSON Web Key Set and verifying received JWT access tokens. |
+| <a href='api-authorization-design.mdx'>API Authorization</a> | Creating a ClaimsPrincipal that includes useful claims, then applying them during authorization. |
+
+This blog's Java API contains plumbing code that I write in the same way the same across three different technology stacks. For your own solution you may be able to meet similar requirements in simpler ways.
+
+### OAuth API Configuration
+
+The API uses a JSON configuration file with the following OAuth settings, which are the same as those used by the final Node.js API:
+
+```json
+{
+  "oauth": {
+    "issuer":                       "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+    "audience":                     "",
+    "algorithm":                    "RS256",
+    "scope":                        "https://api.authsamples.com/investments",
+    "jwksEndpoint":                 "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json",
+    "claimsCacheTimeToLiveMinutes": 15
+  }
+}
+```
+
+The meaning of each field is summarised in the following table:
+
+| Field | Description |
+| ----- | ----------- |
+| issuer | The expected authorization server that the API trusts to issue its access tokens. |
+| audience | The audience in JWT access tokens indicates the API(s) that should process the JWT. |
+| scope | The API business area(s) for which the access token has permissions. |
+| jwksEndpoint | The trusted authorization server endpoint from which *jose4j* will use token signing public keys. |
+| claimsCacheTimeToLiveMinutes | The time to live for a cache that contains extra claims, not issued to access tokens. |
+
+### API Authorization
+
+The API receives an access token with the following payload to restrict the client's API access. The scope limits access to *investments* data. The user's business identity is a custom claim of *manager_id* to represent a person who manages investments. The authorization server also issues a custom *role* claim to the access token:
+
+```json
+{
+  "iss": "https://login.authsamples-dev.com",
+  "aud": "api.authsamples.com",
+  "scope": "openid profile investments",
+  "sub": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "manager_id": "10345",
+  "role": "user",
+  "exp": 1715630456.455
+}
+```
+
+The API processes the JWT access token to receive the main claims. The API then does some more advanced work to look up additional values that I want to treat like claims in the API code. The goal is to set up the API's business logic with a useful claims principal.
+
+### Custom Authorization Filter
+
+The *SecurityConfiguration* class wires up the API's custom OAuth behaviour. This returns a *SecurityFilterChain* class, which configures a custom authorization filter for a resource server:
+
+```java
+@Bean
+public SecurityFilterChain filterChain(final HttpSecurity http) throws Exception {
+
+    var container = this.context.getBeanFactory();
+    var authorizationFilter = new CustomAuthorizationFilter(container);
+
+    http
+            .securityMatcher(new AntPathRequestMatcher(ResourcePaths.ALL))
+            .authorizeHttpRequests(authorize ->
+                    authorize.dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
+                    .anyRequest().authenticated()
+            )
+            .addFilterBefore(authorizationFilter, AbstractPreAuthenticatedProcessingFilter.class)
+
+            .cors(AbstractHttpConfigurer::disable)
+            .csrf(AbstractHttpConfigurer::disable)
+            .headers(AbstractHttpConfigurer::disable)
+            .requestCache(AbstractHttpConfigurer::disable)
+            .securityContext(AbstractHttpConfigurer::disable)
+            .logout(AbstractHttpConfigurer::disable)
+            .exceptionHandling(AbstractHttpConfigurer::disable)
+            .sessionManagement(AbstractHttpConfigurer::disable);
+
+    return http.build();
+}
+```
+
+I disable Spring's website behaviours that are not relevant to APIs. Instead, this blog's <a href='final-spa-overview.mdx'>Final SPA</a> the following backend components manage web-specific security, so that API code is always identical for web and mobile clients.
+
+| Component | Description |
+| --------- | ----------- |
+| Web Host | Manages returning static content and best practice web security headers to the browser. |
+| Backend for Frontend | Manages OAuth-related concerns like getting tokens and the issuing of application level cookies. |
+| API Gateway | Deals with web security concerns during API requests, including cookies, CORS and CSRF logic. |
+
+### OAuth and Claims Code
+
+I use a number of small classes to implement the desired behaviour. The main work is to validate the JWT from the HTTP request, then return a *ClaimsPrincipal* object that I want the API's business logic to use.
+
+<div className='smallimage'>
+    <img src='../images/360/oauth-classes.jpg' alt='oauth classes' />
+</div>
+
+### JWT Access Token Validation
+
+The *AccessTokenValidator* object wraps calls to the *jose4j* library and also makes some additional checks which include checking for the API's required scope:
+
+```java
+public JwtClaims execute(final String accessToken) {
+
+    try {
+        var builder = new JwtConsumerBuilder()
+            .setVerificationKeyResolver(this.jwksResolver)
+            .setJwsAlgorithmConstraints(
+                AlgorithmConstraints.ConstraintType.PERMIT,
+                this.configuration.getAlgorithm()
+            )
+            .setExpectedIssuer(this.configuration.getIssuer());
+
+        if (StringUtils.hasLength(this.configuration.getAudience())) {
+            builder.setExpectedAudience(this.configuration.getAudience());
+        }
+
+        var jwtConsumer = builder.build();
+        var claims = jwtConsumer.processToClaims(accessToken);
+
+        var scopes = ClaimsReader.getStringClaim(claims, "scope").split(" ");
+        var foundScope = Arrays.stream(scopes).filter(s -> s.contains(this.configuration.getScope())).findFirst();
+        if (!foundScope.isPresent()) {
+            throw ErrorFactory.createClientError(
+                    HttpStatus.FORBIDDEN,
+                    ErrorCodes.INSUFFICIENT_SCOPE,
+                    "The token does not contain sufficient scope for this API");
+        }
+
+        return claims;
+
+    } catch (InvalidJwtException ex) {
+        throw ErrorUtils.fromAccessTokenValidationError(ex, this.configuration.getJwksEndpoint());
+    }
+}
+```
+
+There are a number of responsibilities that the library implements for us:
+
+| Responsibility | Description |
+| -------------- | ----------- |
+| JWKS Key Lookup | Downloading token signing public keys from the authorization server's JWKS endpoint. |
+| JWKS Key Caching | Caching the above keys and automatically dealing with new lookups when the authorization server recycles its signing keys. |
+| Signature Checks | Cryptographically verifying the JSON Web Signature of received JWTs. |
+| Protocol Claim Checks | Checking that the token has the correct issuer and audience, and is valid for use at the current time. |
+
+### Claims Principal
+
+The claims principal for the sample API deals with some custom fields shown here:
+
+| Claim | Represents |
+| ----- | ---------- |
+| Scope | The scope for the API, which in this blog is a high level business area of *investments*. |
+| Subject | The user's technical OAuth identity, that the authorization server generates. |
+| Manager ID | The business identity for a user, where a manager is a party who administers investment data. |
+| Role | A role from which the API could derive finer grained business permissions about the level of access. |
+| Title | A business title for the user, which frontend applications get from the API and display. |
+| Regions | An array claim meant to represent a more detailed business rule that does not belong in access tokens. |
+
+In code the *ClaimsPrincipal* class is represented as follows, consisting of type safe objects:
+
+```java
+public class ClaimsPrincipal implements AuthenticatedPrincipal {
+
+    @Getter
+    private final JwtClaims jwtClaims;
+
+    @Getter
+    private final ExtraClaims extraClaims;
+
+    public ClaimsPrincipal(final JwtClaims jwtClaims, final ExtraClaims extraClaims) {
+        this.jwtClaims = jwtClaims;
+        this.extraClaims = extraClaims;
+    }
+}
+```
+
+When the filter runs successfully, it updates a holder object stored against the Java *Request* object with the claims principal. Dependency resolution of the claims principal therefore works even if a request uses child threads. The API code injects claims into business focused classes that need to implement authorization, so that there is full control over both data and logic:
+
+```java
+private boolean isUserAuthorizedForCompany(final Company company) {
+
+    var claims = this.claimsHolder.getClaims();
+    var role = ClaimsReader.getStringClaim(claims.getJwt(), CustomClaimNames.Role).toUpperCase();
+
+    var isAdmin = role.equalsIgnoreCase("admin");
+    if (isAdmin) {
+        return true;
+    }
+
+    var isUser = role.equalsIgnoreCase("user");
+    if (!isUser) {
+        return false;
+    }
+
+    return Arrays.stream(claims.getExtra().regions).anyMatch(ur -> ur.equals(company.getRegion()));
+}
+```
+
+### OAuth Middleware
+
+An *OAuthFilter* class encapsulates the overall OAuth work and deals with injecting claims into the claims principal when needed. In Spring it is also possible to add extra claims in a custom [JwtAuthenticationConverter](https://www.baeldung.com/spring-security-map-authorities-jwt#using_custom_jwtauthenticationconverter).
+
+```java
+public ClaimsPrincipal execute(final HttpServletRequest request) {
+
+    String accessToken = BearerToken.read(request);
+    if (accessToken == null) {
+        throw ErrorFactory.createClient401Error("No access token was supplied in the bearer header");
+    }
+
+    var jwtClaims = this.tokenValidator.execute(accessToken);
+
+    String accessTokenHash = DigestUtils.sha256Hex(accessToken);
+    var extraClaims = this.cache.getItem(accessTokenHash);
+    if (extraClaims != null) {
+        return new ClaimsPrincipal(jwtClaims, extraClaims);
+    }
+
+    extraClaims = this.extraClaimsProvider.lookupExtraClaims(jwtClaims);
+    this.cache.setItem(accessTokenHash, extraClaims, ClaimsReader.getExpiryClaim(jwtClaims));
+ 
+    return new ClaimsPrincipal(jwtClaims, extraClaims);
+}
+```
+
+This technique adds complexity that you may not need. Yet it enables API developers to easily evolve their own authorization values. The code shows one possible way to ensure a stable access token and avoid needing to frequently deploy APIs and the authorization server together. It keeps the claims principal useful to the API's logic, and reduces the need for access token versioning.
+
+### OAuth Error Responses
+
+The API implements this blog's <a href='error-handling-and-supportability.mdx'>Error Handling Design</a>, starting with logic for invalid or expired tokens. In a test client you can simulate a 401 error if you click *Expire Access Token* followed by *Reload Data*:
+
+![expiry testing](../images/360/expiry-testing.jpg?v=20241201)
+
+This results in an invalid access token being sent to the API, which returns an error response in its standard format:
+
+| Data | Description |
+| ---- | ----------- |
+| HTTP Status | The API returns an appropriate HTTP status code. |
+| Payload | The API returns a JSON error object containing *code* and *message* fields. |
+
+In total, the API may return the following OAuth-related HTTP status codes:
+
+| Status | Description |
+| ------ | ----------- |
+| 401 | The access token is missing, invalid or expired. |
+| 403 | The access token does not contain a required scope. |
+| 404 | The API's claims do not allow access to a requested resource so the API returns a *Not Found for User* error. |
+| 500 | A technical problem during OAuth processing, such as a network error downloading JWKS keys. |
+
+When the API fails to download the JWKS it returns the following type of response body to the client:
+
+```json
+{
+  "code": "jwks_download_failure",
+  "message": "Problem encountered downloading JWKS keys",
+  "id": 43132,
+  "area": "FinalApi",
+  "utcTime": "2024-12-01T13:03:09"
+}
+```
+
+The client can then take various types of action based on the HTTP status and error code it receives. For server errors, user facing apps can display received error details to assist technical support staff:
+
+![500 error display](../images/360/500-error-display.jpg?v=20241201)
+
+### Identity and API Logs
+
+API logs include details about OAuth errors, which helps when there is a configuration problem. For HTTP status 4xx errors the logged error content is concise, whereas 5xx errors contain further details. Any type of error entry should explain the cause. The following example shows a 401 error due to a rejected token, which includes context that the API does not return to the client:
+
+```json
+{
+  "id": "b3629a0d-fc73-46b7-a3ca-6115963e8e43",
+  "utcTime": "2022-12-10T13:17:28",
+  "apiName": "FinalApi",
+  "operationName": "GetCompanyTransactions",
+  "hostName": "UBUNTU",
+  "method": "GET",
+  "path": "/investments/companies/2/transactions",
+  "resourceId": "2",
+  "clientName": "FinalSPA",
+  "statusCode": 200,
+  "errorCode": "invalid_token",
+  "millisecondsTaken": 43,
+  "correlationId": "b091ec8e-a1d0-dbf9-f764-012cc730c925",
+  "sessionId": "004d32bc-9755-b50e-6315-5be09f277ebe",
+  "errorData": {
+    "statusCode": 401,
+    "body": {
+      "code": "invalid_token",
+      "message": "Missing, invalid or expired access token"
+    },
+    "context": "JWT verification failed: Invalid signature."
+  }
+}
+```
+
+After the API validates a JWT, it writes the received subject claim, most commonly a UUID, to a *userId* field in the request's API log entry. This can potentially help to track users in benign ways, for technical support purposes. Doing so requires care and I say more about secure logs in the <a href='effective-api-logging.mdx'>Effective API Logging</a> post.
+
+### Where Are We?
+
+I implemented Java API Security in a requirements first manner, to enable behaviour that is important for any OAuth secured API, regardless of technology.
+
+### Next
+
+- Next I drill deeper into other <a href='spring-boot-api-coding-model.mdx'>Java API Code Details</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

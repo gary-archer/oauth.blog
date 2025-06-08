@@ -1,0 +1,95 @@
+# Managed Authorization Server Setup
+
+Previously I explained this blog's <a href='cloud-domain-setup.mdx'>Cloud Domain Setup</a>. Next I explain some advanced configuration details when using AWS Cognito as a managed authorization server.
+
+### Create the Authorization Server
+
+In this blog I only use standards based OAuth security and avoid any vendor specific behaviour that departs from that. Therefore I use AWS Cognito solely as an authorization server. In AWS terms this means you create a *User Pool* with a *Hosted UI*. I started in the AWS Console by creating a Cognito user pool:
+
+![user pool](../images/600/user-pool.jpg)
+
+I explained the basic configuration in the earlier post on <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a>. A key part of the initial setup was the creation of a user schema with custom user fields that APIs use later for their business authorization.
+
+### Create a Custom Domain
+
+For this blog I designed an authorization server base URL of *https://login.authsamples.com*. AWS requires the root domain, located at *https://authsamples.com*, to also be contactable. I therefore created an S3 bucket as a source for HTTP requests to the base domain:
+
+![root bucket](../images/600/root-bucket.jpg)
+
+I then created a CloudFront distribution for the root domain, which results in a generated base URL. I explain more about S3 and CloudFront configuration in the next post, on SPA deployment.
+
+![distro](../images/600/distro.jpg)
+
+Next I updated the user pool with the custom domain and also referenced the *AWS Managed SSL Certificate*:
+
+![custom domain](../images/600/custom-domain.jpg)
+
+I then added an A record to Route 53 to associate the authorization server's subdomain to the generated URL, expressed as an *Alias Target*. AWS then takes 15 minutes or so to make the domain available.
+
+![arecord](../images/600/arecord.jpg)
+
+### Activate Advanced Features
+
+I then activated Cognito advanced features, which did not add any noticeable increase in costs to my development deployment. I chose the following options:
+
+![advanced](../images/600/advanced.jpg)
+
+My only motivation for activating advanced features is to enable *Access Token Customisation* and issue fields from the user schema as claims. This is an essential OAuth behaviour to correctly protect data in APIs.
+
+### Define Custom API Scopes
+
+To define custom API scopes in AWS Cognito you must configure a *Resource Server*. In this blog's code samples I use the generated identifier to represent a set of related APIs for the *investments* business area. Only clients that work with investments data would be assigned the investments scope and be able to successfully call this blog's example APIs.
+
+![scope](../images/600/scope.jpg)
+
+### Configure Token Customisation
+
+I then created a [Pre-Token-Generation Lambda Trigger](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html), using the version 2 schema that supports access token customisation:
+
+![token lambda](../images/600/token-lambda.jpg)
+
+I created a lambda function with the following code, where the *claimsToAddOrOverride* customises access tokens. In the *claimsToSuppress* logic I removes personal data from ID tokens, since my code samples instead get personal data from the authorization server's user info endpoint.
+
+```javascript
+export const handler = function(event, context) {
+  
+  const response = {
+    claimsAndScopeOverrideDetails: {
+      idTokenGeneration: {
+        claimsToSuppress: [
+          'email',
+          'email_verified',
+          'given_name',
+          'family_name',
+          'custom:manager_id',
+          'custom:role',
+    	 ]
+      },
+      accessTokenGeneration: {
+        claimsToAddOrOverride: {
+    	 }
+      }
+    }
+  };
+  
+  if (event.request.scopes.indexOf('https://api.authsamples.com/investments') !== -1) {
+    const customClaims = response.claimsAndScopeOverrideDetails.accessTokenGeneration.claimsToAddOrOverride;
+    customClaims.manager_id = event.request.userAttributes['custom:manager_id'];
+    customClaims.role = event.request.userAttributes['custom:role'];
+  }
+
+  event.response = response;
+  context.done(null, event);
+};
+```
+
+Claims issued to access tokens depend on the client's scope, to enable different clients to receive distinct claims. Custom claims can help to lock down access tokens and reduce their privileges. I would also like to set the access token audience claim to an API identity, as I explain in the <a href='api-authorization-design.mdx'>API Authorization Behaviour</a> post, but that is not possible at the time of writing.
+
+### Where Are We?
+
+I explained the infrastructure configuration of a low maintenance cloud authorization server and activated token customization. This provides the setup I use throughout the blog for standards based OAuth development.
+
+### Next
+
+- I explain this blog's <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a> for Single Page Applications.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

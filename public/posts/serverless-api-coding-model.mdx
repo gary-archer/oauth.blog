@@ -1,0 +1,266 @@
+# Serverless API Code Details
+
+Previously I explained this blog's <a href='serverless-api-deployment.mdx'>Serverless API Deployment</a>. Next I describe some code details for this blog's lambda based APIs, to implement cross cutting concerns in clean ways. The code includes integration tests that call the API's lambda functions with user level access tokens.
+
+### View the Code
+
+The earlier <a href='api-architecture-node.mdx'>Node.js API</a> used the Express HTTP Server. As part of migrating to AWS Serverless my main goal was code portability. I changed the API's host layer but most code, including all API logic, is identical to that in the Express API:
+
+<div className='smallimage'>
+    <img src='../images/640/code-layout.jpg' alt='code layout' />
+</div>
+
+### Running Serverless Offline
+
+Serverless Offline provides HTTPS entry points to APIs, translates incoming requests to the lambda format and then calls lambda handlers. I run *sls offline* with HTTPS details, including certificates and keys from the API's *certs* folder:
+
+```bash
+npx sls offline \
+  --useInProcess \
+  --noPrependStageInUrl \
+  --prefix 'investments' \
+  --host '0.0.0.0' \
+  --httpPort 446 \
+  --httpsProtocol certs
+```
+
+### Lambda Entry Points
+
+Serverless Offline calls lambda handlers which have an equivalent role to REST controller endpoints. During a request, the lambda resolves a service object that implements business logic. Cross cutting concerns execute before and after the lambda base handler.
+
+```typescript
+const baseHandler = async (event: APIGatewayProxyExtendedEvent): Promise<APIGatewayProxyResult> => {
+
+    const service = event.container.get<CompanyService>(SAMPLETYPES.CompanyService);
+    const companies = await service.getCompanyList();
+    return ResponseWriter.successResponse(200, companies);
+};
+
+const instance = new LambdaInstance();
+const handler = await instance.prepare(baseHandler);
+export {handler};
+```
+
+AWS creates one or more lambda instances for each lambda function. A lambda instance can process multiple API requests, each of which receives an API gateway event object. I implement code so that each lambda instance could process concurrent HTTP requests, in the same manner as this blog's earlier cloud native APIs.
+
+### Applying Cross Cutting Concerns
+
+During creation of a lambda instance I register objects with the Inversify container and also create middleware objects:
+
+```typescript
+export class LambdaInstance {
+
+    public async prepare(baseHandler: LambdaHandler)
+        : Promise<middy.MiddyfiedHandler<APIGatewayProxyExtendedEvent, APIGatewayProxyResult> | LambdaHandler> {
+
+        const loggerFactory = new LoggerFactoryImpl();
+        try {
+
+            const configuration = this.loadConfiguration();
+            const parentContainer = new Container();
+
+            const httpProxy = new HttpProxy(configuration.api.useProxy, configuration.api.proxyUrl);
+            await httpProxy.initialize();
+
+            new CompositionRoot(parentContainer)
+                .addConfiguration(configuration)
+                .addExtraClaimsProvider(new ExtraClaimsProviderImpl())
+                .addLogging(configuration.logging, loggerFactory)
+                .addHttpProxy(httpProxy)
+                .register();
+
+            const childContainerMiddleware = new ChildContainerMiddleware(parentContainer);
+            const loggerMiddleware = new LoggerMiddleware(loggerFactory);
+            const exceptionMiddleware = new ExceptionMiddleware(configuration.logging);
+            const authorizerMiddleware = new AuthorizerMiddleware();
+            const customHeaderMiddleware = new CustomHeaderMiddleware(configuration.logging.apiName);
+
+            return middy(async (event: APIGatewayProxyExtendedEvent, context: Context) => {
+                return baseHandler(event, context);
+
+            })
+                .use(childContainerMiddleware)
+                .use(loggerMiddleware)
+                .use(exceptionMiddleware)
+                .use(authorizerMiddleware)
+                .use(customHeaderMiddleware);
+
+        } catch (e) {
+
+            return this.handleStartupError(loggerFactory, e);
+        }
+    }
+}
+```
+
+Earlier Node.js samples used Express middleware whereas for AWS lambdas I use the [Middy Library](https://github.com/middyjs/middy) to create middleware objects:
+
+![middy](../images/640/middy.jpg)
+
+Middy provides interception points called *before*, *after* and *error*. The *LoggerMiddleware* class demonstrates the syntax:
+
+```typescript
+export class LoggerMiddleware implements middy.MiddlewareObj<APIGatewayProxyExtendedEvent, APIGatewayProxyResult> {
+
+    private readonly loggerFactory: LoggerFactoryImpl;
+
+    public constructor(loggerFactory: LoggerFactoryImpl) {
+        this.loggerFactory = loggerFactory;
+    }
+
+    public before(request: middy.Request<APIGatewayProxyExtendedEvent, APIGatewayProxyResult>): void {
+
+        const logEntry = this.loggerFactory.createLogEntry();
+        request.event.container.bind<LogEntryImpl>(BASETYPES.LogEntry).toConstantValue(logEntry);
+        logEntry.start(request.event, request.context);
+    }
+
+    public after(request: middy.Request<APIGatewayProxyExtendedEvent, APIGatewayProxyResult>): void {
+
+        const logEntry = request.event.container.get<LogEntryImpl>(BASETYPES.LogEntry);
+        if (request.response && request.response.statusCode) {
+            logEntry.setResponseStatus(request.response.statusCode);
+        }
+
+        logEntry.end();
+        logEntry.write();
+    }
+}
+```
+
+### Middleware Classes
+
+The API uses the following middleware classes, which are equivalent to those in the Express API:
+
+| Middleware Class | Responsibility |
+| ---------------- | -------------- |
+| ChildContainerMiddleware | Creates a child container per request to store request scoped objects. |
+| LoggerMiddleware | Manages the log entry for each request, to log request and response details. |
+| OAuthFilter | JWT access token validation, creating the claims principal and identity logging. |
+| CustomHeaderMiddleware | Allows advanced client side testing of APIs, such as error rehearsal. |
+| UnhandledExceptionHandler | A central place to add error details to logs and produce the client error. |
+
+### Dependency Injection
+
+With Serverless lambdas I continue to use [InversifyJS](https://github.com/inversify/InversifyJS) with constructor injection, to benefit code clarity, extensibility and testing:
+
+```typescript
+@injectable()
+export class CompanyService {
+
+    private readonly repository: CompanyRepository;
+    private readonly claims: ClaimsPrincipal;
+
+    public constructor(
+        @inject(SAMPLETYPES.CompanyRepository) repository: CompanyRepository,
+        @inject(BASETYPES.ClaimsPrincipal) claims: ClaimsPrincipal) {
+
+        this.repository = repository;
+        this.claims = claims;
+    }
+}
+```
+
+To manage request scoped objects, the *ChildContainerMiddleware* adds a child container to each request's *event* object:
+
+```typescript
+export class ChildContainerMiddleware implements
+    middy.MiddlewareObj<APIGatewayProxyExtendedEvent, APIGatewayProxyResult> {
+
+    private readonly parentContainer: Container;
+
+    public constructor(parentContainer: Container) {
+        this.parentContainer = parentContainer;
+        this.setupCallbacks();
+    }
+
+    public before(request: middy.Request<APIGatewayProxyExtendedEvent, APIGatewayProxyResult>): void {
+        request.event.container = new Container({ parent: this.parentContainer });
+    }
+
+    public after(request: middy.Request<APIGatewayProxyExtendedEvent, APIGatewayProxyResult>): void {
+        delete (request.event as any).container;
+    }
+}
+```
+
+### JWT Access Token Validation
+
+An earlier post explained this blog's approach to <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a>, where a JWT library caches token signing public keys. The Serverless API's in-memory caching is less efficient than for cloud native APIs, since there is a separate lambda instance for each API operation, and each lambda instance calls the authorization server's JWKS URI endpoint.
+
+### Claims Based Authorization
+
+After processing JWT access tokens, the API uses claims according to this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. The API looks up additional authorization values when it first receives a particular access token and stores these extra claims in another in-memory cache that also cannot be shared between lambda instances. The cache key is the SHA256 hash of the access token. The earlier <a href='updated-api-coding-key-points.mdx'>Updated API Code Sample</a> post explains the mechanics.
+
+### API Integration Tests
+
+As for this blog's cloud native APIs, there is a set of integration tests that use a mock authorization server. This enables me to productively test the API with user level access tokens. The following test demonstrates the API receiving an access token with an untrusted issuer.
+
+```typescript
+it ('Call API returns 401 for invalid issuer', async () => {
+
+    const jwtOptions = new MockTokenOptions();
+    jwtOptions.useStandardUser();
+    jwtOptions.issuer = 'https://otherissuer.com';
+    const accessToken = await authorizationServer.issueAccessToken(jwtOptions);
+
+    const options = new ApiRequestOptions(accessToken);
+    const response = await apiClient.getCompanyList(options);
+
+    assert.strictEqual(response.statusCode, 401, 'Unexpected HTTP status code');
+    assert.strictEqual(response.body.code, 'invalid_token', 'Unexpected error code');
+});
+```
+
+### API Logs
+
+Serverless offers only limited control over log output, such as use of a *SLS_DEBUG=** environment variable which I rarely use, since it adds a lot of noise. To ensure that I look at my own preferred output I instead write readable logs to a file during development. In AWS I instead use bare JSON to support log aggregation.
+
+```typescript
+public write(): void {
+
+    if (this.prettyPrint) {
+
+        const data = JSON.stringify(this.data.toLogFormat(), null, 2);
+        fs.appendFileSync('./api.log', data);
+
+    } else {
+
+        process.stdout.write(JSON.stringify(this.data.toLogFormat()) + '\n');
+    }
+}
+```
+
+To test local log aggregation during development I disable pretty printing of JSON logs. If I need to add additional *console.log* output I use the same technique to append that to the log file.
+
+### Lambda Code Debugging
+
+If I need to debug the API's code, I use Visual Studio Code's debugging features to attach to the Serverless Offline process. The following configuration locates the Serverless Offline process running on port 446. I also need to set a *debugger;* statement at the location where I want the code to stop in the debugger. 
+
+```json
+{
+   "version": "0.2.0",
+   "configurations": [
+       {
+           "type": "node",
+           "request": "attach",
+           "name": "Attach to Serverless Offline",
+           "processId": "${command:PickProcess}",
+           "port": 446
+       }
+   ]
+}
+```
+
+Due to the use of source maps in debug builds, I can step through the original lines of TypeScript code and view the state of variables, including OAuth and claims data:
+
+![debug](../images/640/debug.jpg?v=20250126)
+
+### Where Are We?
+
+I invested in a productive test setup to develop Serverless APIs and use portable techniques for coding, testing and deployment whenever possible. Although I quite like the Serverless framework, it is time consuming to ensure that all of the important behaviours work both in development and deployed systems. Instead, I prefer to be able to run more complete environments on a development computer, including security components like the API gateway and authorization server.
+
+### Next
+
+- I briefly summarise the benefits of combining <a href='cloud--native-updates.mdx'>Cloud Native and OAuth</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

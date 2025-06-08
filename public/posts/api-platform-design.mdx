@@ -1,0 +1,50 @@
+# API Architecture Goals
+
+Previously I completed this blog's SPA theme with some <a href='reactjs-codingkeypoints.mdx'>Final SPA Code Details</a>. Next, I summarise what I consider to be the most essential goals and requirements for a platform of many APIs in an OAuth architecture.
+
+### Time to Market
+
+Often the main high level goal for an organization is a fast and predictable time to market for end user functionality. Yet often in software there are hidden complexities that prevent that from being a reality. API development foundations with a clean separation of concerns can reduce application responsibilities to enable business focused development that aligns with this goal.
+
+### Productive API Development
+
+APIs should have a predictable way to deal with non-functional requirements like security, error handling and logging. First you need to understand the behaviours you want and then implement the foundational work. If you follow modern design patterns you should be able to separate concerns to implement those behaviours with clean code.
+
+### Strong API Security
+
+OAuth enables strong API security where every request to every API requires a JWT access token from the authorization server. APIs must implement <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a> and then implement <a href='api-authorization-design.mdx'>Claims Based Authorization</a> to enforce business rules. The basic programming model is straightforward but there are some subtleties when dealing with user attributes from multiple data sources.
+
+### Unified API Security
+
+In the past, API security was often dictated by client requirements. APIs might need to process cookies from web clients or client certificates from business partners. 
+
+A correct OAuth implementation enables you to use a unified security model where API gateways perform tasks like translating cookies to tokens, so that APIs only ever need to process JWT access tokens.
+
+### Best Supporting Components
+
+To enable productive API security you need supporting components. The authorization server deals with user authentication and token issuance so that APIs do not need to. An API gateway should deal with client specific security concerns like validating cookies and client certificates. The API gateway can then forward JWT access tokens to APIs.
+
+### Reliable APIs
+
+APIs must use solid error handling and logging designs, to return useful client error responses and enable fast incident resolution. You should also ensure that you can <a href='api-technical-support-analysis.mdx'>measure failures by type over time</a> so that you can see where you need to improve. Design good quality log data and aggregate API logs to high quality logging subsystem. This blog uses the Elastic Stack.
+
+### Scalability
+
+Once you have separated concerns across components and completed the foundational work in API code, the same patterns and practices should scale easily to many APIs, without much increase in complexity. You should be able to keep code bases modular, and JWT access tokens enable you to connect APIs together securely.
+
+### Portability
+
+I also like to follow a requirements first approach to software rather than being dictated to by particular API technology stacks. When I implement an API coding task it should work in the same way across all API technologies and API hosting platforms. This ensures that adopting newer technologies in future does not change the architecture.
+
+### Where Are We?
+
+I have summarised some foundations to aim for when designing a modern API platform. In this blog's second theme I provide three cloud native APIs in different technology stacks, with a focus on foundational code to meet this blog's API architecture goals:
+
+- <a href='api-architecture-node.mdx'>Node.js API</a>
+- <a href='net-core-code-sample-overview.mdx'>.NET API</a>
+- <a href='java-spring-boot-api-overview.mdx'>Java API</a>
+
+### Next
+
+- I describe an <a href='api-journey-server-side.mdx'>API Journey - Server Side</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

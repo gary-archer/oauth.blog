@@ -1,0 +1,212 @@
+# How to Run the React SPA
+
+Previously I provided a <a href='final-spa-overview.mdx'>Final SPA Overview</a> with the main high-level architecture behaviours. Next I show how to run the final SPA on a development computer in a couple of different configurations.
+
+### Step 1: Download the GitHub Code
+
+Clone the code sample's GitHub repository to your local computer with the following command:
+
+```bash
+git clone https://github.com/gary-archer/oauth.websample.final
+```
+
+![repo](../images/230/repo.jpg?v=20242212)
+
+### Step 2: View the React Code
+
+The main SPA code is located in an */spa* subfolder and has a standard file layout, with React code within the views folder:
+
+<div className='smallimage'>
+    <img src='../images/230/code-layout.jpg' alt='code layout' />
+</div>
+
+Views have identical behaviour to those from this blog's <a href='basicspa-codingkeypoints.mdx'>Earlier SPA Code Samples</a>:
+
+```jsx
+export function TitleView(props: TitleViewProps): JSX.Element {
+
+    return  (
+        <div className='row'>
+            <div className='col-8 my-auto'>
+                <HeadingView />
+            </div>
+            {props.userInfo &&
+                <div className='col-4 my-auto'>
+                    <UserInfoView {...props.userInfo}/>
+                </div>
+            }
+        </div>
+    );
+}
+```
+
+React provides a modern toolset that helps to enable productivity:
+
+| Benefit | Description |
+| ------- | ----------- |
+| Markup | A strongly typed and secure way to work with markup and the DOM, including handling of dangerous input. |
+| Components | A componentized development model, that promotes clean code and a separation of concerns. |
+| Ecosystem | Web development best practice techniques from the React community. |
+
+### Step 3: Configure DNS and SSL
+
+You need to use this blog's web development domain. Add a local DNS entry in your hosts file, which exists at one of these locations:
+
+| OS | Path |
+| -- | ---- |
+| Windows | c:\system32\drivers\etc\hosts |
+| macOS / Linux | /etc/hosts |
+
+Add the following entry to point the SPA's web origin to your local computer:
+
+```markdown
+127.0.0.1  localhost www.authsamples-dev.com
+```
+
+The web static content hosting uses SSL so you must create development certificates. Ensure that OpenSSL 3+ is installed and then run the following commands:
+
+```bash
+export SECRETS_FOLDER="$HOME/secrets"
+mkdir "$SECRETS_FOLDER"
+./certs/create.sh
+```
+
+You should then ensure that your browser trusts the root certificate at the below location, according to the <a href='developer-ssl-setup.mdx'>SSL Trust Configuration</a> post.
+
+```markdown
+certs/authsamples-dev.ca.crt
+```
+
+### Step 4: Run the SPA
+
+Open a terminal and run the following commands from the root folder, to build and run the code:
+
+```bash
+./build.sh && ./run.sh
+```
+
+The [Webpack development server](https://webpack.js.org/configuration/dev-server/) serves static content in watch mode. The default browser then opens at *https://www.authsamples-dev.com*.
+
+![spa build](../images/230/spa-build.jpg?v=20241222)
+
+### Step 5: Sign In to the SPA
+
+You will then be prompted to sign in, and can do so with this test credential:
+
+- User: *guestuser@example.com*
+- Password: *GuestPassword1*
+
+After login, the SPA sends an HttpOnly encrypted cookie containing an AWS Cognito access token to the AWS API gateway. The OAuth Proxy decrypts the cookie and forwards the access token to lambda-based APIs. These API endpoints validate the access token and implement claims-based authorization. For authorized requests, the SPA receives and renders the API's response data:
+
+![spa data](../images/230/spa-data.jpg?v=20240713)
+
+### Step 6: View Secure Cookies
+
+When the SPA makes API requests it sends a short-lived access token encrypted into an *HttpOnly SameSite=strict Secure* cookie. Since Cognito uses RS256 JWTs, the cookie size is around 1.5KB, which is comfortably below browser 4KB cookie size limits. You can use browser tools to view secure cookies, which are for the backend for frontend subdomain and not the web origin. The SPA does not require any cookies to download static content, and does not use cookies when the user performs navigation operations:
+
+![cookie properties](../images/230/cookie-properties.jpg?v=20240817)
+
+### Step 7: View Updated SPA Configuration
+
+In earlier samples, the SPA performed its own OpenID Connect flow in JavaScript. This work is now done by remote token handler components, and the SPA configuration is therefore reduced to a backend for frontend base URL:
+
+```json
+{
+    "bffBaseUrl": "https://bff.authsamples-dev.com"
+}
+```
+
+### Step 8: Understand Web Security Headers
+
+The web host now writes a number of security headers, the most interesting of which is the *Content Security Policy*. It contains the following values, since the SPA now only makes remote calls via its backend for frontend:
+
+```markdown
+content-security-policy:
+  default-src 'none';
+  script-src 'self';
+  connect-src 'self' https://bff.authsamples-dev.com;
+  child-src 'self';
+  img-src 'self';
+  style-src 'self';
+  object-src 'none'
+  frame-ancestors 'none';
+  base-uri 'self';
+  form-action 'self'
+strict-transport-security: max-age=63072000; includeSubdomains; preload
+x-frame-options: DENY
+x-xss-protection: 1; mode=block 
+x-content-type-options: nosniff
+referrer-policy: same-origin
+```
+
+### Step 9: Run a Release Build
+
+You can run some scripts to test a release deployment and run the SPA at the same local computer URL. The *build.sh* script produces JavaScript release bundles. The *deploy.sh* script runs an Express Docker container that serves static content in the same way as the webpack development server. The *teardown.sh* script stops the Docker container.
+
+```bash
+./deployment/docker/build.sh
+./deployment/docker/deploy.sh
+./deployment/docker/teardown.sh
+```
+
+### Local API Setup
+
+It is also possible to run an API that provides the SPA's data on the local computer, but you then need to manage cookies for this routing. One way to do so is to run a local token handler. To do so, first ensure that a docker engine is installed, and also the *envsubst* tool.
+
+### Step A: Run the API
+
+Select one of this blog's final APIs from the below list, and follow its instructions, to run the API on port 446:
+
+- <a href='api-architecture-node.mdx'>Node.js API</a>
+- <a href='net-core-code-sample-overview.mdx'>.NET API</a>
+- <a href='java-spring-boot-api-overview.mdx'>Java Spring Boot API</a>
+
+### Step B: Update DNS
+
+Next, add the API subdomain and local backend for frontend domain to your computer's hosts file:
+
+```markdown
+127.0.0.1  localhost www.authsamples-dev.com api.authsamples-dev.com bfflocal.authsamples-dev.com
+```
+
+### Step C: Run the SPA against a Local API
+
+To make the SPA connect to one of this blog's final APIs, first ensure that the API is running. Then use a *LOCALAPI* parameter when running the scripts described earlier:
+
+```bash
+export SECRETS_FOLDER="$HOME/secrets"
+export LOCALAPI=true
+./build.sh
+./run.sh
+```
+
+This runs some utility token handler components in a small docker compose network. You can study the deployment resources to get a feel for how this works. The SPA's configuration then routes to the API via the local backend for frontend rather than the cloud BFF:
+
+```json
+{
+    "bffBaseUrl": "https://bfflocal.authsamples-dev.com:444"
+}
+```
+
+### Step D: Use the SPA and API
+
+When you now use the SPA it calls the local API rather than a cloud API. The API behaviour includes logging output that is explained in later posts, under this blog's API theme.
+
+![spa and api](../images/230/spa-and-api.jpg?v=20240915)
+
+### Step E: Free Docker Resources
+
+To free resources in the docker compose network, run the following command:
+
+```bash
+./teardown.sh
+```
+
+### Where Are We?
+
+I explained how to run the final SPA code sample, which has more moving parts than earlier code samples. The SPA can be run as a single component under development with a pure SPA developer experience. The app is in control of its own OpenID Connect flow. After user logins, the SPA calls deployed API components using secure cookies.
+
+### Next
+
+- Next I explain some <a href='reactjs-codingkeypoints.mdx'>Final SPA Code Details</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

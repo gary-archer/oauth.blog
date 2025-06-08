@@ -1,0 +1,53 @@
+# Native Architecture Goals
+
+Previously I completed the blog's API theme with some people focused <a href='api-technical-support-analysis.mdx'>API Technical Support Analysis</a>. Next I provide some *OAuth Secured Native Apps* that connect to this blog's cloud endpoints. First, I articulate some goals and requirements that I aim to meet for desktop and mobile apps.
+
+### Time to Market
+
+Often the main high level goal for an organization is a fast and predictable time to market for end user functionality. Yet often in software there are hidden complexities that prevent that from being a reality. Desktop and mobile development foundations with a clean separation of concerns can reduce application responsibilities to enable business focused development that aligns with this goal.
+
+### Best User Experience
+
+User experience for native apps can be difficult, especially on small mobile devices. You should take special care over logins for secured mobile apps, since that is the first experience a user has with your app and a difficult login UX can be a barrier to adoption. OAuth design patterns can play a role in reliably guiding the user.
+
+### Productive Native Development
+
+I have found JavaScript stacks for desktop apps to work pretty well. Yet for mobile apps my experience has been that this type of stack adds extra layers that lead to additional head scratching, delays and lack of control. Instead, I find that Kotlin and Swift results in the most productive mobile development, since they are high level languages with the best native capabilities and error handling control.
+
+### Consistent Frontend Architecture
+
+I use the following technology choices for this blog's final demo frontend apps, which are technically very similar. All frontends have identical business functionality, to authenticate the user, call APIs with OAuth access tokens and work with business data.
+
+- React for SPAs
+- React and Electron for desktop apps
+- Jetpack Compose for Android mobile apps
+- Swift UI for iOS mobile apps
+
+### Portable Frontend Code
+
+All of this blog's final frontends use identical classes across the above technologies, with the same responsibilities. Although SPAs require static content hosting and may use HttpOnly cookies to transport access tokens, the essential use of configuration data, views, view models, API clients and OAuth clients should remain the same across all types of frontend apps. In a real organization this would keep technical qualities consistent and better enable frontend developers to switch focus.
+
+### Best Security Capabilities
+
+Native apps call APIs so need an API message credential. APIs must return only correct and allowed data for each user, so the user must authenticate first. OAuth and OpenID Connect provide the most powerful options for mobile authentication. The authorization server should provide access to modern user friendly login methods for mobile users.
+
+This blog follows the best practices from [OAuth for Native Apps](https://datatracker.ietf.org/doc/rfc8252). I also show how native apps interact with the underlying operating system, so that they can implement security flows. This includes the ability to use hardware backed keys on mobile devices, interact with the system browser, receive deep links, and store OAuth tokens securely.
+
+### Mobile Web Interoperability
+
+For mobile apps, it used to be common to reuse views from a web app, to provide part of the user experience. Webviews could be used to ensure that any bug fixes were rolled out to users immediately. Yet this type of design is now problematic because of security. Both apps should receive separate access tokens with different privileges. Web apps should use HttpOnly cookies to transport access tokens.
+
+These days it is therefore recommended to share data using APIs, and to implement views multiple times. This requires additional development, but ultimately results in the best user experience, since each frontend uses the optimal view technology. You can achieve such an outcome with lowest costs when you write web code with similar classes to mobile code. 
+
+### Easy to Deploy
+
+Mobile apps have standardized deployment mechanisms to app stores. My desktop apps run on Windows, macOS and Linux. They do not require technical prerequisites such as a Java runtime. They only require normal user privileges, which avoids problems for users who do not have administrator privileges.
+
+### Where Are We?
+
+This post clarified some key behaviour to aim for and which I demonstrate in this blog's native apps. OAuth flows for native apps can be a little tricky to implement, since you need to consider both infrastructure and login user experience. There are areas, especially for desktop apps, where the user experience is not ideal.
+
+### Next
+
+- The next post provides an <a href='desktop-apps-overview.mdx'>Initial Desktop Sample Overview</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

@@ -1,0 +1,748 @@
+# Android Code Sample - Code Details
+
+Previously I explained the <a href='android-infrastructure-setup.mdx'>Android Infrastructure Setup</a> and next I summarise some key areas of the Android app's code. See also the <a href='api-journey-client-side.mdx'>Client Side API Journey</a> to understand the background and the requirements being met.
+
+### Portable Code
+
+One of this blog's coding goals is to use the same frontend classes across multiple platforms. The Android app uses the same logical separation of responsibilities into classes as the earlier <a href='reactjs-codingkeypoints.mdx'>React SPA</a>:
+
+<div className='smallimage'>
+    <img src='../images/530/code-layout.jpg' alt='code layout' />
+</div>
+
+### Unobtrusive OAuth Integration
+
+The view objects initiate calls to OAuth secured APIs, which can lead to login redirects and refreshing access tokens.
+
+<div className='smallimage'>
+    <img src='../images/530/view-classes.jpg' alt='view classes' />
+</div>
+
+### Project Creation
+
+I created the project with the below *Empty Activity* template, after which I began developing Kotlin classes:
+
+![project creation](../images/530/project-creation.jpg)
+
+I configured the following options to the application's *build.gradle.kts* file, to enable views that use the newer *Jetpack Compose* syntax, which I find easier to maintain than older XML layout views:
+
+```kotlin
+buildFeatures {
+    compose = true
+    buildConfig = true
+}
+```
+
+### Main Activity Entry Point
+
+The app's manifest file associates its single activity to the launch icon. This activity fulfils a similar role to the application shell in this blog's SPAs:
+
+```xml
+<activity
+        android:name=".app.MainActivity"
+        android:exported="true"
+        android:launchMode="singleTop"
+        android:configChanges="orientation|screenSize">
+
+    <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
+    </intent-filter>
+</activity>
+```
+
+The code begins in the *onCreate* override, which initialises the main view model and creates views:
+
+```kotlin
+override fun onCreate(savedInstanceState: Bundle?) {
+
+    enableEdgeToEdge()
+    super.onCreate(savedInstanceState)
+
+    (this.application as Application).setMainActivity(this)
+    actionBar?.hide()
+
+    val model: MainActivityViewModel by viewModels()
+    this.model = model
+
+    this.createViews()
+    this.model.initialize(this::onLoaded)
+}
+
+private fun onLoaded() {
+    this.binding.model!!.eventBus.register(this)
+    this.navigateStart()
+}
+```
+
+When the app runs, the Android system can recreate views at any time, whereas it constructs the main view model only once. The view model reads settings from the app's JSON configuration, then creates global objects used for OAuth and API operations:
+
+```kotlin
+init {
+
+    this.configuration = ConfigurationLoader().load(this.app.applicationContext)
+
+    this.fetchCache = FetchCache()
+    this.eventBus = EventBus.getDefault()
+
+    this.oauthClient = OAuthClientImpl(this.configuration.oauth, this.app.applicationContext)
+    this.fetchClient = FetchClient(this.configuration, this.fetchCache, this.oauthClient)
+    this.viewModelCoordinator = ViewModelCoordinator(this.eventBus, this.fetchCache)
+
+    this.isLoaded = false
+    this.isTopMost = true
+    this.isDeviceSecured = DeviceSecurity.isDeviceSecured(this.app.applicationContext)
+}
+```
+
+### View Layout and Composition
+
+The main activity's layout creates a number of child views. The navigation host's main content swaps out as the user navigates, in a similar way to the main view of an SPA:
+
+```kotlin
+private fun createViews() {
+
+    val that = this@MainActivity
+    setContent {
+        ApplicationTheme {
+            Column {
+
+                TitleView(that.model.getUserInfoViewModel())
+
+                HeaderButtonsView(
+                    that.model.eventBus,
+                    that::onHome,
+                    that::onReloadData,
+                    that::onExpireAccessToken,
+                    that::onExpireRefreshToken,
+                    that::onStartLogout
+                )
+
+                if (model.error.value != null) {
+
+                    ErrorSummaryView(
+                        ErrorViewModel(
+                            model.error.value!!,
+                            stringResource(R.string.main_error_hyperlink),
+                            stringResource(R.string.main_error_dialogtitle)
+                        ),
+                        Modifier
+                            .fillMaxWidth()
+                            .wrapContentSize()
+                    )
+                }
+
+                SessionView(that.model.eventBus, that.model.fetchClient.sessionId)
+
+                val navHostController = rememberNavController()
+                that.navigationHelper =
+                    NavigationHelper(navHostController) { model.isDeviceSecured }
+                that.navigationHelper.deepLinkBaseUrl =
+                    that.model.configuration.oauth.deepLinkBaseUrl
+
+                NavHost(navHostController, MainView.Blank) {
+
+                    composable(MainView.Blank) {
+                    }
+
+                    composable(MainView.DeviceNotSecured) {
+                        DeviceNotSecuredView(that.model.eventBus, that::openLockScreenSettings)
+                    }
+
+                    composable(MainView.Companies) {
+                        CompaniesView(that.model.getCompaniesViewModel(), navigationHelper)
+                    }
+
+                    composable(
+                        "${MainView.Transactions}/{id}",
+                        listOf(navArgument("id") { type = NavType.StringType })
+                    ) {
+
+                        val id = it.arguments?.getString("id") ?: ""
+                        TransactionsView(
+                            id,
+                            that.model.getTransactionsViewModel(),
+                            navigationHelper
+                        )
+                    }
+
+                    composable(MainView.LoginRequired) {
+                        LoginRequiredView(that.model.eventBus)
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+### Data Binding and View Models
+
+Data binding enables changes to state with readable code. Each non-trivial view has a view model that may store data returned from APIs. When the value of mutable state changes, the view is automatically updated.
+
+```kotlin
+class CompaniesViewModel(
+    private val fetchClient: FetchClient,
+    val eventBus: EventBus,
+    private val viewModelCoordinator: ViewModelCoordinator
+) : ViewModel() {
+
+    var companiesList: MutableState<List<Company>> = mutableStateOf(ArrayList())
+    var error: MutableState<UIError?> = mutableStateOf(null)
+
+    ...
+}
+```
+
+### View Models and API Calls
+
+The most interesting view models are those that get data from APIs. As is standard in frontends, the API request runs from an I/O worker thread and the response rendering updates run on the main thread. Use of [Kotlin Coroutines](https://developer.android.com/kotlin/coroutines) results in readable async await code where suspending functions do the work.
+
+```kotlin
+fun callApi(options: ViewLoadOptions?, onComplete: () -> Unit) {
+
+    val fetchOptions = FetchOptions(
+        FetchCacheKeys.COMPANIES,
+        options?.forceReload ?: false,
+        options?.causeError ?: false
+    )
+
+    this.viewModelCoordinator.onMainViewModelLoading()
+    this.updateError(null)
+
+    val that = this@CompaniesViewModel
+    CoroutineScope(Dispatchers.IO).launch {
+
+        try {
+
+            val companies = fetchClient.getCompanyList(fetchOptions)
+
+            withContext(Dispatchers.Main) {
+
+                if (companies != null) {
+                    that.updateData(companies.toList())
+                    that.viewModelCoordinator.onMainViewModelLoaded(fetchOptions.cacheKey)
+                }
+            }
+
+        } catch (uiError: UIError) {
+
+            withContext(Dispatchers.Main) {
+                that.updateData(ArrayList())
+                that.updateError(uiError)
+                that.viewModelCoordinator.onMainViewModelLoaded(fetchOptions.cacheKey)
+            }
+
+        } finally {
+
+            withContext(Dispatchers.Main) {
+                onComplete()
+            }
+        }
+    }
+}
+```
+
+### API Call Details
+
+The *FetchClient* object acts as a service agent and uses the [okhttp library](https://github.com/square/okhttp). Each API call uses a shared method to send OAuth access tokens and manage retries. I use the same OAuth client side behaviour as in all of this blog's other frontend code samples, to refresh the access token and retry the request once if the API returns a 401 status code. The basic API code, with caching omitted, is shown here:
+
+```kotlin
+private suspend fun <T> getDataFromApi(url: String, responseType: Class<T>, options: FetchOptions): T? {
+
+    var accessToken = this.oauthClient.getAccessToken()
+    if (accessToken.isNullOrBlank()) {
+        throw ErrorFactory().fromLoginRequired()
+    }
+
+    try {
+
+        return this.callApiWithToken("GET", url, null, accessToken, responseType, options)
+
+    } catch (e: Throwable) {
+
+        val error = ErrorFactory().fromException(e)
+        if (error.statusCode != 401) {
+            throw error
+        }
+
+        accessToken = this.oauthClient.synchronizedRefreshAccessToken()
+        return this.callApiWithToken("GET", url, null, accessToken, responseType, options)
+    }
+}
+```
+
+### OAuthClient Interface
+
+The *OAuthClient* interface simplifies the use of OAuth operations in the rest of the app. For example, the *ApiClient* calls *getAccessToken* when it makes requests to APIs.
+
+```kotlin
+interface OAuthClient {
+    suspend fun initialize()
+    suspend fun getAccessToken(): String?
+    suspend fun synchronizedRefreshAccessToken(): String
+    fun startLogin(launchAction: (i: Intent) -> Unit)
+    suspend fun finishLogin(intent: Intent)
+    fun startLogout(launchAction: (i: Intent) -> Unit)
+    fun finishLogout()
+    fun clearLoginState()
+    fun expireAccessToken()
+    fun expireRefreshToken()
+}
+```
+
+### Triggering Login Redirects
+
+The app has two main view areas that trigger concurrent API requests. The main API request returns the main view's data and the user info area makes two additional API requests. The authorization server returns OAuth user info and the API returns its own extra user attributes.
+
+<div className='smallimage'>
+    <img src='../images/530/concurrent-views.jpg?v=20240912' alt='concurrent views' />
+</div>
+
+A *ViewModelCoordinator* object detects when API requests to load views complete. If a view receives a permanent 401 response from the API a single *LoginRequired* event is published. The main activity subscribes to the event and prompts the user to reauthenticate.
+
+```kotlin
+private fun handleAllViewsLoaded() {
+
+    if (this.loadedCount == this.loadingCount) {
+
+        this.loadedCount = 0
+        this.loadingCount = 0
+
+        val errors = this.getLoadErrors()
+        val loginRequired = errors.find { e -> e.errorCode == ErrorCodes.loginRequired }
+        if (loginRequired != null) {
+            this.eventBus.post(LoginRequiredEvent())
+            return
+        }
+    }
+}
+```
+
+### AppAuth Library - Login Requests
+
+The OAuth client implementation uses [AppAuth Android](https://github.com/openid/AppAuth-Android) to implement standards-based OpenID Connect behaviour:
+
+```kotlin
+override fun startLogin(launchAction: (i: Intent) -> Unit) {
+
+    try {
+
+        val authService = AuthorizationService(this.applicationContext, this.getBrowserConfiguration())
+        this.loginAuthService = authService
+
+        val builder = AuthorizationRequest.Builder(
+            this.metadata!!,
+            this.configuration.clientId,
+            ResponseTypeValues.CODE,
+            Uri.parse(this.getLoginRedirectUri())
+        )
+            .setScope(this.configuration.scope)
+        val request = builder.build()
+
+        val authIntent = authService.getAuthorizationRequestIntent(request)
+        launchAction(authIntent)
+
+    } catch (ex: Throwable) {
+        throw ErrorFactory().fromLoginOperationError(ex, ErrorCodes.loginRequestFailed)
+    }
+}
+```
+
+At runtime, the app reads OAuth details from its configuration file and provides them to the AppAuth library:
+
+```json
+{
+  "app": {
+    "apiBaseUrl":             "https://api.authsamples.com/investments"
+  },
+  "oauth": {
+    "authority":              "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+    "clientId":               "2vshs4gidsbpnjmsprhh607ege",
+    "redirectUri":            "https://www.authsamples.com/apps/finalmobileapp/postlogin.html",
+    "postLogoutRedirectUri":  "https://www.authsamples.com/apps/finalmobileapp/postlogout.html",
+    "scope":                  "openid profile https://api.authsamples.com/investments",
+    "userInfoEndpoint":       "https://login.authsamples.com/oauth2/userInfo",
+    "customLogoutEndpoint":   "https://login.authsamples.com/logout",
+    "deepLinkBaseUrl":        "https://mobile.authsamples.com"
+  }
+}
+```
+
+### AppAuth Library - Login Responses
+
+The Android manifest file associates AppAuth's login activity to the claimed HTTPS scheme's domain and a login path:
+
+```xml
+<activity
+    android:name="net.openid.appauth.RedirectUriReceiverActivity"
+    android:exported="true">
+
+    <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data
+            android:scheme="https"
+            android:host="mobile.authsamples.com"
+            android:path="/finalmobileapp/oauth/callback" />
+    </intent-filter>
+</activity>
+```
+
+Upon return from login, the Chrome Custom Tab hosts an intermediate page. This page receives the authorization response, presents a continue button to ensure a user gesture and then invokes the login receiver activity with the authorization response's query string:
+
+```javascript
+<script>
+    window.addEventListener('DOMContentLoaded', function() {
+        var redirectUri = 'https://mobile.authsamples.com/finalmobileapp/oauth/callback';
+
+        if (window.location.search) {
+            redirectUri += window.location.search;
+        }
+
+        document.getElementById('continueButton').onclick = () => {
+            window.location.href = redirectUri;
+        };
+    });
+</script>
+```
+
+### AppAuth Library - Cancelled Logins
+
+Users can cancel logins if they are having trouble logging in. AppAuth libraries have a solid design that returns useful error codes, which the app uses to detect cancellation and other conditions:
+
+```kotlin
+override suspend fun finishLogin(intent: Intent) {
+
+    val authorizationResponse = AuthorizationResponse.fromIntent(intent)
+    val ex = AuthorizationException.fromIntent(intent)
+
+    this.loginAuthService?.dispose()
+    this.loginAuthService = null
+
+    when {
+        ex != null -> {
+
+            if (ex.type == AuthorizationException.TYPE_GENERAL_ERROR &&
+                ex.code == AuthorizationException.GeneralErrors.USER_CANCELED_AUTH_FLOW.code
+            ) {
+
+                throw ErrorFactory().fromRedirectCancelled()
+            }
+
+            throw ErrorFactory().fromLoginOperationError(ex, ErrorCodes.loginResponseFailed)
+        }
+        authorizationResponse != null -> {
+
+            this.exchangeAuthorizationCode(authorizationResponse)
+        }
+    }
+}
+```
+
+### AppAuth Library - Authorization Code Grant
+
+After a successful login response, the app continues the authorization code flow by swapping the authorization code for tokens. AppAuth libraries take care of supplying details like the *PKCE Code Verifier* correctly.
+
+```kotlin
+private suspend fun exchangeAuthorizationCode(authResponse: AuthorizationResponse) {
+
+    return suspendCoroutine { continuation ->
+
+        val callback =
+            AuthorizationService.TokenResponseCallback { tokenResponse, ex ->
+
+                when {
+                    ex != null -> {
+                        val error = ErrorFactory().fromTokenError(ex, ErrorCodes.authorizationCodeGrantFailed)
+                        continuation.resumeWithException(error)
+                    }
+
+                    tokenResponse == null -> {
+                        val empty = RuntimeException("Authorization code grant returned an empty response")
+                        continuation.resumeWithException(empty)
+                    }
+
+                    else -> {
+                        this.saveTokens(tokenResponse)
+                        continuation.resume(Unit)
+                    }
+                }
+            }
+
+        val tokenRequest = authResponse.createTokenExchangeRequest()
+
+        val authService = AuthorizationService(this.applicationContext)
+        authService.performTokenRequest(tokenRequest, NoClientAuthentication.INSTANCE, callback)
+    }
+}
+```
+
+### Secure Token Storage
+
+After login, the app stores OAuth tokens in shared preferences using a *TokenStorage* object. The Android system ensures that no other app can access the app's tokens, so it is not necessary to encrypt the stored values.
+
+### Application Restarts without Login
+
+When the app starts, it loads OpenID Connect metadata and also any tokens from Android storage. This prevents the user needing to re-authenticate on every application restart. If tokens expire by the time the app restarts, the code reliably copes with that condition.
+
+### AppAuth Library - Refreshing Access Tokens
+
+The app uses the AppAuth *TokenRequest* object to send a *Refresh Token Grant* message. The AppAuth error codes enable the app to reliably detect the *Invalid Grant* response when the refresh token finally expires:
+
+```kotlin
+private suspend fun performRefreshTokenGrant() {
+
+    val refreshToken = this.tokenStorage.loadTokens()?.refreshToken
+    if (refreshToken.isNullOrBlank()) {
+        return
+    }
+
+    this.getMetadata()
+
+    return suspendCoroutine { continuation ->
+
+        val callback =
+            AuthorizationService.TokenResponseCallback { tokenResponse, ex ->
+
+                when {
+                    ex != null -> {
+
+                        if (ex.type == AuthorizationException.TYPE_OAUTH_TOKEN_ERROR &&
+                            ex.code == AuthorizationException.TokenRequestErrors.INVALID_GRANT.code
+                        ) {
+                            this.tokenStorage.removeTokens()
+                            continuation.resume(Unit)
+                            this.concurrencyHandler.resume()
+
+                        } else {
+
+                            val error = ErrorFactory().fromTokenError(ex, ErrorCodes.tokenRenewalError)
+                            continuation.resumeWithException(error)
+                            this.concurrencyHandler.resumeWithException(error)
+                        }
+                    }
+
+                    tokenResponse == null -> {
+                        val error = RuntimeException("Refresh token grant returned an empty response")
+                        continuation.resumeWithException(error)
+                        this.concurrencyHandler.resumeWithException(error)
+                    }
+
+                    else -> {
+                        this.saveTokens(tokenResponse)
+                        continuation.resume(Unit)
+                        this.concurrencyHandler.resume()
+                    }
+                }
+            }
+
+        val tokenRequest = TokenRequest.Builder(
+            this.metadata!!,
+            this.configuration.clientId
+        )
+            .setGrantType(GrantTypeValues.REFRESH_TOKEN)
+            .setRefreshToken(refreshToken)
+            .build()
+
+        val authService = AuthorizationService(this.applicationContext)
+        authService.performTokenRequest(tokenRequest, callback)
+    }
+}
+```
+
+### Synchronized Token Refresh
+
+When multiple views call APIs and receive 401 responses, the app synchronises token refresh so that it only occurs once:
+
+- Multiple views call the API and receive a 401 response.
+- The app sends a single token refresh request to the authorization server.
+- Multiple views successfully call the API again with the new access token.
+
+A *ConcurrentActionHandler* uses a thread safe collection to ensure that only a single view runs token refresh at a time:
+
+```kotlin
+override suspend fun synchronizedRefreshAccessToken(): String {
+
+    val refreshToken = this.tokenStorage.loadTokens()?.refreshToken
+    if (!refreshToken.isNullOrBlank()) {
+
+        this.concurrencyHandler.execute(this::performRefreshTokenGrant)
+
+        val accessToken = this.tokenStorage.loadTokens()?.accessToken
+        if (!accessToken.isNullOrBlank()) {
+            return accessToken
+        }
+    }
+
+    throw ErrorFactory().fromLoginRequired()
+}
+```
+
+This mechanism correctly handles [refresh token rotation](https://www.rfc-editor.org/rfc/rfc6749#section-10.4) to prevent race conditions. It avoids problems like users experiencing errors or needing to reauthenticate shortly after signing in.
+
+### Logout
+
+The app's logout logic involves these two actions:
+
+- The app removes OAuth tokens token from Android secure storage.
+- The app removes the authorization server's session cookie.
+
+The second step requires a redirect on a Chrome Custom Tab, since only the system browser can remove the authorization server's session cookie. The following code ensures that this works with AWS Cognito's custom logout endpoint:
+
+```kotlin
+override fun startLogout(launchAction: (i: Intent) -> Unit) {
+
+    val tokens = this.tokenStorage.loadTokens()
+    val idToken = tokens?.idToken
+    this.tokenStorage.removeTokens()
+
+    try {
+        if (idToken == null) {
+
+            val message = "Logout is not possible because tokens have already been removed"
+            throw IllegalStateException(message)
+        }
+
+        val logoutUrlBuilder = this.createLogoutUrlBuilder()
+        val logoutUrl = logoutUrlBuilder.getEndSessionRequestUrl(
+            this.metadata!!,
+            this.getPostLogoutRedirectUri(),
+            idToken
+        )
+
+        launchAction(this.getLogoutIntent(logoutUrl))
+
+    } catch (ex: Throwable) {
+        throw ErrorFactory().fromLogoutOperationError(ex)
+    }
+}
+```
+
+The app receives logout responses on its *Post Logout Redirect URI* using the same intermediate web page mechanism that logins use. The Android manifest file includes an extra activity that enables the app to receive logout responses from the intermediate web page.
+
+```xml
+<activity
+android:name=".plumbing.oauth.logout.LogoutRedirectUriReceiverActivity"
+    android:exported="true">
+
+    <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data
+            android:scheme="https"
+            android:host="mobile.authsamples.com"
+            android:path="/finalmobileapp/oauth/logoutcallback" />
+    </intent-filter>
+</activity>
+```
+
+### AppAuth Library - Error Codes
+
+The *Error Category* and *Error Code* from the [AppAuth Errors Enumeration](https://github.com/openid/AppAuth-Android/blob/master/library/java/net/openid/appauth/AuthorizationException.java) are useful when you need to better understand any AppAuth error codes returned to the app:
+
+```java
+/**
+ * Error codes related to failed token requests.
+ *
+ * @see "The OAuth 2.0 Authorization Framework" (RFC 6749), Section 5.2
+ * <https://tools.ietf.org/html/rfc6749#section-5.2>"
+ */
+public static final class TokenRequestErrors {
+    // codes in this group should be between 2000-2999
+
+    /**
+     * An `invalid_request` OAuth2 error response.
+     */
+    public static final AuthorizationException INVALID_REQUEST =
+    tokenEx(2000, "invalid_request");
+
+    /**
+     * An `invalid_client` OAuth2 error response.
+     */
+    public static final AuthorizationException INVALID_CLIENT =
+    tokenEx(2001, "invalid_client");
+
+    /**
+     * An `invalid_grant` OAuth2 error response.
+     */
+    public static final AuthorizationException INVALID_GRANT =
+    tokenEx(2002, "invalid_grant");
+}
+```
+
+The app's own error handling is therefore careful to capture these runtime details and include them in error screens:
+
+<div className='smallimage'>
+    <img src='../images/530/appauth-error.jpg?v=20240912' alt='appauth error' />
+</div>
+
+Due to the choice of Kotlin as a technology stack, the app requires no extra technical layers to integrate AppAuth libraries, and the app has first-class error handling control.
+
+### Deep Linking
+
+The app uses an additional *Deep Link Forwarding Activity* to control whether to execute deep links. The app ignores deep links when a Chrome Custom Tab window is top most:
+
+```kotlin
+private fun handleIntent(receivedIntent: Intent) {
+
+    if (!this.app().isMainActivityTopMost()) {
+        finish()
+        return
+    }
+
+    receivedIntent.setClass(this, MainActivity::class.java)
+    receivedIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+    startActivity(receivedIntent)
+}
+```
+
+It is possible to deep link to a view location that triggers API requests for unauthorized data. APIs then deny access and the frontend should cope gracefully with the API error response. The app's *TransactionsViewModel* object demonstrates the use of expected API error codes:
+
+```kotlin
+private fun isForbiddenError(error: UIError): Boolean {
+
+    if (error.statusCode == 404 && error.errorCode.equals(ErrorCodes.companyNotFound)) {
+
+        return true
+    } else if (error.statusCode == 400 && error.errorCode.equals(ErrorCodes.invalidCompanyId)) {
+
+        return true
+    }
+
+    return false
+}
+```
+
+### Debugging Kotlin Code
+
+You can use Android Studio to set a breakpoint and step through the app's code. Doing so also enables you to inspect the state of AppAuth objects if you need to troubleshoot OAuth code:
+
+![debug](../images/530/debug.jpg?v=20240912)
+
+### Code Quality Checks
+
+I use the [detekt static analyzer tool](https://detekt.github.io/detekt), to check some of the finer details of the Kotlin code. The project includes a *detekt.gradle* file and you can run the following command to run all code quality checks:
+
+```bash
+./gradlew detekt
+```
+
+I fix any resulting warnings to keep the coding style consistent and maintainable:
+
+![code quality warnings](../images/530/code-quality-warnings.jpg?v=20240912)
+
+### AppAuth Libraries
+
+This blog follows the mobile recommendations from RFC 8252. Doing so does not mandate use of the AppAuth libraries though. If I ran into any blocking issues with the library I could manually implement a code flow in the *OAuthClientImpl* object with straightforward code.
+
+### Where Are We?
+
+This blog's Android app uses modern code with a standards-based OAuth implementation. The app integrates with any authorization server and therefore supports many ways to authenticate users. I also took some time to ensure that the app handles error conditions reliably.
+
+### Next
+
+- Next I explain this blog's <a href='ios-code-sample-overview.mdx'>iOS Code Sample Behaviour</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

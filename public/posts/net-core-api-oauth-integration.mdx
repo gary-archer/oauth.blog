@@ -1,0 +1,393 @@
+# .NET API - OAuth Integration
+
+In the previous post I explained how to run this blog's <a href='net-core-code-sample-overview.mdx'>Final .NET API</a> and summarized the main behaviours. Next I explain how to take finer control over technical behaviours in a .NET API when you integrate OAuth security.
+
+### .NET API Defaults
+
+By default .NET uses a framework based approach to OAuth security, where you add the [JwtBearer Middleware](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.JwtBearer), then other details are looked up from the OpenID Connect metadata endpoint. For AWS Cognito, which does not include an API audience claim in access tokens, this can be done as follows:
+
+```csharp
+private void ConfigureOAuth(IServiceCollection services)
+{
+    services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.Authority = this.configuration.IssuerBaseUrl;
+            options.Audience = this.configuration.Audience;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false
+            };
+        });
+
+    services.AddAuthorization(options =>
+    {
+        options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+    });
+}
+```
+
+You can also use an [AllowAnonymous](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.authorization.allowanonymousattribute) annotation if you have unsecured endpoints like those used for health checks. If it suits your coding preferences, you can use [Authorization Policies](https://docs.microsoft.com/en-us/aspnet/core/security/authorization/policies) to implement your authorization checks.
+
+```csharp
+[HttpGet("{id}/transactions")]
+[Authorize(Policy = "mypolicy")]
+public async Task<CompanyTransactions> GetCompanyTransactionsAsync(string id)
+{
+    ...
+}
+```
+
+To get visibility into the underlying behaviour of the Microsoft classes and to troubleshoot failures you can add entries like the following to your *appSettings.json* file.
+
+```json
+ {
+    "Logging": {
+        "LogLevel": {
+            "Microsoft.AspNetCore.Authentication": "Debug",
+            "Microsoft.AspNetCore.Authorization": "Debug"
+        }
+    }
+}
+```
+
+When getting started with OAuth secured APIs these are good defaults to get up and running. However, they hide the details from API developers. This blog's .NET API instead aims for an educational approach that makes the important requirements visible.
+
+### Key Requirements
+
+This blog's .NET API customises default behaviour to meet the following requirements:
+
+| Requirement | Description |
+| ----------- | ----------- |
+| Standards Based | I use the same standards-based design patterns for OAuth security across Node.js, .NET and Java APIs. |
+| Best Security | The [jose-jwt](https://github.com/dvsekhvalnov/jose-jwt) library enables the most up to date and specialised security algorithms when dealing with JWTs. |
+| Extensible Claims | APIs are in full control of the claims principal and are not forced to only use the authorization server's claims. |
+| Supportable | Errors and logs use custom formats and identity-related error details are included in the API's logs. |
+
+In .NET the OAuth code uses the same main phases as other APIs in this blog:
+
+| Task | Description |
+| ---- | ----------- |
+| <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a> | Downloading a JSON Web Key Set and verifying received JWT access tokens. |
+| <a href='api-authorization-design.mdx'>API Authorization</a> | Creating a ClaimsPrincipal that includes useful claims, then applying them during authorization. |
+
+This blog's .NET API contains plumbing code that I write in the same way the same across three different technology stacks. For your own solution you may be able to meet similar requirements in simpler ways.
+
+### OAuth API Configuration
+
+The API uses a JSON configuration file with the following OAuth settings, which are the same as those used by the final Node.js API:
+
+```json
+{
+  "oauth": {
+    "issuer":                       "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+    "audience":                     "",
+    "algorithm":                    "RS256",
+    "scope":                        "https://api.authsamples.com/investments",
+    "jwksEndpoint":                 "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json",
+    "claimsCacheTimeToLiveMinutes": 15
+  }
+}
+```
+
+The meaning of each field is summarised in the following table:
+
+| Field | Description |
+| ----- | ----------- |
+| issuer | The expected authorization server that the API trusts to issue its access tokens. |
+| audience | The audience in JWT access tokens indicates the API(s) that should process the JWT. |
+| scope | The API business area(s) for which the access token has permissions. |
+| jwksEndpoint | The trusted authorization server endpoint from which *jose-jwt* will use token signing public keys. |
+| claimsCacheTimeToLiveMinutes | The time to live for a cache that contains extra claims, not issued to access tokens. |
+
+### API Authorization
+
+The API receives an access token with the following payload to restrict the client's API access. The scope limits access to *investments* data. The user's business identity is a custom claim of *manager_id* to represent a person who manages investments. The authorization server also issues a custom *role* claim to the access token:
+
+```json
+{
+  "iss": "https://login.authsamples-dev.com",
+  "aud": "api.authsamples.com",
+  "scope": "openid profile investments",
+  "sub": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "manager_id": "10345",
+  "role": "user",
+  "exp": 1715630456.455
+}
+```
+
+The API processes the JWT access token to receive the main claims. The API then does some more advanced work to look up additional values that I want to treat like claims in the API code. The goal is to set up the API's business logic with a useful claims principal.
+
+### Custom Authentication Handler
+
+The *Startup* class creates a custom handler to wire up our API's custom OAuth behaviour. Unless a particular endpoint overrides the authorization policy the API uses the custom handler:
+
+```csharp
+private void ConfigureOAuth(IServiceCollection services)
+{
+    string scheme = "Bearer";
+    services.AddAuthentication(scheme)
+            .AddScheme<AuthenticationSchemeOptions, CustomAuthenticationHandler>(scheme, null);
+
+    services.AddAuthorization(options =>
+    {
+        options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+    });
+}
+```
+
+The implementation's main logic calls an *OAuthFilter* object, which validates the JWT access token and controls claims that the API code uses later for authorization. The handler also customises API log data and error response formats.
+
+```csharp
+protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
+{
+    var logEntry = (LogEntry)this.Context.RequestServices.GetService(typeof(ILogEntry));
+    logEntry.Start(this.Request);
+
+    try
+    {
+        var filter = (OAuthFilter)this.Context.RequestServices.GetService(typeof(OAuthFilter));
+        var claimsPrincipal = await filter.ExecuteAsync(this.Request);
+
+        logEntry.SetIdentity(claimsPrincipal.JwtClaims.Sub);
+
+        var ticket = new AuthenticationTicket(claimsPrincipal, new AuthenticationProperties(), this.Scheme.Name);
+        return AuthenticateResult.Success(ticket);
+    }
+    catch (Exception exception)
+    {
+        var handler = new UnhandledExceptionMiddleware();
+        var clientError = handler.HandleException(exception, this.Context);
+
+        logEntry.End(this.Context.Request, this.Context.Response);
+        logEntry.Write();
+
+        this.Request.HttpContext.Items.TryAdd(ClientErrorKey, clientError);
+        return AuthenticateResult.NoResult();
+    }
+}
+```
+
+### OAuth and Claims Code
+
+I use a number of small classes to implement the desired behaviour. The main work is to validate the JWT from the HTTP request, then return a *ClaimsPrincipal* object that I want the API's business logic to use.
+
+<div className='smallimage'>
+    <img src='../images/330/oauth-classes.jpg' alt='oauth classes' />
+</div>
+
+### JWT Access Token Validation
+
+The *AccessTokenValidator* object gets the token signing public key for the received JWT access token, supplies it to the *jose-jwt* library and then checks for expected claims.
+
+```csharp
+public async Task<JwtClaims> ValidateTokenAsync(string accessToken)
+{
+    using (this.logEntry.CreatePerformanceBreakdown("tokenValidator"))
+    {
+        var claimsJson = string.Empty;
+        try
+        {
+            var kid = this.GetKeyIdentifier(accessToken);
+            if (kid == null)
+            {
+                throw ErrorFactory.CreateClient401Error("Unable to read the kid field from the access token");
+            }
+
+            var jwk = await this.jsonWebKeyResolver.GetTokenSigningPublicKey(kid, this.configuration.Algorithm);
+            if (jwk == null)
+            {
+                throw ErrorFactory.CreateClient401Error(
+                    $"The token kid {kid} was not found in the JWKS for algorithm {this.configuration.Algorithm}");
+            }
+
+            claimsJson = JWT.Decode(accessToken, jwk);
+        }
+        catch (Exception ex)
+        {
+            throw ErrorUtils.FromTokenValidationError(ex);
+        }
+
+        var claims = new JwtClaims(claimsJson);
+        this.ValidateProtocolClaims(claims);
+        return claims;
+    }
+}
+```
+
+There are a number of responsibilities that I would ideally like the JWT library to implement for an API:
+
+| Responsibility | Description |
+| -------------- | ----------- |
+| JWKS Lookup | Downloading token signing public keys from the authorization server's JWKS endpoint. |
+| JWKS Caching | Caching the above keys and automatically dealing with new lookups when the authorization server recycles its signing keys. |
+| Signature Checks | Cryptographically verifying the JSON Web Signature of received JWTs. |
+| Protocol Claim Checks | Checking that the token has the correct issuer and audience, and that it is valid for use at the current time. |
+
+The *jose.jwt* library does the complex cryptographic work, to validate the JWT signature. However, it does not manage JWKS downloads, caching of JWKS keys, or checking protocol claims. These tasks are not complex but make my API code less elegant. I needed to write additional plumbing classes, including a *JsonWebKeyResolver* and a *JwksCache*.
+
+### Claims Principal
+
+The claims principal for the sample API contains the custom fields listed below:
+
+| Claim | Represents |
+| ----- | ---------- |
+| Scope | The scope for the API, which in this blog is a high level business area of *investments*. |
+| Subject | The user's technical OAuth identity, that the authorization server generates. |
+| Manager ID | The business identity for a user, where a manager is a party who administers investment data. |
+| Role | A role from which the API could derive finer grained business permissions about the level of access. |
+| Title | A business title for the user, which frontend applications get from the API and display. |
+| Regions | An array claim meant to represent a more detailed business rule that does not belong in access tokens. |
+
+In code the *ClaimsPrincipal* class is represented as follows, consisting of type safe objects:
+
+```csharp
+public class CustomClaimsPrincipal : ClaimsPrincipal
+{
+    public CustomClaimsPrincipal(JwtClaims jwtClaims, ExtraClaims extraClaims)
+        : base(GetClaimsIdentity(jwtClaims, extraClaims))
+    {
+        this.JwtClaims = jwtClaims;
+        this.ExtraClaims = extraClaims;
+    }
+
+    public JwtClaims JwtClaims { get; private set; }
+
+    public ExtraClaims ExtraClaims { get; private set; }
+}
+```
+
+The API code injects claims into business focused classes that need to implement authorization, so that there is full control over both data and logic:
+
+```csharp
+private bool IsUserAuthorizedForCompany(Company company)
+{
+    var isAdmin = this.claims.GetRole() == "admin";
+    if (isAdmin)
+    {
+        return true;
+    }
+
+    var isUser = this.claims.GetRole() == "user";
+    if (!isUser)
+    {
+        return false;
+    }
+
+    return this.claims.ExtraClaims.Regions.Any(ur => ur == company.Region);
+}
+```
+
+### OAuth Middleware
+
+The *OAuthFilter* object encapsulates the overall OAuth work and deals with injecting claims into the claims principal when needed. In .NET it is also possible to add extra claims in an [OnTokenValidated](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.authentication.jwtbearer.jwtbearerevents.ontokenvalidated) event handler.
+
+```csharp
+public sealed class OAuthFilter
+{
+    public async Task<CustomClaimsPrincipal> ExecuteAsync(HttpRequest request)
+    {
+        var accessToken = BearerToken.Read(request);
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            throw ErrorFactory.CreateClient401Error("No access token was received in the bearer header");
+        }
+
+        var jwtClaims = await this.accessTokenValidator.ValidateTokenAsync(accessToken);
+
+        var accessTokenHash = this.Sha256(accessToken);
+        var extraClaims = await this.cache.GetItemAsync(accessTokenHash);
+        if (extraClaims != null)
+        {
+            return this.CreateClaimsPrincipal(jwtClaims, extraClaims);
+        }
+
+        extraClaims = await this.extraClaimsProvider.LookupExtraClaimsAsync(jwtClaims, request.HttpContext.RequestServices);
+        await this.cache.SetItemAsync(accessTokenHash, extraClaims, jwtClaims.Exp);
+        return this.CreateClaimsPrincipal(jwtClaims, extraClaims);
+    }
+}
+```
+
+This technique adds complexity that you may not need. Yet it enables API developers to easily evolve their own authorization values. The code shows one possible way to ensure a stable access token and avoid needing to frequently deploy APIs and the authorization server together. It keeps the claims principal useful to the API's logic, and reduces the need for access token versioning.
+
+### OAuth Error Responses
+
+The API implements this blog's <a href='error-handling-and-supportability.mdx'>Error Handling Design</a>, starting with logic for invalid or expired tokens. In a test client you can simulate a 401 error if you click *Expire Access Token* followed by *Reload Data*:
+
+![expiry testing](../images/330/expiry-testing.jpg?v=20241201)
+
+This results in the client sending an invalid access token to the API, which returns an error response in my preferred format:
+
+| Data | Description |
+| ---- | ----------- |
+| HTTP Status | The API returns an appropriate HTTP status code. |
+| Payload | The API returns a JSON error object containing *code* and *message* fields. |
+
+In total, the API may return the following OAuth-related HTTP status codes:
+
+| Status | Description |
+| ------ | ----------- |
+| 401 | The access token is missing, invalid or expired. |
+| 403 | The access token does not contain a required scope. |
+| 404 | The API's claims do not allow access to a requested resource so the API returns a *Not Found for User* error. |
+| 500 | A technical problem during OAuth processing, such as a network error downloading JWKS keys. |
+
+When the API fails to download the JWKS it returns the following type of response body to the client:
+
+```json
+{
+  "code": "jwks_download_failure",
+  "message": "Problem encountered downloading JWKS keys",
+  "id": 43132,
+  "area": "FinalApi",
+  "utcTime": "2024-12-01T13:03:09"
+}
+```
+
+The client can then take various types of action based on the HTTP status and error code it receives. For server errors, user facing apps can display received error details to assist technical support staff:
+
+![500 error display](../images/330/500-error-display.jpg?v=20241201)
+
+### API Logs and Identity Data
+
+API logs include details about OAuth errors, which helps when there is a configuration problem. For HTTP status 4xx errors the logged error content is concise, whereas 5xx errors contain further details. Any type of error entry should explain the cause. The following example shows a 401 error due to a rejected token, which includes context that the API does not return to the client:
+
+```json
+{
+  "id": "b3629a0d-fc73-46b7-a3ca-6115963e8e43",
+  "utcTime": "2022-12-10T13:17:28",
+  "apiName": "FinalApi",
+  "operationName": "GetCompanyTransactions",
+  "hostName": "UBUNTU",
+  "method": "GET",
+  "path": "/investments/companies/2/transactions",
+  "resourceId": "2",
+  "clientName": "FinalSPA",
+  "statusCode": 401,
+  "errorCode": "unauthorized",
+  "millisecondsTaken": 43,
+  "correlationId": "b091ec8e-a1d0-dbf9-f764-012cc730c925",
+  "sessionId": "004d32bc-9755-b50e-6315-5be09f277ebe",
+  "errorData": {
+    "statusCode": 401,
+    "body": {
+      "code": "invalid_token",
+      "message": "Missing, invalid or expired access token"
+    },
+    "context": "JWT verification failed: Invalid signature."
+  }
+}
+```
+
+After the API validates a JWT, it writes the received subject claim, most commonly a UUID, to a *userId* field in the request's API log entry. This can potentially help to track users in benign ways, for technical support purposes. Doing so requires care and I say more about secure logs in the <a href='effective-api-logging.mdx'>Effective API Logging</a> post.
+
+### Where Are We?
+
+I implemented .NET API Security in a requirements first manner, to enable behaviour that is important for any OAuth secured API, regardless of technology.
+
+### Next
+
+- Next I drill deeper into other <a href='net-core-api-coding-model.mdx'>.NET API Code Details</a>.
+- For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.
