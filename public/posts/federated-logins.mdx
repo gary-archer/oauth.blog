@@ -36,7 +36,7 @@ To enable such a flow, you configure a *federated login* using steps similar to 
 
 ### Authentication Logic
 
-The authorization server should provide an authentication toolbox. During an authorization code flow, the user may perform various other actions in addition to entering authentication methods, such as one or more of those listed below:
+The authorization server should provide an authentication toolbox. During an authorization code flow, the user may perform various other actions in addition to the use of authentication methods, such as one or more of those listed below:
 
 - User registration.
 - Account recovery.
@@ -58,7 +58,7 @@ At times you may run into custom authentication requirements. In such cases, avo
 - The user interacts with HTML forms that run in the browser to capture proofs of the user's identity.
 - The HTML forms call authorization server endpoints that verify proofs of the user's identity.
 
-A good authorization server provides extensibility to enable custom authentication with your own frontend forms and backend logic. The extensibility should prevent you from ever running into blocking authentication issues. For example, you should be able to integrate with an external identity provider even if it does not follow security standards correctly.
+An authorization server should provide extensibility to enable custom authentication with your own frontend forms and backend logic. The extensibility should prevent you from ever running into blocking authentication issues. For example, you should be able to integrate with an external identity provider even if it does not follow security standards correctly.
 
 ### Where Are We?
 
