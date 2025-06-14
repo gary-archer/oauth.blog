@@ -124,6 +124,13 @@ When the main window exchanges the code for token it uses the PKCE *code_verifie
 
 ![oidc browser logs](../images/180/oidc-browser-logs.jpg?v=20240813)
 
+### Dropped Cookies
+
+Iframe-based token renewal does not work with this blog's default authorization server, since it issues its SSO cookie with *SameSite=lax* instead of *SameSite=none*, which is required to send cookie from an iframe. This means, whenever the access token expires, or the user reloads the page, the user experiences an OpenID Connect login redirect.
+
+Even if the cookie settings was fixed, this is also the behavior in the Safari browser, which drops all third party cookies except for certain exceptions, like top level redirects. Therefore, the updated code example correctly represents the future state of iframe based token renewal.
+
+
 ### Updated API Flow
 
 The SPA's *ApiClient* object now uses an updated algorithm to call APIs, that includes token refresh. I like to only trigger login redirects when one of the following conditions is true:
@@ -196,8 +203,6 @@ automaticSilentRenew: true,
 ```
 
 For best reliability, you could also store a refresh token in local storage and avoid the use of iframe-based access token refresh completely. Yet persistent storage is the least secure way to manage tokens in the browser, with greatest XSS threats. When you also store refresh tokens, you make threats much worse, since an attacker can use the refresh token to get new access tokens without needing to supply a client credential.
-
-By default, iframe-based token renewal does not work at all with AWS Cognito. To provide some kind of working demo solution with that authorization server I use a low security solution with refresh tokens stored in-memory. Usability is intentionally suboptimal, and there is a new OpenID Connect redirect (a single-sign-on event) every time you reload the page or open a new browser tab. To activate iframe-based token renewal you must set a different *provider* name in the SPA's configuration file.
 
 ```json
 {

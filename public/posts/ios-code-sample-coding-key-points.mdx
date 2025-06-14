@@ -412,7 +412,7 @@ At runtime, the app reads OAuth details from its configuration file and provides
 
 ### AppAuth Library - Login Responses
 
-Upon return from login, the ASWebAuthenticationSession window hosts an intermediate page. This page receives the authorization response, presents a continue button to ensure a user gesture and then invokes the login receiver activity with the authorization response's query string:
+Upon return from login, the ASWebAuthenticationSession window hosts an external web page. This page receives the authorization response, presents a continue button to ensure a user gesture and then invokes the login receiver activity with the authorization response's query string:
 
 ```javascript
 <script>
@@ -655,7 +655,7 @@ func startLogoutRedirect(viewController: UIViewController) throws {
 }
 ```
 
-The app receives logout responses on its *Post Logout Redirect URI* using the same intermediate web page mechanism that logins use.
+The app receives logout responses on its *Post Logout Redirect URI* using the same external web page mechanism that logins use.
 
 ### AppAuth Library - Error Codes
 

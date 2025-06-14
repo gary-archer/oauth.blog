@@ -138,7 +138,7 @@ The app also implements <a href='logout.mdx'>Open ID Connect RP-Initiated Logout
     <img src='../images/540/aswebauthenticationsession-start.jpg?v=20240914' alt='logout prompt' />
 </div>
 
-The usual way to resolve this annoyance is to avoid the logout redirect and instead simply drop tokens. Then use the *prompt=login* OpenID Connect request parameter on the next login. At the time of writing though, AWS Cognito does not yet support the *prompt* parameter.
+The best way to resolve this annoyance is to avoid the logout redirect and instead simply remoev tokens. Then, use the *prompt=login* OpenID Connect request parameter on the next login.
 
 ### Deep Linking
 
@@ -182,9 +182,9 @@ There are three scenarios where redirects use the Chrome Custom Tab window. You 
 | Single Sign On | The user already has a valid session cookie and signs in automatically without user actions. |
 | Logout | The user's session cookie expires without user actions. |
 
-In each case, there may need to be a user gesture before the deep link returns control to the app. In some cases, using the OpenID Connect *prompt=login* parameter on every login redirect may provide a reliable solution. In this blog I instead use a custom intermediate page, partly because, at the time of writing, AWS Cognito does not support the *prompt* parameter.
+In each case, there may need to be a user gesture before the deep link returns control to the app. In some cases, using the OpenID Connect *prompt=login* parameter on every login redirect may provide a reliable solution. In this blog I instead use a custom external web page.
 
-### This Blog's Intermediate Web Pages
+### This Blog's External Web Pages
 
 I use the following custom *AWS Hosted Web Pages* that run after login / logout redirects.
 

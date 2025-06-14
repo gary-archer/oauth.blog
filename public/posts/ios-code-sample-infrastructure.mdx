@@ -9,9 +9,9 @@ The iOS app uses 2 online domains which I created as part of this blog's <a href
 | Domain | Usage |
 | ------ | ----- |
 | mobile.authsamples.com | The domain name for mobile deep linking, which points to a cloud location that hosts deep linking assets. |
-| www.authsamples.com | I use part of the web domain to host intermediate post-login and post-logout web pages. |
+| www.authsamples.com | I use part of the web domain to host external post-login and post-logout web pages. |
 
-### Intermediate Web Page Hosting
+### External Web Page Hosting
 
 The web pages are available in the *web* folder of the code sample's GitHub repository. I first uploaded them to an AWS S3 bucket:
 
@@ -59,7 +59,7 @@ The app configures *Associated Domains* in a *finalmobileapp.entitlements* file 
 </plist>
 ```
 
-I uploaded the assets file to run at the below HTTPS URL, in a similar manner to the intermediate web pages. I use a second S3 bucket and CloudFront distribution for the mobile subdomain:
+I uploaded the assets file to run at the below HTTPS URL, in a similar manner to the external web pages. I use a second S3 bucket and CloudFront distribution for the mobile subdomain:
 
 - [https://mobile.authsamples.com/.well-known/apple-app-site-association](https://mobile.authsamples.com/.well-known/apple-app-site-association)
 

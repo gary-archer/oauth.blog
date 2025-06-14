@@ -161,7 +161,7 @@ You can rehearse refresh token expiry if you click *Expire Refresh Token* follow
 
 ### Step 12: Logout
 
-The initial desktop app implements only a basic logout, that discards its tokens and returns it to the *Login Required* view. All authorization requests use the OpenID Connect *prompt=none* parameter to force a new login. In a real organization this would enable you to login as a different test user. However, AWS Cognito does not support this parameter, so this behaviour does not work as intended.
+The initial desktop app implements only a basic logout, that discards its tokens and returns it to the *Login Required* view. All authorization requests use the OpenID Connect *prompt=login* parameter to force a new login. In a real organization this would enable you to login as a different test user.
 
 ### Where Are We?
 

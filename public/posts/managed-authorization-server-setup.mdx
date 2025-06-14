@@ -4,11 +4,11 @@ Previously I explained this blog's <a href='cloud-domain-setup.mdx'>Cloud Domain
 
 ### Create the Authorization Server
 
-In this blog I only use standards based OAuth security and avoid any vendor specific behaviour that departs from that. Therefore I use AWS Cognito solely as an authorization server. In AWS terms this means you create a *User Pool* with a *Hosted UI*. I started in the AWS Console by creating a Cognito user pool:
+I created a *User Pool* with the *Plus* plan and configured the newer *Managed Login* option. In this blog I do not use any advanced authorization server features. My only motivation is to use correct standards-based options like customizable access tokens, single-use refresh tokens and correct use of the OpenID Connect *prompt* parameter.
 
 ![user pool](../images/600/user-pool.jpg)
 
-I explained the basic configuration in the earlier post on <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a>. A key part of the initial setup was the creation of a user schema with custom user fields that APIs use later for their business authorization.
+I explained the basic configuration in the earlier post on <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a>. A key part of the initial setup was the creation of a user schema with custom user fields. These values can be issued to user-level access tokens, so that APIs can use these values in their business authorization.
 
 ### Create a Custom Domain
 
@@ -28,17 +28,9 @@ I then added an A record to Route 53 to associate the authorization server's sub
 
 ![arecord](../images/600/arecord.jpg)
 
-### Activate Advanced Features
-
-I then activated Cognito advanced features, which did not add any noticeable increase in costs to my development deployment. I chose the following options:
-
-![advanced](../images/600/advanced.jpg)
-
-My only motivation for activating advanced features is to enable *Access Token Customisation* and issue fields from the user schema as claims. This is an essential OAuth behaviour to correctly protect data in APIs.
-
 ### Define Custom API Scopes
 
-To define custom API scopes in AWS Cognito you must configure a *Resource Server*. In this blog's code samples I use the generated identifier to represent a set of related APIs for the *investments* business area. Only clients that work with investments data would be assigned the investments scope and be able to successfully call this blog's example APIs.
+To define custom API scopes in AWS Cognito you must configure a *Resource Server*. In this blog's code samples I use the generated identifier to represent a set of related APIs for the *investments* business area. Only clients that work with investments data would receive the investments scope in access tokens and can successfully call this blog's example APIs.
 
 ![scope](../images/600/scope.jpg)
 

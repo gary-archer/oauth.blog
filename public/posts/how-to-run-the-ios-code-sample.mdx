@@ -97,11 +97,11 @@ The authorization server accepts the request because the *Client ID*, *Redirect 
 
 ### Step 7: Understand Redirect Response Handling
 
-After user authentication the app receives an authorization response that contains an authorization code. An intermediate web page manages the claimed HTTPS scheme redirect URI to ensure that the app reliably receives the response.
+After user authentication the app receives an authorization response that contains an authorization code. An external web page manages the claimed HTTPS scheme redirect URI to ensure that the app reliably receives the response.
 
 ![authorization response](../images/550/authorization-response.jpg?v=20240914)
 
-The app uses two intermediate web pages, hosted at the following URLs:
+The app uses two external web pages, hosted at the following URLs:
 
 - [https://www.authsamples.com/apps/finalmobileapp/postlogin.html](https://www.authsamples.com/apps/finalmobileapp/postlogin.html)
 - [https://www.authsamples.com/apps/finalmobileapp/postlogout.html](https://www.authsamples.com/apps/finalmobileapp/postlogout.html)

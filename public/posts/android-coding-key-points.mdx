@@ -390,7 +390,7 @@ The Android manifest file associates AppAuth's login activity to the claimed HTT
 </activity>
 ```
 
-Upon return from login, the Chrome Custom Tab hosts an intermediate page. This page receives the authorization response, presents a continue button to ensure a user gesture and then invokes the login receiver activity with the authorization response's query string:
+Upon return from login, the Chrome Custom Tab hosts an external web page. This page receives the authorization response, presents a continue button to ensure a user gesture and then invokes the login receiver activity with the authorization response's query string:
 
 ```javascript
 <script>
@@ -620,7 +620,7 @@ override fun startLogout(launchAction: (i: Intent) -> Unit) {
 }
 ```
 
-The app receives logout responses on its *Post Logout Redirect URI* using the same intermediate web page mechanism that logins use. The Android manifest file includes an extra activity that enables the app to receive logout responses from the intermediate web page.
+The app receives logout responses on its *Post Logout Redirect URI* using the same external web page mechanism that logins use. The Android manifest file includes an extra activity that enables the app to receive logout responses from the external web page.
 
 ```xml
 <activity

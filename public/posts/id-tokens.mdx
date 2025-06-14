@@ -39,9 +39,7 @@ For example, ID tokens are sometimes sent on the front-channel in logout redirec
 
 ### Using ID Tokens
 
-When ID tokens contain only proof of the authentication event, they are rarely used by applications, and of far less significance than access tokens. This blog's frontend code samples receive an ID token and then ignore it. It is a best practice to receive an ID token however, and let your app's security library validate it.
-
-One of the main ways to use an ID token, is to take greater control over subsequent authorization code flows. One example is to read the *max_age* claim from the ID token, then send the *prompt=login* OpenID Connect parameter if a certain time period has passed, to force a new login.
+ID tokens contain proof of the authentication event and can also contain other attributes of use to frontend clients, like boolean flags about the user's account status. They are of far less significance than access tokens. This blog's simple frontend code samples allow security libraries to validate an ID token and otherwise ignore it.
 
 ### Where Are We?
 

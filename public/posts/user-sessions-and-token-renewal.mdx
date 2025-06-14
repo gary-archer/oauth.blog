@@ -55,14 +55,6 @@ In addition, some authorization servers may not support the silent renewal flow 
 
 ![sso cookie](../images/150/sso-cookie.jpg?v=20240822)
 
-The authorization server also does not support the OpenID Connect *prompt=none* parameter. Instead, it returns an HTML response to render the login page when it does not receive an SSO cookie, instead of returning the expected *login_required* error response:
-
-![iframe render login](../images/150/iframe-render-login.jpg?v=20240822)
-
-This results in a poor user experience where the browser hangs for 10 or so seconds. The *oidc-client-ts* security library then times out and the updated code sample reports an iframe timeout error.
-
-![iframe timeout error](../images/150/iframe-timeout-error.jpg?v=20240822)
-
 ### Low Security Options
 
 You can solve some usability and reliability problems by lowering security, yet these provide least protection against XSS threats, which can easily read your tokens and may be able to send them to a malicious host that calls your APIs. This blog's code examples avoids these options whenever possible:

@@ -162,9 +162,9 @@ There are three scenarios where redirects use the Chrome Custom Tab window. You 
 | Single Sign On | The user already has a valid session cookie and signs in automatically without user actions. |
 | Logout | The user's session cookie expires without user actions. |
 
-In each case, there may need to be a user gesture before the deep link returns control to the app. In some cases, using the OpenID Connect *prompt=login* parameter on every login redirect may provide a reliable solution. In this blog I instead use a custom intermediate page, partly because, at the time of writing, AWS Cognito does not support the *prompt* parameter.
+In each case, there may need to be a user gesture before the deep link returns control to the app. In some cases, using the OpenID Connect *prompt=login* parameter on every login redirect may provide a reliable solution. In this blog I instead use an external web page.
 
-### This Blog's Intermediate Web Pages
+### This Blog's External Web Pages
 
 I use the following custom *AWS Hosted Web Pages* that run after login / logout redirects.
 

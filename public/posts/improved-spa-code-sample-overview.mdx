@@ -228,7 +228,7 @@ The secondary user data is then rendered in a basic tooltip:
 
 ### Step 11. Test Token Renewal
 
-The SPA now refreshes in-memory access tokens silently when they expire. You can simulated this if you click *Expire Token* then *Reload Data*:
+The SPA attempts to refresh in-memory access tokens silently when they expire. You can simulated this if you click *Expire Token* then *Reload Data*:
 
 ![token expiry testing](../images/170/token-expiry-testing.jpg?v=20240813)
 
@@ -241,19 +241,11 @@ Since the SPA stores tokens in-memory, the same renewal occurs if you refresh th
 
 ### Step 12. View Token Renewal OAuth Requests
 
-The updated code sample implements the traditional SPA token renewal flow, where the SPA attempts to gsend the SSO cookie to get a new access token, using the *prompt=none* query parameter:
+The updated code sample implements the traditional SPA token renewal flow, where the SPA attempts to send the SSO cookie to get a new access token, using the *prompt=none* query parameter:
 
 ![iframe renewal request](../images/170/iframe-renewal-request.jpg?v=20240813)
 
-Yet AWS Cognito is not compliant with the iframe renewal flow, so when it is the authorization server, the SPA falls back to using a refresh token to renew access tokens:
-
-![renewal request](../images/170/renewal-request.jpg?v=20240813)
-
-The response includes a new access token, so that the SPA can continue to call APIs without impacting the user:
-
-![renewal response](../images/170/renewal-response.jpg?v=20240813)
-
-Although the SPA's code implements renewal flows correctly, both of them are unsatisfactory. I explain the security and usability issues in the <a href='user-sessions-and-token-renewal.mdx'>Iframe Access Token Renewal</a> post.
+Although the SPA's code implements the renewal flow correctly, every iframe token renewal fails, so the user experiences an OpenID Connect redirect whenever the access token expires or the user refreshes the page. With third-party cookie deprecation, that is the expected future behavior, and I say more about it in the <a href='user-sessions-and-token-renewal.mdx'>Iframe Access Token Renewal</a> post.
 
 ### 13. Logout
 

@@ -140,11 +140,11 @@ The authorization server accepts the request because the *Client ID*, *Redirect 
 
 ### Step 8: Understand Redirect Response Handling
 
-After user authentication the app receives an authorization response that contains an authorization code. An intermediate web page manages the claimed HTTPS scheme redirect URI to ensure that the app reliably receives the response.
+After user authentication the app receives an authorization response that contains an authorization code. An external web page manages the claimed HTTPS scheme redirect URI to ensure that the app reliably receives the response.
 
 ![authorization response](../images/510/authorization-response.jpg?v=20240912)
 
-The app uses two intermediate web pages, hosted at the following URLs:
+The app uses two external web pages, hosted at the following URLs:
 
 - [https://www.authsamples.com/apps/finalmobileapp/postlogin.html](https://www.authsamples.com/apps/finalmobileapp/postlogin.html)
 - [https://www.authsamples.com/apps/finalmobileapp/postlogout.html](https://www.authsamples.com/apps/finalmobileapp/postlogout.html)
@@ -172,7 +172,7 @@ An Android manifest entry associates the *Deep Linking HTTPS Scheme* for login r
 </activity>
 ```
 
-If the user leaves the app at the intermediate page for a couple of minutes and then clicks *Return to the App*, the authorization code could time out, leading to a user error. The user can always retry and recover though.
+If the user leaves the app at the external page for a couple of minutes and then clicks *Return to the App*, the authorization code could time out, leading to a user error. The user can always retry and recover though.
 
 ### Step 9: Understand Login Completion
 
