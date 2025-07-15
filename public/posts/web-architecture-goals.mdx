@@ -34,7 +34,7 @@ If an app has XSS vulnerabilities, then an attacker may be able to access secure
 
 ### Best Login Usability
 
-OpenID Connect can provide multiple ways for users to sign in to an SPA, and this can include options that are both user friendly and secure. In addition, an SPA should be in full control of its usability behaviour:
+The authorization server can provide multiple ways for users to sign in to an SPA, and this can include options that are both user friendly and secure. In addition, an SPA should be in full control of its usability behaviour:
 
 - Session Behaviour: the UI should be in control of navigation and expiry events rather than being abruptly redirected.
 - Multi-Tab Browsing: the user should be able to use multiple browser tabs for the same application.
@@ -61,7 +61,7 @@ Portability is often overlooked, but it is common to want to keep your options o
 
 | Aspect | Description |
 | ------ | ----------- |
-| Portable Apps | Implement OpenID Connect in the SPA in a standard way rather than being locked into one authorization server. |
+| Portable Apps | Implement a standards based OAuth flow in the SPA rather than being locked into one authorization server. |
 | Portable Hosting | You should only need to upload web static content to a CDN to deploy SPAs, so avoid designs that prevent this. |
 
 ### This Blog's SPA Code Samples
