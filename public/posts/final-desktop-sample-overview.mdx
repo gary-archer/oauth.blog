@@ -89,7 +89,7 @@ I created a new OAuth client for the final desktop app, which uses updated redir
 
 When a deep link runs after a redirect, the browser may refuse to invoke it for security reasons unless there is a user gesture. This is especially true if the redirects are entirely automatic, as for logouts or single-sign-on events. 
 
-One solution is to avoid logout redirects and use the OpenID Connect *prompt=none* parameter when you sign in. Instead, I set the app's redirect URIs to external web pages, at the following URLs. These pages also improve a little on the default blank browser page that the user sees after login.
+One solution is to avoid logout redirects and use the OpenID Connect *prompt=login* parameter when you sign in. Instead, I set the app's redirect URIs to external web pages, at the following URLs. These pages also improve a little on the default blank browser page that the user sees after login.
 
 - [https://www.authsamples.com/apps/finaldesktopapp/postlogin.html](https://www.authsamples.com/apps/finaldesktopapp/postlogin.html)
 - [https://www.authsamples.com/apps/finaldesktopapp/postlogout.html](https://www.authsamples.com/apps/finaldesktopapp/postlogout.html)
