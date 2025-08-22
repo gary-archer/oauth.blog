@@ -162,11 +162,11 @@ For audit logs I include most of the contextual fields and add the following add
 
 ### Logs and Sensitive Data
 
-Some types of logs, like audit logs, may need to contain sensitive details about users. Therefore, only a particular audience, like a security team, should be able to view those logs. Keep sensitive data out of request logs so that you can grant engineers access to them. I use an anonymous user identifier, like a UUID, as the OAuth subject claim and write that to all types of logs.
+Some types of logs, like audit logs, may need to contain sensitive details about users. Therefore, only a particular audience, like a security team, should be able to view those logs. Keep sensitive data out of request logs so that you can grant engineers access to production request logs. I use an anonymous user identifier, like a UUID, as the OAuth subject claim and write that to all types of logs.
 
 ### API Logging Deployed Configuration
 
-This blog's final APIs use Node.js, .NET and Java. Each API defines its logging behaviour in its configuration file. Deployed environments usually use the following log configuration, to write bare JSON to standard output.
+This blog's final APIs use Node.js, .NET and Java. Each API defines its logging behaviour in its configuration file. Deployed environments  the following log configuration, to write bare JSON to standard output.
 
 ```json
 {
@@ -197,7 +197,7 @@ This blog's final APIs use Node.js, .NET and Java. Each API defines its logging 
 }
 ```
 
-Typically, the platform captures *stdout* and saves log output to files. Log shipper components require immediate output to instead be bare JSON, on a single line.
+Typically, the platform captures *stdout* and saves log output to files. Log shipper components read lines of bare JSON from the file and send them to a log aggregation system.
 
 ![bare logs](../images/280/bare-logs.jpg)
 
@@ -402,7 +402,7 @@ To see this output in the final APIs, change the logging configuration to use a 
 }
 ```
 
-Each performance section also has a *details* field, which can store additional information. For example, you could extend logging code to record sanitized SQL and parameters when there is a database error or SQL performance is slower than the performance threshold.
+Each performance section also has a *details* field, which can store additional information. For example, you could extend logging code to record sanitized SQL and parameters but only output it when there is an error or performance exceeds the threshold.
 
 ### Client Context
 
@@ -429,7 +429,7 @@ The log entry is a natural request scoped object, and you may need to use it in 
 
 ### Non REST Operations
 
-In other backend operations I follow the same approach. For example, if a *Billing API* subscribes to an event called *OrderCreated* and creates an invoice, that unit of work could log to the same schema, with similar coding techniques. I would write the following type of request log entry, as a logical REST operation rather that a physical one:
+In other backend operations I follow the same approach. For example, if a *Billing API* subscribes to a backend event named *OrderCreated* and creates an invoice, that unit of work could log to the same schema, with similar coding techniques. I would write the following type of request log entry, as a logical REST operation rather that a physical one:
 
 ```json
 {
@@ -451,7 +451,7 @@ In other backend operations I follow the same approach. For example, if a *Billi
 }
 ```
 
-Although there is no physical HTTP request, assigning failures a status code is a widely understood way to convey a high level result to people. Separating the client and service parts of an error also remains a good practice, in case you need to notify a recipient of failures without disclosing the full exception details.
+Although in this case there is no physical HTTP request, assigning failures a status code is a widely understood way to convey a high level result to people. Separating the client and service parts of an error also remains a good practice, in case you need to notify a recipient of failures without disclosing the full exception details.
 
 ### Tracing Standardization
 
