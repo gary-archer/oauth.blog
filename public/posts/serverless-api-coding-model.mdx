@@ -64,15 +64,14 @@ export class LambdaInstance {
 
             new CompositionRoot(parentContainer)
                 .addConfiguration(configuration)
-                .addExtraClaimsProvider(new ExtraClaimsProviderImpl())
-                .addLogging(configuration.logging, loggerFactory)
                 .addHttpProxy(httpProxy)
+                .addExtraClaimsProvider(new ExtraClaimsProviderImpl())
                 .register();
 
             const childContainerMiddleware = new ChildContainerMiddleware(parentContainer);
             const loggerMiddleware = new LoggerMiddleware(loggerFactory);
             const exceptionMiddleware = new ExceptionMiddleware(configuration.logging);
-            const authorizerMiddleware = new AuthorizerMiddleware();
+            const authenticationMiddleware = new AuthenticationMiddleware(configuration.oauth.scope);
             const customHeaderMiddleware = new CustomHeaderMiddleware(configuration.logging.apiName);
 
             return middy(async (event: APIGatewayProxyExtendedEvent, context: Context) => {
@@ -82,7 +81,7 @@ export class LambdaInstance {
                 .use(childContainerMiddleware)
                 .use(loggerMiddleware)
                 .use(exceptionMiddleware)
-                .use(authorizerMiddleware)
+                .use(authenticationMiddleware)
                 .use(customHeaderMiddleware);
 
         } catch (e) {
@@ -123,7 +122,9 @@ export class LoggerMiddleware implements middy.MiddlewareObj<APIGatewayProxyExte
         }
 
         logEntry.end();
-        logEntry.write();
+
+        this.loggerFactory.getRequestLogger()?.write(logEntry.getRequestLog());
+        this.loggerFactory.getAuditLogger()?.write(logEntry.getAuditLog());
     }
 }
 ```
@@ -136,7 +137,7 @@ The API uses the following middleware classes, which are equivalent to those in 
 | ---------------- | -------------- |
 | ChildContainerMiddleware | Creates a child container per request to store request scoped objects. |
 | LoggerMiddleware | Manages the log entry for each request, to log request and response details. |
-| OAuthFilter | JWT access token validation, creating the claims principal and identity logging. |
+| AuthenticationMiddleware | JWT access token validation, creating the claims principal and identity logging. |
 | CustomHeaderMiddleware | Allows advanced client side testing of APIs, such as error rehearsal. |
 | UnhandledExceptionHandler | A central place to add error details to logs and produce the client error. |
 
@@ -214,24 +215,34 @@ it ('Call API returns 401 for invalid issuer', async () => {
 
 ### API Logs
 
-Serverless offers only limited control over log output, such as use of a *SLS_DEBUG=** environment variable which I rarely use, since it adds a lot of noise. To ensure that I look at my own preferred output I instead write readable logs to a file during development. In AWS I instead use bare JSON to support log aggregation.
+Serverless offers only limited control over log output, such as use of a *SLS_DEBUG=** environment variable which I rarely use, since it adds a lot of noise. To ensure that I look at my own preferred output I instead write readable request logs and audit logs to local files during development. In AWS, the logger instead outputs bare JSON to support log aggregation.
 
 ```typescript
-public write(): void {
+export class Logger {
 
-    if (this.prettyPrint) {
+    private readonly type: string;
+    private readonly prettyPrint: boolean;
 
-        const data = JSON.stringify(this.data.toLogFormat(), null, 2);
-        fs.appendFileSync('./api.log', data);
+    public constructor(type: string, prettyPrint: boolean) {
+        this.type = type;
+        this.prettyPrint = prettyPrint;
+    }
 
-    } else {
+    public write(data: any): void {
 
-        process.stdout.write(JSON.stringify(this.data.toLogFormat()) + '\n');
+        if (this.prettyPrint) {
+
+            fs.appendFileSync(`./api-${this.type}.log`, JSON.stringify(data, null, 2));
+
+        } else {
+
+            process.stdout.write(JSON.stringify(data) + '\n');
+        }
     }
 }
 ```
 
-To test local log aggregation during development I disable pretty printing of JSON logs. If I need to add additional *console.log* output I use the same technique to append that to the log file.
+To test local log aggregation during development I disable pretty printing of JSON logs. If I need to add additional log output I add extra details to the log file.
 
 ### Lambda Code Debugging
 

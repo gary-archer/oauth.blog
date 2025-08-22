@@ -2,7 +2,7 @@
 
 Previously I showed how to enable an <a href='log-aggregation-setup.mdx'>OAuth Log Aggregation Setup</a> using open source tools that enable log queries. This post shows how different technical stakeholders could then query the log aggregation system productively to support APIs. You could enable such a solution with this blog's <a href='effective-api-logging.mdx'>Effective API Logging</a> design.
 
-If you run an API and client you can use the client to initiate multiple requests to the API, then use the Kibana system to query the API logs you generate. The main focus of this post is control over log data, so I only use the *Dev Tools* console. I consider log queries for three roles of log user: *DevOps*, *Testers* and *Developers*.
+If you run an API and client you can use the client to initiate multiple requests to the API, then use the Kibana system to query the API request logs you generate. The main focus of this post is control over log data, so I only use the *Dev Tools* console. I consider log queries for three roles of log user: *DevOps*, *Testers* and *Developers*.
 
 ![logging system](../images/400/logging-system.jpg?v=20250315)
 
@@ -305,7 +305,7 @@ POST apilogs/_search
 }
 ```
 
-When results identify slow requests you can drill into details of a particular request to understand why. This blog's API logs include a performance breakdown when the time taken exceeds a performance threshold. The performance breakdown might include sanitized SQL with parameters. In the following trivialised example, unexpected SQL is being run, with a missing *where* clause.
+When results identify slow requests you can drill into details of a particular request to understand why. This blog's API request logs include a performance breakdown when the time taken exceeds a performance threshold. The performance breakdown might include sanitized SQL with parameters. In the following trivialised example, unexpected SQL is being run, with a missing *where* clause.
 
 ```json
 {
@@ -354,7 +354,7 @@ Sometimes APIs are coded with concurrency bugs. Multi-threaded bugs in productio
 
 ### 3.4. Error Rehearsal
 
-API developers are sometimes *on call* to help resolve production incidents. You take most of the pain out of this process when you do early rehearsal of failure scenarios. The <a href='error-handling-and-supportability.mdx'>Error Handling and Supportability</a> post explains some techniques. Rehearsal often involves throwing exceptions temporarily, at various places in the API code, after which you check API logs and ensure that the logged details explain the cause in a clear way. Such tests should be done as a part of normal coding.
+API developers are sometimes *on call* to help resolve production incidents. You take most of the pain out of this process when you do early rehearsal of failure scenarios. The <a href='error-handling-and-supportability.mdx'>Error Handling and Supportability</a> post explains some techniques. Rehearsal often involves throwing exceptions temporarily, at various places in the API code, after which you check API request logs and ensure that the logged details explain the cause in a clear way. Such tests should be done as a part of normal coding.
 
 ### Where Are We?
 

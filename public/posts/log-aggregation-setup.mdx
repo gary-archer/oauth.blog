@@ -4,12 +4,12 @@ Previously I explained this blog's <a href='api-automated-tests.mdx'>API Automat
 
 ### API Logging Output
 
-This blog's final APIs produce bare logs when deployed, with the log entry for one API request per line. Typically the hosting platform captures the API's standard output and writes logs to files ready for log shipping. On a development computer, APIs can also output bare logs, if you update the API configuration file to set *prettyPrint=false*.
+This blog's final APIs use request and audit loggers. Each log entry contains a single line of bare JSON. Typically the hosting platform captures the API's standard output and writes logs to files ready for log shipping. The following example request logs show the format of log entries.
 
 ```json
-{"id":"f1c38406-6d1e-212f-ee8b-e100a4219b28","utcTime":"2022-07-15T17:34:28.631Z","apiName":"FinalApi","operationName":"getCompanyList","hostName":"UBUNTU","method":"GET","path":"/investments/companies","statusCode":401,"errorCode":"unauthorized","millisecondsTaken":10,"correlationId":"b868385c-e8fa-9496-9d5b-492158e3d555","errorData":{"statusCode":401,"clientError":{"code":"unauthorized","message":"Missing, invalid or expired access token"},"context":"No access token was supplied in the bearer header"}}
-{"id":"c997e4f0-e7a3-ed9c-253f-fd25110a4a33","utcTime":"2022-07-15T17:34:37.065Z","apiName":"FinalApi","operationName":"getCompanyTransactions","hostName":"UBUNTU","method":"GET","path":"/investments/companies/2/transactions","resourceId":"2","clientName":"LoadTest","userId":"a6b404b1-98af-41a2-8e7f-e4061dc0bf86","statusCode":200,"millisecondsTaken":124,"correlationId":"bd845c50-8995-92eb-fb2f-bc81a4405fef","sessionId":"50f7bbae-04a2-8ba1-1cde-6a44916ab4aa"}
-{"id":"8e41a54c-1d40-8269-c8f4-12b1bf54ad74","utcTime":"2022-07-15T17:34:37.046Z","apiName":"FinalApi","operationName":"getUserInfo","hostName":"UBUNTU","method":"GET","path":"/investments/userinfo","clientName":"LoadTest","userId":"a6b404b1-98af-41a2-8e7f-e4061dc0bf86","statusCode":200,"millisecondsTaken":162,"correlationId":"5ec0eedf-0dcf-aa8d-f64c-1522e8a65a32","sessionId":"50f7bbae-04a2-8ba1-1cde-6a44916ab4aa"}
+{"type": "request", "id":"f1c38406-6d1e-212f-ee8b-e100a4219b28","utcTime":"2022-07-15T17:34:28.631Z","apiName":"FinalApi","operationName":"getCompanyList","hostName":"UBUNTU","method":"GET","path":"/investments/companies","statusCode":401,"errorCode":"unauthorized","millisecondsTaken":10,"correlationId":"b868385c-e8fa-9496-9d5b-492158e3d555","errorData":{"statusCode":401,"clientError":{"code":"unauthorized","message":"Missing, invalid or expired access token"},"context":"No access token was supplied in the bearer header"}}
+{"type": "request", "id":"c997e4f0-e7a3-ed9c-253f-fd25110a4a33","utcTime":"2022-07-15T17:34:37.065Z","apiName":"FinalApi","operationName":"getCompanyTransactions","hostName":"UBUNTU","method":"GET","path":"/investments/companies/2/transactions","resourceId":"2","clientName":"LoadTest","userId":"a6b404b1-98af-41a2-8e7f-e4061dc0bf86","statusCode":200,"millisecondsTaken":124,"correlationId":"bd845c50-8995-92eb-fb2f-bc81a4405fef","sessionId":"50f7bbae-04a2-8ba1-1cde-6a44916ab4aa"}
+{"type": "request", "id":"8e41a54c-1d40-8269-c8f4-12b1bf54ad74","utcTime":"2022-07-15T17:34:37.046Z","apiName":"FinalApi","operationName":"getUserInfo","hostName":"UBUNTU","method":"GET","path":"/investments/userinfo","clientName":"LoadTest","userId":"a6b404b1-98af-41a2-8e7f-e4061dc0bf86","statusCode":200,"millisecondsTaken":162,"correlationId":"5ec0eedf-0dcf-aa8d-f64c-1522e8a65a32","sessionId":"50f7bbae-04a2-8ba1-1cde-6a44916ab4aa"}
 ```
 
 Of course these raw logs are not easy to read, and the next step is to import them into a *Queryable Data Store*. This does not require any coding, but you need to understand how to configure and deploy open source logging tools.
@@ -55,7 +55,7 @@ mkdir "$SECRETS_FOLDER"
 ```
 
 Then follow instructions to configure <a href='developer-ssl-setup.mdx'>Browser SSL Trust</a> for the following root certificate, so that you can run the Kibana UI and avoid SSL trust errors:
-
+ for a development computer
 ```markdown
 ./certs/authsamples-dev.ca.crt
 ```
@@ -66,7 +66,7 @@ The repo includes a Docker Compose deployment, that includes the main Elasticsea
 
 ```yaml
 elasticsearch:
-  image: docker.elastic.co/elasticsearch/elasticsearch:9.0.3
+  image: docker.elastic.co/elasticsearch/elasticsearch:9.1.2
   hostname: elasticsearch-internal
   environment:
     discovery.type: 'single-node'
@@ -79,24 +79,24 @@ elasticsearch:
 
 ### Step 4: Understand Data Initialization
 
-A job container also runs, whose main role is to create index templates and an ingest pipeline before Elasticsearch receives any logs.
+A job container also runs, whose main role is to create index templates for request logs and audit logs, and an ingest pipeline used when Elasticsearch receives logs.
   
 
 ```yaml
 elasticsearch-init-job:
-    image: elasticjob:latest
-    environment:
-      ELASTIC_URL: 'http://elasticsearch-internal:9200'
-      ELASTIC_USER: 'elastic'
-      ELASTIC_PASSWORD: 'Password1'
-      KIBANA_SYSTEM_USER: 'kibana_system'
-      KIBANA_PASSWORD: 'Password1'
-    depends_on:
-      elasticsearch:
-        condition: service_started
+  image: elasticjob:latest
+  environment:
+    ELASTIC_URL: 'http://elasticsearch-internal:9200'
+    ELASTIC_USER: 'elastic'
+    ELASTIC_PASSWORD: 'Password1'
+    KIBANA_SYSTEM_USER: 'kibana_system'
+    KIBANA_PASSWORD: 'Password1'
+  depends_on:
+    elasticsearch:
+      condition: service_started
 ```
 
-The index template sets data types to ensure that log data is received with the original types. This helps to ensure that queries on log data use the expected data types, for example to sort numbers and dates correctly:
+The following JSON shows format of the index template for request logs. The template sets data types to ensure that log data is received with the original types. This helps to ensure that queries on log data use the expected data types, for example to sort numbers and dates correctly:
 
 ```json
 {
@@ -163,11 +163,11 @@ The index template sets data types to ensure that log data is received with the 
 
 ### Step 5: Understand Kibana Deployment
 
-The Kibana system connects to Elasticsearch as the [kibana_system](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.8.html#builtin-users-changes) user, and the initialization job sets the user's password. Meanwhile, you log in to the Kibana web UI using admin credentials for a development computer of *elastic / Password1*:
+The Kibana system connects to Elasticsearch as the [kibana_system](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.8.html#builtin-users-changes) user, and the initialization job sets the user's password. Meanwhile, you log in to the Kibana web UI using admin credentials of *elastic / Password1*:
 
 ```yaml
 kibana:
-  image: docker.elastic.co/kibana/kibana:9.0.3
+  image: docker.elastic.co/kibana/kibana:9.1.2
   hostname: kibana-internal
   ports:
     - 5601:5601
@@ -179,18 +179,18 @@ kibana:
     SERVER_SSL_ENABLED: 'false'
 ```
 
-Kibana runs at the following HTTPS URL that the Kong API gateway provides:
+Kibana runs at the following HTTPS URL that the Docker Compose cluster exposes:
 
 - *https://logs.authsamples-dev.com*
 
 ### Step 6: Understand Filebeat Deployment
 
-Filebeat uses the following deployment settings, where an API log folder is shared from the host computer to a volume in the Filebeat docker container:
+Filebeat uses the following deployment settings, where an API log folder is shared from the host computer to a volume in the Filebeat docker container. By default the deployment uses the folder for this blog's final Node.js API.
 
 ```yaml
 filebeat:
-  image: docker.elastic.co/beats/filebeat:9.0.3
-  command: filebeat -e -strict.perms=false
+  image: docker.elastic.co/beats/filebeat:9.1.2
+  command: filebeat -e --strict.perms=false -c /etc/filebeat/filebeat.yml
   hostname: filebeat-internal
   volumes:
     - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
@@ -206,9 +206,22 @@ The main Filebeat configuration is in a *filebeat.yml* file, whose inputs can ex
 filebeat.inputs:
 - type: filestream
   enabled: true
-  id: apilogs
+  id: apirequest
   paths:
-  - /var/log/api/api-*.log
+  - /var/log/api/request-*.log
+  fields:
+    logtype: 'request'
+  parsers:
+  - ndjson:
+      keys_under_root: true
+      add_error_key: false
+- type: filestream
+  enabled: true
+  id: apiaudit
+  paths:
+  - /var/log/api/audit-*.log
+  fields:
+    logtype: 'audit'
   parsers:
   - ndjson:
       keys_under_root: true
@@ -218,7 +231,7 @@ output.elasticsearch:
   hosts: ['http://elasticsearch-internal:9200']
   username: elastic
   password: Password1
-  index: "api-%{+yyyy.MM.dd}"
+  index: "api-%{[fields.logtype]}-%{+yyyy.MM.dd}"
   pipelines:
   - pipeline: api
 
@@ -228,6 +241,7 @@ setup:
   template:
     name: api
     pattern: api-*
+    enabled: false
 
 processors:
 - drop_fields:
@@ -235,7 +249,7 @@ processors:
 
 ```
 
-The Filebeat output configuration ensures that there is a separate index per day. This makes it easy to remove old indices containing log data after a desired time to live.
+The Filebeat output configuration ensures that there is a separate index per day for both request logs and audit logs. This makes it easy to remove old indices containing log data after a desired time to live.
 
 ### Step 7: Generate Logs via an API and Client
 
@@ -246,7 +260,7 @@ To generate local API logs you need to run an API, and a client that calls the A
 ~/dev/oauth.apisample.nodejs
 ```
 
-I sometimes use log aggregation when developing this blog's secured components, when I want to look more closely at API logs. For example, I can run <a href='api-architecture-node.mdx'>Final Node.js API</a> locally and use its tests to generate requests so that the API outputs logs.
+I sometimes use log aggregation when developing this blog's secured components, when I want to look more closely at API logs. For example, I can run <a href='api-architecture-node.mdx'>Final Node.js API</a> locally and use its tests to trigger API requests that generate log entries.
 
 ### Step 8: Deploy the Elastic Stack
 
@@ -288,7 +302,7 @@ The Kibana *Dev Tools* enable you to make rich queries against log documents bas
 
 ### Step 10: Understand Ingested Logs
 
-Each log entry is received as a JSON document within an index of the form *apilogs-2022-07-24*. Queries are typically made against top level fields. Meanwhile, JSON objects in logs, such as those used to represent errors, maintain their structure:
+Each log entry is received as a JSON document within an index of the form *api-request-2022-07-24* or *api-audit-2022-07-24*. You can filter data using top queries that reference top level fields. Meanwhile, JSON objects in logs, such as those used to represent errors, maintain their structure:
 
 ```json
 {
@@ -339,7 +353,7 @@ By default, Filebeat adds some fields to each log entry on the outbound side of 
     "processors": [
       {
         "drop": {
-          "if" : "ctx.apiName == null"
+          "if" : "ctx.type == null"
         },
         "script": {
           "lang": "painless",
@@ -363,7 +377,7 @@ The processors I use for the ingestion pipeline are summarised below:
 
 | Processor | Behaviour |
 | --------- | --------- |
-| drop | Ignores any log events from foreign log files and distinguish my logs using an *apiName* field. |
+| drop | Ignores any log events from foreign log files that do not have a *type* field. |
 | script | Prevents Elasticsearch from generating a unique *_id* field and instead set it to the *id* field from API logs. This ensures that if Filebeat gets redeployed and logs reprocessed, there are no duplicate log entries. |
 | data | Assigns the *utcTime* from original API logs to the mandatory *@timestamp* field, rather than setting this value to the time logs were received. |
 | remove | Removes any extra fields that Elasticsearch generates during inbound processing. |
@@ -381,27 +395,11 @@ export FILEBEAT_CONTAINER_ID=$(docker ps | grep filebeat | awk '{print $1}')
 docker exec -it $FILEBEAT_CONTAINER_ID bash
 ```
 
-Then view the */var/log* folder, which points to the *api* folder on the host computer, which is mounted as a volume to the docker container:
+Then view the */var/log/api* folder, which points to the API *logs* subfolder on the host computer. The Filebeat docker container mounts that subfolder as a volume. You should see files whose sizes match those on the host:
 
 ```markdown
--rw-r--r-- 1 root     root       5609 Aug 25 19:43 alternatives.log
-drwxr-xr-x 7 filebeat filebeat    224 Oct  7 18:07 api
-drwxr-xr-x 1 root     root       4096 Aug 25 19:43 apt
--rw-r--r-- 1 root     root      58592 May 31 15:43 bootstrap.log
--rw-rw---- 1 root     utmp          0 May 31 15:43 btmp
--rw-r--r-- 1 root     root     184555 Aug 25 19:43 dpkg.log
--rw-r--r-- 1 root     root      32032 Aug 25 19:57 faillog
--rw-rw-r-- 1 root     utmp     292292 Aug 25 19:57 lastlog
--rw-rw-r-- 1 root     utmp          0 May 31 15:43 wtmp
-```
-
-You should see files whose sizes match those on the host:
-
-```markdown
--rw-r--r-- 1 filebeat filebeat 26311 Oct  2 19:59 finalapi-2022-10-02.log
--rw-r--r-- 1 filebeat filebeat  4657 Oct  3 20:23 finalapi-2022-10-03.log
--rw-r--r-- 1 filebeat filebeat  2103 Oct  7 18:08 finalapi-2022-10-07.log
--rw-r--r-- 1 filebeat filebeat   511 Oct  2 19:46 finalapi.2022-10-02.0.log
+-rw-r--r-- 1 filebeat filebeat 26311 Oct  2 19:59 request-2022-10-02.log
+-rw-r--r-- 1 filebeat filebeat  4657 Oct  3 20:23 audit-2022-10-03.log
 ```
 
 Alternatively, view Filebeat's own logs to see details of any log shipping errors. The Filebeat documentation explains the component's [folder layout](https://www.elastic.co/guide/en/beats/filebeat/current/directory-layout.html), where the *data* folder tracks offsets in shipped log files.
@@ -411,9 +409,74 @@ export FILEBEAT_CONTAINER_ID=$(docker ps | grep filebeat | awk '{print $1}')
 docker logs -f $FILEBEAT_CONTAINER_ID
 ```
 
+### Step 13: Kubernetes Log Aggregation
+
+If I deploy APIs to Kubernetes there are a couple of differences, since both request and audit logs get output to *stdout* instead of local files. Kubernetes saves *stdout* to the */var/log/containers* folder of Kubernetes nodes. I base a solution on the [Filebeat Kubernetes Reference Configuration](https://raw.githubusercontent.com/elastic/beats/9.1/deploy/kubernetes/filebeat-kubernetes.yaml) and use a Filebeat configuration that captures both request logs and audit logs as a single filestream. I first parse container log entries from Kubernetes nodes and then use the JSON parser to load the message part of each log entry.
+
+```yaml
+filebeat.inputs:
+  - type: filestream
+    enabled: true
+    id: apilogs
+    paths:
+      - /var/log/containers/finalapi-*finalapi*.log
+    parsers:
+      - container: ~
+      - ndjson:
+          keys_under_root: true
+          add_error_key: false
+    prospector:
+      scanner:
+        symlinks: true
+
+  output.elasticsearch:
+    hosts: ['http://elasticsearch-svc:9200']
+    username: elastic
+    password: Password1
+    index: "api-%{+yyyy.MM.dd}"
+    pipelines:
+    - pipeline: api
+```
+
+Then, during ingestion, I dynamically calculate the final index name for each log entry using its *type* field.
+
+```json
+{
+  "description": "Ingest Pipeline for API Logs",
+  "processors": [
+    {
+      "drop": {
+        "if" : "ctx.type != 'request' && ctx.type != 'audit'"
+      },
+      "script": {
+        "lang": "painless",
+        "description": "Use client side IDs and select the index from data",
+        "source": "
+ctx._id = ctx.id;
+if (ctx.type == 'request') {
+  ctx._index = ctx._index.replace('api-', 'api-request-');
+}
+if (ctx.type == 'audit') {
+  ctx._index = ctx._index.replace('api-', 'api-audit-');
+}
+"
+      },
+      "date" : {
+        "field" : "utcTime",
+        "formats" : ["ISO8601"]
+      },
+      "remove": {
+        "field": ["log", "stream", "type"],
+        "ignore_missing": true
+      }
+    }
+  ]
+}
+```
+
 ### Where Are We?
 
-I explained how to deploy the Elastic Stack on a local development computer. The setup shows how to aggregate local API logs from a development computer, ready for querying. In the next post I demonstrate some example queries.
+I explained how to use Filebeat and Elastic Stack to aggregate logs and how to run a working end-to-end log aggregation solution on a local computer. This setup provides source data to query logs and in the next post I demonstrate some example queries.
 
 ### Next
 

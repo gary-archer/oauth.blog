@@ -32,10 +32,11 @@ The first error case I consider is calling an OAuth secured API without an acces
 }
 ```
 
-The API logs the error along with some context in case the 401 is unexpected. For example, the authorization server could issue a client an access token with an *aud* claim that does not match the API's expected audience. Note that no call stack is logged for 4xx errors:
+The API records error details in its request logs along with some context in case the 401 is unexpected. For example, the authorization server could issue a client an access token with an *aud* claim that does not match the API's expected audience. Note that no call stack is logged for 4xx errors:
 
 ```json
 {
+  "type": "request",
   "id": "39c9350e-b056-38e0-2bed-636a50ead25d",
   "utcTime": "2022-12-22T09:37:51.821Z",
   "apiName": "FinalApi",
@@ -247,10 +248,10 @@ For API 5xx errors, the key difference is that this blog's apps render the extra
 
 ### API 5xx Error Logs
 
-For 5xx errors, this blog's APIs log the error details in the following format. This includes client and service error details. The service details including a call stack and any other useful information that could explain the cause. Some error fields are denormalized, to support error queries:
+For 5xx errors, this blog's APIs record error details in request logs in the following format. This includes client and service error details. The service details including a call stack and any other useful information that could explain the cause. Some error fields are denormalized, to support error queries:
 
 ```json
-
+  "type": "request",
   "id": "efa6217b-7be1-f393-773d-6d8aa9a464b3",
   "utcTime": "2024-09-03T10:08:39.154Z"
   "apiName": "FinalApi",

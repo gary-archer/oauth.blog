@@ -186,10 +186,11 @@ The API uses the same OAuth integration and claims handling techniques as this b
 
 ### Main Feature 2: Production Supportability
 
-The other main objective of the API code sample is JSON logging of API requests, to include useful technical support fields. Logging output writes to a file called *api.log* on a local computer or to Cloudwatch in AWS.
+The other main objective of the API code sample is JSON logging of API requests, to produce both technical support and audit logs. Logging output writes to files called *api-request.log* and *api-audit.log* on a local computer or to Cloudwatch in AWS.
 
 ```json
 {
+  "type": "request",
   "id": "57b5b054-55bc-2515-65f9-cd7f66919788",
   "utcTime": "2022-12-10T12:57:52.451Z",
   "apiName": "FinalApi",
@@ -210,7 +211,7 @@ You could follow the <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</
 
 ### Where Are We?
 
-The Serverless API uses portable code to meet requirements articulated in the <a href='API Architecture Goals'>API Architecture Goals</a> post. Next I explain how I deploy the Serverless lambdas to AWS and expose endpoints using the AWS API gateway.
+The Serverless API uses portable code to meet requirements articulated in the <a href='api-platform-design.mdx'>API Architecture Goals</a> post. Next I explain how I deploy the Serverless lambdas to AWS and expose endpoints using the AWS API gateway.
 
 ### Next
 
