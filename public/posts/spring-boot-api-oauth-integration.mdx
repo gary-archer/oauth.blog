@@ -45,7 +45,7 @@ This blog's Java API customises default behaviour to meet the following requirem
 | Standards Based | I use the same standards-based design patterns for OAuth security across Node.js, .NET and Java APIs. |
 | Best Security | The [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library enables the most up to date and specialised security algorithms when dealing with JWTs. |
 | Extensible Claims | APIs are in full control of the claims principal and are not forced to only use the authorization server's claims. |
-| Supportable | Errors and logs use custom formats and identity-related error details are included in the API's logs. |
+| Supportable | The API outputs request logs and audit logs with good queryability and includes identity related details. |
 
 In Java the OAuth code uses the same main phases as other APIs in this blog:
 
@@ -101,7 +101,7 @@ The API receives an access token with the following payload to restrict the clie
 
 The API processes the JWT access token to receive the main claims. The API then does some more advanced work to look up additional values that I want to treat like claims in the API code. The goal is to set up the API's business logic with a useful claims principal.
 
-### Custom Authorization Filter
+### Custom Authentication Filter
 
 The *SecurityConfiguration* class wires up the API's custom OAuth behaviour. This returns a *SecurityFilterChain* class, which configures a custom authorization filter for a resource server:
 
@@ -110,15 +110,14 @@ The *SecurityConfiguration* class wires up the API's custom OAuth behaviour. Thi
 public SecurityFilterChain filterChain(final HttpSecurity http) throws Exception {
 
     var container = this.context.getBeanFactory();
-    var authorizationFilter = new CustomAuthorizationFilter(container);
+    var authenticationFilter = new CustomAuthenticationFilter(container);
 
     http
-            .securityMatcher(new AntPathRequestMatcher(ResourcePaths.ALL))
+            .securityMatcher(PathPatternRequestMatcher.withDefaults().matcher(ResourcePaths.ALL))
             .authorizeHttpRequests(authorize ->
-                    authorize.dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
-                    .anyRequest().authenticated()
+                    authorize.anyRequest().authenticated()
             )
-            .addFilterBefore(authorizationFilter, AbstractPreAuthenticatedProcessingFilter.class)
+            .addFilterBefore(authenticationFilter, AbstractPreAuthenticatedProcessingFilter.class)
 
             .cors(AbstractHttpConfigurer::disable)
             .csrf(AbstractHttpConfigurer::disable)
@@ -151,7 +150,7 @@ I use a number of small classes to implement the desired behaviour. The main wor
 
 ### JWT Access Token Validation
 
-The *AccessTokenValidator* object wraps calls to the *jose4j* library and also makes some additional checks which include checking for the API's required scope:
+The *AccessTokenValidator* object wraps calls to the *jose4j* library and returns the claims in the JWT access token:
 
 ```java
 public JwtClaims execute(final String accessToken) {
@@ -170,18 +169,7 @@ public JwtClaims execute(final String accessToken) {
         }
 
         var jwtConsumer = builder.build();
-        var claims = jwtConsumer.processToClaims(accessToken);
-
-        var scopes = ClaimsReader.getStringClaim(claims, "scope").split(" ");
-        var foundScope = Arrays.stream(scopes).filter(s -> s.contains(this.configuration.getScope())).findFirst();
-        if (!foundScope.isPresent()) {
-            throw ErrorFactory.createClientError(
-                    HttpStatus.FORBIDDEN,
-                    ErrorCodes.INSUFFICIENT_SCOPE,
-                    "The token does not contain sufficient scope for this API");
-        }
-
-        return claims;
+        return jwtConsumer.processToClaims(accessToken);
 
     } catch (InvalidJwtException ex) {
         throw ErrorUtils.fromAccessTokenValidationError(ex, this.configuration.getJwksEndpoint());
@@ -189,7 +177,7 @@ public JwtClaims execute(final String accessToken) {
 }
 ```
 
-There are a number of responsibilities that the library implements for us:
+There are a number of responsibilities that the security library implements:
 
 | Responsibility | Description |
 | -------------- | ----------- |
@@ -251,7 +239,7 @@ private boolean isUserAuthorizedForCompany(final Company company) {
 }
 ```
 
-### OAuth Middleware
+### OAuth Filter
 
 An *OAuthFilter* class encapsulates the overall OAuth work and deals with injecting claims into the claims principal when needed. In Spring it is also possible to add extra claims in a custom [JwtAuthenticationConverter](https://www.baeldung.com/spring-security-map-authorities-jwt#using_custom_jwtauthenticationconverter).
 
@@ -318,12 +306,13 @@ The client can then take various types of action based on the HTTP status and er
 
 ![500 error display](../images/360/500-error-display.jpg?v=20241201)
 
-### Identity and API Logs
+### API Structured Logs
 
-API logs include details about OAuth errors, which helps when there is a configuration problem. For HTTP status 4xx errors the logged error content is concise, whereas 5xx errors contain further details. Any type of error entry should explain the cause. The following example shows a 401 error due to a rejected token, which includes context that the API does not return to the client:
+API request logs record error details for all failed requests, to help with problem resolution. For HTTP status 4xx errors the logged error content is concise, whereas 5xx errors contain further details. Any type of error entry should explain the cause. The following example shows a 401 error due to a rejected token, which includes context that the API does not return to the client:
 
 ```json
 {
+  "type": "request",
   "id": "b3629a0d-fc73-46b7-a3ca-6115963e8e43",
   "utcTime": "2022-12-10T13:17:28",
   "apiName": "FinalApi",
@@ -333,8 +322,8 @@ API logs include details about OAuth errors, which helps when there is a configu
   "path": "/investments/companies/2/transactions",
   "resourceId": "2",
   "clientName": "FinalSPA",
-  "statusCode": 200,
-  "errorCode": "invalid_token",
+  "statusCode": 401,
+  "errorCode": "unauthorized",
   "millisecondsTaken": 43,
   "correlationId": "b091ec8e-a1d0-dbf9-f764-012cc730c925",
   "sessionId": "004d32bc-9755-b50e-6315-5be09f277ebe",
@@ -349,7 +338,7 @@ API logs include details about OAuth errors, which helps when there is a configu
 }
 ```
 
-After the API validates a JWT, it writes the received subject claim, most commonly a UUID, to a *userId* field in the request's API log entry. This can potentially help to track users in benign ways, for technical support purposes. Doing so requires care and I say more about secure logs in the <a href='effective-api-logging.mdx'>Effective API Logging</a> post.
+The API also writes identity details to logs after successful JWT validation. The received subject claim, most commonly a UUID, is recorded to the *userId* field of API request logs. Audit logs also include fields for *isAuthenticated*, *isAuthorized*, *scope* and *claims*, to provide visibility of security activity.
 
 ### Where Are We?
 

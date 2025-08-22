@@ -103,7 +103,7 @@ The startup logic also creates middleware objects for cross cutting concerns, an
 ```typescript
 const childContainerMiddleware = new ChildContainerMiddleware(this.parentContainer);
 const loggerMiddleware = new LoggerMiddleware(this.loggerFactory, routesMetadata);
-const authorizerMiddleware = new AuthorizerMiddleware();
+const authenticationMiddleware = new AuthenticationMiddleware();
 const customHeaderMiddleware = new CustomHeaderMiddleware(this.configuration.logging.apiName);
 const exceptionHandler = new UnhandledExceptionHandler(this.configuration.logging.apiName);
 ```
@@ -114,7 +114,7 @@ I summarise the role of each of the API's middleware objects in the following ta
 | ---------------- | -------------- |
 | ChildContainerMiddleware | Create a child container per request, to store request scoped objects. |
 | LoggerMiddleware | Create the log entry for the API request, then log request and response details. |
-| AuthorizerMiddleware | OAuth processing, creating the claims principal for the API request, and adding identity details to logs. |
+| AuthenticationMiddleware | Validate access tokens, enforce required scopes, create the claims principal and log identity details. |
 | CustomHeaderMiddleware | Enable advanced client side testing of APIs via custom headers. |
 | UnhandledExceptionHandler | A central place to handle exceptions, add error details to logs, and produce the client error response. |
 
@@ -213,12 +213,13 @@ public execute(request: Request, response: Response, next: NextFunction): void {
     const container = response.locals.container as Container;
     container.bind<LogEntry>(BASETYPES.LogEntry).toConstantValue(logEntry);
 
-    const routeMetadata = this.routeMetadataHandler.getOperationRouteInfo(request);
-    logEntry.start(request, routeMetadata);
+    logEntry.start(request, this.routeLogInfoHandler);
 
     response.on('finish', () => {
+
         logEntry.end(response);
-        logEntry.write();
+        this.loggerFactory.getRequestLogger()?.info(logEntry.getRequestLog());
+        this.loggerFactory.getAuditLogger()?.info(logEntry.getAuditLog());
     });
 
     next();
@@ -257,12 +258,12 @@ Logging objects write to a log file and, if you follow the <a href='log-aggregat
 ![log queries](../images/310/log-queries.jpg)
 
 
-### Authorizer Middleware
+### Authentication Middleware
 
-The API uses the same OAuth integration and claims handling techniques as this blog's second code sample, explained earlier in the <a href='updated-api-coding-key-points.mdx'>Updated API Code Details</a> blog post. The middleware also adds the claims principal to the child container to make it resolvable, and adds identity data to logs:
+The API uses an OAuth filter class to implement access token validation and create a claims principal, in a similar way to the earlier <a href='updated-api-coding-key-points.mdx'>Updated API Code Details</a> blog post. The authentication middleware also adds identity data to logs, adds the claims principal to the child container to make it resolvable, and enforces required scopes:
 
 ```typescript
-export class AuthorizerMiddleware {
+export class AuthenticationMiddleware {
 
     public async execute(request: Request, response: Response, next: NextFunction): Promise<void> {
 
@@ -271,9 +272,26 @@ export class AuthorizerMiddleware {
         const logEntry = container.get<LogEntryImpl>(BASETYPES.LogEntry);
 
         const claimsPrincipal = await filter.execute(request, response);
-        logEntry.setIdentity(ClaimsReader.getStringClaim(claimsPrincipal.getJwt(), 'sub'));
+
+        const userId = ClaimsReader.getStringClaim(claimsPrincipal.getJwt(), 'sub');
+        const scope = ClaimsReader.getStringClaim(claimsPrincipal.getJwt(), 'scope');
+        const loggedClaims = {
+            managerId: ClaimsReader.getStringClaim(claimsPrincipal.getJwt(), CustomClaimNames.managerId),
+            role: ClaimsReader.getStringClaim(claimsPrincipal.getJwt(), CustomClaimNames.role),
+        };
+        logEntry.setIdentity(userId, scope.split(' '), loggedClaims);
 
         container.bind<ClaimsPrincipal>(BASETYPES.ClaimsPrincipal).toConstantValue(claimsPrincipal);
+
+        const scopes = ClaimsReader.getStringClaim(claimsPrincipal.getJwt(), 'scope').split(' ');
+        if (scopes.indexOf(this.requiredScope) === -1) {
+
+            throw ErrorFactory.createClientError(
+                403,
+                BaseErrorCodes.insufficientScope,
+                'The token does not contain sufficient scope for this API');
+        }
+
         next();
     }
 }
@@ -310,10 +328,11 @@ export class UnhandledExceptionHandler {
 }
 ```
 
-The art of good error handling is to design good error objects that contain useful fields to both callers of the API and technical support staff. Development error output has a productive and readable format that matches the rendering of production logs. Each log entry includes context like the current user, session, API and operation.
+The art of good error handling is to design good error objects that contain useful fields to both callers of the API and technical support staff. Development error output has a productive and readable format that matches the rendering of production logs. Each request log entry includes context like the current user, session, API and operation.
 
 ```json
 {
+  "type": "request",
   "id": "2b9de255-808b-10f9-cb01-79d76a851b27",
   "utcTime": "2022-12-10T13:02:46.234Z",
   "apiName": "FinalApi",
@@ -329,16 +348,6 @@ The art of good error handling is to design good error objects that contain usef
   "millisecondsTaken": 10,
   "correlationId": "cde4cfed-c6d2-bd28-0add-fc19a97c9fb9",
   "sessionId": "89ab6a9c-12ca-35be-584b-71bb84ee1042",
-  "performance": {
-    "name": "total",
-    "millisecondsTaken": 10,
-    "children": [
-      {
-        "name": "validateToken",
-        "millisecondsTaken": 1
-      }
-    ]
-  },
   "errorData": {
     "statusCode": 500,
     "clientError": {
