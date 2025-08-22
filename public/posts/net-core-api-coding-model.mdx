@@ -151,7 +151,7 @@ private void RegisterBaseDependencies()
 }
 ```
 
-The *LogEntry* is then injected into singleton middleware objects, which contribute data to logs at various points during the request lifecycle:
+The *LogEntry* is then injected into singleton objects like the *LoggerMiddleware*, which contribute data to logs at various points during the request lifecycle:
 
 ```csharp
 public async Task Invoke(HttpContext context, ILogEntry logEntryParam)
@@ -162,7 +162,10 @@ public async Task Invoke(HttpContext context, ILogEntry logEntryParam)
     await this.next(context);
 
     logEntry.End(context.Request, context.Response);
-    logEntry.Write();
+    
+    var loggerFactory = (ILoggerFactory)context.RequestServices.GetService(typeof(ILoggerFactory));
+    loggerFactory.GetRequestLogger()?.Info(logEntry.GetRequestLog());
+    loggerFactory.GetAuditLogger()?.Info(logEntry.GetAuditLog());
 }
 ```
 
@@ -187,11 +190,9 @@ public class CompanyRepository
 }
 ```
 
-Logging objects write to a JSON log file and, if you follow the <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</a>, logs will automatically flow to Elasticsearch:
+Logging objects write to a JSON log file and, if you follow the <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</a>, request logs and audit logs will automatically flow to Elasticsearch:
 
 ![log queries](../images/340/log-queries.jpg)
-
-The sample API uses fixed appenders and fixed JSON output formats. In a real API you may instead prefer to use [log4net XML configuration](https://logging.apache.org/log4net/release/manual/configuration.html) to declaratively control logging output.
 
 ### Error Handling Implementation
 
@@ -219,10 +220,11 @@ public ClientError HandleException(Exception exception, HttpContext context)
 }
 ```
 
-The art of good error handling is to design good error objects that are useful to both callers of the API and technical support staff. Error output has a *productive and readable* format, and production logs are rendered as follows, including context such as the user, session, API and operation:
+The art of good error handling is to design good error objects that contain useful fields to both callers of the API and technical support staff. Development error output has a productive and readable format that matches the rendering of production logs. Each request log entry includes context like the current user, session, API and operation.
 
 ```json
 {
+  "type": "request",
   "id": "0ff96924-1c02-469a-a5de-a1a6b7911ab2",
   "utcTime": "2022-12-10T13:25:40",
   "apiName": "FinalApi",

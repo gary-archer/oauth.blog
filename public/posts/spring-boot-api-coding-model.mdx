@@ -221,15 +221,17 @@ public class LogEntryInjector {
 }
 ```
 
-The *LogEntry* is then accessed by interceptor objects which contribute data to logs at various points during the request lifecycle:
+The *LogEntry* is then accessed by interceptor objects which contribute data to request logs and audit logs at various points during the request lifecycle:
 
 ```java
 public final class LoggingInterceptor implements HandlerInterceptor {
 
     private final BeanFactory container;
+    private final LoggerFactory loggerFactory;
 
-    public LoggingInterceptor(final BeanFactory container) {
+    public LoggingInterceptor(final BeanFactory container, final LoggerFactory loggerFactory) {
         this.container = container;
+        this.loggerFactory = loggerFactory;
     }
 
     @Override
@@ -238,8 +240,59 @@ public final class LoggingInterceptor implements HandlerInterceptor {
             final @NonNull HttpServletResponse response,
             final @NonNull Object handler) {
 
-        var logEntry = this.container.getBean(LogEntryImpl.class);
-        logEntry.start(request);
+        try {
+
+            if (request.getDispatcherType().equals(DispatcherType.REQUEST)) {
+
+                var logEntry = this.container.getBean(LogEntryImpl.class);
+                logEntry.start(request);
+
+                @SuppressWarnings("unchecked")
+                var pathVariables = (Map<String, String>)
+                        request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+                logEntry.setResourceId(pathVariables);
+            }
+
+        } catch (Exception filterException) {
+
+            var exceptionHandler = this.container.getBean(UnhandledExceptionHandler.class);
+            exceptionHandler.handleFilterException(request, response, filterException);
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public void afterCompletion(
+            final @NonNull HttpServletRequest request,
+            final @NonNull HttpServletResponse response,
+            final @NonNull Object handler,
+            final Exception ex) {
+
+        try {
+
+            var logEntry = this.container.getBean(LogEntryImpl.class);
+            var handlerMappings = this.container.getBean(RequestMappingHandlerMapping.class);
+            logEntry.end(request, response, handlerMappings);
+
+            var requestLogger = loggerFactory.getRequestLogger();
+            if (requestLogger != null) {
+                requestLogger.info("info", logEntry.getRequestLog());
+            }
+
+            var auditLogger = loggerFactory.getAuditLogger();
+            if (auditLogger != null) {
+                auditLogger.info("info", logEntry.getAuditLog());
+            }
+
+            CustomRequestScope.removeAll();
+
+        } catch (Exception filterException) {
+
+            var exceptionHandler = this.container.getBean(UnhandledExceptionHandler.class);
+            exceptionHandler.handleFilterException(request, response, filterException);
+        }
     }
 }
 ```
@@ -270,11 +323,9 @@ public class CompanyRepository {
 }
 ```
 
-The logging object write to a log file and, if you follow this blog's <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</a>, logs will automatically flow to Elasticsearch:
+Logging objects write to a JSON log file and, if you follow the <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</a>, request logs and audit logs will automatically flow to Elasticsearch:
 
 ![log queries](../images/370/log-queries.jpg)
-
-The sample API uses fixed appenders and fixed JSON output formats. In a real API you may instead prefer to use [logback XML configuration](https://logback.qos.ch/manual/configuration.html) to declaratively control logging output.
 
 ### Error Handling Implementation
 
@@ -305,10 +356,11 @@ public final class UnhandledExceptionHandler {
 }
 ```
 
-The art of good error handling is to design good error objects that are useful to both callers of the API and technical support staff. Error output has a *productive and readable* format, and production logs are rendered as follows, including context such as the user, session, API and operation:
+The art of good error handling is to design good error objects that contain useful fields to both callers of the API and technical support staff. Development error output has a productive and readable format that matches the rendering of production logs. Each request log entry includes context like the current user, session, API and operation.
 
 ```json
 {
+  "type": "request",
   "id" : "2bcf50e1-8a11-4c3e-ae59-c3265693de00",
   "utcTime" : "2022-12-10T18:38:14.233698634Z",
   "apiName" : "FinalApi",
