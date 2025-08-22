@@ -156,33 +156,59 @@ export class CompanyService {
 
 The API uses the same OAuth integration and claims handling techniques as this blog's second code sample, explained earlier in the <a href='updated-api-coding-key-points.mdx'>Updated API Code Details</a> blog post.
 
-### Main Feature 2: Production Supportability
+### Main Feature 2: Request Logs and Audit Logs
 
-The other main objective of the API code sample is JSON logging of API requests, to include useful technical support fields. Logging console output looks like this on a development computer:
+The other main objective of the API code sample is JSON logging of API requests. Every request to the API writes a request log entry for troubleshooting purposes and an audit log entry to record the security event. The following examples show the format of log output.
 
 ```json
 {
-  "id": "57b5b054-55bc-2515-65f9-cd7f66919788",
-  "utcTime": "2022-12-10T12:57:52.451Z",
+  "type": "request",
+  "id": "c4939e2c-9f71-4f4b-bbca-dda287b48385",
+  "utcTime": "2022-07-24T08:41:05.069Z",
   "apiName": "FinalApi",
-  "operationName": "getUserInfo",
+  "operationName": "getCompanyTransactions",
   "hostName": "UBUNTU",
   "method": "GET",
-  "path": "/investments/userinfo",
-  "clientName": "FinalSPA",
+  "path": "/investments/companies/2/transactions",
+  "resourceId": "2",
+  "clientName": "LoadTest",
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 200,
-  "millisecondsTaken": 372,
-  "correlationId": "8debe475-41bb-6c9f-7fc6-7395d79a4b67",
-  "sessionId": "f54f1734-aeba-d9a5-550c-e8c74ad3fbf9"
+  "millisecondsTaken": 7,
+  "correlationId": "3e4ac756-11c7-e60f-c564-ad4f203d5742",
+  "sessionId": "a601559a-0c90-c899-8099-8a9f63a30be8"
+}
+{
+  "type": "audit",
+  "id": "c4939e2c-9f71-4f4b-bbca-dda287b48385",
+  "utcTime": "2022-07-24T08:41:05.069Z",
+  "apiName": "FinalApi",
+  "operationName": "getCompanyTransactions",
+  "hostName": "UBUNTU",
+  "method": "GET",
+  "path": "/investments/companies/2/transactions",
+  "resourceId": "2",
+  "clientName": "LoadTest",
+  "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "statusCode": 200,
+  "millisecondsTaken": 7,
+  "correlationId": "3e4ac756-11c7-e60f-c564-ad4f203d5742",
+  "sessionId": "a601559a-0c90-c899-8099-8a9f63a30be8",
+  "isAuthenticated": true,
+  "isAuthorized": true,
+  "scope": [
+    "openid",
+    "profile",
+    "investments"
+  ],
+  "claims": {
+    "managerId": "10345",
+    "role": "user"
+  }
 }
 ```
 
-Meanwhile, the API also writes text files to its *logs* folder in a bare JSON format, ready for log shipping:
-
-![bare logs](../images/300/bare-logs.jpg?v=20250315)
-
-Optionally, you can follow the <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</a> to run a Docker-based deployment of the Elastic Stack. You can then run <a href='api-technical-support-analysis.mdx'>Technical Support Queries</a> against the API's logs. This would be useful in a production system, to make sense of large volumes of API requests.
+The API also writes text files to its *logs* folder in a bare JSON format, ready for log shipping. You can follow the <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</a> to run a Docker-based deployment of the Elastic Stack. You can then run <a href='api-technical-support-analysis.mdx'>Technical Support Queries</a> against the API's logs. This would be useful in a production system, to make sense of large volumes of API requests.
 
 ### Cloud Native Deployment
 
@@ -196,7 +222,7 @@ The API is cloud-native and includes some Docker and Kubernetes deployment resou
 
 ### Where Are We?
 
-I summarised the key productivity behaviours of this blog's final APIs. This starts with modern code setup and a clean separation of concerns that sets up business logic for future growth. Next, APIs have a unified security model that works the same for any type of API client. Finally, APIs have an early focus on reliability.
+I summarised the key productivity behaviours of this blog's final APIs. This starts with modern code setup and a clean separation of concerns that sets up business logic for future growth. Next, APIs have a unified security model that works the same for any type of API client. Finally, APIs have an early focus on reliability and measurability.
 
 ### Next
 
