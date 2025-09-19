@@ -31,9 +31,9 @@ Install OpenSSL 3+ so that you can create development certificates and run the A
 
 ### Prerequisite 3: Install Java
 
-I use the latest long term support version of Java that Spring Boot supports, which is [Java 21](https://www.azul.com/downloads/?version=java-21-lts) at the time of writing. I use the open source Azul Java SDK and create a *JAVA_HOME* environment variable at a location such as */usr/lib/jvm/zulu-21-amd64*.
+I use the latest long term support version of Java that Spring Boot supports, which is [Java 25](https://www.azul.com/downloads/?version=java-25-lts) at the time of writing. I use the open source Azul Java SDK and create a *JAVA_HOME* environment variable at a location such as */usr/lib/jvm/zulu-25-amd64*.
 
-![java](../images/350/java.jpg)
+![java](../images/350/java.jpg?v=20250919)
 
 ### Prerequisite 4: Install Docker
 
@@ -43,7 +43,7 @@ To run API tests, or the full SPA and API solution, you use Docker utility compo
 
 I use the free community edition of [Intellj Idea](https://www.jetbrains.com/idea/download) for Java based development. The project structure must be uploaded to use the downloaded JDK. Also install the [Lombok plugin](https://plugins.jetbrains.com/plugin/6317-lombok) and optionally the [Checkstyle plugin](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea).
 
-![java-ide](../images/350/java-ide.jpg)
+![java-ide](../images/350/java-ide.jpg?v=20250919)
 
 When I load the project I wait for the gradle sync to complete. Then I run the *FinalApiApplication.java* source file to start listening for requests over HTTPS.
 
