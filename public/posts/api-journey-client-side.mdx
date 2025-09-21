@@ -165,6 +165,48 @@ public async callApi(options?: ViewLoadOptions): Promise<void> {
 }
 ```
 
+### API Client
+
+The lower level API client deals with translating HTTP requests and responses to objects. It also uses an algorithm of the following form to manage access tokens, token refresh and session expiry:
+
+```typescript
+private async getDataFromApiWithTokenRefresh(url: string, options: FetchOptions): Promise<any> {
+
+    if (!this.oauthClient.isLoggedIn()) {
+        throw ErrorFactory.fromLoginRequired();
+    }
+
+    try {
+
+        return await this.callApiWithCredential('GET', url, options);
+
+    } catch (e1: any) {
+
+        const error1 = ErrorFactory.fromHttpError(e1, url, 'API');
+        if (error1.getStatusCode() !== 401) {
+            throw error1;
+        }
+
+        await this.oauthClient.synchronizedRefresh();
+
+        try {
+
+            return await this.callApiWithCredential('GET', url, options);
+
+        }  catch (e2: any) {
+
+            const error2 = ErrorFactory.fromHttpError(e2, url, 'API');
+            if (error2.getStatusCode() !== 401) {
+                throw error2;
+            }
+
+            this.oauthClient.clearLoginState();
+            throw ErrorFactory.fromLoginRequired();
+        }
+    }
+}
+```    
+
 ### View Recreation
 
 In modern frontend stacks like React, Android Jetpack Compose or Swift UI, views get recreated many times, but you create view models and data only once. To enforce this, React strict mode immediately re-creates each view while any async code in the *useEffect* hook executes. The idea is to force developers to write efficient clients that only send necessary APIs requests. 
@@ -181,11 +223,43 @@ export class FetchCache {
 
 When frontends first make API requests, they do not have an API message credential so cannot call APIs. The fetch client throws a *login_required* error which the fetch cache stores. Multiple views could throw this error at the same time so a *ViewModelCoordinator* object waits for all views to try to load, then inspects the fetch cache. When required, it publishes an event that the main view subscribes to. The main view's handler then presents a login required view to the user.
 
+```javascript
+private handleAllViewsLoaded(): void {
+
+    if (this.loadedCount === this.loadingCount) {
+
+        this.loadingCount = 0;
+        this.loadedCount = 0;
+
+        const errors = this.getLoadErrors();
+        const loginRequired = errors.find((e) => e.getErrorCode() === ErrorCodes.loginRequired);
+        if (loginRequired) {
+            this.resetState();
+            this.eventBus.emit(EventNames.LoginRequired, new LoginRequiredEvent());
+            return;
+        }
+    }
+}
+```
+
 ### Running a Code Flow
 
 To get a correct access token for the user, the client must run an OpenID Connect authorization code flow, to initiate user authentication. To do the work, I aim to plug in a respected standards-based third-party library, or backend for frontend in the case of the SPA.
 
 I wrap the use of libraries in an *OAuthClient* interface that is useful to the rest of the application's code. In the event of library limitations or problems you could swap out the implementation without impacting the rest of the app. If required, it is fairly easy to write your own logic that implements a code flow and other lifecycle operations.
+
+```javascript
+export interface OAuthClient {
+    isLoggedIn(): boolean;
+    login(currentLocation: string): Promise<void>;
+    handlePageLoad(): Promise<string | null>;
+    logout(): Promise<void>;
+    clearLoginState(): void;
+    synchronizedRefresh(): Promise<void>
+    expireAccessToken(): Promise<void>;
+    expireRefreshToken(): Promise<void>;
+}
+```
 
 ### Login User Experience
 
