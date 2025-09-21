@@ -4,14 +4,14 @@ Previously I summarised the use of <a href='id-tokens.mdx'>ID Tokens</a> in appl
 
 ### New Features
 
-The updated SPA and API code sample has the following additional features:
+The updated SPA and API code sample has the following additional behaviours, to implement the OpenID Connect features that the SPA needs to run a complete application lifecycle:
 
 | Feature | Description |
 | ------- | ----------- |
 | Claims Based Authorization | The API provides a more complete and future-proof claims-based authorization solution. |
 | In-Memory Token Storage | The SPA now stores OAuth tokens only in-memory, to improve the browser security a little. |
 | Silent Token Renewal | The SPA now supports silent access token renewal using the SSO cookie. |
-| Multi Tab Browsing | The token renewal solution enables multi tab-browsing without noticeable user impact. |
+| Multi Tab Browsing | The token renewal solution should enable multi tab-browsing without noticeable user impact. |
 | Logout | The SPA implements a basic form of logout, including logout across multiple browser tabs. |
 | Real-World URLs | Both the SPA and API run on a development computer using real-world HTTPS URLs. |
 
@@ -59,7 +59,7 @@ The SPA now uses more complete OAuth settings and HTTPS URLs:
         "authority":              "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
         "clientId":               "hje94a2jj3lgkobkh57ikenhh",
         "redirectUri":            "https://www.authsamples-dev.com/spa",
-        "postLogoutRedirectUri":  "https://www.authsamples-dev.com/spa/loggedout.html",
+        "postLogoutRedirectUri":  "https://www.authsamples-dev.com/spa/loggedout",
         "scope":                  "openid profile email https://api.authsamples.com/api/investments",
         "customLogoutEndpoint":   "https://login.authsamples.com/logout"
     }
@@ -95,7 +95,7 @@ The API configuration is similarly updated:
 
 The SPA now requires an updated client registration. In AWS Cognito, this blog's default authorization server, there are new settings for *Custom Scope* and *Post Logout Redirect URI*:
 
-![spa client](../images/170/spa-client.jpg)
+![spa client](../images/170/spa-client.jpg?v=20250921)
 
 ### Step 5. Configure DNS and SSL
 
@@ -245,7 +245,7 @@ The updated code sample implements the traditional SPA token renewal flow, where
 
 ![iframe renewal request](../images/170/iframe-renewal-request.jpg?v=20240813)
 
-Although the SPA's code implements the renewal flow correctly, every iframe token renewal fails, so the user experiences an OpenID Connect redirect whenever the access token expires or the user refreshes the page. With third-party cookie deprecation, that is the expected future behavior, and I say more about it in the <a href='user-sessions-and-token-renewal.mdx'>Iframe Access Token Renewal</a> post.
+Although the SPA's code implements the renewal flow correctly, every iframe token renewal fails, since AWS Cognito cookies do not support this flow. The user experiences an OpenID Connect redirect whenever the access token expires or the user refreshes the page. With third-party cookie deprecation, that is the expected future behavior, and I say more about it in the <a href='user-sessions-and-token-renewal.mdx'>Iframe Access Token Renewal</a> post.
 
 ### 13. Logout
 

@@ -17,9 +17,9 @@ The SPA uses only a handful of external dependencies, expressed in its *package.
 ```json
 {
     "dependencies": {
-        "axios": "^1.9.0",
+        "axios": "^1.12.2",
         "mustache": "^4.2.0",
-        "oidc-client-ts": "^3.2.0"
+        "oidc-client-ts": "^3.3.0"
     }
 }
 ```
@@ -122,7 +122,7 @@ The SPA configuration contains the following values, to enable the SPA to connec
 }
 ```
 
-The *OAuthClient* instance creates a *UserManager* object from the oidc-client-ts library, which does the main OAuth work:
+The *OAuthClient* instance creates a *UserManager* object from the oidc-client-ts library, which does the main OAuth work. I use session storage of tokens for the first code sample, so that tokens survive page reloads but get removed once the user closes the browser tab:
 
 ```typescript
 export class OAuthClient {
@@ -137,6 +137,8 @@ export class OAuthClient {
             redirect_uri: config.redirectUri,
             scope: config.scope,
             response_type: 'code',
+            userStore: new WebStorageStateStore({ store: sessionStorage }),
+            stateStore: new WebStorageStateStore({ store: sessionStorage }),
             loadUserInfo: true,
             automaticSilentRenew: false,
             monitorSession: false,
@@ -156,21 +158,29 @@ public async loadView(): Promise<void> {
 
     this.errorView.clear();
 
-    const transactionsCompany = this.getTransactionsViewId();
-    if (transactionsCompany) {
+    if (this.isInLoggedOutView()) {
 
-        const view = new TransactionsView(this.apiClient, transactionsCompany);
+        const view = new LoginRequiredView();
         await view.load();
 
     } else {
 
-        const view = new CompaniesView(this.apiClient);
-        await view.load();
+        const transactionsCompany = this.getTransactionsViewId();
+        if (transactionsCompany) {
+
+            const view = new TransactionsView(this.apiClient, transactionsCompany);
+            await view.load();
+
+        } else {
+
+            const view = new CompaniesView(this.apiClient);
+            await view.load();
+        }
     }
 }
 ```
 
-This results in the view executing and attempting to call an API to get its data:
+By default, the initial companies view executes and attempts to call an API to get its data:
 
 ```typescript
 public async load(): Promise<void> {
@@ -188,7 +198,7 @@ public async load(): Promise<void> {
 }
 ```
 
-The *ApiClient* asks the *OAuthClient* for an access token so that it can make the API request. If it cannot get one, the *ApiClient* triggers a login redirect. The in-flight API call is also terminated, with a *login_required* error. The SPA's error handling code does not render errors with this error code.
+The *ApiClient* asks the *OAuthClient* for an access token so that it can make an API request. If it cannot get one, the *ApiClient* throws a *login_required* error to terminate the API request. The SPA's error view handles this error by redirecting the user to the login required view.
 
 ```typescript
 private async callApi(path: string, method: Method, dataToSend?: any): Promise<any> {
@@ -196,21 +206,18 @@ private async callApi(path: string, method: Method, dataToSend?: any): Promise<a
     const url = `${this.apiBaseUrl}${path}`;
     let token = await this.oauthClient.getAccessToken();
     if (!token) {
-        await this.oauthClient.startLogin(null);
         throw ErrorHandler.getFromLoginRequired();
     }
 }
 ```
 
-The initial SPA only sends a single API request at a time. This blog's final UI code samples will show a way to trigger login redirects when the frontend makes concurrent requests to APIs.
-
-The *OAuthClient* object first stores the SPA's location in session storage and then performs a full screen redirect. In this blog, I only use full-screen redirects, since that is the most standard way to implement logins with fewest user experience issues.
+Before running a login redirect, the *OAuthClient* stores the SPA's current location in session storage and then issues a full screen redirect. In this blog, I only use full-screen redirects, since that is the most standard way to implement logins with fewest user experience issues.
 
 ```typescript
-private async startLogin(): Promise<void> {
+private async startLogin(currentLocation: string): Promise<void> {
 
     const data = {
-        hash: location.hash.length > 0 ? location.hash : '#',
+        hash: currentLocation || '#',
     };
 
     try {
@@ -220,6 +227,9 @@ private async startLogin(): Promise<void> {
     }
 }
 ```
+
+The initial SPA only sends a single API request at a time. This blog's final UI code samples will show a way to trigger login redirects when the frontend makes concurrent requests to APIs.
+
 ### Handling Login Responses
 
 When the login completes, the authorization server returns a response to the SPA's redirect URI. This causes the SPA's *index.html* to reload. The SPA must handle the login response as part of its application startup. If the SPA starts normally or as part of a page reload, *handleLoginResponse* is a no-op, but if it is an authorization response the current URL will have one of the following forms:
@@ -227,7 +237,7 @@ When the login completes, the authorization server returns a response to the SPA
 - *https://localhost/spa?code=xxx&state=yyy*
 - *https://localhost/spa?error=invalid_request&state=yyy*
 
-An SPA can either use an explicit callback path like *https://localhost/spa/callback*, or it can inspect its query parameters, as in the code sample. Either way, the SPA detects an authorization response and asks the oidc-client-ts library to process it. The code sample then performs these actions:
+An SPA can either use an explicit callback path like *https://localhost/spa/callback*, or it can inspect its query parameters, as in the code sample. Either way, the SPA detects an authorization response and asks the oidc-client-ts library to process it. The response handling code then performs the following actions:
 
 - Restores the location and state that was saved before the redirect.
 - Removes the authorization response's query parameters from the browser history.
@@ -249,7 +259,6 @@ public async handleLoginResponse(): Promise<void> {
 
                     const user = await this.userManager.signinRedirectCallback();
                     redirectLocation = user.state.hash;
-                    this.loginTime = new Date().getTime();
 
                 } catch (e: any) {
 
@@ -392,7 +401,6 @@ private async callApi(path: string, method: Method, dataToSend?: any): Promise<a
 
     const token = await this.oauthClient.getAccessToken();
     if (!token) {
-        await this.oauthClient.startLogin(null);
         throw ErrorHandler.getFromLoginRequired();
     }
 
@@ -406,65 +414,13 @@ private async callApi(path: string, method: Method, dataToSend?: any): Promise<a
         if (error.statusCode !== 401)
             throw e;
 
-        await this.oauthClient.startLogin(error);
+        await this.oauthClient.clearLoginState();
         throw ErrorHandler.getFromLoginRequired();
     }
 }
 ```
 
-The SPA does not try to anticipate API 401 responses based on expiry times, since 401s can occur for multiple reasons. Example events that might cause 401s in some deployments are token revocation, cryptographic key renewal or load-balancing failovers.
-
-### Preventing Redirect loops
-
-When developing an OAuth client you should ensure that your app is not vulnerable to redirect loops, where there is a cycle of redirecting the user, getting an access token, then API calls failing with a 401 response. You can rehearse this condition if you set the issuer to an incorrect value in the API's configuration:
-
-```json
-{
-    "api": {
-        "port": 80,
-        "trustedOrigins": [
-            "http://localhost"
-        ],
-        "useProxy": false,
-        "proxyUrl": "http://127.0.0.1:8888"
-    },
-    "oauth": {
-        "jwksEndpoint": "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json",
-        "issuer":       "xxx",
-        "audience":     "",
-        "algorithm":    "RS256"
-    }
-}
-```
-
-The initial SPA prevents redirect loops with the following time-based check during the *startLogin* request. I show a better solution based on token refresh in future code samples.
-
-```typescript
-public async startLogin(api401Error: UIError | null): Promise<void> {
-
-    try {
-
-        const data = {
-            hash: location.hash.length > 0 ? location.hash : '#',
-        };
-
-        if (api401Error && this.loginTime) {
-
-            const currentTime = new Date().getTime();
-            const millisecondsSinceLogin = currentTime - this.loginTime;
-            if (millisecondsSinceLogin < 250) {
-                throw api401Error;
-            }
-        }
-
-        await this.userManager.signinRedirect({state: data});
-
-    } catch (e: any) {
-
-        throw ErrorHandler.getFromLoginOperation(e, ErrorCodes.loginRequestFailed);
-    }
-}
-```
+The SPA does not try to anticipate API 401 responses based on expiry times, since 401s can occur for multiple reasons. Example events that might cause 401s in some deployments are token revocation or load-balancing failovers.
 
 ### SPA Error Handling
 

@@ -113,7 +113,7 @@ Next, I created a client secret which the API uses when it connects to Microsoft
 
 Under *Applications / App Registrations*, I selected *New Registration* and added a client called *BasicSPA*, selecting the *Single Page Application* platform type.
 
-![spa client](../images/190/spa-client.jpg?v=20240816)
+![spa client](../images/190/spa-client.jpg?v=20250921)
 
 Next, I navigated to *API Permissions*, selected *Add a permission / My APIs* and chose the *investments* scope. Again I selected the *Grant Admin Consent for Default Directory* option:
 
@@ -182,7 +182,7 @@ For the SPA update both the *Tenant ID* and the SPA's *Client ID* to your own va
         "authority":              "https://login.microsoftonline.com/7f071fbc-8bf2-4e61-bb48-dabd8e2f5b5a/v2.0",
         "clientId":               "e9a29a01-21b4-4533-bae6-438141ebc05c",
         "redirectUri":            "https://www.authsamples-dev.com/spa/",
-        "postLogoutRedirectUri":  "https://www.authsamples-dev.com/spa/loggedout.html",
+        "postLogoutRedirectUri":  "https://www.authsamples-dev.com/spa#loggedout",
         "scope":                  "openid api://552b475c-471d-43a1-9dfe-f6b895931110/investments"
     }
 }
@@ -194,7 +194,7 @@ For the API configuration, replace the *Tenant ID* with your own value. Also upd
 
 ```json
 {
-    "api": {
+    "api": {s tech
         "port": 443,
         "sslCertificateFileName": "./certs/authsamples-dev.ssl.p12",
         "sslCertificatePassword": "Password1",

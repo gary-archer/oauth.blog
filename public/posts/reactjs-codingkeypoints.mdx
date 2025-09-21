@@ -106,12 +106,12 @@ The SPA no longer uses a JavaScript security library to implement OpenID Connect
 
 ```json
 "dependencies": {
-  "axios": "^1.9.0",
+  "axios": "^1.12.2",
   "js-event-bus": "^1.1.1",
-  "react": "^19.1.0",
-  "react-dom": "^19.1.0",
-  "react-modal": "^3.16.1",
-  "react-router-dom": "^7.3.0"
+  "react": "^19.1.1",
+  "react-dom": "^19.1.1",
+  "react-modal": "^3.16.3",
+  "react-router-dom": "^7.9.1"
 }
 ```
 
@@ -333,7 +333,7 @@ Clients that use tokens can determine whether the user is authenticated by the p
 
 ### Login Detection
 
-The fetch client throws an error with a *login_required* error code when it is asked to call APIs but *isLoggedIn* is not set to true. For the final SPA this error could occur concurrently, so the SPA handles the condition using a *ViewModelCoordinator* object. After all view models have tried to load, if there is one or more errors with a *login_required* error code, an event is published. This main application view subscribes to this event and then triggers a login redirect.
+The fetch client throws an error with a *login_required* error code when it is asked to call APIs but *isLoggedIn* is not set to true. For the final SPA this error could occur concurrently, so the SPA handles the condition using a *ViewModelCoordinator* object. After all view models have tried to load, if there is one or more errors with a *login_required* error code, an event is published. This main application view subscribes to this event and then presents the login required view to the user.
 
 ```typescript
 private handleAllViewsLoaded(): void {
@@ -445,10 +445,10 @@ private async callApiWithCredential(
     dataToSend: any): Promise<any> {
 
     const headers: any = {
-        'token-handler-version':        '1',
-        'x-authsamples-api-client':     'FinalSPA',
-        'x-authsamples-session-id':     this.sessionId,
-        'x-authsamples-correlation-id': Guid.create().toString(),
+        'token-handler-version':      '1',
+        'authsamples-api-client':     'FinalSPA',
+        'authsamples-session-id':     this.sessionId,
+        'authsamples-correlation-id': Guid.create().toString(),
     };
 
     const requestOptions = {

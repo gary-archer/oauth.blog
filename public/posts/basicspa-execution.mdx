@@ -91,7 +91,7 @@ This blog uses the following main Cognito test account for SPA logins. This is n
 
 ### Step 6: Domain Setup
 
-This blog's code samples use DNS based URLs on a local computer, to represent a deployed architecture. Clean URLs are used, without a port number in the URL.
+This blog's code samples use DNS based URLs on a local computer, to represent a deployed architecture. I use URLs for development that feel the same as those for deployed systems, without a port number in the URL.
 
 | Component | Base URL |
 | --------- | -------- |
@@ -147,7 +147,11 @@ To simplify the developer setup, the API also serves the SPA's bundle files to t
 
 ### Step 8: Login to the SPA
 
-The *start.sh* script then invokes a browser at *http://localhost/spa*, and the SPA triggers an OpenID Connect redirect when it loads, to get an OAuth access token, so that it can call the API:
+The *start.sh* script then invokes a browser at *http://localhost/spa*. The SPA attempts to load its home view and call the API to get data. However, the SPA does not have an access token yet so it redirects to a login required view:
+
+![Login Required](../images/30/login-required.jpg)
+
+The SPA never issues abrupt redirects and instead guides the user, who can initiate the login. This provides good usability and also prevents the potential for redirect loops if the SPA and API have configuration problems.
 
 ![Login](../images/30/login.jpg)
 
@@ -169,17 +173,20 @@ http://localhost/spa/#company=2
 
 ![Company 1](../images/20/details-view.jpg)
 
-Users can bookmark SPA locations. You can simulate this in a new browser tab or window. If a private browser window is used, the user is redirected to sign in again, then returned to the bookmarked screen:
+Users can bookmark SPA locations. You can simulate this in a new browser tab or window, by opening transactions for a particular company. The user is prompted to sign in again, and then returns to the bookmarked screen:
 
 ![Multi tab navigation](../images/30/multi-tab-navigation.jpg)
 
 ### Step 10: Run a User Session
 
-The SPA's session management is incomplete in the initial code sample. Every time the access token expires the user has to sign in again. You can simulated expiry if you click *Expire Token* followed by *Reload Data*.
+The SPA's session management is incomplete in the initial code sample. Every time the user opens a new browser tab or the access token expires, the user has to sign in again. You can simulated expiry for a browser tab if you click *Expire Token* followed by *Reload Data*.
 
 ![Session testing](../images/30/session-testing.jpg)
 
-The initial SPA stores access tokens in session storage, so that page reloads do not redirect the browser. However, opening a new browser tab or window does a single sign-on operation, to get a new access token.
+The initial SPA stores access tokens in session storage, so that page reloads do not redirect the browser. However, opening a new browser tab or window prompts the user to re-login and then does a single sign-on operation.
+
+This usability problem is easily fixed by storing OAuth tokens in local storage, but that is considered less secure. The initial code sample therefore visualizes the types of usability and security concerns that are common when you secure SPAs.
+
 
 ### Step 11: View Browser Traffic
 

@@ -16,7 +16,7 @@ At a higher level, there were three main requirements I wanted to meet for this 
 | ----------- | ----------- |
 | Strong Browser Security | Follow current best practices, with only the latest and most secure cookies used in the browser. |
 | Globally Equal Performance | Deploy the SPA to a content delivery network, so that web latency is roughly the same at any global location. |
-| Pure SPA Development | Web developers work productively on modern frontends, with small code bases and no security plumbing. |
+| Pure SPA Development | Web developers work productively on modern frontends, with small code bases, usability control and no backend plumbing. |
 
 The cookie requirement is an awkward one for SPAs. When developing SPAs and APIs you should not need to return to older website technology stacks. The key technique to maintain an SPA architecture and meet all three requirements is to use API-driven cookie issuing,
 
@@ -30,6 +30,16 @@ In 2021 I adopted the *Token Handler Pattern* which consists of the following AP
 | OAuth Proxy | A plugin that runs in a high-performance API gateway. During API requests the plugin decrypts cookies and forwards JWT access tokens to APIs. |
 
 This architecture requires extra moving parts. There is a learning curve to understand the deployment and its configuration settings. The reward once you get deployment working is to maintain a modern and productive frontend technical setup for all future web development.
+
+### Backend for Frontend Solutions to Avoid
+
+There are other types of cookie issuing solutions for web applications, but they deliver suboptimal solutions since they are not tailored to an SPA's requirements. The following notes explain the two most common types:
+
+- **Reverse Proxy**. Development setups and deployments use a reverse proxy that implements security. When requests for HTML files do not have a session cookie the browser is abrubtly redirected. In some implementations, fetch requests may also experience abrupt redirects, or APIs may not receive access tokens. You therefore lose technical control.
+
+- **Website**. Developers run a complex local setup where their web host comes into contact with secured data and typically uses a website cookie framework. The web host may use server-side rendering to return HTML and data together. It requires a runtime and other server dependencies that limits developer setups and deployments, and the frontend loses technical control.
+
+Instead, my BFF uses a separation of concerns to meet my requirements, where both the SPA and APIs retain full technical control. The frontend can reliably handle API 401 responses and keep cookies short-lived, even when they occur for concurrent API requests.
 
 ### Security Components
 

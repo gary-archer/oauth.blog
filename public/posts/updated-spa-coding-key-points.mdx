@@ -10,7 +10,7 @@ I use additional settings from the *oidc-client-ts* library to use the following
 - Silent token renewal via iframes.
 - Logout.
 
-The SPA's OAuthClient class therefore supplies additional settings to the *oidc-client-ts* library:
+The SPA's OAuthClient class therefore uses some updated *oidc-client-ts* library settings:
 
 ```typescript
 public constructor(configuration: OAuthConfiguration) {
@@ -126,19 +126,17 @@ When the main window exchanges the code for token it uses the PKCE *code_verifie
 
 ### Dropped Cookies
 
-Iframe-based token renewal does not work with this blog's default authorization server, since it issues its SSO cookie with *SameSite=lax* instead of *SameSite=none*, which is required to send cookie from an iframe. This means, whenever the access token expires, or the user reloads the page, the user experiences an OpenID Connect login redirect.
+Iframe-based token renewal does not work with this blog's default authorization server, since it issues its SSO cookie with *SameSite=lax* instead of *SameSite=none*, which is required to send third-party cookies. This means, whenever the access token expires, or the user reloads the page, the user experiences an OpenID Connect login redirect.
 
-Even if the cookie settings was fixed, this is also the behavior in the Safari browser, which drops all third party cookies except for certain exceptions, like top level redirects. Therefore, the updated code example correctly represents the future state of iframe based token renewal.
-
+Even if the cookie settings was fixed, this is also the behavior in the Safari browser or Chrome incognito mode. These browsers drop all third party cookies except for certain exceptions, like top level redirects. Therefore, the updated code example correctly represents the future state of iframe based token renewal.
 
 ### Updated API Flow
 
-The SPA's *ApiClient* object now uses an updated algorithm to call APIs, that includes token refresh. I like to only trigger login redirects when one of the following conditions is true:
+The SPA's *ApiClient* object now uses an updated algorithm to call APIs, that includes token refresh. The user is presented with the login required view if any of the following conditions occur:
 
 - There is no access token yet.
 - Token refresh fails with an *invalid_grant* error code, meaning end of session.
-
-I write the code as follows, but note that the *oidc-client-ts* library's *signInSilent* method does not return error codes, to enable my preferred logic. Therefore, if refreshing an access token fails for other reasons, like a dropped SSO cookie during an iframe redirect, this logic could lead to a redirect loop.
+- There is a permanent 401 calling APIs, which typically means configuration settings are wrong.
 
 ```typescript
 private async callApi(path: string, method: Method, dataToSend?: any): Promise<any> {
@@ -147,8 +145,6 @@ private async callApi(path: string, method: Method, dataToSend?: any): Promise<a
 
     let token = await this.oauthClient.getAccessToken();
     if (!token) {
-
-        await this.oauthClient.startLogin(null);
         throw ErrorFactory.getFromLoginRequired();
     }
 
@@ -158,36 +154,30 @@ private async callApi(path: string, method: Method, dataToSend?: any): Promise<a
 
     } catch (e1: any) {
 
-        const error = e1 as UIError;
-        if (error.statusCode !== 401) {
-            throw error;
+        const error1 = e1 as UIError;
+        if (error1.getStatusCode() !== 401) {
+            throw error1;
         }
 
         token = await this.oauthClient.refreshAccessToken();
         if (!token) {
 
-            await this.oauthClient.startLogin(error);
+            await this.oauthClient.clearLoginState();
             throw ErrorFactory.getFromLoginRequired();
         }
 
-        return await this.callApiWithToken(url, method, dataToSend, token);
-    }
-}
-```
+        try {
 
-Therefore, I use the same type of logic from the first SPA, where *startLogin* uses a time-based check to prevent redirect loops:
+            return await this.callApiWithToken(url, method, dataToSend, token);
 
-```typescript
-private async preventRedirectLoop(api401Error: UIError | null): Promise<void> {
+        } catch (e2: any) {
 
-    if (api401Error && this.loginTime) {
-
-        const currentTime = new Date().getTime();
-        const millisecondsSinceLogin = currentTime - this.loginTime;
-        if (millisecondsSinceLogin < 1000) {
-
-            await this.clearLoginState();
-            throw api401Error;
+            const error2 = e2 as UIError;
+            if (error2.getStatusCode() !== 401) {
+                throw error2;
+            }
+            await this.oauthClient.clearLoginState();
+            throw ErrorFactory.getFromLoginRequired();
         }
     }
 }
@@ -195,14 +185,14 @@ private async preventRedirectLoop(api401Error: UIError | null): Promise<void> {
 
 ### Low Security Token Storage Options
 
-There are simpler ways to implement token refresh. For example, you can update the *oidc-client-ts* settings to those shown here. A background timer then attempts to refresh the access token by comparing the current time to the *expires_in* field from the token response. The time for iframe-based token refresh occurs in the background so you avoid impacting users. You can also avoid performing a token refresh if the user reloads the page or opens a new browser tab:
+There are simpler ways to implement token refresh. For example, you can update the *oidc-client-ts* settings to those shown below. A background timer then attempts to refresh the access token by comparing the current time to the *expires_in* field from the token response. The time for iframe-based token refresh occurs in the background so you avoid impacting users. You can also avoid performing a token refresh if the user reloads the page or opens a new browser tab:
 
 ```markdown
 userStore: new WebStorageStateStore({ store: localStorage }),
 automaticSilentRenew: true,
 ```
 
-For best reliability, you could also store a refresh token in local storage and avoid the use of iframe-based access token refresh completely. Yet persistent storage is the least secure way to manage tokens in the browser, with greatest XSS threats. When you also store refresh tokens, you make threats much worse, since an attacker can use the refresh token to get new access tokens without needing to supply a client credential.
+For best reliability, you could also store a refresh token in local storage and avoid the use of iframe-based access token refresh completely. Yet local storage is the least secure way to manage tokens in the browser, with greatest XSS threats. When you also store refresh tokens, you make threats much worse, since an attacker can potentially use a refresh token to get new access tokens without needing to supply a client credential.
 
 ```json
 {
@@ -214,7 +204,7 @@ For best reliability, you could also store a refresh token in local storage and 
         "authority":              "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
         "clientId":               "hje94a2jj3lgkobkh57ikenhh",
         "redirectUri":            "https://www.authsamples-dev.com/spa",
-        "postLogoutRedirectUri":  "https://www.authsamples-dev.com/spa/loggedout.html",
+        "postLogoutRedirectUri":  "https://www.authsamples-dev.com/spa/loggedout",
         "scope":                  "openid profile https://api.authsamples.com/investments",
         "customLogoutEndpoint":   "https://login.authsamples.com/logout"
     }
@@ -311,7 +301,7 @@ private onStorageChange(event: StorageEvent): void {
 
 ### Where Are We?
 
-I explained the code to complete the traditional SPA flow, with in-memory storage of access tokens, and the SSO cookie used for token refresh.
+I explained the code to complete the traditional SPA flow, with in-memory storage of access tokens, and the SSO cookie used for token refresh. The use of iframes was a successful technique, but in 2021 it is no longer considered secure or reliable.
 
 ### Next
 
