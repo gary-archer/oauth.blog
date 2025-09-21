@@ -142,6 +142,7 @@ export class IpcEventNames {
     public static readonly ON_LOGIN_REACTIVATE = 'login_reactivate';
     public static readonly ON_LOGOUT = 'oauth_logout';
     public static readonly ON_TOKEN_REFRESH = 'oauth_tokenrefresh';
+    public static readonly ON_CLEAR_LOGIN_STATE = 'oauth_clearstate';
     public static readonly ON_EXPIRE_ACCESS_TOKEN = 'oauth_expireaccesstoken';
     public static readonly ON_EXPIRE_REFRESH_TOKEN = 'oauth_expirerefreshtoken';
 }
@@ -294,6 +295,7 @@ export interface OAuthService {
     refreshAccessToken(): Promise<string | null>;
     login(): Promise<void>;
     logout(): void;
+    clearLoginState(): void;
     expireAccessToken(): void;
     expireRefreshToken(): void;
 }
@@ -342,26 +344,40 @@ private async callApi(
 }
 ```
 
-Meanwhile the renderer's *ApiClient* manages token refresh when an API request fails with a 401 error:
+Meanwhile the renderer's *ApiClient* uses the following generic routine to invoke an API operation via its IPC callback. This uses a standard algorithm to refresh access tokens or handle session expiry:
 
 ```typescript
 private async getDataFromApi(callback: () => Promise<any>): Promise<any> {
 
-    try {
+        try {
 
-        return await callback();
+            return await callback();
 
-    } catch (e1: any) {
+        } catch (e1: any) {
 
-        const error1 = ErrorFactory.fromException(e1);
-        if (error1.statusCode !== 401) {
-            throw error1;
+            const error1 = ErrorFactory.fromException(e1);
+            if (error1.getStatusCode() !== 401) {
+                throw error1;
+            }
+
+            await this.oauthClient.refreshAccessToken();
+
+            try {
+
+                return await callback();
+
+            } catch (e2: any) {
+
+                const error2 = ErrorFactory.fromException(e2);
+                if (error2.getStatusCode() !== 401) {
+                    throw error2;
+                }
+
+                this.oauthClient.clearLoginState();
+                throw ErrorFactory.fromLoginRequired();
+            }
         }
-
-        await this.oauthClient.refreshAccessToken();
-        return await callback();
     }
-}
 ```
 
 When there is no token yet or token refresh fails with an *invalid_grant* error, views receive a *login_required* error and terminate API requests in a controlled manner. This error code is treated specially and results in a redirect to the *Login Required View*, which saves a return location to use once login completes:

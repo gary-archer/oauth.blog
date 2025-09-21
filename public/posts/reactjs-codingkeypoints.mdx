@@ -467,34 +467,39 @@ private async callApiWithCredential(
 When the current access token expires, the SPA makes a token refresh request to get new tokens and rewrite cookies with new tokens. The SPA then retries the original API request with updated cookies. It is also possible that the user could close all browser windows when the *isLoggedIn=true* flag is set. The next time the user runs the app, session cookies are no longer present and APIs return 401 responses. The SPA, and this blog's native apps, cope reliably with these conditions using the following overall algorithm for API requests:
 
 ```typescript
-if (!this.oauthClient.isLoggedIn()) {
-    throw loginRequiredError;
-}
+private async getDataFromApiWithTokenRefresh(url: string, options: FetchOptions): Promise<any> {
 
-try {
-    return await this.callApiWithCredential(method, url, options, dataToSend);
-
-} catch (e1: any) {
-
-    const error1 = ErrorFactory.fromHttpError(e1, url, 'API');
-    if (error1.statusCode !== 401) {
-        throw error1;
+    if (!this.oauthClient.isLoggedIn()) {
+        throw ErrorFactory.fromLoginRequired();
     }
 
     try {
+
+        return await this.callApiWithCredential('GET', url, options);
+
+    } catch (e1: any) {
+
+        const error1 = ErrorFactory.fromHttpError(e1, url, 'API');
+        if (error1.getStatusCode() !== 401) {
+            throw error1;
+        }
+
         await this.oauthClient.synchronizedRefresh();
 
-    } catch (e2: any) {
+        try {
 
-        throw ErrorFactory.fromHttpError(e2, url, 'API');
-    }
+            return await this.callApiWithCredential('GET', url, options);
 
-    try {
+        }  catch (e2: any) {
 
-        return await this.callApiWithCredential(method, url, options, dataToSend);
+            const error2 = ErrorFactory.fromHttpError(e2, url, 'API');
+            if (error2.getStatusCode() !== 401) {
+                throw error2;
+            }
 
-    }  catch (e3: any) {
-        throw ErrorFactory.fromHttpError(e3, url, 'API');
+            this.oauthClient.clearLoginState();
+            throw ErrorFactory.fromLoginRequired();
+        }
     }
 }
 ```

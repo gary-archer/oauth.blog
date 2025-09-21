@@ -161,8 +161,6 @@ private async callApi(path: string, method: Method, dataToSend?: any): Promise<a
 
         token = await this.oauthClient.refreshAccessToken();
         if (!token) {
-
-            await this.oauthClient.clearLoginState();
             throw ErrorFactory.getFromLoginRequired();
         }
 

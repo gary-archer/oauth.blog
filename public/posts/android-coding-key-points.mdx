@@ -245,10 +245,14 @@ fun callApi(options: ViewLoadOptions?, onComplete: () -> Unit) {
 
 ### API Call Details
 
-The *FetchClient* object acts as a service agent and uses the [okhttp library](https://github.com/square/okhttp). Each API call uses a shared method to send OAuth access tokens and manage retries. I use the same OAuth client side behaviour as in all of this blog's other frontend code samples, to refresh the access token and retry the request once if the API returns a 401 status code. The basic API code, with caching omitted, is shown here:
+The *FetchClient* object acts as a service agent and uses the [okhttp library](https://github.com/square/okhttp). Each API call uses a shared method to send OAuth access tokens and manage retries. I use the same OAuth client side behaviour as in all of this blog's other frontend code samples, to refresh the access token and retry the request once if the API returns a 401 status code. The API client code is shown here:
 
 ```kotlin
-private suspend fun <T> getDataFromApi(url: String, responseType: Class<T>, options: FetchOptions): T? {
+private suspend fun <T> getDataFromApiWithTokenRefresh(
+    url: String,
+    responseType: Class<T>,
+    options: FetchOptions
+): T? {
 
     var accessToken = this.oauthClient.getAccessToken()
     if (accessToken.isNullOrBlank()) {
@@ -259,15 +263,29 @@ private suspend fun <T> getDataFromApi(url: String, responseType: Class<T>, opti
 
         return this.callApiWithToken("GET", url, null, accessToken, responseType, options)
 
-    } catch (e: Throwable) {
+    } catch (e1: Throwable) {
 
-        val error = ErrorFactory().fromException(e)
-        if (error.statusCode != 401) {
-            throw error
+        val error1 = ErrorFactory().fromException(e1)
+        if (error1.statusCode != 401) {
+            throw error1
         }
 
         accessToken = this.oauthClient.synchronizedRefreshAccessToken()
-        return this.callApiWithToken("GET", url, null, accessToken, responseType, options)
+
+        try {
+
+            return this.callApiWithToken("GET", url, null, accessToken, responseType, options)
+
+        } catch (e2: Throwable) {
+
+            val error2 = ErrorFactory().fromException(e2)
+            if (error2.statusCode != 401) {
+                throw error2
+            }
+
+            this.oauthClient.clearLoginState();
+            throw ErrorFactory().fromLoginRequired()
+        }
     }
 }
 ```

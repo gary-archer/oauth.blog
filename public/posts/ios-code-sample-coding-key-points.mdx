@@ -261,14 +261,14 @@ func callApi(options: ViewLoadOptions? = nil) {
 
 ### API Call Details
 
-The *FetchClient* object acts as a service agent and uses iOS [Async URL Sessions](https://tanaschita.com/20221017-using-urlsession-with-async-await). Each API call uses a shared method to send OAuth access tokens and manage retries. I use the same OAuth client side behaviour as in all of this blog's other frontend code samples, to refresh the access token and retry the request once if the API returns a 401 status code. The basic API code, with caching omitted, is shown here:
+The *FetchClient* object acts as a service agent and uses iOS [Async URL Sessions](https://tanaschita.com/20221017-using-urlsession-with-async-await). Each API call uses a shared method to send OAuth access tokens and manage retries. I use the same OAuth client side behaviour as in all of this blog's other frontend code samples, to refresh the access token and retry the request once if the API returns a 401 status code. The API client code is shown here:
 
 ```swift
-private func getDataFromApi(url: URL, options: FetchOptions) async throws -> Data? {
+private func getDataFromApiWithTokenRefresh(url: URL, options: FetchOptions) async throws -> Data? {
 
-    var accessToken = oauthClient.getAccessToken()
+    var accessToken = self.oauthClient.getAccessToken()
     if accessToken == nil {
-        throw loginRequiredError
+        throw ErrorFactory.fromLoginRequired()
     }
 
     do {
@@ -281,19 +281,33 @@ private func getDataFromApi(url: URL, options: FetchOptions) async throws -> Dat
 
     } catch {
 
-        let error = ErrorFactory.fromException(error: error)
-        if error.statusCode != 401 {
-            throw error
+        let error1 = ErrorFactory.fromException(error: error)
+        if error1.statusCode != 401 {
+            throw error1
         }
 
-        accessToken = try await oauthClient.synchronizedRefreshAccessToken()
-        return try await self.callApiWithToken(
-            method: "GET",
-            url: url,
-            jsonData: nil,
-            accessToken: accessToken!,
-            options: options) 
-    } 
+        accessToken = try await self.oauthClient.synchronizedRefreshAccessToken()
+
+        do {
+
+            return try await self.callApiWithToken(
+                method: "GET",
+                url: url,
+                jsonData: nil,
+                accessToken: accessToken!,
+                options: options)
+
+        } catch {
+
+            let error2 = ErrorFactory.fromException(error: error)
+            if error2.statusCode != 401 {
+                throw error2
+            }
+
+            try await self.oauthClient.clearLoginState()
+            throw ErrorFactory.fromLoginRequired()
+        }
+    }
 }
 ```
 
