@@ -39,7 +39,7 @@ There are other types of cookie issuing solutions for web applications, but they
 
 - **Website**. Developers run a complex local setup where their web host comes into contact with secured data and typically uses a website cookie framework. The web host may use server-side rendering to return HTML and data together. It requires a runtime and other server dependencies that limits developer setups and deployments, and the frontend loses technical control.
 
-Instead, my BFF uses a separation of concerns to meet my requirements, where both the SPA and APIs retain full technical control. The frontend can reliably handle API 401 responses and keep cookies short-lived, even when they occur for concurrent API requests.
+Instead, my BFF uses a separation of concerns to meet my requirements, where both the SPA and APIs retain full technical control. The frontend can reliably handle API 401 responses and use short-lived cookies, even when 401s occur for concurrent API requests.
 
 ### Security Components
 
