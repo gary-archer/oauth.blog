@@ -7,7 +7,7 @@
   "license": "MIT",
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "scripts": {
     "start": "next dev",
@@ -25,7 +25,7 @@
     "@next/mdx": "^15.1.7",
     "@types/fs-extra": "^11.0.4",
     "@types/mdx": "^2.0.13",
-    "@types/node": "22.15.18",
+    "@types/node": "24.5.2",
     "@types/react": "^19.1.2",
     "rehype-slug": "^5.1.0",
     "remark-gfm-no-autolink": "^2.0.0",

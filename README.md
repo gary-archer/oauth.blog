@@ -10,11 +10,10 @@ A technical blog with a focus on productive and reliable OAuth development setup
 ## Running the Blog
 
 By default, just read the blog's MDX pages in GitHub.\
-You can also run it as a [Next.js Application](TECHNOLOGY.md) in various other ways:
+You can also run the blog as a [Next.js Application](TECHNOLOGY.md).\
+To do so, run the following commands and then browse to `http://localhost:3000`:
 
-| Step | Description |
-| ---- | ----------- |
-| npm install | First install dependencies |
-| npm start | Run in development mode and open a browser at http://localhost:3000 |
-| ./deploy-local.sh | Run in deployed mode locally using http://localhost:3001 |
-| ./deploy-aws.sh | I can use this script to deploy static content to AWS CloudFront |
+```bash
+npm install
+npm start
+```

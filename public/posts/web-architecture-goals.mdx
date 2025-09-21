@@ -34,10 +34,9 @@ If an app has XSS vulnerabilities, then an attacker may be able to access secure
 
 ### Best Login Usability
 
-The authorization server can provide multiple ways for users to sign in to an SPA, and this can include options that are both user friendly and secure. In addition, an SPA should be in full control of its usability behaviour:
+The authorization server can provide multiple ways for users to sign in to an SPA, and this can include options that are both user friendly and secure. In addition, an SPA should be in full control of usability and support features like multi-tab browsing.
 
-- Session Behaviour: the UI should be in control of navigation and expiry events rather than being abruptly redirected.
-- Multi-Tab Browsing: the user should be able to use multiple browser tabs for the same application.
+In particular, web applications should cope elegantly with API challenge responses that use HTTP status codes of 401 and 403. The frontend guides the user, rather than issuing an abrupt redirect. To enable that, JavaScript code should issue all requests for secured data.
 
 ### Good Search Results
 
