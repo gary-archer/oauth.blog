@@ -44,7 +44,7 @@ public void initialize(final ConfigurableApplicationContext context) {
 
     loggerFactory.configure(configuration.getLogging());
 
-    this.configurePort(configuration.getApi());
+    this.configureHttpListener(configuration.getApi());
     this.configureHttpDebugging(configuration.getApi());
     this.configureSsl(configuration);
 
