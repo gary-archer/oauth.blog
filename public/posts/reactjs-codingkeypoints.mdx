@@ -446,9 +446,9 @@ private async callApiWithCredential(
 
     const headers: any = {
         'token-handler-version':      '1',
-        'x-authsamples-api-client':     'FinalSPA',
-        'x-authsamples-session-id':     this.sessionId,
-        'x-authsamples-correlation-id': Guid.create().toString(),
+        'authsamples-api-client':     'FinalSPA',
+        'authsamples-session-id':     this.sessionId,
+        'authsamples-correlation-id': Guid.create().toString(),
     };
 
     const requestOptions = {
