@@ -246,9 +246,8 @@ export class CompanyRepository {
 
     public async getCompanyList(): Promise<Company[]> {
 
-        return using(this.logEntry.createPerformanceBreakdown('selectCompanyListData'), async () => {
-            return this.jsonReader.readData<Company[]>('data/companyList.json');
-        });
+        const breakdown = this.logEntry.createPerformanceBreakdown('selectCompanyListData');
+        return this.jsonReader.readData<Company[]>('data/companyList.json');
     }
 }
 ```

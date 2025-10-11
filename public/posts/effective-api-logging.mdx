@@ -348,18 +348,17 @@ In places the API code contains statements to measure the performance of a parti
 ```typescript
 public async getUserInfo(accessToken: string): Promise<UserInfoClaims> {
 
-    return using(this.logEntry.createPerformanceBreakdown('userInfoLookup'), async () => {
+    using breakdown = this.logEntry.createPerformanceBreakdown('userInfoLookup');
 
-        try {
+    try {
 
-            const response = await axios.request(options as AxiosRequestConfig);
-            return ClaimsReader.userInfoClaims(response.data);
+        const response = await axios.request(options as AxiosRequestConfig);
+        return ClaimsReader.userInfoClaims(response.data);
 
-        } catch (e: any) {
+    } catch (e: any) {
 
-            throw ErrorUtils.fromUserInfoError(e, this.configuration.userInfoEndpoint);
-        }
-    });
+        throw ErrorUtils.fromUserInfoError(e, this.configuration.userInfoEndpoint);
+    }
 }
 ```
 
