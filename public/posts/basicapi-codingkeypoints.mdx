@@ -20,7 +20,6 @@ The API only uses a handful of third-party libraries, declared in its *package.j
         "axios": "^1.12.2",
         "cors": "^2.8.5",
         "express": "^5.1.0",
-        "fs-extra": "^11.3.0",
         "https-proxy-agent": "^7.0.6",
         "jose": "^6.1.0",
         "on-headers": "^1.0.2",
@@ -37,7 +36,7 @@ When you run *npm start*, the *startup/app.ts* class executes, to configure the 
 const logger = new ApiLogger();
 try {
 
-    const configJson = await fs.readFile('api.config.json', 'utf8');
+    const configJson = await fs.readFile('api.config.json', 'utf-8');
     const configuration = JSON.parse(configJson) as Configuration;
 
     const expressApp = express();

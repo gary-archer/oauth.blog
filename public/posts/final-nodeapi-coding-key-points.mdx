@@ -32,7 +32,7 @@ const parentContainer = new Container();
 
 try {
 
-    const configurationJson = await fs.readFile('api.config.json', 'utf8');
+    const configurationJson = await fs.readFile('api.config.json', 'utf-8');
     const configuration = JSON.parse(configurationJson) as Configuration;
     loggerFactory.configure(configuration.logging);
 

@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import fs from 'node:fs/promises';
 import {GetStaticPathsResult, GetStaticPropsContext, GetStaticPropsResult} from 'next';
 import path from 'path';
 import {JSX} from 'react';
