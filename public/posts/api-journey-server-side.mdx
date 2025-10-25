@@ -360,6 +360,8 @@ You can think of technical support logs and audit logs as separate schemas that 
 - A support user can ask questions of technical support logs.
 - A security user can ask questions of audit logs.
 
+A real-world deployment should include aggregated logs for both APIs and the authorization server. The authorization server is a specialist API that should provide its own audit logs that record security events, to provide insights into usage and potential threats.
+
 ### API Responsibilities are Separated
 
 To provide the behaviours that I articulate, this blog's API require some plumbing code. A folder structure classifies each class as *host*, *logic* or *plumbing*. In real APIs you might externalise some of the plumbing to one or more shared libraries. The goal in a real organization would be to use clean, scalable code for the valuable business logic.
@@ -382,3 +384,4 @@ I summarised a non-functional journey for APIs, where OAuth does not create the 
 
 - Next I take an equivalent look at the <a href='api-journey-client-side.mdx'>API Journey - Client Side</a>.
 - For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.
+ 
