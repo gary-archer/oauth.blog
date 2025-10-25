@@ -322,6 +322,44 @@ When there is a server error I write a log entry that includes a unique *Error I
 
 The logs enable <a href='api-technical-support-analysis.mdx'>people-focused technical support queries</a> to measure errors or slowness. For example, you can produce a breakdown of errors by type and frequency for a time period. You can then iron out any reliability issues as part of your quality processes.
 
+### APIs Audit Requests for Secured Data
+
+Once you take control over API logging, it should be straightforward to implement auditing of API requests. This is just a different type of log, which records identities and the level of access. In particular, it outputs the scopes and the most important business claims. This blog's final APIs write audit logs with the following fields:
+
+```json
+{
+  "type": "audit",
+  "id": "d6edef10-0ae9-44fe-91b6-95e68d2b9d3b",
+  "utcTime": "2025-10-11T18:21:39.991Z",
+  "apiName": "FinalApi",
+  "operationName": "getCompanyTransactions",
+  "hostName": "UBUNTU",
+  "method": "GET",
+  "path": "/investments/companies/2/transactions",
+  "resourceId": "2",
+  "clientName": "LoadTest",
+  "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "statusCode": 200,
+  "sessionId": "51bea312-b713-46eb-a9f4-8af2c4328836",
+  "isAuthenticated": true,
+  "isAuthorized": true,
+  "scope": [
+    "openid",
+    "profile",
+    "investments"
+  ],
+  "claims": {
+    "managerId": "10345",
+    "role": "user"
+  }
+}
+```
+
+You can think of technical support logs and audit logs as separate schemas that different audiences can be granted access to. The [Log Aggregation Setup](log-aggregation-setup.mdx) post explains how to deploy Elasticsearch and Kibana so that:
+
+- A support user can ask questions of technical support logs.
+- A security user can ask questions of audit logs.
+
 ### API Responsibilities are Separated
 
 To provide the behaviours that I articulate, this blog's API require some plumbing code. A folder structure classifies each class as *host*, *logic* or *plumbing*. In real APIs you might externalise some of the plumbing to one or more shared libraries. The goal in a real organization would be to use clean, scalable code for the valuable business logic.
