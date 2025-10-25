@@ -1,11 +1,10 @@
 # Cloud Native OAuth
 
-Previously I explained this blog's <a href='serverless-api-coding-model.mdx'>Serverless API Code Details</a> to complete the initial cloud deployment. Yet the API side of the architecture could be further improved:
+Previously I explained this blog's <a href='serverless-api-coding-model.mdx'>Serverless API Code Details</a> to complete the initial cloud deployment. Yet the API side of the architecture has some problems:
 
-- Serverless APIs may be more complex  than cloud native APIs, due to differences between local and deployed environments.
-- The cloud managed authorization server may not meet the more detailed security requirements for APIs and clients.
-- The cloud managed API gateway may not meet the more detailed custom logic requirements during API requests.
-- The cloud managed logging system may not meet the more detailed requirements to manage logs at scale.
+- It is locked in to AWS technology and its deployment options.
+- The managed authorization server, API gateway and logging systems lack some essential features.
+- The API technology works differently on development computers and in the cloud.
 
 ### Cloud Native Deployments
 
@@ -16,23 +15,35 @@ Having used a variety of deployments, I prefer the following default mix for the
 | Web Architecture | Cloud Content Delivery Network |
 | API Architecture | Cloud Kubernetes Platform |
 
-These days, cloud platforms enable you to run clusters without needing to perform the lower level work. For example, managed solutions deal with control plane high availability and keeping Kubernetes nodes up to date. You then use cloud networking, disk storage and compute resources and only need to operate on application level YAML resources.
-
-I can run all of the APIs and frontends that I developed for this blog on Kubernetes. The use of cloud native patterns and components provides future proof hosting. I can also choose best of breed supporting components that meet my deeper requirements on the API side of the architecture and host those components in a cluster right next to my APIs.
+These days, cloud platforms enable you to run Kubernetes clusters without needing to perform the lower level work. For example, managed solutions deal with control plane high availability and keeping Kubernetes nodes up to date. You then use cloud networking, disk storage and compute resources and only need to operate on application level YAML resources.
 
 ### OAuth in Kubernetes
 
-This blog focused on the following main foundations, along with reliable and productive deployments and developer setups:
+Cloud native enables you to take closer control over OAuth, in areas like identity data, token issuance, token translations, user authentication and security monitoring. You should be able to to improve your security capabilities and avoid technical limitations and blocking issues, to take full advantage of the architecture.
 
-- Securing APIs using JWT access tokens and claims based authorization.
-- Securing clients using the OAuth code flow and environmental best practices.
-
-Later in your OAuth journey you are likely to want to take finer control over deployments, identity data, token issuance and user authentication workflows. You should be able to to improve your security capabilities and avoid technical limitations and blocking issues, to take full advantage of the architecture.
-
-You can learn more about combining OAuth and cloud native in the O'Reilly book that I wrote with my colleagues from Curity. The content provides a much deeper dive into OAuth and API first security. The code examples demonstrate various cloud native integrations and deployments that you can run on a development computer and then deploy to the cloud in the same way:
+You can learn much more about combining OAuth and cloud native in the O'Reilly book that I wrote with my colleagues from Curity. The content provides a much deeper dive into OAuth and API first security. The code examples demonstrate various cloud native integrations and deployments that you can run on a development computer and then deploy to the cloud in the same way:
 
 - [Cloud Native Data Security with OAuth](https://www.oreilly.com/library/view/cloud-native-data/9781098164874/)
 - [Book Code Examples](https://github.com/curityio/cloud-native-oauth-security-examples)
+
+You can then many deeper requirements on the API side of the architecture, like the following essential security features:
+
+- Platform features like workload identities, to enable secure connections with short-lived credentials.
+- An authorization server that provides up-to-date security features for APIs and clients.
+- An API gateway that supports plugins to enable token translations.
+- A logging system with rich visualization and querying features for monitoring security events.
+
+### Migrating APIs and Clients to Kubernetes
+
+To optimize your future migration choices, write portable code regardless of technology. In particular, use portable libraries and design patterns for essential foundations like security and logging.
+
+I can deploy all of the final APIs that I developed for this blog on Kubernetes, connect all of the final frontends, then deploy to any cloud or on-premise. I use the following GitHub repositories to run portable Kubernetes example deployments:
+
+- [Local Kubernetes Deployment using KIND](https://github.com/gary-archer/oauth.cloudnative.kind)
+- [Managed Kubernetes Deployment using AWS Elastic Kubernetes Service (EKS)](https://github.com/gary-archer/oauth.cloudnative.eks)
+- [On-Premise Kubernetes Deployment using KUBEADM](https://github.com/gary-archer/oauth.cloudnative.kubeadm)
+
+An organization that follows this approach can keep its options open and plan many types of deployment, including multi-cloud. It can also use local clusters for some types of development and test environments, to save costs.
 
 ### Where Are We?
 
