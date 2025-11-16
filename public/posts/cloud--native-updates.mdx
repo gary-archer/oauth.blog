@@ -15,7 +15,7 @@ Having used a variety of deployments, I prefer the following default mix for the
 | Web Architecture | Cloud Content Delivery Network |
 | API Architecture | Cloud Kubernetes Platform |
 
-These days, cloud platforms enable you to run Kubernetes clusters without needing to perform the lower level work. For example, managed solutions deal with control plane high availability and keeping Kubernetes nodes up to date. You then use cloud networking, disk storage and compute resources and only need to operate on application level YAML resources.
+These days you can often run Kubernetes clusters without needing to perform the lower level work. For example, managed solutions deal with control plane high availability and keeping Kubernetes nodes up to date. You then use cloud networking, disk storage and compute resources and only need to operate on application level YAML resources.
 
 ### OAuth in Kubernetes
 
@@ -29,21 +29,13 @@ You can learn much more about combining OAuth and cloud native in the O'Reilly b
 You can implement many deeper requirements on the API side of the architecture, like the following essential security features:
 
 - Platform features like workload identities, to enable secure connections with short-lived credentials.
-- An authorization server that provides up-to-date security features for APIs and clients.
+- An authorization server that supports many up-to-date security behaviours for APIs and clients.
 - An API gateway that supports plugins to enable token translations.
 - A logging system with rich visualization and querying features for monitoring security events.
 
 ### Migrating APIs and Clients to Kubernetes
 
-To optimize your future migration choices, write portable code regardless of technology. In particular, use portable libraries and design patterns for essential foundations like security and logging.
-
-I can deploy all of the final APIs that I developed for this blog on Kubernetes, connect all of the final frontends, then deploy to any cloud or on-premise. I use the following GitHub repositories to run portable Kubernetes example deployments:
-
-- [Local Kubernetes Deployment using KIND](https://github.com/gary-archer/oauth.cloudnative.kind)
-- [Managed Kubernetes Deployment using AWS Elastic Kubernetes Service (EKS)](https://github.com/gary-archer/oauth.cloudnative.eks)
-- [On-Premise Kubernetes Deployment using KUBEADM](https://github.com/gary-archer/oauth.cloudnative.kubeadm)
-
-An organization that follows this approach can keep its options open and plan many types of deployments, including multi-cloud. It can also use local clusters for some types of development and test environments, to save costs.
+To optimize your future migration choices, write portable code regardless of technology. I can deploy all of the final APIs that I developed for this blog on Kubernetes, connect all of the final frontends, then deploy to any cloud or on-premise. An organization that follows this approach can keep its options open and plan many types of deployments, including multi-cloud. It can also use local clusters for some types of development and test environments, to save costs.
 
 ### Where Are We?
 
