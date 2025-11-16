@@ -18,42 +18,35 @@ In a real API platform, much of the plumbing folder could be extracted into one 
 
 ### Application Startup Logic
 
-As is standard for a .NET API, the startup logic is coded primarily in the following two classes:
-
-| Class | Description |
-| ----- | ----------- |
-| Program | The application entry point |
-| Startup | Manages REST and security specific behaviour |
-
-The program class logic focuses on reading the configuration file, configuring the HTTP server and wiring up logging:
+As is standard for a .NET API, a *Program* class manages application startup. This starts with reading the API's JSON configuration file, wiring up logging and configuring the HTTP server:
 
 ```csharp
-private static IWebHost BuildWebHost(ILoggerFactory loggerFactory)
+private static WebApplication CreateApi(Plumbing.Logging.ILoggerFactory loggerFactory)
 {
-    var configuration = Configuration.Load("./api.config.json");
+    var configuration = Configuration.LoadAsync("./api.config.json").Result;
 
-    return new WebHostBuilder()
-        .ConfigureServices(services =>
-        {
-            services.AddSingleton(loggerFactory);
-            services.AddSingleton(configuration);
-        })
-        .ConfigureLogging(loggingBuilder =>
-        {
-            loggerFactory.Configure(loggingBuilder, configuration.Logging);
-        })
+    var builder = WebApplication.CreateBuilder();
+
+    loggerFactory.Configure(builder.Logging, configuration.Logging);
+    builder.Services.AddSingleton(configuration);
+
+    builder.WebHost
         .UseKestrel(options =>
         {
             options.Listen(IPAddress.Any, configuration.Api.Port, listenOptions =>
             {
-                listenOptions.UseHttps(
-                    configuration.Api.SslCertificateFileName,
-                    configuration.Api.SslCertificatePassword);
+                if (!string.IsNullOrWhiteSpace(configuration.Api.SslCertificateFileName) &&
+                    !string.IsNullOrWhiteSpace(configuration.Api.SslCertificatePassword))
+                {
+                    listenOptions.UseHttps(
+                        configuration.Api.SslCertificateFileName,
+                        configuration.Api.SslCertificatePassword);
+                }
             });
-        })
-        .UseStartup<Startup>()
-        .Build();
-}
+        });
+
+    ...
+}    
 ```
 
 ### Dependency Composition
@@ -61,10 +54,10 @@ private static IWebHost BuildWebHost(ILoggerFactory loggerFactory)
 The startup logic registers dependencies in the Microsoft IOC container:
 
 ```csharp
-new CompositionRoot(services)
-    .AddConfiguration(this.configuration)
-    .AddLogging(this.configuration.Logging, this.loggerFactory)
-    .AddProxyConfiguration(this.configuration.Api.UseProxy, this.configuration.Api.ProxyUrl)
+new CompositionRoot(builder.Services)
+    .AddConfiguration(configuration)
+    .AddLogging(configuration.Logging, loggerFactory)
+    .AddProxyConfiguration(configuration.Api.UseProxy, configuration.Api.ProxyUrl)
     .AddExtraClaimsProvider(new ExtraClaimsProvider())
     .Register();
 ```
@@ -74,12 +67,10 @@ new CompositionRoot(services)
 The startup logic also creates various middleware objects to manage cross cutting concerns:
 
 ```csharp
-private void ConfigureApiMiddleware(IApplicationBuilder api)
-{
-    api.UseMiddleware<LoggerMiddleware>();
-    api.UseMiddleware<UnhandledExceptionMiddleware>();
-    api.UseMiddleware<CustomHeaderMiddleware>();
-}
+var api = builder.Build();
+api.UseMiddleware<LoggerMiddleware>();
+api.UseMiddleware<UnhandledExceptionMiddleware>();
+api.UseMiddleware<CustomHeaderMiddleware>();
 ```
 
 The role of each of these middleware classes is summarised below:

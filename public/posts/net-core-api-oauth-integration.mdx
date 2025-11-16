@@ -7,28 +7,27 @@ In the previous post I explained how to run this blog's <a href='net-core-code-s
 By default .NET uses a framework based approach to OAuth security, where you add the [JwtBearer Middleware](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.JwtBearer), then other details are looked up from the OpenID Connect metadata endpoint. For AWS Cognito, which does not include an API audience claim in access tokens, this can be done as follows:
 
 ```csharp
-private void ConfigureOAuth(IServiceCollection services)
-{
-    services
-        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(options =>
-        {
-            options.Authority = this.configuration.IssuerBaseUrl;
-            options.Audience = this.configuration.Audience;
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateAudience = false
-            };
-        });
+var builder = WebApplication.CreateBuilder();
+...
 
-    services.AddAuthorization(options =>
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = this.configuration.IssuerBaseUrl;
+        options.Audience = this.configuration.Audience;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateAudience = false
+        };
+    })
+    .AddAuthorization(options =>
     {
         options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
     });
-}
 ```
 
-You can also use an [AllowAnonymous](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.authorization.allowanonymousattribute) annotation if you have unsecured endpoints like those used for health checks. If it suits your coding preferences, you can use [Authorization Policies](https://docs.microsoft.com/en-us/aspnet/core/security/authorization/policies) to implement your authorization checks.
+You can use an [AllowAnonymous](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.authorization.allowanonymousattribute) annotation if you have unsecured endpoints like those used for health checks. If it suits your coding preferences, you can use [Authorization Policies](https://docs.microsoft.com/en-us/aspnet/core/security/authorization/policies) to implement your authorization checks.
 
 ```csharp
 [HttpGet("{id}/transactions")]
@@ -121,30 +120,28 @@ The API processes the JWT access token to receive the main claims. The API then 
 
 ### Custom Authentication Handler
 
-The *Startup* class creates a custom handler to wire up our API's custom OAuth behaviour. Unless a particular endpoint overrides the authorization policy the API uses the custom handler:
+The *Program* entry point object creates a custom handler to wire up the API's custom OAuth behaviour. Unless a particular endpoint overrides the authorization policy the API uses the custom handler:
 
 ```csharp
-private void ConfigureOAuth(IServiceCollection services)
-{
-    string scheme = "Bearer";
-    services.AddAuthentication(scheme)
-            .AddScheme<AuthenticationSchemeOptions, CustomAuthenticationHandler>(scheme, null);
+var builder = WebApplication.CreateBuilder();
+...
 
-    services.AddAuthorization(options =>
-    {
-        options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
-    });
-}
+string scheme = "Bearer";
+builder.Services
+    .AddAuthentication(scheme)
+    .AddScheme<AuthenticationSchemeOptions, CustomAuthenticationHandler>(scheme, null);
+
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+});
 ```
 
-The implementation's main logic calls an *OAuthFilter* object, which validates the JWT access token and produces a *ClaimsPrincipal* object that the API code uses later for authorization. The handler also include identity details in logs, enforces required scopes and makes the *ClaimsPrincipal* resolvable in business logic.
+The implementation's main logic calls an *OAuthFilter* object, which validates the JWT access token and produces a *ClaimsPrincipal* object that the API code uses later for authorization. The handler also include identity details or authenticaton error details in logs, enforces required scopes and makes the *ClaimsPrincipal* resolvable in business logic.
 
 ```csharp
 protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
 {
-    var logEntry = (LogEntry)this.Context.RequestServices.GetService(typeof(ILogEntry));
-    logEntry.Start(this.Request);
-
     try
     {
         var oauthFilter = (OAuthFilter)this.Context.RequestServices.GetService(typeof(OAuthFilter));
@@ -157,6 +154,8 @@ protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
             ["managerId"] = claimsPrincipal.Jwt.GetStringClaim(ClaimNames.ManagerId),
             ["role"] = claimsPrincipal.Jwt.GetStringClaim(ClaimNames.Role),
         };
+
+        var logEntry = (LogEntry)this.Context.RequestServices.GetService(typeof(ILogEntry));
         logEntry.SetIdentity(userId, scope, loggedClaims);
 
         var oauthConfiguration = (OAuthConfiguration)this.Context.RequestServices.GetService(typeof(OAuthConfiguration));
@@ -175,12 +174,6 @@ protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         var handler = new UnhandledExceptionMiddleware();
         var clientError = handler.HandleException(exception, this.Context);
-
-        logEntry.End(this.Context.Request, this.Context.Response);
-
-        var loggerFactory = (ILoggerFactory)this.Context.RequestServices.GetService(typeof(ILoggerFactory));
-        loggerFactory.GetRequestLogger()?.Info(logEntry.GetRequestLog());
-        loggerFactory.GetAuditLogger()?.Info(logEntry.GetAuditLog());
 
         this.Request.HttpContext.Items.TryAdd(ClientErrorKey, clientError);
         return AuthenticateResult.NoResult();
