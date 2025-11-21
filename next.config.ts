@@ -1,8 +1,5 @@
-import withMDX, {NextMDXOptions} from '@next/mdx';
+import createMDX, {NextMDXOptions} from '@next/mdx';
 import {NextConfig} from 'next';
-import remarkGfm from 'remark-gfm-no-autolink';
-import remarkPrism from 'remark-prism'
-import rehypeSlug from 'rehype-slug';
 
 const nextConfig: NextConfig = {
     reactStrictMode: true,
@@ -15,11 +12,14 @@ const nextConfig: NextConfig = {
     devIndicators: false,
 };
 
+// MDX plugins require special behavior
+// https://nextjs.org/docs/app/guides/mdx#using-plugins-with-turbopack
 const mdxConfig: NextMDXOptions = {
     options: {
-        remarkPlugins: [remarkGfm, remarkPrism],
-        rehypePlugins: [rehypeSlug as any],
+        remarkPlugins: ['remark-gfm-no-autolink', 'remark-prism'],
+        rehypePlugins: ['rehype-slug'],
     },
 };
+const withMDX = createMDX(mdxConfig);
 
-export default withMDX(mdxConfig)(nextConfig);
+export default withMDX(nextConfig);
