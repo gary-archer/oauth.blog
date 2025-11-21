@@ -8,6 +8,7 @@ By default Spring Security uses a framework based approach to OAuth security. Ad
 
 ```java
 @Configuration
+@EnableWebSecurity
 public class SecurityConfiguration {
     
 	@Bean
@@ -106,29 +107,40 @@ The API processes the JWT access token to receive the main claims. The API then 
 The *SecurityConfiguration* class wires up the API's custom OAuth behaviour. This returns a *SecurityFilterChain* class, which configures a custom authorization filter for a resource server:
 
 ```java
-@Bean
-public SecurityFilterChain filterChain(final HttpSecurity http) throws Exception {
+@Configuration
+@EnableWebSecurity
+public class SecurityConfiguration {
 
-    var container = this.context.getBeanFactory();
-    var authenticationFilter = new CustomAuthenticationFilter(container);
+    private final ConfigurableApplicationContext context;
 
-    http
-            .securityMatcher(PathPatternRequestMatcher.withDefaults().matcher(ResourcePaths.ALL))
-            .authorizeHttpRequests(authorize ->
-                    authorize.anyRequest().authenticated()
-            )
-            .addFilterBefore(authenticationFilter, AbstractPreAuthenticatedProcessingFilter.class)
+    public SecurityConfiguration(final ConfigurableApplicationContext context) {
+        this.context = context;
+    }
 
-            .cors(AbstractHttpConfigurer::disable)
-            .csrf(AbstractHttpConfigurer::disable)
-            .headers(AbstractHttpConfigurer::disable)
-            .requestCache(AbstractHttpConfigurer::disable)
-            .securityContext(AbstractHttpConfigurer::disable)
-            .logout(AbstractHttpConfigurer::disable)
-            .exceptionHandling(AbstractHttpConfigurer::disable)
-            .sessionManagement(AbstractHttpConfigurer::disable);
+    @Bean
+    public SecurityFilterChain filterChain(final HttpSecurity http) throws Exception {
 
-    return http.build();
+        var container = this.context.getBeanFactory();
+        var authenticationFilter = new CustomAuthenticationFilter(container);
+
+        http
+                .securityMatcher(PathPatternRequestMatcher.withDefaults().matcher(ResourcePaths.ALL))
+                .authorizeHttpRequests(authorize ->
+                        authorize.anyRequest().authenticated()
+                )
+                .addFilterBefore(authenticationFilter, AbstractPreAuthenticatedProcessingFilter.class)
+
+                .cors(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable)
+                .headers(AbstractHttpConfigurer::disable)
+                .requestCache(AbstractHttpConfigurer::disable)
+                .securityContext(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
+                .exceptionHandling(AbstractHttpConfigurer::disable)
+                .sessionManagement(AbstractHttpConfigurer::disable);
+
+        return http.build();
+    }
 }
 ```
 
