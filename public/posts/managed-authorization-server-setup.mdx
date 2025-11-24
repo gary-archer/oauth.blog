@@ -43,7 +43,7 @@ I then created a [Pre-Token-Generation Lambda Trigger](https://docs.aws.amazon.c
 I created a lambda function with the following code, where the *claimsToAddOrOverride* customises access tokens. In the *claimsToSuppress* logic I removes personal data from ID tokens, since my code samples instead get personal data from the authorization server's user info endpoint.
 
 ```javascript
-export const handler = function(event, context) {
+export const handler = function(event) {
   
   const response = {
     claimsAndScopeOverrideDetails: {
@@ -71,7 +71,7 @@ export const handler = function(event, context) {
   }
 
   event.response = response;
-  context.done(null, event);
+  return event;
 };
 ```
 
