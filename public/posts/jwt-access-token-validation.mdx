@@ -122,7 +122,13 @@ The API expresses its settings in its configuration file. At the time of writing
 
 ### Failed Token Validation
 
-When any token validation checks fail, the API should return an error response with a 401 HTTP status code. Traditionally, you return error details in *www-authenticate* response headers. This is the preferred option when a third-party integrates with your API. This blog instead returns a JSON object that is easier for frontend clients to process:
+When any token validation checks fail, the API should return an error response with a 401 HTTP status code. APIs should return the traditional *www-authenticate* response header to ensure interoperability:
+
+```http
+www-authenticate: Bearer error="invalid_token", error_description="Missing, invalid or expired access token"
+```
+
+This blog's APIs return JSON error objects with *code* and *message* fields, so also return that payload for 401 errors. The blog's clients can then process all API errors in the same way, while receiving correct details about expired access tokens.
 
 ```json
 {

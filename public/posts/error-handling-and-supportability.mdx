@@ -23,7 +23,7 @@ To meet these goals, you should build software that expects failure. It is commo
 
 ### 401 Error Responses
 
-The first error case I consider is calling an OAuth secured API without an access token. This blog's APIs return an error object with a code and message. The HTTP 401 status is also included in the response:
+The first error case I consider is calling an OAuth secured API without an access token. In addition to the traditional *www-authenticate* header, this blog's APIs return an error object with *code* and *message* fields. The HTTP 401 status is also included in the response:
 
 ```json
 {   
@@ -61,8 +61,6 @@ The API records error details in its request logs along with some context in cas
   }
 }
 ```
-
-For API 401s, you can also include the error details in a [www-authenticate header](https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2). For most APIs I prefer to design my own error model that uses a consistent wire format for all types of error. If you also want to align with OAuth recommendations you can consider returning error details in both a *www-authenticate* response header and an error object.
 
 ### 4xx Error Responses due to Invalid Input
 
