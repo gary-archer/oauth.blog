@@ -183,7 +183,7 @@ private async callApi(path: string, method: Method, dataToSend?: any): Promise<a
 
 ### Low Security Token Storage Options
 
-There are simpler ways to implement token refresh. For example, you can update the *oidc-client-ts* settings to those shown below. A background timer then attempts to refresh the access token by comparing the current time to the *expires_in* field from the token response. The time for iframe-based token refresh occurs in the background so you avoid impacting users. You can also avoid performing a token refresh if the user reloads the page or opens a new browser tab:
+There are simpler ways to implement token refresh. For example, you can update the *oidc-client-ts* settings to include the following two settings. A background timer then attempts to refresh the access token by comparing the current time to the *expires_in* field from the token response. The time for iframe-based token refresh occurs in the background so you avoid impacting users. You can also avoid performing a token refresh if the user reloads the page or opens a new browser tab:
 
 ```markdown
 userStore: new WebStorageStateStore({ store: localStorage }),
