@@ -194,6 +194,7 @@ filebeat:
     - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
     - ../../../oauth.apisample.nodejs/logs:/var/log/api
   environment:
+    ELASTICSEARCH_URL: 'http://elasticsearch-internal:9200'
     ELASTICSEARCH_USERNAME: 'elastic'
     ELASTICSEARCH_PASSWORD: 'Password1'
 ```
@@ -226,9 +227,9 @@ filebeat.inputs:
       add_error_key: false
 
 output.elasticsearch:
-  hosts: ['http://elasticsearch-internal:9200']
-  username: elastic
-  password: Password1
+  hosts: ["${ELASTICSEARCH_URL}"]
+  username: "${ELASTICSEARCH_USERNAME}"
+  password: "${ELASTICSEARCH_PASSWORD}"
   index: "api-%{[fields.logtype]}-%{+yyyy.MM.dd}"
   pipelines:
   - pipeline: api
@@ -270,9 +271,9 @@ filebeat.inputs:
         symlinks: true
 
   output.elasticsearch:
-    hosts: ['http://elasticsearch-svc:9200']
-    username: elastic
-    password: Password1
+    hosts: ["${ELASTICSEARCH_URL}"]
+    username: "${ELASTICSEARCH_USERNAME}"
+    password: "${ELASTICSEARCH_PASSWORD}"
     index: "api-%{+yyyy.MM.dd}"
     pipelines:
     - pipeline: api
