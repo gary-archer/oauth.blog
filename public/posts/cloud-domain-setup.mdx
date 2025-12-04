@@ -39,13 +39,13 @@ I also use a *https://bff.authsamples.com* domain as a backend for frontend base
 
 ### AWS Account Setup
 
-I first used the [AWS Sign Up](https://aws.amazon.com/free) option and selected the *Create a Free Account* option. I submitted registration details and then processed the confirmation email. Next I signed into the [AWS Management Console](https://aws.amazon.com/console/) and started administering resources under my account. I navigated to *IAM / Users* and created a user called *aws-upload*, which this blog uses use for uploading built applications to AWS. 
+I first used the [AWS Sign Up](https://aws.amazon.com/free) option and selected the *Create a Free Account* option. I submitted registration details and then processed the confirmation email. Next I signed into the [AWS Management Console](https://aws.amazon.com/console/) and started administering resources under my account. 
 
-I then granted permissions to enable the user to upload files to AWS and made a note of the *Access Key ID* and *Secret Access Key* values. To complete the setup, I followed the [AWS CLI Installation Instructions](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html). I configured the CLI to populate configuration files in my local *~/.aws* directory, so that I can run *aws* commands to deploy my applications.
+I then installed the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) so that I can deploy applications and automate the creation of AWS infrastructure to provide HTTPS endpoints. I use the *aws* command to trigger deployments and use [aws login](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sign-in.html) when prompted, to authorize the AWS CLI.
 
 ### Create Cloud Domains
 
-After activating the account I used the [Route 53](https://aws.amazon.com/route53/) DNS service to create my cloud domains. Each of these costs 14 USD per year and provides low cost hosting for my hosted code samples.
+After activating the account I used the [Route 53](https://aws.amazon.com/route53/) DNS service to create my cloud domains. Each of these costs around 15 USD per year and provides low cost hosting for my hosted code samples.
 
 ![parent domain](../images/580/parent-domain.jpg?v=20241231)
 
