@@ -52,14 +52,14 @@ If you want to run the SPA as well as the API, install [Node.js](https://nodejs.
 Close the GitHub repository with the following command:
 
 ```bash
-git clone https://github.com/gary-archer/oauth.apisample.netcore
+git clone https://github.com/gary-archer/oauth.apisample.net
 ```
 
 ![repo](../images/320/repo.jpg)
 
 ### Step 2: Create SSL Certificates
 
-Next run the following commands, to create some OpenSSL development certificates:
+Next, run the following commands, to create some OpenSSL development certificates:
 
 ```bash
 export SECRETS_FOLDER="$HOME/secrets"
@@ -74,15 +74,7 @@ certs/authsamples-dev.ca.crt
 
 ### Step 3: Build and Run the API
 
-Close the GitHub repository with the following command:
-
-```bash
-git clone https://github.com/gary-archer/oauth.apisample.netcore
-```
-
-![repo](../images/320/repo.jpg?v=20251121)
-
-Next run the API:
+Next, run the API:
 
 ```bash
 ./start.sh
@@ -108,7 +100,7 @@ To run XUnit tests, the API must be pointed to a mock authorization server, so m
 ./testsetup.sh
 ```
 
-Next run tests with the following command:
+Next, run tests with the following command:
 
 ```bash
 ./integration_tests.sh
