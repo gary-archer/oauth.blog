@@ -32,18 +32,18 @@ Node.js uses the *npm* tool to specify libraries used by your application in its
 ```json
 {
   "dependencies": {
-    "axios": "^1.12.2",
+    "axios": "^1.13.2",
     "mustache": "^4.2.0",
-    "oidc-client-ts": "^3.3.0"
+    "oidc-client-ts": "^3.4.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.35.0",
+    "@eslint/js": "^9.39.2",
     "@types/mustache": "^4.2.5",
-    "eslint": "^9.35.0",
-    "ts-loader": "^9.5.2",
-    "typescript": "^5.9.2",
-    "typescript-eslint": "^8.44.0",
-    "webpack": "^5.101.3",
+    "eslint": "^9.39.2",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.49.0",
+    "webpack": "^5.103.0",
     "webpack-cli": "^6.0.1",
     "webpack-merge": "^6.0.1"
   }
@@ -107,7 +107,11 @@ import {CompanyRepository} from '../repositories/companyRepository.js';
 
 ### Writing Code: Using Type Definition Files
 
-The *index.d.ts* file sometimes exists at a non-standard location. You then use options such as [typeRoots](https://www.typescriptlang.org/tsconfig#typeRoots) to resolve paths. In some cases, you use a separate type definitions file from [Definitely Typed](https://github.com/DefinitelyTyped/DefinitelyTyped). These are recognised by *package.json* entries that begin with *@types*.
+The *index.d.ts* file sometimes exists at a non-standard location. You then use options such as [typeRoots](https://www.typescriptlang.org/tsconfig#typeRoots) to resolve paths. In some cases, you use a separate type definitions file from [Definitely Typed](https://github.com/DefinitelyTyped/DefinitelyTyped). These are recognised by *package.json* entries that begin with *@types*. You can find their latest versions with commands of the following form:
+
+```bash
+npm view @types/node --json | grep '"24.' | sort -rV | head -n 1
+```
 
 For libraries with no type definitions, you can add a typings.d.ts file to the project and then use a *declare module* statement. This gets past compiler errors, though you lose type checking or intellisense. If you prefer, you can instead add your own type definitions for the library.
 
