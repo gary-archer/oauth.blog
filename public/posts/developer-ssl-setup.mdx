@@ -266,10 +266,10 @@ This blog's <a href='net-core-code-sample-overview.mdx'>OAuth Secured .NET API</
 
 ### Trusting a Root Certificate in Java APIs
 
-This blog's <a href='java-spring-boot-api-overview.mdx'>OAuth Secured Java API</a> uses certificate trust from the Java trust store. For example, on Ubuntu Linux this is at the following location when running Java 21:
+This blog's <a href='java-spring-boot-api-overview.mdx'>OAuth Secured Java API</a> uses certificate trust from the Java trust store. For example, on Ubuntu Linux this is at the following location when running Java 25:
 
 ```markdown
-/usr/lib/jvm/zulu-21-amd64/lib/security/cacerts
+/usr/lib/jvm/zulu-25-amd64/lib/security/cacerts
 ```
 
 Operations to manage certificates use the [keytool utility](https://www.techquintal.com/java-keytool-keystore-commands), and I use the following types of commands to add, find and remove trust for root certificates in a bundle file:

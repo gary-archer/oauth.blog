@@ -25,7 +25,7 @@ The code implements OAuth integration in an unobtrusive manner, so that Android 
 
 ![project](../images/510/project.jpg?v=20240912)
 
-When the project loads there is a *Gradle Sync* to download third party libraries. Ensure that this completes successfully. You may also need to configure Java 21 under *Settings / Build,Execution,Deployment / Build Tools / Gradle / Gradle JDK*.
+When the project loads there is a *Gradle Sync* to download third party libraries. Ensure that this completes successfully. You may also need to configure Java 25 under *Settings / Build,Execution,Deployment / Build Tools / Gradle / Gradle JDK*.
 
 ### Step 3: Run the App on an Emulator
 
@@ -46,21 +46,21 @@ View the app's *libs.versions.toml* [Version Catalog File](https://docs.gradle.o
 
 ```markdown
 [versions]
-application = "8.13.0"
-kotlin = "2.2.21"
-compose = "2.2.21"
+application = "8.13.2"
+kotlin = "2.3.0"
+compose = "2.3.0"
 detekt = "2.0.0-alpha.1"
 core-ktx = "1.17.0"
-activity-compose = "1.11.0"
-compose-bom = "2025.10.01"
-navigation = "2.9.5"
-compose-ui = "1.9.4"
+activity-compose = "1.12.2"
+compose-bom = "2025.12.01"
+navigation = "2.9.6"
+compose-ui = "1.10.0"
 material3 = "1.4.0"
 appauth = "0.11.1"
 browser = "1.9.0"
-okhttp = "5.2.1"
+okhttp = "5.3.2"
 gson = "2.13.2"
-okio = "3.16.2"
+okio = "3.16.4"
 eventbus = "3.3.1"
 
 [plugins]
