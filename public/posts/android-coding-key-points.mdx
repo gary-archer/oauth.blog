@@ -296,11 +296,12 @@ The *OAuthClient* interface simplifies the use of OAuth operations in the rest o
 
 ```kotlin
 interface OAuthClient {
-    suspend fun initialize()
+    suspend fun getSession()
     suspend fun getAccessToken(): String?
     suspend fun synchronizedRefreshAccessToken(): String
     fun startLogin(launchAction: (i: Intent) -> Unit)
     suspend fun finishLogin(intent: Intent)
+    fun getDelegationId(): String
     fun startLogout(launchAction: (i: Intent) -> Unit)
     fun finishLogout()
     fun clearLoginState()

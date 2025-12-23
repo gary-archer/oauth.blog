@@ -29,7 +29,7 @@ The traditional SPA flow remains useful to represent a pure SPA architecture and
 Clone the code sample's GitHub repository with the following command:
 
 ```bash
-git clone https://github.com/gary-archer/oauth.websample.azure
+git clone https://github.com/gary-archer/oauth.websample.entraid
 ```
 
 ![repo](../images/190/repo.jpg)
@@ -138,7 +138,7 @@ Populating these values for my two test user accounts was a little convoluted an
 
 Entra ID automatically creates the extensions app and stores custom user attributes there. The *UserAdmin* app is a backend client for administering all user accounts with the client credentials flow. Therefore I granted it *User.ReadWriteAll* application permissions (not delegated permissions). To populate the values for my two test user accounts I had to write some client code to call the Graph API. I did this as a bash script that uses the [jq](https://github.com/jqlang/jq) tool. The code sample repository contains the script:
 
-- [utils/populate_custom_user_attributes.sh](https://github.com/gary-archer/oauth.websample.azure/blob/master/utils/populate-custom-user-attributes.sh)
+- [utils/populate_custom_user_attributes.sh](https://github.com/gary-archer/oauth.websample.entraid/blob/master/utils/populate-custom-user-attributes.sh)
 
 My two custom user attributes are extension attributes with the following full technical names. The middle part is the client ID of the extensions app registration with hyphens removed:
 
@@ -160,7 +160,7 @@ A *Single Sign On* tab is then available from which you can select *Attributes &
 You can then download the code, then open it in Visual Studio Code:
 
 ```bash
-git clone https://github.com/gary-archer/oauth.websample.azure
+git clone https://github.com/gary-archer/oauth.websample.entraid
 ```
 
 Identify the configuration files containing OAuth settings used by the UI and API:

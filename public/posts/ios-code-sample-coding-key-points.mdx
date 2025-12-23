@@ -317,11 +317,12 @@ The *OAuthClient* interface simplifies the use of OAuth operations in the rest o
 
 ```swift
 protocol OAuthClient {
-    func initialize() async throws
+    func getSession() async throws
     func getAccessToken() async throws -> String
     func synchronizedRefreshAccessToken() async throws -> String
     func startLoginRedirect(viewController: UIViewController) throws
     func handleLoginResponse() async throws -> OIDAuthorizationResponse
+    func getDelegationId() -> String
     func finishLogin(authResponse: OIDAuthorizationResponse) async throws
     func startLogoutRedirect(viewController: UIViewController) throws
     func handleLogoutResponse() async throws -> OIDEndSessionResponse
