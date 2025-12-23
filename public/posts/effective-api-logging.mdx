@@ -409,9 +409,9 @@ Access tokens provide user and client context that can be useful to add to API l
 
 - The *sub* claim should be a stable anonymous identifier for the current user.
 - The *client_id* should preferably be a readable value for the client application.
-- The *delegation_id* is a natural identifier for the user's authentication session.
+- The *delegation_id* is a natural identifier for the user's authenticated session.
 
-This security context helps to satisfy <a href='api-technical-support-analysis.mdx'>query use cases</a>. This blog's final clients render the *delegation_id* as an API session ID and enables developers or testers to quickly filter API logs for their own user session. The *delegation_id* is assigned after login and then remains the same when access tokens and refresh tokens get renewed.
+This security context helps to satisfy <a href='api-technical-support-analysis.mdx'>query use cases</a>. This blog's final clients render the *delegation_id* as an API session ID, which enables developers or testers to quickly filter API logs for their own user session. The *delegation_id* is assigned after login and then remains the same when access tokens and refresh tokens get renewed.
 
 ![application session](../images/280/application-session.jpg?v=20240913)
 
