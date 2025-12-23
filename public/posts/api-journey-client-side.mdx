@@ -24,7 +24,8 @@ OAuth clients typically load their configuration at startup, to get details such
         "scope":                 "openid profile https://api.authsamples.com/investments",
         "customLogoutEndpoint":  "https://login.authsamples.com/logout",
         "postLogoutRedirectUri": "https://www.authsamples.com/apps/finaldesktopapp/postlogout.html",
-        "logoutCallbackPath":    "/logoutcallback"
+        "logoutCallbackPath":    "/logoutcallback",
+        "delegationIdClaimName":  "origin_jti"
     }
 }
 ```
@@ -165,7 +166,7 @@ public async callApi(options?: ViewLoadOptions): Promise<void> {
 }
 ```
 
-### API Client
+### Reliable Fetch
 
 The lower level API client deals with translating HTTP requests and responses to objects. It also uses an algorithm of the following form to manage access tokens, token refresh and session expiry:
 
@@ -380,7 +381,7 @@ Clicking an *Error Summary* link invokes an *Error Details* dialog that provides
 
 ![error detail](../images/270/error-detail.jpg?v=20240911)
 
-The *API Session ID* shown in the browser is nothing to do with OAuth or security. Instead, it enables a technical user of the SPA to query the API logs their session generates. See the <a href='api-technical-support-analysis.mdx'>Technical Support Analysis</a> post for details.
+The *API Session ID* shown in frontends is the OAuth *delegation_id* from the ID token. APIs receive the same value in access tokens. The *delegation_id* remains the same throughout the authenticated user's session and this blog's final APIs include the value in their API logs. Testers can therefore filter API logs to find entries they have generated. See the <a href='api-technical-support-analysis.mdx'>Technical Support Analysis</a> post for some example queries that use the logged session ID.
 
 ### Client Responsibilities are Separated
 

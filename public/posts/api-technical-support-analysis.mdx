@@ -81,7 +81,7 @@ This is a *Lucene* query whose response is zero or more documents. A DevOps user
     "correlationId": "fa20ca8e-8506-c4f0-9217-1cac1a83a2c8",
     "errorId": 48649,
     "id": "17580a1c-1631-f80f-e32e-9e237d47cbab",
-    "clientName": "FinalSPA",
+    "clientId": "FinalSPA",
     "statusCode": 500
 }
 ```
@@ -94,7 +94,7 @@ POST _sql?format=txt
 SELECT
   utcTime,
   operationName,
-  clientName,
+  clientId,
   sessionId,
   statusCode,
   userId 
@@ -112,7 +112,7 @@ ORDER BY
 For this type of query, the output format in the Kibana frontend is a tabular list of columns that shows *how often* this type of error has occurred and for *which users*:
 
 ```markdown
-|apiName|operationName         |clientName|statusCode|errorCode           |userId                              |
+|apiName|operationName         |clientId  |statusCode|errorCode           |userId                              |
 +-------+----------------------+----------+----------+--------------------+------------------------------------+
 FinalApi|getCompanyTransactions|FinalSPA  |500       |exception_simulation|a6b404b1-98af-41a2-8e7f-e4061dc0bf86|
 ```
@@ -126,7 +126,7 @@ SELECT
   apiName,
   method,
   path,
-  clientName,
+  clientId,
   statusCode,
   errorCode
 FROM
@@ -142,7 +142,7 @@ LIMIT 100
 This query returns results similar to the following and provides a clear picture of the user's technical activity against APIs:
 
 ```markdown
-|apiName |method|path                                 |clientName|statusCode|errorCode           |
+|apiName |method|path                                 |clientId  |statusCode|errorCode           |
 +--------+------+-------------------------------------+----------+----------+--------------------+
 |FinalApi|GET   |/investments/companies               |FinalSPA  |200       |null                |
 |FinalApi|GET   |/investments/userinfo                |FinalSPA  |200       |null                |
@@ -181,7 +181,7 @@ It can be common in software for there to be intermittent problems which people 
 POST _sql?format=txt
 {"query": """
 SELECT
-  clientName,
+  clientId,
   apiName,
   operationName,
   statusCode,
@@ -196,7 +196,7 @@ AND
 AND
   utcTime > '2019-08-01' 
 GROUP BY
-  clientName,
+  clientId,
   apiName,
   operationName,
   statusCode,
@@ -207,7 +207,7 @@ GROUP BY
 You might issue production reliability reports for APIs every two weeks. Each type of issue should be understood, and you could plan actions such as adding more log detail when needed.
 
 ```markdown
-|clientName     |apiName |operationName         |statusCode|errorCode           |frequency|
+|clientId       |apiName |operationName         |statusCode|errorCode           |frequency|
 +---------------+--------+----------------------+----------+--------------------+---------+
 |FinalSPA       |FinalApi|getCompanyTransactions|404       |company_not_found   |6        |
 |FinalSPA       |FinalApi|getCompanyList        |500       |exception_simulation|2        |
@@ -225,11 +225,11 @@ You can use technical support logs for testing, to force all errors and slowness
 
 ### 2.1. Analysing your own UI Session
 
-This blog's example frontends all send a *Session ID* to the API via a custom header. This field is nothing to do with OAuth or authenticated user sessions, and is only used for log filtering:
+This blog's example frontends all render the *delegation_id* from the ID token as an API session ID. APIs receive the same value in access tokens. The *delegation_id* remains the same throughout the authenticated user's session and this blog's final APIs include the value in their API logs.
 
 ![log session id](../images/400/log-session-id.jpg?v=20241228)
 
-The session ID enables testers to focus only on logs for the entries that they generate in their own user session:
+Testers can therefore filter API logs to find entries they have generated:
 
 ```markdown
 POST _sql?format=txt
@@ -246,7 +246,7 @@ You can use logs to monitor all errors that occur in test systems. Those that ar
 POST _sql?format=txt
 {"query": """
 SELECT
-  clientName,
+  clientId,
   apiName,
   operationName,
   statusCode,
@@ -261,7 +261,7 @@ AND
 AND
   utcTime > '2019-08-01' 
 GROUP BY
-  clientName,
+  clientId,
   apiName,
   operationName,
   statusCode,

@@ -85,6 +85,7 @@ The API uses a JSON configuration file with the following OAuth settings, which 
     "algorithm":                    "RS256",
     "scope":                        "https://api.authsamples.com/investments",
     "jwksEndpoint":                 "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json",
+    "delegationIdClaimName":        "origin_jti",
     "claimsCacheTimeToLiveMinutes": 15
   }
 }
@@ -137,7 +138,7 @@ builder.Services.AddAuthorization(options =>
 });
 ```
 
-The implementation's main logic calls an *OAuthFilter* object, which validates the JWT access token and produces a *ClaimsPrincipal* object that the API code uses later for authorization. The handler also include identity details or authenticaton error details in logs, enforces required scopes and makes the *ClaimsPrincipal* resolvable in business logic.
+The implementation's main logic calls an *OAuthFilter* object, which validates the JWT access token and produces a *ClaimsPrincipal* object that the API code uses later for authorization. The handler also enforces required scopes and enables business logic classes to resolve the *ClaimsPrincipal*.
 
 ```csharp
 protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -147,19 +148,9 @@ protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         var oauthFilter = (OAuthFilter)this.Context.RequestServices.GetService(typeof(OAuthFilter));
         var claimsPrincipal = await oauthFilter.ExecuteAsync(this.Request);
 
-        var userId = claimsPrincipal.Jwt.Sub;
-        var scope = claimsPrincipal.Jwt.Scope.Split(" ").ToList();
-        var loggedClaims = new JsonObject
-        {
-            ["managerId"] = claimsPrincipal.Jwt.GetStringClaim(ClaimNames.ManagerId),
-            ["role"] = claimsPrincipal.Jwt.GetStringClaim(ClaimNames.Role),
-        };
-
-        var logEntry = (LogEntry)this.Context.RequestServices.GetService(typeof(ILogEntry));
-        logEntry.SetIdentity(userId, scope, loggedClaims);
-
         var oauthConfiguration = (OAuthConfiguration)this.Context.RequestServices.GetService(typeof(OAuthConfiguration));
-        if (!scope.Contains(oauthConfiguration.Scope))
+        var receivedScopes = ClaimsReader.GetStringClaim(claimsPrincipal.Jwt, ClaimNames.Scope).Split(" ").ToList();
+        if (!receivedScopes.Contains(oauthConfiguration.Scope))
         {
             throw ErrorFactory.CreateClientError(
                 HttpStatusCode.Forbidden,
@@ -191,14 +182,15 @@ I use a number of small classes to implement the desired behaviour. The main wor
 
 ### JWT Access Token Validation
 
-The *AccessTokenValidator* object gets the token signing public key for the received JWT access token, supplies it to the *jose-jwt* library and then checks for expected claims.
+The *AccessTokenValidator* object gets the token signing public key that matches the *kid* field in the received JWT access token's header. Next, the *jose-jwt* library performs cryptographic validation of the access token's signature. The code then checks for expected claims and adds some access token details to logs.
 
 ```csharp
 public async Task<JwtClaims> ValidateTokenAsync(string accessToken)
 {
     using (this.logEntry.CreatePerformanceBreakdown("tokenValidator"))
     {
-        var claimsJson = string.Empty;
+        JwtClaims claims = null;
+        string claimsJson = string.Empty;
         try
         {
             var kid = this.GetKeyIdentifier(accessToken);
@@ -215,6 +207,10 @@ public async Task<JwtClaims> ValidateTokenAsync(string accessToken)
             }
 
             claimsJson = JWT.Decode(accessToken, jwk);
+            claims = new JwtClaims(claimsJson);
+
+            this.ValidateProtocolClaims(claims);
+            this.logEntry.SetIdentityData(this.GetIdentityData(claims));
         }
         catch (Exception ex)
         {
@@ -237,7 +233,7 @@ There are a number of responsibilities that I would ideally like the JWT library
 | Signature Checks | Cryptographically verifying the JSON Web Signature of received JWTs. |
 | Protocol Claim Checks | Checking that the token has the correct issuer and audience, and that it is valid for use at the current time. |
 
-The *jose.jwt* library does the complex cryptographic work, to validate the JWT signature. However, it does not manage JWKS downloads, caching of JWKS keys, or checking protocol claims. These tasks are not complex but make my API code less elegant. I needed to write additional plumbing classes, including a *JsonWebKeyResolver* and a *JwksCache*.
+The *jose.jwt* library does not manage JWKS downloads, caching of JWKS keys, or checking protocol claims. These tasks are not complex but make my API code less elegant. I needed to write additional plumbing classes, including a *JsonWebKeyResolver* and a *JwksCache*.
 
 ### Claims Principal
 
@@ -377,7 +373,7 @@ API request logs record error details for all failed requests, to help with prob
   "method": "GET",
   "path": "/investments/companies/2/transactions",
   "resourceId": "2",
-  "clientName": "FinalSPA",
+  "clientId": "FinalSPA",
   "statusCode": 401,
   "errorCode": "unauthorized",
   "millisecondsTaken": 43,

@@ -108,11 +108,12 @@ When the SPA makes API requests it sends a short-lived access token encrypted in
 
 ### Step 7: View Updated SPA Configuration
 
-In earlier samples, the SPA performed its own OpenID Connect flow in JavaScript. This work is now done by remote token handler components, and the SPA configuration is therefore reduced to a backend for frontend base URL:
+In earlier samples, the SPA performed its own OpenID Connect flow in JavaScript. This work is now done by remote token handler components, and the SPA configuration is therefore reduced primarily to a backend for frontend base URL:
 
 ```json
 {
-    "bffBaseUrl": "https://bff.authsamples-dev.com"
+    "bffBaseUrl": "https://bff.authsamples-dev.com",
+    "delegationIdClaimName": "origin_jti"
 }
 ```
 
@@ -184,7 +185,8 @@ This runs some utility token handler components in a small docker compose networ
 
 ```json
 {
-    "bffBaseUrl": "https://bfflocal.authsamples-dev.com:444"
+    "bffBaseUrl": "https://bfflocal.authsamples-dev.com:444",
+    "delegationIdClaimName": "origin_jti"
 }
 ```
 

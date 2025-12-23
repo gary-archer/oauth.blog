@@ -18,6 +18,7 @@ APIs start by loading their configuration, which includes OAuth settings needed 
     "algorithm":                    "ES256",
     "scope":                        "investments",
     "jwksEndpoint":                 "https://login.authsamples-dev.com:447/.well-known/jwks.json",
+    "delegationIdClaimName":        "origin_jti",
     "claimsCacheTimeToLiveMinutes": 15
   }
 }
@@ -103,7 +104,7 @@ This blog's API code samples receive the following format of access token, which
 }
 ```
 
-The API validates a JWT access token on every request, after which the API trusts the token claims. The API's then implements its business authorization, using *scopes* and *claims* from the access token's payload.
+The API validates a JWT access token on every request, after which the API trusts the token claims. The API adds identity details to logs and then performs its business authorization, using *scopes* and *claims* from the access token's payload.
 
 ```typescript
 public async validateAccessToken(accessToken: string): JwtClaims {
@@ -115,7 +116,10 @@ public async validateAccessToken(accessToken: string): JwtClaims {
     } as JWTVerifyOptions;
 
     const result = await jwtVerify(accessToken, this.jwksRetriever.remoteJWKSet, options);
-    return  result.payload;
+    claims = result.payload;
+
+    this.logEntry.setIdentityData(this.getIdentityData(claims));
+    return claims;
 }
 ```
 
@@ -185,7 +189,7 @@ export class CompanyService {
 
 The authorization logic could be written in various other ways. The claims principal is a natural request-scoped object, so there could be other ways to inject it. My personal preference is to use constructor injection.
 
-### Testable OAuth Implementation
+### API Security is Testable
 
 You should test OAuth API security frequently as part of a secure API development lifecycle. This blog's final APIs use tests that <a href='api-automated-tests.mdx'>mock the authorization server</a>. This technique enables you to easily control access tokens when you write integration tests on a development computer. I use the same JOSE library for both API access token validation and test code that produces JWTs.
 
@@ -204,6 +208,7 @@ describe('OAuth API Tests', () => {
 
         const jwtOptions = new MockTokenOptions();
         jwtOptions.useStandardUser();
+        jwtOptions.delegationId = this.delegationId;
         jwtOptions.scope = 'openid profile';
         const accessToken = await authorizationServer.issueAccessToken(jwtOptions);
 
@@ -216,7 +221,7 @@ describe('OAuth API Tests', () => {
 }
 ```
 
-### API Returns Friendly Errors to Clients
+### APIs Returns Friendly Errors to Clients
 
 One of the reasons why I use a JOSE library is to take finer control of OAuth error responses for clients. For most API errors I return a client-friendly object containing a *code* and *message*. When APIs serve frontend clients, I use the same response format for OAuth errors:
 
@@ -238,7 +243,7 @@ When there is a server error, the API returns additional information to support 
   "utcTime": "2022-07-24T10:28:00.438Z"
 ```
 
-### API Writes Queryable Logs
+### APIs Writes Queryable Logs
 
 I design API request logs to be easy for people to query. When there is a client error I write a log entry similar to this:
 
@@ -253,7 +258,7 @@ I design API request logs to be easy for people to query. When there is a client
   "method": "GET",
   "path": "/investments/companies/2/transactions",
   "resourceId": "2",
-  "clientName": "FinalSPA",
+  "clientId": "FinalSPA",
   "statusCode": 401,
   "errorCode": "invalid_token",
   "millisecondsTaken": 2,
@@ -283,7 +288,7 @@ When there is a server error I write a log entry that includes a unique *Error I
   "method": "GET",
   "path": "/investments/companies/2/transactions",
   "resourceId": "2",
-  "clientName": "FinalSPA",
+  "clientId": "FinalSPA",
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 500,
   "errorCode": "exception_simulation",
@@ -337,7 +342,7 @@ Once you take control over API logging, it should be straightforward to implemen
   "method": "GET",
   "path": "/investments/companies/2/transactions",
   "resourceId": "2",
-  "clientName": "LoadTest",
+  "clientId": "LoadTest",
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 200,
   "sessionId": "51bea312-b713-46eb-a9f4-8af2c4328836",

@@ -40,6 +40,7 @@ The test configuration that points to a mock JWKS URI can be considered one of t
         "jwksEndpoint":                  "https://login.authsamples-dev.com:447/.well-known/jwks.json",
         "userInfoEndpoint":              "https://login.authsamples-dev.com:447/oauth2/userInfo",
         "jwksCooldownDuration":          0,
+        "delegationIdClaimName":        "origin_jti",
         "claimsCacheTimeToLiveMinutes":  15
     }
 }
@@ -146,6 +147,7 @@ it ('Get transactions returns 404 for companies that do not match the regions cl
 
     const jwtOptions = new MockTokenOptions();
     jwtOptions.useStandardUser();
+    jwtOptions.delegationId = this.delegationId;
     const accessToken = await authorizationServer.issueAccessToken(jwtOptions);
 
     const options = new ApiRequestOptions(accessToken);
@@ -165,6 +167,8 @@ public async issueAccessToken(options: MockTokenOptions): Promise<string> {
             iss: options.issuer,
             aud: options.audience,
             scope: options.scope,
+            delegation_id: options.delegationId,
+            client_id: 'TestClient',
             sub: options.subject,
             manager_id: options.managerId,
             role: options.role,
@@ -174,10 +178,6 @@ public async issueAccessToken(options: MockTokenOptions): Promise<string> {
             .sign(this.jwk.privateKey);
 }
 ```
-
-You can view mock access tokens issued by the JOSE library in an online JWT viewer. In the following example I ensured that the token contains all of the *scopes* and *claims* that the real authorization server issues:
-
-![mock access token](../images/380/mock-access-token.jpg)
 
 ### Basic Load Test
 
@@ -215,7 +215,7 @@ Each API request in the load test also sends input fields that are logged, to pr
 | ----- | ----------- |
 | Session ID | An identifier to partition all requests in the load test together, so that any log analysis can ignore other log entries. |
 | Correlation ID | An identifier for a single request, to enable slow or failed requests to be quickly looked up. |
-| Client Name | The name of the load test, as a mechanism to find all load test sessions. |
+| Client ID | The name of the load test client, as a mechanism to find all load test sessions. |
 
 If a load test results in suboptimal results, the load tester could interrogate logs to understand why, using <a href='api-technical-support-analysis.mdx'>technical support analysis queries</a>.
 

@@ -437,7 +437,7 @@ The SPA retains full control over login usability. Rather than using a few lines
 
 ### API Requests with Cookies
 
-After login the SPA uses *HttpOnly SameSite=strict Secure* cookies to call APIs. The SPA must use the *withCredentials* flag to instruct the browser to send cookies to its backend for frontend. The SPA sends a custom header to enforce CORS preflight requests, as a CSRF prevention best practice. The SPA also sends some custom headers to the API for logging purposes.
+After login the SPA uses *HttpOnly SameSite=strict Secure* cookies to call APIs. The SPA must use the *withCredentials* flag to instruct the browser to send cookies to its backend for frontend. The SPA sends a custom header to enforce CORS preflight requests, as a CSRF prevention best practice. The SPA also sends some a correlation ID for logging and tracing purposes.
 
 ```typescript
 private async callApiWithCredential(
@@ -447,10 +447,8 @@ private async callApiWithCredential(
     dataToSend: any): Promise<any> {
 
     const headers: any = {
-        'token-handler-version':      '1',
-        'authsamples-api-client':     'FinalSPA',
-        'authsamples-session-id':     this.sessionId,
-        'authsamples-correlation-id': Guid.create().toString(),
+        'token-handler-version': '1',
+        'correlation-id': Guid.create().toString(),
     };
 
     const requestOptions = {

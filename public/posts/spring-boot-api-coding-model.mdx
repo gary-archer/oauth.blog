@@ -242,16 +242,13 @@ public final class LoggingInterceptor implements HandlerInterceptor {
 
         try {
 
-            if (request.getDispatcherType().equals(DispatcherType.REQUEST)) {
+            var logEntry = this.container.getBean(LogEntryImpl.class);
+            logEntry.start(request);
 
-                var logEntry = this.container.getBean(LogEntryImpl.class);
-                logEntry.start(request);
-
-                @SuppressWarnings("unchecked")
-                var pathVariables = (Map<String, String>)
-                        request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
-                logEntry.setResourceId(pathVariables);
-            }
+            @SuppressWarnings("unchecked")
+            var pathVariables = (Map<String, String>)
+                    request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+            logEntry.setResourceId(pathVariables);
 
         } catch (Exception filterException) {
 
@@ -369,7 +366,7 @@ The art of good error handling is to design good error objects that contain usef
   "method" : "GET",
   "path" : "/investments/companies/4/transactions",
   "resourceId" : "4",
-  "clientName" : "FinalSPA",
+  "clientId" : "FinalSPA",
   "userId" : "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode" : 500,
   "errorCode" : "exception_simulation",

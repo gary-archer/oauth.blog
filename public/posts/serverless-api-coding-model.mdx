@@ -71,7 +71,7 @@ export class LambdaInstance {
             const childContainerMiddleware = new ChildContainerMiddleware(parentContainer);
             const loggerMiddleware = new LoggerMiddleware(loggerFactory);
             const exceptionMiddleware = new ExceptionMiddleware(configuration.logging);
-            const authenticationMiddleware = new AuthenticationMiddleware(configuration.oauth.scope);
+            const authenticationMiddleware = new AuthenticationMiddleware(configuration.oauth);
             const customHeaderMiddleware = new CustomHeaderMiddleware(configuration.logging.apiName);
 
             return middy(async (event: APIGatewayProxyExtendedEvent, context: Context) => {
@@ -202,6 +202,7 @@ it ('Call API returns 401 for invalid issuer', async () => {
 
     const jwtOptions = new MockTokenOptions();
     jwtOptions.useStandardUser();
+    jwtOptions.delegationId = this.delegationId;
     jwtOptions.issuer = 'https://otherissuer.com';
     const accessToken = await authorizationServer.issueAccessToken(jwtOptions);
 

@@ -8,7 +8,7 @@ Most online documents on API logging describe a widely used development approach
 
 - Enable a *logger per class*.
 - Enable *logging levels*, such as DEBUG, INFO, WARN and ERROR.
-- Output log data to various locations via *appenders* or *transports*.
+- Output text data to various locations via *appenders* or *transports*.
 - Enable logging behaviour to be changed via *configuration*.
 
 Results can be useful for local development, with a single user and a low volume of API requests. Yet it may not scale effectively when you need to manage a large volume of logs.
@@ -82,7 +82,7 @@ For each API request I output a single request log entry and a single audit log 
   "method": "GET",
   "path": "/investments/companies/2/transactions",
   "resourceId": "2",
-  "clientName": "LoadTest",
+  "clientId": "LoadTest",
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 200,
   "millisecondsTaken": 7,
@@ -99,7 +99,7 @@ For each API request I output a single request log entry and a single audit log 
   "method": "GET",
   "path": "/investments/companies/2/transactions",
   "resourceId": "2",
-  "clientName": "LoadTest",
+  "clientId": "LoadTest",
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 200,
   "millisecondsTaken": 7,
@@ -134,7 +134,7 @@ This blog's API request logs use a schema with the following top level fields, m
 | HTTP Method | Whether a GET, POST etc. |
 | Path | The URL path and query string. |
 | Resource ID | The REST URL runtime path segments that identify the resource. |
-| Client Name | A readable value for the application that called the API. |
+| Client ID | The ID of the OAuth client that called the API. |
 | User ID | The subject claim from the OAuth access token. |
 | Status Code | The response status code. |
 | Milliseconds Taken | The number of milliseconds that the API code took to execute. |
@@ -274,7 +274,7 @@ When APIs return an HTTP 400 related status, request logs record the client resp
   "method": "GET",
   "path": "/investments/companies/2/transactions",
   "resourceId": "2",
-  "clientName": "FinalSPA",
+  "clientId": "FinalSPA",
   "statusCode": 401,
   "errorCode": "invalid_token",
   "millisecondsTaken": 2,
@@ -304,7 +304,7 @@ When API requests return an HTTP 500 related status, request logs include both t
   "method": "GET",
   "path": "/investments/companies/2/transactions",
   "resourceId": "2",
-  "clientName": "FinalSPA",
+  "clientId": "FinalSPA",
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 500,
   "errorCode": "exception_simulation",
@@ -374,7 +374,7 @@ To see this output in the final APIs, change the logging configuration to use a 
   "hostName": "UBUNTU",
   "method": "GET",
   "path": "/investments/companies",
-  "clientName": "FinalSPA",
+  "clientId": "FinalSPA",
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 200,
   "millisecondsTaken": 383,
@@ -403,17 +403,19 @@ To see this output in the final APIs, change the logging configuration to use a 
 
 Each performance section also has a *details* field, which can store additional information. For example, you could extend logging code to record sanitized SQL and parameters but only output it when there is an error or performance exceeds the threshold.
 
-### Client Context
+### Access Token Logging Context
 
-API clients contribute useful fields to logs with the following three custom HTTP headers:
+Access tokens provide user and client context that can be useful to add to API logs:
 
-- A *Correlation ID* for the exact request.
-- A *Session ID* for all requests in the same authenticated user session.
-- A *Client Name* to easily identify the client.
+- The *sub* claim should be a stable anonymous identifier for the current user.
+- The *client_id* should preferably be a readable value for the client application.
+- The *delegation_id* is a natural identifier for the user's authentication session.
 
-This *Client Context* helps to satisfy <a href='api-technical-support-analysis.mdx'>query use cases</a>, including the ability to quickly filter logs for a frontend session ID. Calls to upstream APIs can forward the client context in request headers, so that the upstream API includes these identifiers in its own log entry.
+This security context helps to satisfy <a href='api-technical-support-analysis.mdx'>query use cases</a>. This blog's final clients render the *delegation_id* as an API session ID and enables developers or testers to quickly filter API logs for their own user session. The *delegation_id* is assigned after login and then remains the same when access tokens and refresh tokens get renewed.
 
 ![application session](../images/280/application-session.jpg?v=20240913)
+
+APIs should send access tokens when they call upstream APIs. The security context then securely flows between APIs, each of which can add a log entry that includes security context. The access token serves APIs to enable a scalable logging solution.
 
 ### Logging Implementation
 
@@ -441,7 +443,7 @@ In other backend operations I follow the same approach. For example, if a *Billi
   "method": "POST",
   "path": "/invoices/777",
   "resourceId": "777",
-  "clientName": "MessageBroker",
+  "clientId": "MessageBroker",
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 200,
   "millisecondsTaken": 7,

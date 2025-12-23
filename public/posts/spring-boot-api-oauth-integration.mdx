@@ -69,6 +69,7 @@ The API uses a JSON configuration file with the following OAuth settings, which 
     "algorithm":                    "RS256",
     "scope":                        "https://api.authsamples.com/investments",
     "jwksEndpoint":                 "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json",
+    "delegationIdClaimName":        "origin_jti",
     "claimsCacheTimeToLiveMinutes": 15
   }
 }
@@ -104,7 +105,7 @@ The API processes the JWT access token to receive the main claims. The API then 
 
 ### Custom Authentication Filter
 
-The *SecurityConfiguration* class wires up the API's custom OAuth behaviour. This returns a *SecurityFilterChain* class, which configures a custom authorization filter for a resource server:
+The *SecurityConfiguration* class wires up the API's custom OAuth behaviour. This returns a *SecurityFilterChain* class, which configures a custom authentication filter for a resource server:
 
 ```java
 @Configuration
@@ -152,6 +153,45 @@ I disable Spring's website behaviours that are not relevant to APIs. Instead, th
 | Backend for Frontend | Manages OAuth-related concerns like getting tokens and the issuing of application level cookies. |
 | API Gateway | Deals with web security concerns during API requests, including cookies, CORS and CSRF logic. |
 
+The Spring authentication filter implementation runs an OAuth filter to validate the access token and get claims. The filter also makes the *ClaimsPrincipal* object resolvable by business logic and controls OAuth error responses returned to clients.
+
+```java
+@Override
+protected void doFilterInternal(
+        final HttpServletRequest request,
+        final HttpServletResponse response,
+        final FilterChain filterChain) throws ServletException, IOException {
+
+    try {
+        var logEntry = this.container.getBean(LogEntryImpl.class);
+        logEntry.start(request);
+
+        var oauthFilter = this.container.getBean(OAuthFilter.class);
+        var claimsPrincipal = oauthFilter.execute(request);
+
+        var scopes = ClaimsReader.getStringClaim(claimsPrincipal.getJwt(), "scope").split(" ");
+        var foundScope = Arrays.stream(scopes).filter(s -> s.contains(this.configuration.getScope())).findFirst();
+        if (foundScope.isEmpty()) {
+            throw ErrorFactory.createClientError(
+                    HttpStatus.FORBIDDEN,
+                    BaseErrorCodes.INSUFFICIENT_SCOPE,
+                    "The token does not contain sufficient scope for this API");
+        }
+
+        var holder = this.container.getBean(ClaimsPrincipalHolder.class);
+        holder.setClaims(claimsPrincipal);
+        SecurityContextHolder.getContext().setAuthentication(new CustomAuthentication(claimsPrincipal));
+
+        filterChain.doFilter(request, response);
+
+    } catch (Throwable ex) {
+
+        var handler = this.container.getBean(UnhandledExceptionHandler.class);
+        handler.handleFilterException(request, response, ex);
+    }
+}
+```
+
 ### OAuth and Claims Code
 
 I use a number of small classes to implement the desired behaviour. The main work is to validate the JWT from the HTTP request, then return a *ClaimsPrincipal* object that I want the API's business logic to use.
@@ -162,7 +202,7 @@ I use a number of small classes to implement the desired behaviour. The main wor
 
 ### JWT Access Token Validation
 
-The *AccessTokenValidator* object wraps calls to the *jose4j* library and returns the claims in the JWT access token:
+The *AccessTokenValidator* object wraps calls to the *jose4j* library. It returns a claims object and also adds access token details to logs:
 
 ```java
 public JwtClaims execute(final String accessToken) {
@@ -181,7 +221,10 @@ public JwtClaims execute(final String accessToken) {
         }
 
         var jwtConsumer = builder.build();
-        return jwtConsumer.processToClaims(accessToken);
+        var claims = jwtConsumer.processToClaims(accessToken);
+
+        this.logEntry.setIdentityData(this.getIdentityData(claims));
+        return claims;
 
     } catch (InvalidJwtException ex) {
         throw ErrorUtils.fromAccessTokenValidationError(ex, this.configuration.getJwksEndpoint());
@@ -333,7 +376,7 @@ API request logs record error details for all failed requests, to help with prob
   "method": "GET",
   "path": "/investments/companies/2/transactions",
   "resourceId": "2",
-  "clientName": "FinalSPA",
+  "clientId": "FinalSPA",
   "statusCode": 401,
   "errorCode": "unauthorized",
   "millisecondsTaken": 43,

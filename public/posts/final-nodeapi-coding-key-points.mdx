@@ -103,7 +103,7 @@ The startup logic also creates middleware objects for cross cutting concerns, an
 ```typescript
 const childContainerMiddleware = new ChildContainerMiddleware(this.parentContainer);
 const loggerMiddleware = new LoggerMiddleware(this.loggerFactory, routesMetadata);
-const authenticationMiddleware = new AuthenticationMiddleware();
+const authenticationMiddleware = new AuthenticationMiddleware(this.configuration.oauth);
 const customHeaderMiddleware = new CustomHeaderMiddleware(this.configuration.logging.apiName);
 const exceptionHandler = new UnhandledExceptionHandler(this.configuration.logging.apiName);
 ```
@@ -259,7 +259,7 @@ Logging objects write to a log file and, if you follow the <a href='log-aggregat
 
 ### Authentication Middleware
 
-The API uses an OAuth filter class to implement access token validation and create a claims principal, in a similar way to the earlier <a href='updated-api-coding-key-points.mdx'>Updated API Code Details</a> blog post. The authentication middleware also adds identity data to logs, adds the claims principal to the child container to make it resolvable, and enforces required scopes:
+The API uses an OAuth filter class to implement access token validation and create a claims principal, in a similar way to the earlier <a href='updated-api-coding-key-points.mdx'>Updated API Code Details</a> blog post. The authentication middleware also adds the claims principal to the child container to make it resolvable, and enforces required scopes:
 
 ```typescript
 export class AuthenticationMiddleware {
@@ -268,22 +268,12 @@ export class AuthenticationMiddleware {
 
         const container = response.locals.container as Container;
         const filter =  container.get<OAuthFilter>(BASETYPES.OAuthFilter);
-        const logEntry = container.get<LogEntryImpl>(BASETYPES.LogEntry);
 
         const claimsPrincipal = await filter.execute(request, response);
-
-        const userId = ClaimsReader.getStringClaim(claimsPrincipal.getJwt(), 'sub');
-        const scope = ClaimsReader.getStringClaim(claimsPrincipal.getJwt(), 'scope');
-        const loggedClaims = {
-            managerId: ClaimsReader.getStringClaim(claimsPrincipal.getJwt(), CustomClaimNames.managerId),
-            role: ClaimsReader.getStringClaim(claimsPrincipal.getJwt(), CustomClaimNames.role),
-        };
-        logEntry.setIdentity(userId, scope.split(' '), loggedClaims);
-
         container.bind<ClaimsPrincipal>(BASETYPES.ClaimsPrincipal).toConstantValue(claimsPrincipal);
 
         const scopes = ClaimsReader.getStringClaim(claimsPrincipal.getJwt(), 'scope').split(' ');
-        if (scopes.indexOf(this.requiredScope) === -1) {
+        if (scopes.indexOf(this.configuration.scope) === -1) {
 
             throw ErrorFactory.createClientError(
                 403,
@@ -339,7 +329,7 @@ The art of good error handling is to design good error objects that contain usef
   "hostName": "UBUNTU",
   "method": "GET",
   "path": "/investments/companies",
-  "clientName": "FinalSPA",
+  "clientId": "FinalSPA",
   "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
   "statusCode": 500,
   "errorCode": "exception_simulation",
