@@ -2,9 +2,9 @@
 
 In the <a href='web-architecture-goals.mdx'>Web Architecture Goals</a> post I summarised some desired qualities. The first step is to run an integrated code sample on a development computer, so that access tokens are sent between an SPA, API and authorization server.
 
-### Behaviours
+### Business Focused Development
 
-The behaviour provided in the initial code sample is summarised below:
+The following table summarises the business-like behaviours that the initial code sample demonstrates.
 
 | Behaviour | Description |
 | --------- | ----------- |
@@ -14,21 +14,23 @@ The behaviour provided in the initial code sample is summarised below:
 | Reliable | Both the SPA and API handle expiry and other failure conditions in a solid manner. |
 | Real World URLs | The SPA makes cross domain calls to the API on the local computer, and you can view its OAuth messages. |
 
-### Components
-
-The Basic SPA Code Sample will get the below components and endpoints talking to each other, using OAuth security:
-
-![Components](../images/20/components.jpg)
+The overall goal is a productive technical setup that would help to enable a fast time to market at a real organization. To achieve that goal I use modern technical tools but also run the web frontend like a real user during development.
 
 ### SPAs in 2021
 
-This sample uses the traditional SPA solution, with a JavaScript OpenID Connect implementation. It is now considered more secure for your production apps to instead use a <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend</a> approach. The traditional SPA flow remains useful when you first learn OAuth, and to represent a pure SPA architecture.
+This sample uses the traditional SPA solution, with a JavaScript OpenID Connect implementation. It is now considered more secure for your production apps to instead use a <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend</a> approach. Before integrating a BFF you should understand the traditional SPA flow and the web development and deployment benefits it enables.
 
 ### Code Download
 
-Clone the code for the SPA and API from [here](https://github.com/gary-archer/oauth.websample1). I explain how to run it in the next post:
+Clone the code for the SPA and API with the following command:
 
-![Repo](../images/20/repo.jpg)
+```bash
+git clone https://github.com/gary-archer/oauth.websample1
+```
+
+The GitHub repository provides a fast setup and README instructions:
+
+![Repo](../images/20/repo.jpg?v=20251229)
 
 ### Security Libraries
 
@@ -48,35 +50,53 @@ This blog uses multiple technologies, and they are all modern and cross platform
 | SPA | TypeScript | Chrome / Edge / Firefox / Safari / Mobile |
 | API | Node.js + TypeScript | Windows / macOS / Linux |
 
-### Basic Web Technology for Early Samples
+### Basic Web Technology
 
-I use modern web technology, but avoid web frameworks to start with, to establish requirements and techniques that would work with any technology stack:
+For this blog's early SPAs I use vanilla TypeScript rather than web frameworks, to reduce JavaScript complexity. Instead, I focus on requirements for OAuth and API integrations, using techniques that would work with any technology stack:
 
 | Step | Details |
 | ---- | ------- |
 | SPA OAuth Code Integration | First show how to integrate standards-based OAuth support into an SPA with a focus on OAuth requirements. |
 | Modern SPA Framework | Avoid getting sidetracked by too much web technology initially, though this blog's <a href='final-spa-overview.mdx'>Final SPA</a> uses React. |
 
+### Web and API Hosting
+
+In OAuth, you should separate web and API hosting, so that API developers deal with data security and web developers focus on the frontend. This separation is a key factor in reducing development responsibilities to help enable a fast time to market. In deployed systems I represent this separation with an AWS custom domain of *authsamples.com* and the following base URLs:
+
+| Component | Base URL |
+| --------- | -------- |
+| API | https://api.authsamples.com |
+| Web Static Content | https://www.authsamples.com |
+
+On a development computer I almost never develop with URLs like *http://localhost:3000*. Instead, I use real-world domain names and HTTPS for the hosting of APIs and web static content. I use a *-dev* suffix for URLs to represent the local environment.
+
+| Component | Base URL |
+| --------- | -------- |
+| API | https://api.authsamples-dev.com |
+| Web Static Content | https://www.authsamples-dev.com |
+
+This type of setup requires some extra initial work. Once completed, you have maximum capabiltiies for testing security, reliability and deployments on a development computer. As you shall see, you can also continue to take full advantage of the developer experience features of modern technology stacks.
+
 ### Code Sample Theme
 
 This blog's code samples represent a fictional financial scenario, that pretends to display sensitive investment details. In a real financial app you would need to protect this type of data carefully:
 
-![List View](../images/20/list-view.jpg)
+![List View](../images/20/list-view.jpg?v=20251229)
 
 The actual data is just made up and does not represent anything real. The SPA receives fixed JSON data from the API and renders it. The SPA views include a basic *Transactions View* and you can imagine that this contains money transaction details.
 
-![Details View](../images/20/details-view.jpg)
+![Details View](../images/20/details-view.jpg?v=20251229)
 
 This view primarily exists to demonstrate navigation and deep linking, where an access token must be retrieved before the SPA can present its view. Users can bookmark URLs to secured resources, and the SPA may need to renew a token or re-authenticate the user before presenting the view:
 
-- *http://localhost/spa#company=1*
-- *http://localhost/spa#company=2*
+- *https://www.authsamples-dev.com/spa#company=1*
+- *https://www.authsamples-dev.com/spa#company=2*
 
 ### Where Are We?
 
-I explained the initial code sample's behaviour, to integrate an SPA, the API and the authorization server.
+I explained the initial code sample's security behaviours, to integrate an SPA, the API and the authorization server. The more important objective is the setup you choose for all future development. In the next post you see how this works.
 
 ### Next
 
-- Next I explain <a href='basicspa-execution.mdx'>How to Run the Code Sample</a>.
+- I explain <a href='basicspa-execution.mdx'>How to Run the Code Sample</a>.
 - For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.
