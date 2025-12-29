@@ -1,10 +1,16 @@
 # Web Technology Setup
 
-Previously I suggested an <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a>. In this post I explain how this blog uses web technology, for Node.js APIs, browser based apps and Electron desktop apps. I summarise my preferred way to think about the requirements.
+Previously I suggested an <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a>. In this post I explain how this blog uses web technology, primarily for browser based apps. I also highlight differences for Node.js code, such as APIs. The main technical goal is a business-like development setup that matches deployed systems, so that security, reliability and deployment aspects work the same locally and in production.
 
-### Code Setup
+### OAuth Web Architecture
 
-Single page applications should focus on frontend-only concerns. The goal should be modern, productive code that provides a fast and modern customer experience with a fast time to market. Your technology choices should enable this.
+Before OAuth and APIs, web applications required a web backend to secure requests. Web developers built backend endpoints secured by HttpOnly cookies. The web backend required a runtime and cookie issuing libraries. The runtime imposed deployment limitations and sometimes imposed unwelcome usability problems, like abrupt server issued login redirects that frontend developers could not control.
+
+In an OAuth web architecture, APIs manage data security instead of the web static content host. Content delivery networks can optimize web performance. Web developers have fewer responsibilities and can use up to date technology to build a modern frontend experience, with a faster time to market than older solutions.
+
+To fully realise the benefits you first need the type of well designed web technology setup that this post explains. Web developers can then operate like mobile developers, with a frontend-only focus and full usability control. To get sensitive data, the frontend sends access tokens (or HttpOnly cookies that reference them) directly to internet API URLs. 
+
+### Web Application Code
 
 The main ingredient of an SPA is its logic. Choose a language that remains close to the browser's default language, to reduce complexity. Also use clean code and a separation of concerns. I use TypeScript since I like the extensions to JavaScript in these areas:
 
@@ -14,20 +20,20 @@ The main ingredient of an SPA is its logic. Choose a language that remains close
 
 ### Web Development Pipeline
 
-I summarise the main stages of the web development pipeline in the below table. It can be useful to articulate desired behaviour at each stage, in your own efforts to reduce complexity:
+You then need to implement a web development pipeline, where the application code is central but there are a number of related behaviors. Modern web technology changes often and can feel overwhelming at times. I therefore like to articulate my important requirements at each stage of processing.
 
 | Stage	| Description |
 | ----- | ----------- |
-| Download Dependencies | Before you write any real code you typically need to download libraries. |
-| Write Code | To write TypeScript code you need to import third party libraries and use their classes and functions. |
-| Execute Tasks | You sometimes need to execute arbitrary tasks as part of development, such as code quality checks. |
+| Download Dependencies | Before you write any real code you typically need a way to download third party libraries as dependencies. |
+| Write Code | To write non-trivial TypeScript code you need to import third party libraries and use their classes and functions. |
+| Execute Tasks | You sometimes need to execute arbitrary tasks as part of development, such as code quality checks or running tests. |
 | Build Code | You need to build code so that it runs in browsers, which involves compiling TypeScript. |
 | Execute Code | You execute compiled code in the browser, which is different to the code you develop. |
-| Decompile Code | When there is a problem, or to support debugging, you want to get back to the original TypeScript code. |
+| Decompile Code | When there is a problem, or to support debugging, you want to decompile to the original TypeScript code. |
 
 ### Downloading Dependencies: Package Manager
 
-Node.js uses the *npm* tool to specify libraries used by your application in its *package.json* file. The built code uses the entries in the *dependencies* section at runtime. You typically require a number of plumbing entries in the *devDependencies* section to produce the built code.
+Node.js uses the *npm* tool to specify libraries in your application's *package.json* file. The built code uses the entries in the *dependencies* section at runtime. You typically require a number of plumbing entries in the *devDependencies* section to produce the built code.
 
 ```json
 {
@@ -39,12 +45,15 @@ Node.js uses the *npm* tool to specify libraries used by your application in its
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/mustache": "^4.2.5",
+    "@types/node": "^24.10.3",
     "eslint": "^9.39.2",
     "ts-loader": "^9.5.4",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.49.0",
     "webpack": "^5.103.0",
     "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.2",
     "webpack-merge": "^6.0.1"
   }
 }
@@ -69,7 +78,7 @@ import {UserManager, UserManagerSettings} from 'oidc-client';
 import mustache from 'mustache';
 ```
 
-This blog's APIs use Node.js 24 or later, with the following *tsconfig.json* configuration. You use some of these settings when you import modules and other settings when you build code:
+This blog's APIs use Node.js 24 or later, with the following settings in the *tsconfig.json* file, which controls TypeScript behaviors. I typically use the latest released (non-experimental) settings. You use some settings when you import modules and other settings when you build TypeScript code to JavaScript, to enable browser execution:
 
 ```json
 {
@@ -99,7 +108,7 @@ You use the following settings when you import modules:
 | [moduleResolution](https://www.typescriptlang.org/tsconfig#moduleResolution) | Use modern rules to resolve external modules. |
 | [allowSyntheticDefaultImports](https://www.typescriptlang.org/tsconfig#allowSyntheticDefaultImports) | Enable the cleanest import syntax for older CommonJS modules. |
 
-You also need to tell the compiler that the project's own source files use ECMAScript modules. To do so, specify *type=module* in the *package.json* file. For Node.js APIs that use *type=module*, a *.js* suffix is required when you import other classes. During coding this is a TypeScript file, though it becomes JavaScript when executed:
+You also need to tell the compiler that the project's own source files use ECMAScript modules. To do so, specify *type=module* in the *package.json* file. For Node.js (non browser) code that use *type=module*, add a *.js* suffix to imports. During coding this is a TypeScript file, though it becomes JavaScript when executed:
 
 ```typescript
 import {CompanyRepository} from '../repositories/companyRepository.js';
@@ -107,16 +116,16 @@ import {CompanyRepository} from '../repositories/companyRepository.js';
 
 ### Writing Code: Using Type Definition Files
 
-The *index.d.ts* file sometimes exists at a non-standard location. You then use options such as [typeRoots](https://www.typescriptlang.org/tsconfig#typeRoots) to resolve paths. In some cases, you use a separate type definitions file from [Definitely Typed](https://github.com/DefinitelyTyped/DefinitelyTyped). These are recognised by *package.json* entries that begin with *@types*. You can find their latest versions with commands of the following form:
+To use some libraries without compilation errors, TypeScript requires type definition files from [Definitely Typed](https://github.com/DefinitelyTyped/DefinitelyTyped). These are recognised by *package.json* entries that begin with *@types*. You can find their latest versions with commands of the following form:
 
 ```bash
 npm view @types/node --json | grep '"24.' | sort -rV | head -n 1
 ```
 
-For libraries with no type definitions, you can add a typings.d.ts file to the project and then use a *declare module* statement. This gets past compiler errors, though you lose type checking or intellisense. If you prefer, you can instead add your own type definitions for the library.
+For libraries with no type definitions, I occasionally need to add a *typings.d.ts* file to the project and then use a *declare module* statement. This gets past compiler errors, so that my experience is no worse than developing in JavaScript, though I lose type checking or intellisense.
 
 ```typescript
-declare module 'some-js-lib';
+declare module 'some-legacy-library';
 ```
 
 ### Writing Code: Using TypeScript Libraries
@@ -150,14 +159,6 @@ You can find browser types under the *node_modules/typescript/lib* folder and th
     <img src='../images/90/typescript-lib.jpg' alt='typescript library' />
 </div>
 
-### Writing Code: Efficient Imports
-
-When you import ECMAScript modules you should import only the functionality needed to [reduce the size of built code](https://developers.google.com/web/fundamentals/performance/optimizing-javascript/tree-shaking/#finding_opportunities_to_shake_a_tree). For browser-based applications that also reduces download times for users:
-
-```typescript
-import {SmallUtility} from 'LargeLibrary';
-```
-
 ### Writing Code: TypeScript Development
 
 I  use a class-based development model, to encapsulate data, behaviour and dependencies together in the most standard way. Constructor injection is used for inter-class dependencies:
@@ -173,13 +174,17 @@ export class CompaniesView {
 
     public async load(): Promise {
 
-        const data =  await this.apiClient.getCompanyList();
-        this.renderData(data);
+        try {
+            const data =  await this.apiClient.getCompanyList();
+            this.renderData(data);
+        } catch (e: any) {
+            ...
+        }
     }
 }
 ```
 
-Strong typing during coding allows the environment to make more checks. When using ECMAScript modules, the compiled code remains closest to the original TypeScript syntax.
+Strong typing during coding allows the environment to make more checks and simplifies refactoring. I use ECMAScript modules so that the compiled code remains modern and closest to the original TypeScript syntax.
 
 ### Writing Code: Styling
 
@@ -258,23 +263,34 @@ My application CSS file is therefore small, containing only padding, colours and
 
 ### Executing Tasks
 
-My code samples also use *npm* tasks that call bash scripts, which handle some finer details, including any environmental differences between Linux, macOS and Windows:
+My code samples also use *npm* tasks that call bash scripts, which handle some finer details, including any environmental differences between Linux, macOS and Windows. The following example script runs build tasks and serves the SPA's built code using a static web content server:
 
 ```bash
-cd "$(dirname "${BASH_SOURCE[0]}")"
-
-if [ ! -d 'node_modules' ]; then
-  npm install
+npm install
+if [ $? -ne 0 ]; then
+  echo 'Problem encountered installing SPA dependencies'
+  read -n 1
+  exit 1
 fi
 
 npm run lint
+if [ $? -ne 0 ]; then
+  echo 'Problem encountered running SPA code quality checks'
+  read -n 1
+  exit 1
+fi
+
 npm start
-read -n 1
+if [ $? -ne 0 ]; then
+  echo 'Problem encountered running the SPA'
+  read -n 1
+  exit 1
+fi
 ```
 
 ### Building Code: Linting
 
-My first build task checks code quality using the [typescript-eslint](https://github.com/typescript-eslint/typescript-eslint) library. The underlying [eslint](https://eslint.org/) library requires its own JavaScript configuration file. I import recommended rulesets as well as activating rules that reflect my coding preferences:
+My first build task checks code quality using the [typescript-eslint](https://github.com/typescript-eslint/typescript-eslint) library. The underlying [eslint](https://eslint.org/) library requires its own JavaScript configuration file. I import standard JavaScript and TypeScript rulesets as well as activating rules that reflect my coding preferences:
 
 ```javascript
 import eslint from '@eslint/js';
@@ -320,90 +336,91 @@ For the SPA, a build phase is essential, for the following reasons:
 | Reason | Description |
 | ------ | ----------- |
 | Browser Support | Produce JavaScript code that browsers can execute. |
-| Web Performance | Reduce code size so that bundle sizes stay small, and the SPA performs well. |
+| Web Performance | Reduce code size to ensure small bundle sizes, so that the SPA performs well. |
 
 I use the [webpack](https://webpack.js.org/) tool, but only for one main task, to produce the JavaScript bundles expressed in the final *index.html* file:
 
 ```html
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang='en'>
     <head>
         <meta charset='utf-8'>
-        <base href='/spa/' />
+        <base href='/spa/'>
         <title>OAuth Demo App</title>
 
-        <link rel='stylesheet' href='css/bootstrap.min.css'>
-        <link rel='stylesheet' href='css/app.css'>
+        <link rel='stylesheet' href='bootstrap.min.css'>
+        <link rel='stylesheet' href='app.css'>
     </head>
     <body>
-        <div id='root' class='container' />
-        
-        <script type='module' src='dist/vendor.bundle.js'></script>
-        <script type='module' src='dist/app.bundle.js'></script>
+        <div id='root' class='container'></div>
+
+        <script type='module' src='vendor.bundle.js'></script>
+        <script type='module' src='app.bundle.js'></script>
     </body>
 </html>
 ```
 
 ### Building Code: Webpack Configuration
 
-Webpack requires a configuration object and the syntax can seem a little cryptic at first. Mostly though, you just need to specify the SPA's entry point source file, then provide an output folder for compiled bundles:
+Webpack requires a configuration object that you can create in TypeScript. The options can seem a little cryptic at first. Mostly though, you just need to specify the SPA's entry point source file, then provide an output folder for compiled bundles. The following example uses an entry point of *app.ts* and writes bundles to a *dist* folder:
 
-```javascript
-import path from 'path';
+```typescript
+const config: webpack.Configuration = {
 
-const dirname = process.cwd();
-export default {
-  
-  context: path.resolve(dirname, './src'),
-  target: ['web'],
-  devtool: 'source-map',
-
-  entry: {
-    app: ['./app/app.ts']
-  },
-  module: {
-    rules: [
-      {
-        test: /\.ts$/,
-        use: 'ts-loader',
-        exclude: /node_modules/
-      }
-    ]
-  },
-  resolve: {
-    
-    extensions: ['.ts', '.js']
-  },
-  output: {
-    
-    path: path.resolve(dirname, './dist'),
-    filename: '[name].bundle.js'
-  },
-  optimization: {
-
-    splitChunks: {
-      cacheGroups: {
-        vendor: {
-          chunks: 'initial',
-          name: 'vendor',
-          test: /node_modules/,
-          enforce: true
-        },
-      }
+    mode: 'development',
+    context: path.resolve(dirname, './src'),
+    target: ['web'],
+    devtool: 'source-map',
+    entry: {
+        app: ['./app/app.ts']
+    },
+    module: {
+        rules: [
+            {
+                test: /\.ts$/,
+                use: 'ts-loader',
+                exclude: /node_modules/
+            }
+        ]
+    },
+    resolve: {
+        extensions: ['.ts', '.js']
+    },
+    output: {
+        path: path.resolve(dirname, './dist'),
+        filename: '[name].bundle.js',
+        module: true,
+    },
+    experiments: {
+        outputModule: true,
+    },
+    optimization: {
+        splitChunks: {
+            cacheGroups: {
+                vendor: {
+                    chunks: 'initial',
+                    name: 'vendor',
+                    test: /node_modules/,
+                    enforce: true
+                },
+            }
+        }
     }
-  }
-}
+};
 ```
 
-Webpack has its own rules for resolving imports. You have to use *extensions* to tell it to build both the SPA's TypeScript code, and JavaScript code consumed from the *node_modules* folder.
-
-### Building Code: Processing TypeScript
-
-The SPA's application code builds to an *app.bundle.js* file. When compiling the SPA, the [ts-loader](https://github.com/TypeStrong/ts-loader) library uses the settings from the *tsconfig.json* file. I configure webpack to build a second, larger bundle, called *vendor.bundle.js*, containing third-party code from the *node_modules* folder.
+Some newer bundlers claim to provide a simpler developer experience, but I have found that they often result in different web delivery mechanisms during development and in deployed environments. As a mature bundler, webpack enables me to use the SPA during development with the same technical steps as production users.
 
 ### Building Code: Web Compilation
 
-The build result produces the following files to a *dist* folder. The source map files can be used later to through code in a debugger, or to diagnose exception stack traces:
+Webpack has its own rules for resolving imports. You supply *extensions* to tell webpack to build both the SPA's TypeScript code and JavaScript code consumed from the *node_modules* folder. The *ts-loader* utility compiles TypeScript code into JavaScript using the settings in the *tsconfig.json* file. To compile the SPA's TypeScript code, use the <a href='https://github.com/privatenumber/tsx'>tsx loader utility</a> to run the webpack configuration file.
+
+```bash
+NODE_OPTIONS='--import tsx' webpack --config webpack.config.ts
+```
+
+The SPA's application code builds to an *app.bundle.js* file. When compiling the SPA, the [ts-loader](https://github.com/TypeStrong/ts-loader) library uses the settings from the *tsconfig.json* file. I configure webpack to build a second, larger bundle, called *vendor.bundle.js*, containing third-party code from the *node_modules* folder. The build outputs the following files to a *dist* folder. The source map files can be used to step through code in a debugger, or to diagnose exception stack traces:
 
 ```markdown
 vendor.bundle.js
@@ -412,12 +429,14 @@ app.bundle.js
 app.bundle.js.map
 ```
 
-For SPAs, I ensure that output works in mainstream browsers for the last 5 years or so. I also want to produce clean production JavaScript code, without the need for excessive [polyfilling](https://javascript.info/polyfills). I use the following *tsconfig.json* output settings:
+For SPAs, I ensure that output works in mainstream browsers for the last 5 years or so. I also produce clean production JavaScript code that maintains the expressiveness of the original TypeScript code. I therefore use the following *tsconfig.json* output settings:
 
 | Setting | Description |
 | ------- | ----------- |
 | [target](https://www.typescriptlang.org/tsconfig#target) | Building to ES2017 means built code runs in all mainstream desktop and mobile browsers and *await* statements are output to the built code. |
-| [module](https://www.typescriptlang.org/tsconfig#module) | ES2022 means bundled code uses the ECMAScript module format, which browser hosts support, and may output top level await statements to the built code. |
+| [module](https://www.typescriptlang.org/tsconfig#module) | ES2022 means bundled code uses the ECMAScript module format, which browsers have supported for years, and bundles may use top level await statements. |
+
+### Building Code: ECMAScript Output
 
 Since the SPA builds to ES2017 JavaScript, the development build results remain close to the SPA's TypeScript code, with types removed. Keeping the built code similar to the developed code makes decompilation easier later.
 
@@ -427,8 +446,13 @@ class CompaniesView {
         this.apiClient = apiClient;
     }
     async load() {
-        const data = await this.apiClient.getCompanyList();
-        this.renderData(data);
+        
+        try {
+            const data = await this.apiClient.getCompanyList();
+            this.renderData(data);
+        } catch (e) {
+            ...
+        }
     }
 }
 ```
@@ -440,23 +464,64 @@ Support for ES2017 features were added to all main mobile and desktop browsers i
 
 ### Building Code: API Compilation
 
-During development of TypeScript APIs, I avoid producing JavaScript files, since doing so adds confusion when you search the code base. Instead, Node.js can be asked to execute TypeScript files directly with the [tsx](https://github.com/privatenumber/tsx) tool. The Node.js runtime then uses ECMAScript modules built in-memory:
+During development of TypeScript APIs, I avoid producing JavaScript files, since doing so adds confusion when you search the code base. Instead, Node.js can be asked to execute TypeScript files directly with the tsx tool. The Node.js runtime then uses ECMAScript modules built in-memory.
 
 ```bash
 tsx watch src/host/startup/app.ts
 ```
 
-Deployed builds for Node.js APIs should instead run JavaScript code, for best performance. The initial API also has an *npm run buildRelease* command to produce deployable files to its *dist* folder. The most up to date Node.js options can be used for the API build. I avoid using bundle files for API code. By keeping built code easier to read, you are better able to diagnose potential production problems, and understand exception stack traces.
+Deployed builds for Node.js APIs should instead run JavaScript code, for best performance. The initial API also has an *npm run buildRelease* command to produce deployable files to its *dist* folder. The most up to date Node.js options can be used for the API build. I avoid using bundle files for API code. By keeping built code easier to read, you are better able to diagnose potential production problems, and diagnose exception stack traces.
 
-### Executing Code: Recompiling after Code Changes
+### Executing Code: Development Web Host
 
-The SPA code recompiles automatically when you change code, via webpack's *watch* parameter:
+After the web build, the SPA's HTML, CSS and JavaScript bundles can be served from any HTTP server, so deployment is portable. For example, Node.js Express can serve static content using the following minimal code:
 
-![spa-build](../images/90/spa-build.jpg?v=20240826)
+```typescript
+const app = express();
+app.use('/spa', express.static('./dist'));
+app.listen(8000, () => {
+      console.log('Serving web static content ...');
+  });
+```
 
-### Decompiling Code: Debugging the API
+As is standard for SPA development, this blog's SPAs use a development static content host. I use the webpack development server, which uses Node.js Express under the hood. To serve static content locally using SSL and a custom domain name I use the following configuration:
 
-To step through API code in a debugger, first open the root level workspace file. The *api/.vscode/launch.json* configuration file enables you to debug the API's code from the *Run and Debug* tab of Visual Studio Code:
+```typescript
+const devServer: webpackDevServer.Configuration = {
+
+    server: {
+        type: 'https',
+        options: {
+            pfx: fs.readFileSync('../certs/authsamples-dev.ssl.p12'),
+            passphrase: 'Password1',
+        },
+    },
+    static: {
+        directory: path.join(dirname, './dist'),
+        publicPath: '/spa/',
+    },
+    port: 443,
+    open: 'https://www.authsamples-dev.com/spa',
+    devMiddleware: {
+        writeToDisk: true,
+    },
+    historyApiFallback: {
+        index: '/spa/',
+    },
+    hot: true,
+    allowedHosts: [
+        'www.authsamples-dev.com',
+    ],
+};
+```
+
+Although I get some developer conveniences like hot reloading when I make frontend code changes, the main behavior I want from a development web static content host is to serve web assets in the same way as for production users. The only difference during development is that I use a non-optimized build with debugging support.
+
+### Decompiling Code: Debugging
+
+To step through code in GitHub repositories with multiple projects I use a [Visual Studio Code Workspace File](https://code.visualstudio.com/docs/editing/workspaces/workspaces). I then use Visual Studio Code's *Open workspace from file* option, after which I can use the *Run and Debug* tab to choose the project to debug. 
+
+For a TypeScript API I add a */.vscode/launch.json* configuration file with settings similar to those shown below.
 
 ```json
 {
@@ -475,13 +540,7 @@ To step through API code in a debugger, first open the root level workspace file
 }
 ```
 
-You can then step through TypeScript code and inspect the state of variables:
-
-![api debug](../images/90/api-debug.jpg)
-
-### Decompiling Code: Debugging the SPA
-
-There is a similar configuration file at *spa/.vcscode/launch.json* to launch the SPA:
+For a TypeScript SPA I add a */.vscode/launch.json* configuration file with settings similar to those shown below.
 
 ```json
 {
@@ -497,40 +556,34 @@ There is a similar configuration file at *spa/.vcscode/launch.json* to launch th
 }
 ```
 
-When bundle files download in debug mode, their last line points to a source map file that the browser also downloads:
+From the *Debug and Run* tab I can choose *Launch API* and *Launch SPA*, then operate the SPA while setting breakpoints to inspect the state of variables:
+
+![spa debug](../images/90/spa-debug.jpg)
+
+If you inspect bundle files, their last line references a source map file that browser developer tools download when a debug session starts. Source maps enable TypeScript code debugging while the corresponding JavaScript code executes in the browser.
 
 ```text
 //# sourceMappingURL=app.bundle.js.map
 ```
 
-You can then step through the actual lines of TypeScript code, while the browser executes the corresponding JavaScript code:
-
-![spa debug](../images/90/spa-debug.jpg)
-
 ### Decompiling Code: SPA Exception Stack Traces
 
-The webpack setup uses separate development and production configurations. The development configuration includes a property that enables code debugging, and also a property to let JavaScript know whether it should run in debug mode:
+The webpack configuration uses separate development and production configurations. The development configuration references the development web server configuration, includes a property that enables code debugging, and also sets a property to let JavaScript know whether it should run in debug mode:
 
-```javascript
-import webpack from 'webpack';
-import {merge} from 'webpack-merge';
-import baseConfig from './webpack.config.base.mjs';
+```typescript
+const devConfig: webpack.Configuration = {
 
-export default merge(baseConfig, {
-
-  mode: 'development',
-  devtool: 'source-map',
-  
-  output: Object.assign({}, baseConfig.output, {
-    devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]'
-  }),
-  
-  plugins:[
-    new webpack.DefinePlugin({
-      IS_DEBUG: 'true',
-    })
-  ]
-});
+    mode: 'development',
+    devServer,
+    output: Object.assign({}, baseConfig.output, {
+        devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]',
+    }),
+    plugins:[
+        new webpack.DefinePlugin({
+            IS_DEBUG: 'true',
+        }),
+    ],
+};
 ```
 
 To prevent TypeScript compilation errors, I reference the *IS_DEBUG* variable in the SPA's *typings.d.ts* file. The SPA's error handling code uses the variable to decide whether to render stack traces:
@@ -548,15 +601,15 @@ public static getErrorStack(error: UIError): ErrorLine | null {
 }
 ```
 
-I intentionally render SPA stack trace data in a raw format. In production apps, I would use a *Send Home* feature to receive this data:
+In debug builds I intentionally render SPA stack trace data in a raw format. In production apps, I could use a *Send Home* feature to receive this data:
 
 ![exception](../images/90/exception.jpg)
 
-You should save a backup of source map files for each application release. When a user experiences an error you can use tools like the [Online Source Mapper](https://sourcemaps.info) to find the original source location of an error. To do so, paste stack trace data into the left hand pane and the source map data into the small edit box:
+I would save a backup of source map files for each application release. When a user experiences an error you can use tools like the [Online Source Mapper](https://sourcemaps.info) to find the original source location of an error. To do so, paste stack trace data into the left hand pane and the source map data into the small edit box:
 
 ![stack trace](../images/90/stack-trace.jpg)
 
-The right pane then displays an updated stack trace based on the original TypeScript lines of code. In the following example output you can see that the failure is at *line 55* of the *ApiClient* source file:
+The right pane then displays an updated stack trace based on the original TypeScript lines of code. In the following example output you can see that the failure is at *line 55* of the *ApiClient.ts* source file:
 
 ```markdown
 Error: simulating an exception at ApiClient.callApi (webpack:///./api/client/apiClient.ts:55:18)
@@ -569,19 +622,22 @@ at async App.execute (webpack:///./app/app.ts:51:12)
 
 Stack traces are most useful when there is a bug in the SPA's code that you cannot reproduce. If you verify that stack trace lookups work during development, you have solid options for resolving production problems later.
 
-### Web Deployment
+### Web Production Behaviors
 
-I explained how to manage a web pipeline on a development computer. Later in this blog I apply some finishing touches to the [web deployment pipeline](cdn-static-content-delivery.mdx) and host the SPA's static content on a content delivery network.
+Once you have a productive web pipeline, you are well placed to productionize and apply finishing touches to the web technology. The following blog posts explore this blog's finishing touches, all of which build upon the web technology setup:
 
-### Electron Desktop Apps
+- The <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend Design</a> explains security hardening for SPAs.
+- The <a href='final-spa-overview.mdx'>Final SPA Overview</a> explains an update to the React framework.
+- The <a href='api-journey-client-side.mdx'>API Journey Client Side</a> explains more about API sessions in clients.
+- The <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a> explains modern web deployments with optimal global performance.
 
-In the native apps section of this blog I use [Electron](https://www.electronjs.org/) to develop OAuth-secured cross-platform desktop apps. An Electron app can also be built to ECMAScript modules, though doing so is a little tricky. The <a href='desktop-app-coding-key-points.mdx'>Desktop App - Code Details</a> post explains the techniques I use.
+Of course, in a real SPA you are likely to have additional requirements, like greater use of images and CSS. You may also prefer to do a little more work in the web host. You should be able to adapt this blog's web technology setup to implement such requirements.
 
 ### Where Are We?
 
-I summarized a thought process to ensure a modern and productive setup that keeps the web technology understandable. I use the same technical approach when I switch to the React framework for this blog's <a href='final-spa-overview.mdx'>Final SPA</a>.
+I summarized a thought process to ensure a modern, productive and business-like web development setup. In particular, I separate web and API concerns so that the web host does not deal with data security. Next, I explain some development setups to enable the use of HTTPS and HTTP proxies, so that you have rich options to view OAuth and API messages, when developing within a distributed architecture.
 
 ### Next
 
-- I explain a <a href='http-debugging-setup.mdx'>Development HTTP Proxy Setup</a>.
+- I explain this blog's <a href='http-debugging-setup.mdx'>Development HTTP Proxy Setup</a>.
 - For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.
