@@ -4,7 +4,7 @@ In the previous post I explained <a href='basicspa-execution.mdx'>How to Run the
 
 ### Development Domains
 
-This blog provides an <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a> where you use the following logical domains on a development computer. This best enables early thinking about the deployment of each component.
+This blog provides an <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a> that enables early thinking about deployments. You reference the following logical domains on a development computer. Components that run locally use a fictional parent domain of *authsamples-dev.com*, to indicate that they are under development. Meanwhile, the authorization server uses a real internet hosted domain associated to my AWS account.
 
 | Component	| Base URL |
 | --------- | -------- |
@@ -12,15 +12,11 @@ This blog provides an <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastruct
 | API | *https://api.authsamples-dev.com* |
 | Authorization Server | *https://login.authsamples.com* |
 
-In this blog I use a cloud parent domain of *authsamples.com* for components that run in the AWS cloud. Components that run on a development computer use a fictional parent domain of *authsamples-dev.com*, to indicate that they are under development. OAuth flows use a mix of local and deployed components.
-
-### Viewing OAuth Messages
+### How to View OAuth Messages
 
 Most of the time I trace HTTP/S messages using an HTTP development proxy rather than browser tools. This allows me to view traffic from both the SPA and API together. See the below post if you are new to this type of tool:
 
 - <a href='http-debugging-setup.mdx'>HTTP Proxy Setup</a>
-
-The first code sample runs on HTTP URLs and technical restrictions force the SPA to use a *localhost* domain name. To use more architecturally meaningful URLs, this post's messages use the <a href='improved-spa-code-sample-overview.mdx'>second code sample</a>.
 
 ### Step 1. SPA Downloads its Configuration
 
@@ -34,13 +30,12 @@ The SPA client needs to get an access token with which to call its APIs, and nee
 
 ![Authorization Request](../images/40/authorization-request.jpg?v=20240727)
 
-Authorization servers contain an OAuth client registration containing configuration settings, and only allow the request if the SPA uses the correct *Client ID*, *Redirect URI* and *Scope*. The client uses the following scope parameters to request permissions to issue to the access token once user authentication completes:
+Authorization servers contain an OAuth client registration containing configuration settings, and only allow the request if the SPA uses the correct *Client ID* and *Redirect URI*. The client uses the following scope parameters to request permissions to issue to the access token once user authentication completes:
 
 | Scope | Meaning |
 | ----- | ------- |
 | openid | OpenID Connect is used in addition to OAuth 2.0. |
 | profile | Needed later to get the user's name details from the OpenID Connect userinfo endpoint. |
-| https://api.authsamples.com/investments | A custom scope to grant access to an area of business data. |
 
 ### Step 3. SPA Gets OpenID Connect Metadata
 
@@ -58,7 +53,7 @@ When the authorization server receives the request, it validates the request par
 
 ![User Authentication](../images/40/user-authentication.jpg?v=20240727)
 
-In some use cases, you can configure the authorization server to present a consent screen once user authentication completes. The user then grants third-party clients the requested API permissions. In this blog's examples, there are no third-party clients. Instead, both APIs and clients are built by the same organization, which owns the data. Therefore, I do not configure user consent.
+In some use cases, you can configure the authorization server to request user consent after user authentication completes. The user then grants third-party clients particular API permissions that clients request using the *scope* parameter. In this blog's examples, there are no third-party clients. I represent APIs and clients built by the same organization, which owns the data. Therefore, I do not configure user consent.
 
 ### Step 5. An Authenticated User Session Begins
 
@@ -88,11 +83,11 @@ As part of its response processing, the library makes a direct HTTPS back channe
 
 In OAuth there are multiple grant messages and this is just one of them. When possible, your OAuth clients should provide a credential before they receive tokens, but an SPA has nowhere secure to store such a credential. The SPA is therefore considered a *public client* and gets tokens in a less secure way than *confidential clients*.
 
-The result of all grant messages is to receive tokens. I configure the authorization server to return access tokens with a short 15 minute expiry. Before accepting tokens, the security library validates the ID token to ensure that it has the claims the client expects. 
+The result of all grant messages is to receive tokens. I configure the authorization server to return access tokens with a short 15 minute expiry. Before accepting tokens, the security library cryptographically validates the ID token. 
 
 ![Token Response](../images/40/token-response.jpg?v=20240727)
 
-An OAuth flow for SPAs should avoid returning refresh tokens to the browser, since it is a long-lived credential and the browser has nowhere secure to store it. Yet, at the time of writing, AWS Cognito does not allow the refresh token to be disabled.
+An OAuth flow for SPAs should avoid returning refresh tokens to the browser, since it is a long-lived credential and the browser has nowhere secure to store refresh tokens. Yet, at the time of writing, AWS Cognito does not allow the refresh token to be disabled.
 
 ### Step 8. Proof Key for Code Exchange is Used
 
@@ -112,16 +107,13 @@ Authorization requests sometimes result in authorization response errors. You ca
 ```json
 {
     "app": {
-        "apiBaseUrl":             "https://api.authsamples-dev.com/api"
+        "apiBaseUrl":       "https://api.authsamples-dev.com:446/api"
     },
     "oauth": {
-        "provider":               "cognito",
-        "authority":              "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
-        "clientId":               "hje94a2jj3lgkobkh57ikenhh",
-        "redirectUri":            "https://www.authsamples-dev.com/spa",
-        "postLogoutRedirectUri":  "https://www.authsamples-dev.com/spa/loggedout",
-        "scope":                  "openid profile https://api.authsamples.com/investments xxx",
-        "customLogoutEndpoint":   "https://login.authsamples.com/logout"
+        "authority":        "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+        "clientId":         "hje94a2jj3lgkobkh57ikenhh",
+        "redirectUri":      "https://www.authsamples-dev.com/spa",
+        "scope":            "openid profile xxx"
     }
 }
 ```
@@ -134,9 +126,7 @@ The security library reads error details and makes them available to the SPA. Si
 
 ![Authorization Error Display](../images/40/authorization-error-display.jpg?v=20240727)
 
-The authorization server only returns errors in an authorization response when the client provides a recognised *Client ID* and *Redirect URI*. If this is not the case the authorization server renders an error page instead:
-
-![Authorization Server Error Page](../images/40/authorization-server-error-page.jpg?v=20240727)
+The authorization server only returns errors in an authorization response when the client provides a recognised *Client ID* and *Redirect URI*. If this is not the case the authorization server renders an error page instead.
 
 ### Step 10. View Access Token Claims
 
@@ -148,13 +138,10 @@ The access token is a JWT that is digitally signed and which must be verified by
 
 - **sub**: A unique immutable identifier for the user.
 - **iss**: The authorization server that issued the token.
-- **scope**: Scopes can represent business areas.
 - **exp**: The time when the token expires.
+- **scope**: Scopes can represent business areas within your APIs.
 
-The authorization server should also issue an *audience (aud)* claim, which can be an array, to represent one or more related APIs. In larger API deployments, the *scope* and *aud* claims provide mechanisms to restrict the APIs that accept the access token. The access token also contains the following custom claims that the API can use for its business authorization. I say more about custom claims in the second code sample:
-
-- **manager_id**: A familiar user identity that the API uses in its business data.
-- **role**: A value from which APIs can derive business permissions.
+The authorization server should also issue an *audience (aud)* claim, which can be an array, to represent one or more related APIs. In larger API deployments, the *scope* and *aud* claims provide mechanisms to restrict the APIs that accept the access token. The access token can also contain custom claims that the API uses for its business authorization. I say more about custom claims in the second code sample.
 
 ### Step 11. View ID Token Claims
 
@@ -215,23 +202,20 @@ I recommend testing these scenarios to ensure that the API returns useful error 
 ```json
 {
     "api": {
-        "port": 443,
-        "sslCertificateFileName": "./certs/authsamples-dev.ssl.p12",
+        "port": 446,
+        "sslCertificateFileName": "../certs/authsamples-dev.ssl.p12",
         "sslCertificatePassword": "Password1",
         "trustedOrigins": [
             "https://www.authsamples-dev.com"
         ],
-        "useProxy": true,
+        "useProxy": false,
         "proxyUrl": "http://127.0.0.1:8888"
     },
     "oauth": {
-        "jwksEndpoint":                  "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.xxx",
-        "userInfoEndpoint":              "https://login.authsamples.com/oauth2/userInfo",
-        "issuer":                        "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
-        "audience":                      "",
-        "algorithm":                     "RS256",
-        "scope":                         "https://api.authsamples.com/investments",
-        "claimsCacheTimeToLiveMinutes":  15
+        "jwksEndpoint": "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.xxx",
+        "issuer":       "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+        "audience":     "",
+        "algorithm":    "RS256"
     }
 }
 ```
