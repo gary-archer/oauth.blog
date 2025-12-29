@@ -12,12 +12,6 @@ The goal of the Entra ID code sample is to match the <a href='improved-spa-code-
 | Same Security Libraries | I use the same open source standards-based libraries and the same main application code. |
 | Minor Vendor Differences | I minimize the impact of any vendor-specific code required by either AWS Cognito or Microsoft Entra ID. |
 
-### Components
-
-The components remain those that I used with this blog's default authorization server.
-
-![components](../images/190/components.jpg)
-
 ### SPAs in 2021
 
 This sample uses the traditional SPA solution, with OpenID Connect implemented solely in JavaScript. In 2021 the best practice is to upgrade to a <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend</a> approach.
@@ -176,7 +170,7 @@ For the SPA update both the *Tenant ID* and the SPA's *Client ID* to your own va
 ```json
 {
     "app": {
-        "apiBaseUrl":             "https://api.authsamples-dev.com/api"
+        "apiBaseUrl":             "https://api.authsamples-dev.com:446/api"
     },
     "oauth": {
         "authority":              "https://login.microsoftonline.com/7f071fbc-8bf2-4e61-bb48-dabd8e2f5b5a/v2.0",
@@ -194,9 +188,9 @@ For the API configuration, replace the *Tenant ID* with your own value. Also upd
 
 ```json
 {
-    "api": {s tech
-        "port": 443,
-        "sslCertificateFileName": "./certs/authsamples-dev.ssl.p12",
+    "api": {
+        "port": 446,
+        "sslCertificateFileName": "../certs/authsamples-dev.ssl.p12",
         "sslCertificatePassword": "Password1",
         "trustedOrigins": [
             "https://www.authsamples-dev.com"

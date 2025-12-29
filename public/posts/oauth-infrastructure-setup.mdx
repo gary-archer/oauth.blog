@@ -4,12 +4,12 @@ The previous post explained <a href='jwt-access-token-validation.mdx'>JWT Access
 
 ### Step 1: Define Base URLs
 
-When working with OAuth, I recommend designing URLs for a development computer, so that you operate similarly to deployed environments. I use the following base URLs for this blog's code samples:
+When working with OAuth, I recommend designing URLs for a development computer, so that you operate similarly to deployed environments. I use the following base URLs for this blog's code samples on a development computer:
 
 | Development Base URL | Description |
 | -------------------- | ----------- |
 | *https://www.authsamples-dev.com* | A base URL for web applications |
-| *https://api.authsamples-dev.com* | A base URL for APIs |
+| *https://api.authsamples-dev.com:446* | A base URL for APIs |
 | *https://login.authsamples.com* | The authorization server |
 
 When I created this blog I purchased a <a href='cloud-domain-setup.mdx'>cloud domain</a> called *authsamples.com* and configured a number of subdomains. When you run this blog's code samples, you use a mix of components, some of which run on your local computer and some of which run in the cloud.
@@ -107,9 +107,9 @@ Authorization servers have a base URL and usually publish OpenID Connect metadat
 
 ### Step 7: Register OAuth Clients
 
-Frontend apps are registered as OAuth clients using an administration user interface, where you configure fields such as *Client ID*, *Redirect URI* and *Scope*.
+Frontend apps are registered as OAuth clients using an administration user interface, where you configure fields like the *Client ID* and *Redirect URI*.
 
-![oauth client](../images/80/oauth-client.jpg)
+![oauth client](../images/80/oauth-client.jpg?v=20251229)
 
 ### Step 8: Configure Token Lifetimes
 
@@ -119,7 +119,7 @@ The configuration of OAuth clients includes token lifetimes. This blog's code sa
 - The refresh token lifetime is *12 hours*, which becomes the maximum time for the user's authenticated session against APIs.
 - The ID token lifetime is also *12 hours*, though this time is not used.
 
-![token lifetimes](../images/80/token-lifetimes.jpg)
+![token lifetimes](../images/80/token-lifetimes.jpg?v=20251229)
 
 ### Step 9: Configure Applications
 
@@ -130,7 +130,7 @@ The *authority* URL is typically the base URL of the authorization server. You c
 ```json
 {
     "app": {
-        "apiBaseUrl":       "https://api.authsamples-dev.com/api"
+        "apiBaseUrl":       "https://api.authsamples-dev.com:446/api"
     },
     "oauth": {
         "authority":        "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
@@ -146,7 +146,9 @@ The OAuth configuration for an API focuses on how it downloads token signing pub
 ```json
 {
     "api": {
-        "port": 443,
+        "port": 446,
+        "sslCertificateFileName": "../certs/authsamples-dev.ssl.p12",
+        "sslCertificatePassword": "Password1",
         "trustedOrigins": [
             "https://www.authsamples-dev.com"
         ],

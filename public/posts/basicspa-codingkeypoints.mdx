@@ -1,6 +1,6 @@
 # Basic SPA - Code Details
 
-The <a href='basicspa-oauthworkflow.mdx'>SPA and API OAuth Messages</a> post explained the initial code sample's HTTP/S messages. Next I drill into some identity-related code in the SPA.
+The <a href='basicspa-oauthworkflow.mdx'>SPA and API OAuth Messages</a> post explained the initial code sample's HTTP/S messages. Next, I summarize the base setup and explain key points of the OAuth integration.
 
 ### SPA Code
 
@@ -20,11 +20,11 @@ The SPA uses only a handful of external dependencies, expressed in its *package.
     "axios": "^1.13.2",
     "mustache": "^4.2.0",
     "oidc-client-ts": "^3.4.1"
-  },
+  }
 }
 ```
 
-I separate the SPA's concerns into a number of TypeScript classes, and in particular I keep plumbing separated from the application's important code. In a real SPA the views and view models represent your business value:
+I separate the SPA's concerns into a number of TypeScript classes, and in particular I keep plumbing separated from the application's important business logic. In a real SPA the views and view models represent your business value:
 
 <div className='smallimage'>
     <img src='../images/50/spa-code.jpg?v=20250122' alt='SPA code' />
@@ -32,33 +32,64 @@ I separate the SPA's concerns into a number of TypeScript classes, and in partic
 
 ### SPA Views
 
-The SPA's views consist of a number of subviews, arranged via rows and columns:
-
-![SPA Layout](../images/50/spa-layout.jpg)
-
-I use the [Bootstrap Grid System](https://getbootstrap.com/docs/4.0/layout/grid/) to lay out elements at runtime, and the deployed HTML is minimal:
+The SPA's deployed HTML is minimal. The application's code builds to JavaScript bundle files that the browser can execute. The browser downloads HTML, CSS and JavaScript from a development static content server:
 
 ```html
 <!DOCTYPE html>
 <html lang='en'>
     <head>
         <meta charset='utf-8'>
-        <base href='/spa/' />
+        <base href='/spa/'>
         <title>OAuth Demo App</title>
 
-        <link rel='stylesheet' href='css/bootstrap.min.css'>
-        <link rel='stylesheet' href='css/app.css'>
+        <link rel='stylesheet' href='bootstrap.min.css'>
+        <link rel='stylesheet' href='app.css'>
     </head>
     <body>
-        <div id='root' class='container' />
-        
-        <script type='module' src='dist/vendor.bundle.js'></script>
-        <script type='module' src='dist/app.bundle.js'></script>
+        <div id='root' class='container'></div>
+
+        <script type='module' src='vendor.bundle.js'></script>
+        <script type='module' src='app.bundle.js'></script>
     </body>
 </html>
 ```
 
-As the user navigates between screens, a *main* element within the *root* element updates to render the current location's view.
+At runtime, views populate the *root* element with inner elements. In particular, a *main* child element gets updated with the main view as the user navigates. Views are composed of subviews, arranged via rows and columns, using the [Bootstrap Grid System](https://getbootstrap.com/docs/4.0/layout/grid/). 
+
+### Static Content Hosting
+
+I use the webpack development server to serve static content in a productive manner. I configure a local HTTPS setup with the following settings and use hot reloading when the frontend code changes, as is common in SPA development.
+
+```typescript
+const devServer: webpackDevServer.Configuration = {
+
+    server: {
+        type: 'https',
+        options: {
+            pfx: fs.readFileSync('../certs/authsamples-dev.ssl.p12'),
+            passphrase: 'Password1',
+        },
+    },
+    static: {
+        directory: path.join(dirname, './dist'),
+        publicPath: '/spa/',
+    },
+    port: 443,
+    open: 'https://www.authsamples-dev.com/spa',
+    devMiddleware: {
+        writeToDisk: true,
+    },
+    historyApiFallback: {
+        index: '/spa/',
+    },
+    hot: true,
+    allowedHosts: [
+        'www.authsamples-dev.com',
+    ],
+};
+```
+
+The webpack development server is just a thin wrapper around the Express HTTP server. The important point is that there is only minimal web host development and the web host never comes into contact with sensitive data. The <a href='web-technology-setup.mdx'>Web Technology Setup</a> blog post explains more about my JavaScript technology requirements.
 
 ### SPA Entry Point
 
@@ -111,18 +142,18 @@ The SPA configuration contains the following values, to enable the SPA to connec
 ```json
 {
     "app": {
-        "apiBaseUrl":       "http://api.authsamples-dev.com/api"
+        "apiBaseUrl":       "https://api.authsamples-dev.com:446/api"
     },
     "oauth": {
         "authority":        "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
-        "clientId":         "62raqvncbki418n3ckl59uf0f4",
-        "redirectUri":      "http://localhost/spa",
+        "clientId":         "hje94a2jj3lgkobkh57ikenhh",
+        "redirectUri":      "https://www.authsamples-dev.com/spa",
         "scope":            "openid profile"
     }
 }
 ```
 
-The *OAuthClient* instance creates a *UserManager* object from the oidc-client-ts library, which does the main OAuth work. I use session storage of tokens for the first code sample, so that tokens survive page reloads but get removed once the user closes the browser tab:
+The *OAuthClient* instance creates a *UserManager* object from the oidc-client-ts library, which does the main OAuth work. I use session storage of tokens for the first code sample, so that tokens survive page reloads but get removed once the user finishes using the SPA:
 
 ```typescript
 export class OAuthClient {
@@ -234,8 +265,8 @@ The initial SPA only sends a single API request at a time. This blog's final UI 
 
 When the login completes, the authorization server returns a response to the SPA's redirect URI. This causes the SPA's *index.html* to reload. The SPA must handle the login response as part of its application startup. If the SPA starts normally or as part of a page reload, *handleLoginResponse* is a no-op, but if it is an authorization response the current URL will have one of the following forms:
 
-- *https://localhost/spa?code=xxx&state=yyy*
-- *https://localhost/spa?error=invalid_request&state=yyy*
+- *https://www.authsamples-dev.com/spa?code=xxx&state=yyy*
+- *https://www.authsamples-dev.com/spa?error=invalid_request&state=yyy*
 
 An SPA can either use an explicit callback path like *https://localhost/spa/callback*, or it can inspect its query parameters, as in the code sample. Either way, the SPA detects an authorization response and asks the oidc-client-ts library to process it. The response handling code then performs the following actions:
 
@@ -274,7 +305,13 @@ public async handleLoginResponse(): Promise<void> {
 }
 ```
 
-The above code enables *deep linking*, where a user can bookmark a location like *http://localhost/spa/#company=2*, then access it in a new browser session. After signing in, the user returns to their bookmarked location.
+The above code enables *deep linking*, where a user can bookmark a location like *https://www.authsamples-dev.com/spa/#company=2*, then access it in a new browser session. After signing in, the user returns to their bookmarked location.
+
+Note also that the SPA only processes authorization responses when it has a stored state. This simple measure helps to prevent unwelcome error displays if events such as the following occur:
+
+- Users returning to the app after hitting the back button after login.
+- Users who bookmark the authorization server's login page.
+- Attacks that paste malicious authorization responses into the application.
 
 ### Rendering User Info
 
@@ -461,7 +498,7 @@ private static getOAuthExceptionMessage(exception: any): string {
 }
 ```
 
-OAuth introduces additional endpoints, messages and configuration settings into frontend clients, so there is plenty of scope for problems when getting integrated. I always use solid error handling code and perform early error rehearsal to improve my productivity.
+OAuth introduces additional endpoints, messages and configuration settings into frontend clients, so there is plenty of scope for incorrect deployments. I therefore always use solid error handling code and perform early error rehearsal to improve my future productivity.
 
 ### Where Are We?
 

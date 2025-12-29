@@ -20,7 +20,7 @@ Some technology stacks provide a *Resource Server Framework* that operates like 
 
 ### JOSE Libraries
 
-This blog provides APIs developed in the following languages and in each case a *JSON Object Signing and Encryption (JOSE)* library is used, to enable up-to-date security options when needed:
+This blog provides APIs developed in the following languages and in each case a [JavaScript Object Signing and Encryption (JOSE)](https://datatracker.ietf.org/wg/jose/about/) library is used, to enable up-to-date security options when needed:
 
 | Technology | JOSE Library |
 | ---------- | ------------ |
@@ -104,9 +104,11 @@ The API expresses its settings in its configuration file. At the time of writing
 ```json
 {
     "api": {
-        "port": 80,
+        "port": 446,
+        "sslCertificateFileName": "../certs/authsamples-dev.ssl.p12",
+        "sslCertificatePassword": "Password1",
         "trustedOrigins": [
-            "http://localhost"
+            "https://www.authsamples-dev.com"
         ],
         "useProxy": false,
         "proxyUrl": "http://127.0.0.1:8888"

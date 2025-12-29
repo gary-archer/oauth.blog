@@ -469,9 +469,7 @@ To step through API code in a debugger, first open the root level workspace file
             "runtimeArgs": ["--import", "tsx"],
             "args": ["src/host/startup/app.ts"],
             "outputCapture": "std",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
+            "skipFiles": ["<node_internals>/**"]
         }
     ]
 }
@@ -483,7 +481,7 @@ You can then step through TypeScript code and inspect the state of variables:
 
 ### Decompiling Code: Debugging the SPA
 
-There is a similar configuration file at *spa/.vcscode/launch.json*. The setup is a little more complex since the debugger uses source map files that webpack outputs to the *dist* folder:
+There is a similar configuration file at *spa/.vcscode/launch.json* to launch the SPA:
 
 ```json
 {
@@ -493,15 +491,16 @@ There is a similar configuration file at *spa/.vcscode/launch.json*. The setup i
             "type": "chrome",
             "request": "launch",
             "name": "Launch SPA",
-            "url": "http://www.authsamples-dev.com/spa/",
-            "webRoot": "${workspaceRoot}/src/*",
-            "sourceMaps": true,
-            "sourceMapPathOverrides":{
-                "webpack:///./*": "${workspaceRoot}/dist/*"
-            }
+            "url": "https://www.authsamples-dev.com/spa/"
         }
     ]
 }
+```
+
+When bundle files download in debug mode, their last line points to a source map file that the browser also downloads:
+
+```text
+//# sourceMappingURL=app.bundle.js.map
 ```
 
 You can then step through the actual lines of TypeScript code, while the browser executes the corresponding JavaScript code:

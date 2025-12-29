@@ -81,9 +81,11 @@ First, edit the API configuration for this blog's <a href='basicspa-execution.md
 ```json
 {
     "api": {
-        "port": 80,
+        "port": 446,
+        "sslCertificateFileName": "../certs/authsamples-dev.ssl.p12",
+        "sslCertificatePassword": "Password1",
         "trustedOrigins": [
-            "http://localhost"
+            "https://www.authsamples-dev.com"
         ],
         "useProxy": true,
         "proxyUrl": "http://127.0.0.1:8888"
@@ -124,7 +126,7 @@ When the HTTP proxy is used, a browser indicates that *mitmproxy* is the issuer 
 
 ### Proxy Configuration
 
-The tricky part of using an HTTPS proxy is knowing how to configure it across different tools and technologies, which can include all of these clients:
+The tricky part of using an HTTP proxy is knowing how to configure it across different tools and technologies, which can include all of these clients:
 
 - Chrome Browser
 - Firefox Browser
@@ -299,7 +301,7 @@ To use curl to connect to an HTTP URL I use commands of this form to capture tra
 
 ```bash
 export http_proxy=http://127.0.0.1:8888
-curl -H "Authorization Bearer xxx" http://api.authsamples-dev.com/api/companies
+curl -H "Authorization Bearer xxx" https://api.authsamples-dev.com/api/companies
 ```
 
 To use OpenSSL to connect to an HTTPS URL I use commands of this form to capture traffic in an HTTP proxy:

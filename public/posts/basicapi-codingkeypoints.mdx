@@ -42,9 +42,7 @@ try {
     const expressApp = express();
     const httpServer = new HttpServerConfiguration(expressApp, configuration, logger);
     await httpServer.initializeApi();
-
-    httpServer.initializeWebStaticContentHosting();
-    httpServer.startListening();
+    await httpServer.startListening();
 
 } catch (e) {
 
@@ -53,7 +51,7 @@ try {
 }
 ```
 
-The startup logic is in the *HttpServerConfiguration* class, whose main role is to express how to process API requests:
+The startup logic is in the *HttpServerConfiguration* class, whose main role is to configure API routes:
 
 - The *get* expressions handle API requests.
 - The *use* expressions implement cross cutting concerns.
@@ -83,43 +81,60 @@ public async initializeApi(): Promise<void> {
 
 ### API Configuration
 
-The API uses a JSON configuration file in a similar manner to the SPA. The API configures fields it needs for JWT validation:
+The API uses a JSON configuration file in a similar manner to the SPA. The API configures SSL certificates and OAuth fields it needs for JWT access token validation:
 
 ```json
 {
     "api": {
-        "port": 80,
+        "port": 446,
+        "sslCertificateFileName": "../certs/authsamples-dev.ssl.p12",
+        "sslCertificatePassword": "Password1",
         "trustedOrigins": [
-            "http://localhost"
+            "https://www.authsamples-dev.com"
         ],
         "useProxy": false,
         "proxyUrl": "http://127.0.0.1:8888"
     },
     "oauth": {
         "jwksEndpoint": "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/jwks.json",
-        "issuer": "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
-        "audience": "",
-        "algorithm": "RS256"
+        "issuer":       "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+        "audience":     "",
+        "algorithm":    "RS256"
     }
 }
 ```
 
-### Web Static Content Hosting
+### API Hosting
 
-The API also uses Express to host web static content, to make the SPA's files available for download to the browser. In the initial code sample, this is done for the following reasons:
-
-- Demonstrating  that a web host should require only minimal code.
-- Reducing the number of parts so that the overall backend is easier to run.
+In development mode, the API loads OpenSSL issued certificates and listens at *https://api.authsamples-dev.com:446*. Using real-world domain-based URLs enables me to think more about the client experience.
 
 ```typescript
-public initializeWebStaticContentHosting(): void {
+public async startListening(): Promise<void> {
 
-    this.express.use('/spa', express.static('../spa'));
-    this.express.use('/favicon.ico', 
+    const port = this.configuration.api.port;
+    if (this.configuration.api.sslCertificateFileName && this.configuration.api.sslCertificatePassword) {
+
+        const pfxFile = await fs.readFile(this.configuration.api.sslCertificateFileName);
+        const sslOptions = {
+            pfx: pfxFile,
+            passphrase: this.configuration.api.sslCertificatePassword,
+        };
+
+        const httpsServer = https.createServer(sslOptions, this.express);
+        httpsServer.listen(port, () => {
+            console.log(`API is listening on HTTPS port ${port}`);
+        });
+
+    } else {
+
+        this.express.listen(port, () => {
+            console.log(`API is listening on HTTP port ${port}`);
+        });
+    }
 }
 ```
 
-In a real deployment you would use a separate web host component, and for SPAs this is often a content delivery network. The <a href='final-spa-overview.mdx'>Final SPA</a> switches to a dedicated web host for development and a CDN for deployed environments.
+In deployed mode the API would be hosted behind an API gateway that provides the domain-based URLs and SSL certificates. The API would usually listen on an HTTP internal URL that uses a low-privilege port above 1024.
 
 ### Service Logic Classes
 
@@ -322,7 +337,7 @@ By default this leads to lightweight output as follows:
 
 ### API Error Handling
 
-The API code also implements solid error handling using these main classes:
+The API code also implements solid error handling using the following main classes:
 
 | Class | Description |
 | ----- | ----------- |

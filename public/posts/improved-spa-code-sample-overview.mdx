@@ -15,12 +15,6 @@ The updated SPA and API code sample has the following additional behaviours, to 
 | Logout | The SPA implements a basic form of logout, including logout across multiple browser tabs. |
 | Real-World URLs | Both the SPA and API run on a development computer using real-world HTTPS URLs. |
 
-### Updated Components
-
-I show the updated components and endpoints below, which include the use of an API memory cache to store authorization values used across multiple requests:
-
-![components](../images/170/components.jpg)
-
 ### SPAs in 2021
 
 This sample uses the traditional SPA solution, with OpenID Connect implemented solely in JavaScript. In 2021 the best practice is to upgrade to a <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend</a> approach.
@@ -47,12 +41,12 @@ The SPA uses the same components as the initial code sample, with SPA code that 
 
 ### Step 3. View Updated Configuration
 
-The SPA now uses more complete OAuth settings and HTTPS URLs:
+The SPA now uses more complete OAuth settings, to request a custom *investments* scope:
 
 ```json
 {
     "app": {
-        "apiBaseUrl":             "https://api.authsamples-dev.com/api"
+        "apiBaseUrl":             "https://api.authsamples-dev.com:446/api"
     },
     "oauth": {
         "provider":               "cognito",
@@ -66,13 +60,13 @@ The SPA now uses more complete OAuth settings and HTTPS URLs:
 }
 ```
 
-The API configuration is similarly updated:
+The API configuration is also updated, to require the *investments* scope:
 
 ```json
 {
     "api": {
-        "port": 443,
-        "sslCertificateFileName": "./certs/authsamples-dev.ssl.p12",
+        "port": 446,
+        "sslCertificateFileName": "../certs/authsamples-dev.ssl.p12",
         "sslCertificatePassword": "Password1",
         "trustedOrigins": [
             "https://www.authsamples-dev.com"
@@ -86,18 +80,13 @@ The API configuration is similarly updated:
         "issuer":                        "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
         "audience":                      "",
         "algorithm":                     "RS256",
+        "scope":                         "https://api.authsamples.com/investments",
         "claimsCacheTimeToLiveMinutes":  15
     }
 }
 ```
 
-### Step 4. Understand Updated OAuth Client Settings
-
-The SPA now requires an updated client registration. In AWS Cognito, this blog's default authorization server, there are new settings for *Custom Scope* and *Post Logout Redirect URI*:
-
-![spa client](../images/170/spa-client.jpg?v=20250921)
-
-### Step 5. Configure DNS and SSL
+### Step 4. Configure DNS and SSL
 
 Update the hosts file on your computer to include this blog's local development domains, described in the earlier <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a> post:
 
@@ -119,12 +108,12 @@ Then ensure that your browser trusts the root certificate at the following locat
 certs/authsamples-dev.ca.crt
 ```
 
-### Step 6. Build and Run the SPA and API
+### Step 5. Build and Run the SPA and API
 
-Next, run the following script, to build the code and run the API over SSL on port 443. The default browser then runs at *https://www.authsamples-dev.com/spa*.
+Next, run the following script, to build the code and run the API at *https://api.authsamples-dev.com:446/api*. The SPA then continues to runs at *https://www.authsamples-dev.com/spa*.
 
 ```bash
-./build.sh && ./run.sh
+./start.sh
 ```
 
 The SPA terminal window builds JavaScript bundles:
@@ -135,7 +124,7 @@ The API terminal window listens for requests from the SPA on port 443:
 
 ![api build](../images/170/api-build.jpg?v=20240831)
 
-### Step 7. Test Logins with Multiple User Accounts
+### Step 6. Test Logins with Multiple User Accounts
 
 Continue to use the following AWS Cognito test account to sign in to the SPA:
 
@@ -149,7 +138,7 @@ You can also use a second test account with higher privileges, to see additional
 
 The updated SPA shows different data depending on the user since the API now applies claims-based authorization.
 
-### Step 8. View Updated Access Tokens
+### Step 7. View Updated Access Tokens
 
 After a login the SPA receives the following access token. This now contains an *investments* scope and custom claims for *manager_id* and *role*. The API uses these values for its authorization:
 
@@ -157,7 +146,7 @@ After a login the SPA receives the following access token. This now contains an 
 
 For details on how the authorization server issues these scopes and claims see the <a href='managed-authorization-server-setup.mdx'>Cloud Authorization Server Setup</a> blog post.
 
-### Step 9. API uses Claims Based Authorization
+### Step 8. API uses Claims Based Authorization
 
 The API's OAuth processing reads the token claims and also looks up extra values that it needs to implement its authorization. I provide further details on my design choices in the <a href='api-authorization-design.mdx'>API Authorization Behaviour</a> blog post.
 
@@ -196,7 +185,7 @@ In the transactions view, if the user tries to access company 3 data by editing 
 
 The SPA handles this *Not Found For User* API error code specially and redirects to the home page, to avoid displaying a user error.
 
-### Step 10. SPA Downloads User Info
+### Step 9. SPA Downloads User Info
 
 As for the first code sample, the SPA continues to get name details for display from the OpenID Connect userinfo endpoint:
 
@@ -226,7 +215,7 @@ The secondary user data is then rendered in a basic tooltip:
 
 ![secondary user data](../images/170/secondary-user-data.jpg?v=20240813)
 
-### Step 11. Test Token Renewal
+### Step 10. Test Token Renewal
 
 The SPA attempts to refresh in-memory access tokens silently when they expire. You can simulated this if you click *Expire Token* then *Reload Data*:
 
@@ -239,7 +228,7 @@ Since the SPA stores tokens in-memory, the same renewal occurs if you refresh th
 - The SPA receives a new access token without any user impact.
 - The SPA retries the API call with the new access token.
 
-### Step 12. View Token Renewal OAuth Requests
+### Step 11. View Token Renewal OAuth Requests
 
 The updated code sample implements the traditional SPA token renewal flow, where the SPA attempts to send the SSO cookie to get a new access token, using the *prompt=none* query parameter:
 
@@ -247,7 +236,7 @@ The updated code sample implements the traditional SPA token renewal flow, where
 
 Although the SPA's code implements the renewal flow correctly, every iframe token renewal fails, since AWS Cognito cookies do not support this flow. The user experiences an OpenID Connect redirect whenever the access token expires or the user refreshes the page. With third-party cookie deprecation, that is the expected future behavior, and I say more about it in the <a href='user-sessions-and-token-renewal.mdx'>Iframe Access Token Renewal</a> post.
 
-### 13. Logout
+### 12. Logout
 
 The SPA also implements logout functionality. The SPA removes its own tokens, then redirects to the authorization server sending the SSO cookie. The authorization server expires the SSO cookie to end the user's session, then redirects the browser back to its *Post Logout Redirect URI*, which renders the following view:
 

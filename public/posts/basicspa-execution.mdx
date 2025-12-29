@@ -14,7 +14,7 @@ I use [Visual Studio Code](https://code.visualstudio.com/) as a mainstream edito
     <img src='../images/30/code-layout.jpg?v=20251229' alt='Code layout' />
 </div>
 
-The project demonstrates a code separation to aim for. The API serves protected data to the frontend. The web application is entirely frontend-focused. Web developers no longer need to implement the type of backend logic that older website solutions required.
+The project demonstrates a code separation to aim for. The API serves sensitive data to the frontend. The web application is entirely frontend-focused. Web developers no longer need to implement the type of backend logic that older website solutions required.
 
 I provide the API and SPA together, to show how they interact. In a real setup you should use separate source control repositories. Each developer than works on a single component at a time, which provides maximum choices on how to assign work.
 
@@ -102,10 +102,11 @@ If you use HTTP URLs, without SSL certificates, both AWS Cognito and the cryptog
 
 ### Step 6: Run the SPA and API
 
-In the root folder, run the following commands to spin up the system. The deployment uses OpenSSL to create development HTTPS certificates in your preferred secrets folder. Other than that it mostly runs *npm install* and *npm start* for the SPA and API components:
+In the root folder, run the following commands to spin up the system. The first time you run one of this blog's code examples, the deployment creates <a href="developer-ssl-setup.mdx">OpenSSL Development Certificates</a> in your preferred secrets folder.
 
 ```bash
-export SECRETS_FOLDER=~/secrets
+export SECRETS_FOLDER="$HOME/secrets"
+mkdir "$SECRETS_FOLDER"
 ./start.sh
 ```
 
@@ -148,7 +149,9 @@ Initially, the SPA attempts to load its home view and call the API to get data. 
 
 The SPA never issues abrupt redirects and instead guides the user, who can initiate the login. This provides good usability and also prevents the potential for redirect loops if you ever use incorrect OAuth configuration settings for the SPA or API.
 
-Once user authentication completes, the SPA renders hard coded fictional data returned from the API. This data is secured using OAuth access tokens. The API uses [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), to grant the SPA's precise domain the cross-origin permissions to call the API.
+### Step 8: Call APIs
+
+Once user authentication completes, the SPA renders hard coded fictional data returned from the API. This data is secured using OAuth access tokens. 
 
 ![List view](../images/20/list-view.jpg?v=20251229)
 
@@ -156,7 +159,9 @@ The first API call is to *https://api.authsamples-dev.com:446/api/companies*, an
 
 ![API browser access](../images/30/api-browser-access.jpg?v=20251229)
 
-### Step 8: Run Navigation Actions
+To enable the SPA to successfully call APIs, this blog's early APIs implement [Cross Origin Request Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), to grant the SPA's precise domain the cross-origin permissions to call the API. Another option, which I use for this blog's final APIs, is to implement CORS in an API gateway rather than in API code.
+
+### Step 9: Run Navigation Actions
 
 You can click one of the *View Transactions* links to navigate to the SPA's second view. Alternatively, you can type the following format of URL into the browser's address bar:
 
@@ -170,7 +175,7 @@ Users can bookmark SPA locations. You can simulate this in a new browser tab or 
 
 ![Multi tab navigation](../images/30/multi-tab-navigation.jpg?v=20251229)
 
-### Step 9: Run a User Session
+### Step 10: Run a User Session
 
 The SPA's session management is incomplete in the initial code sample. Every time the user opens a new browser tab or the access token expires, the user has to sign in again. You can simulated expiry for a browser tab if you click *Expire Token* followed by *Reload Data*.
 
@@ -178,13 +183,13 @@ The initial SPA stores access tokens in session storage, so that page reloads do
 
 This usability problem is easily fixed by storing OAuth tokens in local storage, but that is considered less secure. The initial code sample therefore visualizes the types of usability and security concerns that are common when you implement OAuth SPA security.
 
-### Step 10: View Browser Traffic
+### Step 11: View Browser Traffic
 
 Developers need to understand OAuth messages, which are sent using an HTTP language, with input and output parameter names defined in OAuth specifications. An  authorization request begins the login process, and includes a number of query string parameters:
 
 ![HTTP debugging](../images/30/http-debugging.jpg?v=20251229)
 
-### Step 11: View Security Library Logs
+### Step 12: View Security Library Logs
 
 The SPA can show debug details from the oidc-client-ts library, to provide visualisation of the OAuth SPA logic. You can activate this by adding a *#log=debug* query parameter to the SPA, then viewing the browser console. The following screenshot uses Google Chrome development tools. Note that I select the *Verbose* level to show debug messages and *Preserve Log* to maintain messages before and after login redirects.
 
