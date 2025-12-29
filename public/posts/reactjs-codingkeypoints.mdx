@@ -34,7 +34,7 @@ The final SPA uses the same HTML markup as earlier SPAs:
         <meta charset='utf-8'>
         <meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>
 
-        <base href='/spa/' />
+        <base href='/spa/'>
         <title>OAuth Demo App</title>
 
         <link rel='stylesheet' href='bootstrap.min.css'>
@@ -48,56 +48,6 @@ The final SPA uses the same HTML markup as earlier SPAs:
         <script type='module' src='app.bundle.js'></script>
     </body>
 </html>
-```
-
-### Web Host
-
-The final SPA could use any web static content host, but this component should always be lightweight and never interfere with the frontend experience. For development I use the webpack development server and also ensure the following important local behaviours. In a real system with would help to derisk production deployments.
-
-- The web host uses production security, including SSL and strong web security headers.
-- The serving of static content supports code splitting and works the same as deployed systems.
-
-The web host's logic serves the SPA's static content from the */spa* folder. Other folders could be added in future, for additional micro-frontends. An abbreviated configuration is shown here with the most essential settings:
-
-```typescript
-const devServer: webpackDevServer.Configuration = {
-
-    server: {
-        type: 'https',
-        options: {
-            key: fs.readFileSync('../certs/authsamples-dev.ssl.key'),
-            cert: fs.readFileSync('../certs/authsamples-dev.ssl.crt'),
-        },
-    },
-    static: {
-        directory: path.join(dirname, '../dist'),
-    },
-    port: 443,
-    historyApiFallback: {
-        index: '/spa/',
-    },
-    hot: true,
-    allowedHosts: [
-        'www.authsamples-dev.com',
-    ],
-    headers: secureHeaders
-}
-
-const devConfig: webpack.Configuration = {
-    mode: 'development',
-    devServer,
-    output: Object.assign({}, baseConfig.output, {
-        devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]',
-        publicPath: '/spa/',
-    }),
-    plugins:[
-        new webpack.DefinePlugin({
-            IS_DEBUG: 'true',
-        })
-    ]
-};
-
-export default merge(baseConfig, devConfig);
 ```
 
 ### React Library Setup

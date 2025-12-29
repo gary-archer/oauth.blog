@@ -32,23 +32,6 @@ To add to the complexity, some authorization servers use non-standard logout sol
 | client_id | The client can send its ID to identify itself to the authorization server. |
 | logout_uri | The *post_logout_redirect_uri* must be provided in a parameter with a different name. |
 
-### Allowed Post Logout Redirect URIs
-
-Some providers do not allow post logout redirect URIs to include a hash location so you may instead need to redirect to a small logout HTML page, then manage this redirect within the app. The next SPA code sample follows this approach:
-
-```html
-<!DOCTYPE html>
-<html lang='en'>
-    <head>
-        <meta charset='utf-8'>
-        <base href='/spa/' />
-        <title>OAuth Demo App</title>    
-    </head>
-    <body>
-        <script src='dist/loggedout.js'></script>
-    </body>
-</html>
-```
 ### Post Logout Location
 
 When logout has completed, this blog's code samples return the user to a *Post Logout Landing Page* within the app, then present the user with an option to sign in again:

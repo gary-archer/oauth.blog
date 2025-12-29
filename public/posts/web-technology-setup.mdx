@@ -515,7 +515,7 @@ const devServer: webpackDevServer.Configuration = {
 };
 ```
 
-Although I get some developer conveniences like hot reloading when I make frontend code changes, the main behavior I want from a development web static content host is to serve web assets in the same way as for production users. The only difference during development is that I use a non-optimized build with debugging support.
+Although I get some developer conveniences like hot reloading when I make frontend code changes, the main behavior I want from a development web static content host is to serve web assets in the same way as for production users. The development web host must be able to implement security behaviors like setting a strong content security policy. The only difference during development is that I use a non-optimized build with debugging support.
 
 ### Decompiling Code: Debugging
 

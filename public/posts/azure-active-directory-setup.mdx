@@ -245,7 +245,7 @@ certs/authsamples-dev.ca.crt
 Next, run the following script, to build the code and run the API over SSL on port 443. The default browser then runs at *https://www.authsamples-dev.com/spa/*. The SPA redirects to Entra ID and you can sign in with one of the test user accounts:
 
 ```bash
-./build.sh && ./run.sh
+./start.sh
 ```
 
 Login completes successfully and you can run the same SPA and API that I previously ran against AWS Cognito. There are some minor OAuth differences but both apps use essentially the same code.
