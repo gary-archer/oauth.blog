@@ -6,7 +6,7 @@ Previously I suggested an <a href='oauth-infrastructure-setup.mdx'>OAuth Infrast
 
 Before OAuth and APIs, web applications required a web backend to secure requests. Web developers built backend endpoints secured by HttpOnly cookies. The web backend required a runtime and cookie issuing libraries. The runtime imposed deployment limitations and sometimes imposed unwelcome usability problems, like abrupt server issued login redirects that frontend developers could not control.
 
-In an OAuth web architecture, APIs manage data security instead of the web static content host. Content delivery networks can optimize web performance. Web developers have fewer responsibilities and can use up to date technology to build a modern frontend experience, with a faster time to market than older solutions.
+In an OAuth web architecture, APIs manage data security instead of the web static content host. Content delivery networks can optimize web download performance. Web developers have fewer responsibilities and can use up to date technology to build a modern frontend experience, with a faster time to market than older solutions.
 
 To fully realise the benefits you first need the type of well designed web technology setup that this post explains. Web developers can then operate like mobile developers, with a frontend-only focus and full usability control. To get sensitive data, the frontend sends access tokens (or HttpOnly cookies that reference them) directly to internet API URLs. 
 

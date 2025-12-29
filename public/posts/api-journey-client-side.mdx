@@ -349,14 +349,14 @@ public async execute(action: () => Promise<void>): Promise<void> {
 
 Eventually the client's refresh token also expires. This can be simulated by clicking *Expire Refresh Token* followed by *Reload Data*. The token refresh request then returns an *invalid_grant* error code. The client then triggers another login redirect, in the same way as the initial login redirect.
 
-### Usability Control
+### Security Control
 
-In OAuth deployments, APIs can issue security challenges to the frontend:
+OAuth secured APIs can issue security challenges to frontend applications. These can occur in response to concurrent API requests:
 
 - APIs keep access tokens short-lived by returning HTTP 401 responses with an *invalid_token* error code. 
 - APIs keep access tokens least-privilege by returning HTTP 403 responses with an *insufficient_scope* error code.
 
-API clients should initiate their own API requests for secured data. The frontend can then respond to challenges and guide the user. The frontend also has best reliability control, even when it sends concurrent API requests.
+To enable the reliable use of short-lived, least-privilege access tokens, the app itself should use fetch requests to initiate all API requests for sensitive data. For web applications, that should be code that runs in the browser. This blog's <a href='web-technology-setup.mdx'>Web Technology Setup</a> meets that requirement by ensuring that the web host never comes into contact with sensitive data from APIs.
 
 ### Deep Linking
 
