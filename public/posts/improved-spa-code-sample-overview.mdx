@@ -116,7 +116,7 @@ Next, run the following script, to build the code and run the API at *https://ap
 ./start.sh
 ```
 
-The SPA terminal window builds JavaScript bundles:
+The SPA terminal window builds JavaScript bundles and serves them using the webpack development server:
 
 ![spa build](../images/170/spa-build.jpg?v=20240831)
 
@@ -232,7 +232,7 @@ Since the SPA stores tokens in-memory, the same renewal occurs if you refresh th
 
 The updated code sample implements the traditional SPA token renewal flow, where the SPA attempts to send the SSO cookie to get a new access token, using the *prompt=none* query parameter:
 
-![iframe renewal request](../images/170/iframe-renewal-request.jpg?v=20240813)
+![iframe renewal request](../images/170/iframe-renewal-request.jpg?v=2051230)
 
 Although the SPA's code implements the renewal flow correctly, every iframe token renewal fails, since AWS Cognito cookies do not support this flow. The user experiences an OpenID Connect redirect whenever the access token expires or the user refreshes the page. With third-party cookie deprecation, that is the expected future behavior, and I say more about it in the <a href='user-sessions-and-token-renewal.mdx'>Iframe Access Token Renewal</a> post.
 
