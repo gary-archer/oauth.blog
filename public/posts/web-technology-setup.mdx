@@ -2,17 +2,9 @@
 
 Previously I suggested an <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a>. In this post I explain how this blog uses web technology, primarily for browser based apps. I also highlight differences for Node.js code, such as APIs. The main technical goal is a business-like development setup that matches deployed systems, so that security, reliability and deployment aspects work the same locally and in production.
 
-### OAuth Web Architecture
-
-Before OAuth and APIs, web applications required a web backend to secure requests. Web developers built backend endpoints secured by HttpOnly cookies. The web backend required a runtime and cookie issuing libraries. The runtime imposed deployment limitations and sometimes imposed unwelcome usability problems, like abrupt server issued login redirects that frontend developers could not control.
-
-In an OAuth web architecture, APIs manage data security instead of the web static content host. Content delivery networks can optimize web download performance. Web developers have fewer responsibilities and can use up to date technology to build a modern frontend experience, with a faster time to market than older solutions.
-
-To fully realise the benefits you first need the type of well designed web technology setup that this post explains. Web developers can then operate like mobile developers, with a frontend-only focus and full usability control. To get sensitive data, the frontend sends access tokens (or HttpOnly cookies that reference them) directly to internet API URLs. 
-
 ### Web Application Code
 
-The main ingredient of an SPA is its logic. Choose a language that remains close to the browser's default language, to reduce complexity. Also use clean code and a separation of concerns. I use TypeScript since I like the extensions to JavaScript in these areas:
+The main ingredient of an SPA is its view logic. Choose a language that remains close to the browser's default language, to reduce complexity. Also use clean code and a separation of concerns. I use TypeScript since I like the extensions to JavaScript in these areas:
 
 - Expressive types including interfaces and private class members.
 - Data contracts can represent API requests and responses.
@@ -474,7 +466,7 @@ Deployed builds for Node.js APIs should instead run JavaScript code, for best pe
 
 ### Executing Code: Development Web Host
 
-After the web build, the SPA's HTML, CSS and JavaScript bundles can be served from any HTTP server, so deployment is portable. For example, Node.js Express can serve static content using the following minimal code:
+After the web build, the SPA's HTML, CSS and JavaScript bundles can be served from any HTTP server. For example, Node.js Express can serve static content using the following minimal code:
 
 ```typescript
 const app = express();
@@ -484,7 +476,9 @@ app.listen(8000, () => {
   });
 ```
 
-As is standard for SPA development, this blog's SPAs use a development static content host. I use the webpack development server, which uses Node.js Express under the hood. To serve static content locally using SSL and a custom domain name I use the following configuration:
+A lightweight web host is the most critical part of the web technology setup. Since the web host never comes into contact with sensitive data from APIs, you significantly simplify frontend developer setups. Web developers operate like mobile developers, and get sensitive data by calling API internet URLs. When APIs return challenge responses with HTTP status codes of 401 or 403, frontend developers can handle them with full usability control.
+
+As is standard for SPA development, this blog uses a development static content host. I use the webpack development server, which uses Node.js Express under the hood. To serve static content locally using SSL and a custom domain name I use the following configuration. I like to write bundles to disk during development so that I can understand how my built code is returned to the browser.
 
 ```typescript
 const devServer: webpackDevServer.Configuration = {
