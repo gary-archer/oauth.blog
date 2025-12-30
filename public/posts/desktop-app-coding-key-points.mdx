@@ -75,7 +75,7 @@ The renderer process runs an SPA in the Chromium browser host, with the followin
 
 ### Electron Builds
 
-I wanted to use modern TypeScript code, which Electron does not easily support. Therefore, I used Webpack to build to ECMAScript modules, which is a little tricky to get working in both main and renderer processes. Two webpack builds run, to produce the following bundle files from the code layout and the *node_modules* folder:
+To build the Electron app I use webpack to produce bundles for both the main and renderer sides of the application. Two webpack builds run, using the techniques from the earlier post on <a href='web-technology-setup.mdx'>Web Technology Setup</a> blog post, to produce the following ECMAScript bundle files from the code layout and the *node_modules* folder:
 
 <div className='smallimage'>
     <img src='../images/430/bundles.jpg?v=20240922' alt='bundles' />
@@ -89,6 +89,7 @@ import webpack from 'webpack';
 
 const dirname = process.cwd();
 const config: webpack.Configuration = {
+
     mode: 'development',
     target: ['electron-main'],
     experiments: {

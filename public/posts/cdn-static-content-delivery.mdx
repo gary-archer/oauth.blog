@@ -24,7 +24,7 @@ This post covers the details for the first domain, and the steps for other domai
 
 ### Automated Deployment
 
-In a prevouis post I explained <a href='how-to-run-the-react-js-spa.mdx'>How to Run the Final SPA</a>. To deploy to CloudFront I use the following commands, though they only work if you have access to my AWS account:
+In a previous post I explained <a href='how-to-run-the-react-js-spa.mdx'>How to Run the Final SPA</a>. To deploy to CloudFront I use the following commands, though they only work if you have access to my AWS account:
 
 ```bash
 git clone https://github.com/gary-archer/oauth.websample.final
@@ -38,7 +38,7 @@ The build script for the final SPA produces a root level *dist* folder containin
 
 <img src='../images/610/release-bundles.jpg' alt='release bundles' />
 
-I produce a final *index.html* file and use cache busting timestamps for JS and CSS files, to ensure that the browser's cache never serves old files after an upgrade. I also apply [subresource integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) attributes, to bind each resource to the HTML file. This does not solve any real security problems for my web deployment, but is a personal preference, to assert the correctness of assets shipped together.
+I produce a final *index.html* file and use cache busting timestamps for JS and CSS files, to ensure that the browser's cache never serves old files after an upgrade. I also apply [subresource integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) attributes, to bind each resource to the HTML file. This may not solve any real security problems for my web deployment, but is a personal preference, to assert the correctness of assets shipped together.
 
 ```html
 <!DOCTYPE html>
