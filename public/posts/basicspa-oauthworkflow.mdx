@@ -1,6 +1,6 @@
 # SPA and API - OAuth Messages
 
-In the previous post I explained <a href='basicspa-execution.mdx'>How to Run the Basic SPA Sample</a>. This post takes a closer look at HTTP messages used by the SPA and API. I use these messages to provide a summary of the mainstream OAuth behaviours. The main focus is a reliable end-to-end flow across distributed components.
+In the previous post I explained <a href='basicspa-execution.mdx'>How to Run the Basic SPA Sample</a>. This post takes a closer look at HTTP messages in an end-to-end flow between the SPA, authorization server and API. These messages highlight some OAuth behaviors to run a basic authorization code flow, but also deal with error handling and cross origin requests.
 
 ### Development Domains
 
@@ -9,7 +9,7 @@ This blog provides an <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastruct
 | Component	| Base URL |
 | --------- | -------- |
 | SPA | *https://www.authsamples-dev.com* |
-| API | *https://api.authsamples-dev.com* |
+| API | *https://api.authsamples-dev.com:446* |
 | Authorization Server | *https://login.authsamples.com* |
 
 ### How to View OAuth Messages
@@ -22,13 +22,13 @@ Most of the time I trace HTTP/S messages using an HTTP development proxy rather 
 
 The sample first downloads configuration settings from the server, to avoid hard coding these details in JavaScript. The configuration includes public OAuth settings sent in browser URLs, whose values are therefore safe to download to the browser.
 
-![Configuration Download](../images/40/config-download.jpg?v=20240727)
+![Configuration Download](../images/40/config-download.jpg?v=20251230)
 
 ### Step 2. SPA Initiates an Authorization Redirect
 
-The SPA client needs to get an access token with which to call its APIs, and needs to initiate user authentication to get one. The SPA uses the *oidc-client-ts* library to create an authorization request URL containing OpenID Connect keywords. The SPA sets its location to this URL, to cause a front channel browser redirect to Cognito's authorization endpoint:
+The SPA client needs to get an access token with which to call its APIs, and needs to initiate user authentication to get one. The SPA uses the *oidc-client-ts* library to create an authorization request URL containing OpenID Connect keywords. The SPA sets its location to this URL, to cause a front channel browser redirect to Cognito's authorization endpoint. The security library also generates a random state that it saves to session storage.
 
-![Authorization Request](../images/40/authorization-request.jpg?v=20240727)
+![Authorization Request](../images/40/authorization-request.jpg?v=20251230)
 
 Authorization servers contain an OAuth client registration containing configuration settings, and only allow the request if the SPA uses the correct *Client ID* and *Redirect URI*. The client uses the following scope parameters to request permissions to issue to the access token once user authentication completes:
 
@@ -59,7 +59,7 @@ In some use cases, you can configure the authorization server to request user co
 
 Once a login completes successfully, the authorization server issues a SSO (single sign-on) cookie to the browser. This is a third-party cookie since the authorization server runs in an unrelated domain from the SPA. In subsequent authorization requests the authorization server knows the user is already signed in when it receives this cookie, and can avoid login prompts.
 
-![User Session Cookie](../images/40/user-session-cookie.jpg?v=20240901)
+![User Session Cookie](../images/40/user-session-cookie.jpg?v=20251230)
 
 There are a couple of issues with the way cookies are set:
 
@@ -71,9 +71,11 @@ There are a couple of issues with the way cookies are set:
 
 The authorization server returns an authorization response to the SPA, containing an *authorization code*. The SPA must reload to handle this login response and get tokens.
 
-![Authorization Response](../images/40/authorization-response.jpg?v=20240727)
+![Authorization Response](../images/40/authorization-response.jpg?v=20251230)
 
-The SPA receives the response on its redirect URI. This can be a particular path, such as */callback*, or you can use the base URL of the SPA. The security library implements the response processing. It makes recommended OAuth checks like verifying that the response state parameter matches the request state parameter.
+The SPA receives the response on its redirect URI, which can be a particular path, such as */callback*, or you can use the base URL of the SPA. If you use the base URL, many web technology stacks will issue an extra redirect if the redirect URI does not include a */* suffix.
+
+If the SPA has a stored state in session storage it asks the security library to process the authorization response. The library makes recommended OAuth checks like verifying that the response state parameter matches the request state parameter.
 
 ### Step 7. SPA Swaps Code for Tokens
 
@@ -91,14 +93,13 @@ An OAuth flow for SPAs should avoid returning refresh tokens to the browser, sin
 
 ### Step 8. Proof Key for Code Exchange is Used
 
-PKCE is an extension to the original *authorization code flow* and involves the following additional steps:
+PKCE is an extension to the original *authorization code flow* and involves the following additional steps, which security libraries implement. It protects against some types of interception and injection attacks against authorization codes. 
 
 - Client generates a runtime secret (the *code_verifier*) before issuing an authorization redirect.
+- Client stores the code verifier, such as in session storage.
 - Client sends a hash of the secret (the *code_challenge*) in the authorization request.
 - Client posts the code verifier in the authorization code grant request.
 - Authorization server verifies that hash of the verifier matches the challenge received earlier, before issuing tokens.
-
-This protects against some types of attack, such as a malicious party sending an intercepted authorization code to the authorization server. 
 
 ### Step 9: SPA Handles Login Errors
 
@@ -112,7 +113,7 @@ Authorization requests sometimes result in authorization response errors. You ca
     "oauth": {
         "authority":        "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
         "clientId":         "hje94a2jj3lgkobkh57ikenhh",
-        "redirectUri":      "https://www.authsamples-dev.com/spa",
+        "redirectUri":      "https://www.authsamples-dev.com/spa/",
         "scope":            "openid profile xxx"
     }
 }
@@ -132,7 +133,26 @@ The authorization server only returns errors in an authorization response when t
 
 After a successful user login, the SPA calls APIs with an access token. You can view access token claims if you paste the access token into an [Online JWT Viewer](https://jwt.io/). This information is only meant to be available to APIs. Some authorization servers issue access tokens to clients in an opaque format, to avoid exposing API claims.
 
-![Access Token Claims](../images/40/access-token-claims.jpg?v=20240727)
+```json
+{
+  "kid": "QdDJdF0FVH9bamM7SoBhMShUmiP8tcfuhtNImYwRzOg=",
+  "alg": "RS256"
+}
+{
+  "sub": "06e3c525-33d1-47ec-97be-03d8affc3726",
+  "iss": "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+  "version": 2,
+  "client_id": "hje94a2jj3lgkobkh57ikenhh",
+  "origin_jti": "58c09847-b898-472d-9ad6-5a99b9a5f713",
+  "token_use": "access",
+  "scope": "openid profile",
+  "auth_time": 1767088527,
+  "exp": 1767089427,
+  "iat": 1767088527,
+  "jti": "7762f073-eb26-492d-8cae-eeb3db98d68d",
+  "username": "06e3c525-33d1-47ec-97be-03d8affc3726"
+}
+```
 
 The access token is a JWT that is digitally signed and which must be verified by APIs. The values in the payload are *claims* that you use to restrict access token privileges. After an API verifies the JWT's digital signature it can trust the claims contained in the JWT payload. The following are built-in OAuth protocol claims that the API uses:
 
@@ -141,13 +161,32 @@ The access token is a JWT that is digitally signed and which must be verified by
 - **exp**: The time when the token expires.
 - **scope**: Scopes can represent business areas within your APIs.
 
-The authorization server should also issue an *audience (aud)* claim, which can be an array, to represent one or more related APIs. In larger API deployments, the *scope* and *aud* claims provide mechanisms to restrict the APIs that accept the access token. The access token can also contain custom claims that the API uses for its business authorization. I say more about custom claims in the second code sample.
+The authorization server should also issue an *audience (aud)* claim, which can be an array, to represent one or more related APIs. In larger API deployments, the *scope* and *aud* claims provide mechanisms to restrict the APIs that accept the access token. The access token can also contain custom claims that the API uses for its business authorization. I say much more about scopes and claims later in this blog.
 
 ### Step 11. View ID Token Claims
 
 Because the SPA included the *openid* scope, OpenID Connect is used and the SPA receives an ID token, which informs it how and when authentication occurred. The audience claim of this token is the client ID of the SPA:
 
-![ID Token Claims](../images/40/id-token-claims.jpg?v=20240727)
+```json
+{
+  "kid": "SNdU6pNlC2hZFj/LtbqQroR9dSkK+P4xp2OYC1P4h4s=",
+  "alg": "RS256"
+}
+{
+  "at_hash": "jiPQI9PNi3rNRZUgl-fkag",
+  "origin_jti": "58c09847-b898-472d-9ad6-5a99b9a5f713",
+  "sub": "06e3c525-33d1-47ec-97be-03d8affc3726",
+  "aud": "hje94a2jj3lgkobkh57ikenhh",
+  "token_use": "id",
+  "auth_time": 1767088527,
+  "iss": "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+  "cognito:username": "06e3c525-33d1-47ec-97be-03d8affc3726",
+  "exp": 1767131727,
+  "iat": 1767088527,
+  "jti": "438d0872-b662-4b84-8871-e04be95b6855"
+}
+```
+
 
 ### Step 12. SPA Downloads User Info
 
