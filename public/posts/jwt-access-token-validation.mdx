@@ -126,7 +126,7 @@ The API expresses its settings in its configuration file. At the time of writing
 
 When any token validation checks fail, the API should return an error response with a 401 HTTP status code. APIs should return the traditional *www-authenticate* response header to ensure interoperability:
 
-```http
+```markdown
 www-authenticate: Bearer error="invalid_token", error_description="Missing, invalid or expired access token"
 ```
 
