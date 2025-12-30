@@ -180,7 +180,7 @@ Strong typing during coding allows the environment to make more checks and simpl
 
 ### Writing Code: Styling
 
-The blog uses only basic CSS with the [Bootstrap](https://getbootstrap.com/docs/4.0/getting-started/introduction/) library. I use its built-in styles for both presentation and a grid-based layout:
+For this blog I keep styling simple, since some web technology CSS solutions add a lot of technical overhead. I use the [Bootstrap](https://getbootstrap.com/docs/4.0/getting-started/introduction/) library's built-in styles for both presentation and a grid-based layout:
 
 ```html
 <div class='row listRow'>
@@ -205,7 +205,7 @@ The blog uses only basic CSS with the [Bootstrap](https://getbootstrap.com/docs/
 </div>
 ```
 
-My application CSS file is therefore small, containing only padding, colours and minor adjustments to support mobile layouts:
+My application CSS file is therefore a single global file, containing only padding, colours and minor adjustments to support mobile layouts:
 
 ```css
 .row
@@ -621,11 +621,11 @@ Stack traces are most useful when there is a bug in the SPA's code that you cann
 Once you have a productive web pipeline, you are well placed to productionize and apply finishing touches to the web technology. The following blog posts explore this blog's finishing touches for web applications. None of these steps change the web technology setup:
 
 - The <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend Design</a> explains the use of secure cookies to transport access tokens.
-- The <a href='final-spa-overview.mdx'>Final SPA Overview</a> explains an update to the React framework.
+- The <a href='final-spa-overview.mdx'>Final SPA Overview</a> explains an updates to the React framework and a strong content security policy.
 - The <a href='api-journey-client-side.mdx'>API Journey Client Side</a> explains how web clients should handle API security challenges.
 - The <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a> explains modern web deployments with optimal global performance.
 
-Of course, in a real SPA you are likely to have additional requirements, like greater use of images and CSS. You may also prefer to do a little more work in the web host. You should be able to adapt this blog's web technology setup to implement such requirements.
+Of course, in a real SPA you are likely to have additional requirements, like greater use of images and CSS. You may also prefer to do a little more work in the web host. You should be able to adapt this blog's web technology setup to add extra behaviors to meet your own requirements.
 
 ### Where Are We?
 

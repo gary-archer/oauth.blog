@@ -4,9 +4,11 @@ In the previous post I ran a <a href='azure-ad-troubleshooting.mdx'>Microsoft En
 
 ### Security Best Practices for SPAs
 
-The definitive document on security best practices is [OAuth 2.0 for Browser Based Apps](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps). The threats of malicious JavaScript are greater when JavaScript code can use tokens directly. The option with the strongest security guarantees is to use the browser's built in defences, namely SameSite cookies, cross-origin resource sharing (CORS) and a strong Content Security Policy (CSP). 
+The definitive document on security best practices is [OAuth 2.0 for Browser Based Apps](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps). The likelihood of security mistakes that malicious JavaScript could exploit, and the potential time of exploits, are both greater when JavaScript code uses tokens directly. 
 
-This means, to limit the impact of Cross Site Scripting (XSS) exploits, single page applications should use cookies to transport access tokens to APIs. These cookies should use the *HttpOnly SameSite=strict Secure* properties. This does not make browser security perfect, but limits the impact of XSS exploits. You must combine browser defences with XSS prevention best practices.
+The option with the strongest security guarantees is to use the browser's built in defences, namely SameSite cookies, cross-origin resource sharing (CORS) and a strong Content Security Policy (CSP). Combine the use of browser defences with XSS prevention best practices. In most cases, an XSS exploit is then limited to a session riding attack against APIs, which ends when the user stops using the SPA.
+
+The big change from a web development viewpoint is that SPAs should use *HttpOnly SameSite=strict Secure* cookies to transport access tokens to APIs. The cookie requirement is an awkward one for SPAs, where you want to maintain a <a href='web-technology-setup.mdx'>Modern Web Technology Setup</a> and should not need to return to older website technology stacks. 
 
 ### High Level Requirements
 
@@ -16,20 +18,18 @@ At a higher level, there were three main requirements I wanted to meet for this 
 | ----------- | ----------- |
 | Strong Browser Security | Follow current best practices, with only the latest and most secure cookies used in the browser. |
 | Globally Equal Performance | Deploy the SPA to a content delivery network, so that web latency is roughly the same at any global location. |
-| Pure SPA Development | Web developers work productively on modern frontends, with small code bases, usability control and no backend plumbing. |
-
-The cookie requirement is an awkward one for SPAs. When developing SPAs that call APIs you should maintain a <a href='web-technology-setup.mdx'>Modern Web Technology Setup</a> and should not need to return to older website technology stacks. The key technique to maintain an SPA architecture and meet all three requirements is to use API-driven cookie issuing,
+| Pure SPA Development | Web developers use production security but work only on modern frontends, with small code bases and usability control. |
 
 ### This Blog's Backend for Frontend
 
-In 2021 I adopted the *Token Handler Pattern* which consists of the following API components that implement cookie security. These components are stateless and easy to manage, since cookies contain all state. You deploy cookie issuing APIs and they do not need to run on the computers of web developers.
+The key technique to maintain an SPA architecture and meet all three requirements is to use API-driven cookie issuing, In 2021 I adopted the *Token Handler Pattern* which consists of the following API components that implement cookie security. These components do not need to run on development computers. They are also stateless and easy to manage, since cookies contain all state.
 
 | Component | Description |
 | --------- | ----------- |
 | OAuth Agent | A REST API that acts as a backend for frontend to simplify OAuth work for the SPA and manage a backend client credential. The BFF also issues cookies to the SPA that contain encrypted tokens. |
 | OAuth Proxy | A plugin that runs in a high-performance API gateway. During API requests the plugin decrypts cookies and forwards JWT access tokens to APIs. |
 
-This architecture requires extra moving parts. There is a learning curve to understand the deployment and its configuration settings. The reward once you get deployment working is to maintain a modern and productive frontend technical setup for all future web development.
+This architecture requires extra moving parts. There is a learning curve to understand the deployment and its configuration settings. The reward once you get deployment working is to maintain a modern web architecture and a productive setup for all future web development.
 
 ### Backend for Frontend Solutions to Avoid
 
