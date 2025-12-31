@@ -17,7 +17,7 @@ git clone https://github.com/gary-archer/oauth.websample.final
 The main SPA code is located in an */spa* subfolder and has a standard file layout, with React code within the views folder:
 
 <div className='smallimage'>
-    <img src='../images/230/code-layout.jpg' alt='code layout' />
+    <img src='../images/230/code-layout.jpg?v=20251230' alt='code layout' />
 </div>
 
 Views have identical behaviour to those from this blog's <a href='basicspa-codingkeypoints.mdx'>Earlier SPA Code Samples</a>:
@@ -87,7 +87,7 @@ Open a terminal and run the following command from the root folder, to build and
 
 The Webpack development server serves HTML, CSS and JavaScript static content resources and opens the default browser at *https://www.authsamples-dev.com*.
 
-![spa build](../images/230/spa-build.jpg?v=20241222)
+![spa build](../images/230/spa-build.jpg?v=20251230)
 
 ### Step 5: Sign In to the SPA
 
@@ -117,30 +117,7 @@ In earlier samples, the SPA performed its own OpenID Connect flow in JavaScript.
 }
 ```
 
-### Step 8: Understand Web Security Headers
-
-The web host now writes a number of security headers, the most interesting of which is the *Content Security Policy*. It contains the following values, since the SPA now only makes remote calls via its backend for frontend:
-
-```markdown
-content-security-policy:
-  default-src 'none';
-  script-src 'self';
-  connect-src 'self' https://bff.authsamples-dev.com;
-  child-src 'self';
-  img-src 'self';
-  style-src 'self';
-  object-src 'none'
-  frame-ancestors 'none';
-  base-uri 'self';
-  form-action 'self'
-strict-transport-security: max-age=63072000; includeSubdomains; preload
-x-frame-options: DENY
-x-xss-protection: 1; mode=block 
-x-content-type-options: nosniff
-referrer-policy: same-origin
-```
-
-### Step 9: Run a Release Build
+### Step 8: Run a Release Build
 
 You can run some scripts to test a release deployment and run the SPA at the same local computer URL. The *build.sh* script produces JavaScript release bundles. The *deploy.sh* script runs an Express Docker container that serves static content in the same way as the webpack development server. The *teardown.sh* script stops the Docker container.
 
@@ -152,7 +129,7 @@ You can run some scripts to test a release deployment and run the SPA at the sam
 
 ### Local API Setup
 
-It is also possible to run an API that provides the SPA's data on the local computer, but you then need to manage cookies for this routing. One way to do so is to run a local token handler. To do so, first ensure that a docker engine is installed, and also the *envsubst* tool.
+Web developers only need to work on a single component, the SPA, and that is the preferred development setup. If required, you can also connect the SPA to an API on the local computer, though you then need to manage cookies for this routing. One way to do so is to run a local token handler. To do so, first ensure that a docker engine is installed, and also the *envsubst* tool.
 
 ### Step A: Run the API
 

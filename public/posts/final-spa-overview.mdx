@@ -26,13 +26,15 @@ Any reader can run the AWS deployed version of the SPA from this blog's <a href=
 
 ![online spa](../images/220/online-spa.jpg?v=20240713)
 
-### Code Sample
+### Proeductive Development
 
-The SPA code sample manages only frontend concerns. The resources in the *deployment* folder represent web static content hosting variations. The next post shows how to run the code sample locally.
+The final SPA is a React app that runs at a */spa* path. Additional paths, for other micro-frontends, could run within the same web domain, to keep the code base manageable as it grows. From a security viewpoint, any additional apps added to the web domain should be for the same business area. All apps then share each other's API cookies and also each other's cross site scripting threats.
 
 <div className='smallimage'>
-    <img src='../images/220/code-layout.jpg?v=20241222' alt='code layout' />
+    <img src='../images/220/code-layout.jpg?v=20251230' alt='code layout' />
 </div>
+
+The SPA uses cookies issued by utility APIs but its code and web host manage only web concerns, with all cookie aspects externalized from SPA development. The resources in the *deployment* folder represent web static content hosting variations. The next post explains how to run the SPA and its development web host locally.
 
 ### Development URLs
 
@@ -109,15 +111,30 @@ Earlier SPAs in this blog used hash-based routing. The final SPA instead uses Re
 
 When the app loads, the React application reads the base path from the *index.html* file and supplies it to the React router. The app then uses relative routes within the */spa/* base path.
 
-### Mobile First
+### Strongest Browser Security
 
-Since the SPA is now cloud-deployed, you can access it on small mobile devices, so I made the final SPA more presentable on smaller screens:
+The SPA sends a *HttpOnly SameSite=strict Secure* cookie when it calls APIs, where the cookie contains an encrypted access token. Cookies are issued by utility APIs that restrict API access to the SPA's precise origin. The SPA also uses a strong content security policy to restrict the actions of malicious JavaScript in the event on an XSS exploit. The web host returns the following security headers:
 
-<div className='smallimage'>
-    <img src='../images/220/mobile-view.jpg?v=20240713' alt='mobile view' />
-</div>
+```markdown
+content-security-policy:
+  default-src 'none';
+  script-src 'self';
+  connect-src 'self' https://bff.authsamples.com;
+  child-src 'self';
+  img-src 'self';
+  style-src 'self';
+  object-src 'none'
+  frame-ancestors 'none';
+  base-uri 'self';
+  form-action 'self'
+strict-transport-security: max-age=63072000; includeSubdomains; preload
+x-frame-options: DENY
+x-xss-protection: 1; mode=block 
+x-content-type-options: nosniff
+referrer-policy: same-origin
+```
 
-### Web Performance
+### Optimized Web Performance
 
 The time to first render in a secured web application is not immediate and requires the following steps. The browser makes multiple static content and HTTP requests. Modern networks and the latest HTTP/2 functionality help to manage the steps efficiently:
 

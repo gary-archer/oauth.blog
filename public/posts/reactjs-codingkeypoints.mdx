@@ -13,16 +13,6 @@ I provided two earlier plain TypeScript SPA and API code samples:
 
 These earlier SPAs used access tokens in the browser, which is no longer recommended. Therefore, the final SPA instead uses utility API components that issue cookies, so that API credentials are unavailable to JavaScript code.
 
-### SPA Code
-
-The final SPA is a React app that runs at a */spa* path. Additional paths, for other micro-frontends, could run within the same web domain, to keep the code base manageable as it grows:
-
-<div className='smallimage'>
-    <img src='../images/240/spa-code.jpg?v=20241222' alt='spa code' />
-</div>
-
-From a security viewpoint, any additional apps added to the web domain should be for the same business area. All apps then share each other's API cookies and also each other's cross site scripting threats.
-
 ### HTML Markup
 
 The final SPA uses the same HTML markup as earlier SPAs:
@@ -49,6 +39,64 @@ The final SPA uses the same HTML markup as earlier SPAs:
     </body>
 </html>
 ```
+
+### Web Host
+
+During development I continue to use the webpack development server. For the final SPA I use additional settings to use a restrictive content security policy during development. I also run middleware to handle invalid paths outside of the React root location:
+
+```typescript
+const devServer: webpackDevServer.Configuration = {
+
+    ...
+    headers: [
+        {
+            key: 'content-security-policy',
+            value: policy,
+        },
+        {
+            key: 'strict-transport-security',
+            value: 'max-age=31536000; includeSubdomains; preload',
+        },
+        {
+            key: 'x-frame-options',
+            value: 'DENY',
+        },
+        {
+            key: 'x-xss-protection',
+            value: '1; mode=block',
+        },
+        {
+            key: 'x-content-type-options',
+            value: 'nosniff',
+        },
+        {
+            key: 'referrer-policy',
+            value: 'same-origin',
+        },
+    ],
+    setupMiddlewares: (middlewares: webpackDevServer.Middleware[]) => {
+
+        middlewares.unshift({
+            name: 'not-found',
+            path: '/',
+            middleware: (request: Request, response: Response, next: NextFunction) => {
+
+                const currentPath = request.path.toLowerCase();
+                if (currentPath.startsWith('/spa/') || currentPath === '/favicon.ico') {
+                    next();
+                    return;
+                }
+
+                response.redirect('/spa/');
+            },
+        });
+
+        return middlewares;
+    },
+};
+```
+
+The project also contains an Express web host that you can find in the *deployments/docker/webhost* folder. You can use the Express host to test delivery of static content release builds to the browser. The Docker web host uses compression and writes response headers to enable browser caching. I say more about release behaviors at the end of this blog post.
 
 ### React Library Setup
 
@@ -119,40 +167,6 @@ return (
     </>
 );
 ```
-
-### Mobile First Layout
-
-I deploy the demo SPA's static content to the AWS content delivery network. Since it is available online, I used Bootstrap's features to make the mobile layout basically presentable. In the transactions view the following markup shows 3 items per row on large screens, 2 items per row on medium screens and only a single item per row on small mobile devices:
-
-```jsx
-<div className='col-lg-4 col-md-6 col-xs-12' key={transaction.id} />
-```
-
-The transactions mobile view therefore shows a single card per transaction in mobile resolutions:
-
-<div className='smallimage'>
-    <img src='../images/240/mobile-transactions.jpg?v=20240713' alt='mobile transactions' />
-</div>
-
-The companies list becomes too squashed up for smaller sizes, so mobile layouts render a different view of the data:
-
-```jsx
-return  (
-    <>
-        {state.error && <ErrorSummaryView {...getErrorProps()}/>}
-        {state.companies.length > 0 && (props.isMobileLayout ?
-            <CompaniesMobileView {...getChildProps()}/> :
-            <CompaniesDesktopView {...getChildProps()}/>)}
-
-    </>
-);
-```
-
-At mobile dimensions the companies list now uses a card-based layout rather than a grid based layout:
-
-<div className='smallimage'>
-    <img src='../images/240/mobile-companies.jpg?v=20240713' alt='mobile companies' />
-</div>
 
 ### Views, View Models and State
 
@@ -501,11 +515,11 @@ public async execute(action: () => Promise<void>): Promise<void> {
 }
 ```
 
-### Finishing Touches
+### Deploying Release Builds
 
-The final SPA deals reliably with some tricky areas, in the lower-level plumbing classes. Some of these could be turned into a shared library, which would reduce code. In a real organization the goal would be to grow the web code base by adding new view and view model classes. An early focus on security, development setups, deployment and reliability helps to enable this.
+The final SPA deals reliably with some tricky areas, in the lower-level plumbing classes. Once written, web developers at a real organization could grow the web code base by adding new view and view model classes. An early focus on security, development setups, deployment, security and reliability supports the valuable future business logic.
 
-There is one remaining post for this blog's final SPA. It is part of the cloud theme and covers <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a> using a cloud platform. The SPA's static content gets uploaded to a content delivery network which deploys it to hundreds of global locations for globally equal performance. The SPA's deployment is also portable and runs the same anywhere, including a development computer.
+There is one remaining post for this blog's final SPA, on <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a>. It is part of this blog's cloud theme and covers web release builds in more depth. The SPA's static content gets uploaded to a content delivery network which deploys it to hundreds of global locations for globally equal performance. The SPA's deployment is portable and runs the same in all environments.
 
 ### Where Are We?
 

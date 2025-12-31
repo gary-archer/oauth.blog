@@ -194,7 +194,7 @@ These are configured under the *Behaviors* settings of the CloudFront distributi
 
 ![csp](../images/610/csp.jpg?v=20241224)
 
-The most interesting setting is the [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) which protects against common threats and only allow the SPA's JavaScript to make remote calls to its web host and backend for frontend. I use settings of the following form in both CloudFront and the webpack development server that I use for development:
+The most interesting setting is the [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) which protects against common threats and only allow the SPA's JavaScript to make remote calls to its web host and backend for frontend. I use settings of the following form:
 
 ```markdown
 default-src 'none';
@@ -286,7 +286,7 @@ I then configure the CloudFront functions against the distribution:
 
 ![cloudfront functions](../images/610/cloudfront-functions.jpg)
 
-A key point to understand is the separation of concerns. The code that runs within the CDN only manages web concerns and never deals with data security. If the code was to call APIs it would add considerable complexity to both deployment systems and developer setups. CDNs may also impose short HTTP request timeouts and small message sizes leading to reliability problems. 
+A key point to understand is the separation of concerns. The code that runs within the CDN only manages web concerns and never deals with data security. If the code was to call APIs it would add considerable complexity to both deployment systems and developer setups. AWS is likely to impose short HTTP request timeouts and small message sizes for API calls from Cloudfront functions, which would lead to reliability problems. 
 
 ### Upgrading the SPA
 
