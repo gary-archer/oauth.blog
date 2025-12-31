@@ -38,6 +38,7 @@ Node.js uses the *npm* tool to specify libraries in your application's *package.
     "@eslint/js": "^9.39.2",
     "@types/mustache": "^4.2.5",
     "@types/node": "^24.10.3",
+    "copy-webpack-plugin": "^13.0.1",
     "eslint": "^9.39.2",
     "ts-loader": "^9.5.4",
     "tsx": "^4.21.0",
@@ -180,7 +181,7 @@ Strong typing during coding allows the environment to make more checks and simpl
 
 ### Writing Code: Styling
 
-For this blog I keep styling simple, since some web technology CSS solutions add a lot of technical overhead. I use the [Bootstrap](https://getbootstrap.com/docs/5.3/getting-started/introduction/) library's built-in styles for both presentation and a grid-based layout:
+For this blog I keep styling simple, since some web technology CSS solutions add a lot of technical overhead. I mostly use the [Bootstrap](https://getbootstrap.com/docs/5.3/getting-started/introduction/) library's built-in styles, in particular to enable simple grid based layouts.
 
 ```html
 <div class='row listRow'>
@@ -194,7 +195,7 @@ For this blog I keep styling simple, since some web technology CSS solutions add
         <a href='#company={{id}}'>View Transactions</a>
     </div>
     <div class='col-2 my-auto moneycolor fw-bold text-end'>
-        {{formattedTargetUsd}}<br/>
+        {{formattedTargetUsd}}
     </div>
     <div class='col-2 my-auto moneycolor fw-bold text-end'>
         {{formattedInvestmentUsd}}
@@ -216,6 +217,14 @@ My application CSS file is therefore a single global file, containing only paddi
 {
     height: 80px;
 }
+.mobileHeaderRow
+{
+    height: 60px;
+}
+.mobileRow
+{
+    height: 40px;
+}
 .valuecolor
 {
     color: blue;
@@ -236,19 +245,11 @@ My application CSS file is therefore a single global file, containing only paddi
 {
     color:darkblue;
 }
-
 @media all and (max-width: 992px)
 {
     body
     {
         font-size: 0.85em;
-    }
-}
-@media all and (max-width: 768px)
-{
-    body
-    {
-        font-size: 0.45em;
     }
 }
 ```
@@ -355,17 +356,17 @@ I use the [webpack](https://webpack.js.org/) tool, but only for one main task, t
 
 ### Building Code: Webpack Configuration
 
-Webpack requires a configuration object that you can create in TypeScript. The options can seem a little cryptic at first. Mostly though, you just need to specify the SPA's entry point source file, then provide an output folder for compiled bundles. The following example uses an entry point of *app.ts* and writes bundles to a *dist* folder:
+Webpack requires a configuration object that you can create in TypeScript. The options can seem a little cryptic at first. Mostly though, you just need to specify the SPA's entry point source file, then provide an output folder for compiled bundles. The following example uses an entry point of *app.ts* and writes bundles to a *dist* folder.
 
 ```typescript
 const config: webpack.Configuration = {
 
     mode: 'development',
-    context: path.resolve(dirname, './src'),
+    context: path.resolve(dirname, '.'),
     target: ['web'],
     devtool: 'source-map',
     entry: {
-        app: ['./app/app.ts']
+        app: ['./src/app/app.ts']
     },
     module: {
         rules: [
@@ -383,6 +384,7 @@ const config: webpack.Configuration = {
         path: path.resolve(dirname, './dist'),
         filename: '[name].bundle.js',
         module: true,
+        clean: true
     },
     experiments: {
         outputModule: true,
@@ -398,21 +400,45 @@ const config: webpack.Configuration = {
                 },
             }
         }
-    }
+    },
+    plugins: [
+        new CopyPlugin({
+            patterns: [
+                {
+                    from: 'index.html',
+                    to: path.resolve('dist'),
+                },
+                {
+                    from: 'css',
+                    to: path.resolve('dist'),
+                },
+                {
+                    from: 'favicon.ico',
+                    to: path.resolve('dist'),
+                },
+                {
+                    from: 'spa.config.json',
+                    to: path.resolve('dist'),
+                },
+            ]
+        }),
+    ]
 };
 ```
+
+Once webpack has built files I use a simple file copy plugin to deploy other files to the *dist* folder. I then run the SPA with the same web files as a production user. Whenever I make changes to HTML, CSS or JavaScript files I get fast feedback in the browser.
 
 Some newer bundlers claim to provide a simpler developer experience, but I have found that they often result in different web delivery mechanisms during development and in deployed environments. As a mature bundler, webpack enables me to use the SPA during development with the same technical steps as production users.
 
 ### Building Code: Web Compilation
 
-Webpack has its own rules for resolving imports. You supply *extensions* to tell webpack to build both the SPA's TypeScript code and JavaScript code consumed from the *node_modules* folder. The *ts-loader* utility compiles TypeScript code into JavaScript using the settings in the *tsconfig.json* file. To compile the SPA's TypeScript code, use the <a href='https://github.com/privatenumber/tsx'>tsx loader utility</a> to run the webpack configuration file.
+Webpack has its own rules for resolving imports. You supply *extensions* to tell webpack to build both the SPA's TypeScript code and JavaScript code consumed from the *node_modules* folder. The [ts-loader library](https://github.com/TypeStrong/ts-loader) compiles TypeScript code into JavaScript using the settings in the *tsconfig.json* file. To compile the SPA's TypeScript code, use the <a href='https://github.com/privatenumber/tsx'>tsx loader utility</a> to run the webpack configuration file.
 
 ```bash
 NODE_OPTIONS='--import tsx' webpack --config webpack.config.ts
 ```
 
-The SPA's application code builds to an *app.bundle.js* file. When compiling the SPA, the [ts-loader](https://github.com/TypeStrong/ts-loader) library uses the settings from the *tsconfig.json* file. I configure webpack to build a second, larger bundle, called *vendor.bundle.js*, containing third-party code from the *node_modules* folder. The build outputs the following files to a *dist* folder. The source map files can be used to step through code in a debugger, or to diagnose exception stack traces:
+The SPA's application code builds to an *app.bundle.js* file. I configure webpack to build a second, larger bundle, called *vendor.bundle.js*, containing third-party code from the *node_modules* folder. The build outputs the following files to a *dist* folder. The source map files can be used to step through code in a debugger, or to diagnose exception stack traces:
 
 ```markdown
 vendor.bundle.js
@@ -502,14 +528,14 @@ const devServer: webpackDevServer.Configuration = {
     historyApiFallback: {
         index: '/spa/',
     },
-    hot: true,
+    hot: false,
     allowedHosts: [
         'www.authsamples-dev.com',
     ],
 };
 ```
 
-Although I get some developer conveniences like hot reloading when I make frontend code changes, the main behavior I want from a development web static content host is to serve web assets in the same way as for production users. The development web host must be able to implement security behaviors like setting a strong content security policy. The only difference during development is that I use a non-optimized build with debugging support.
+Although I get some developer conveniences like page reloading when I make frontend code changes, the main behavior I want from a development web static content host is to serve web assets in the same way as for production users. My development web host also supports secure behaviors like setting a strong content security policy during development. The only difference during development is that I use a non-optimized build with debugging support.
 
 ### Decompiling Code: Debugging
 
@@ -620,12 +646,12 @@ Stack traces are most useful when there is a bug in the SPA's code that you cann
 
 Once you have a productive web pipeline, you are well placed to productionize and apply finishing touches to the web technology. The following blog posts explore this blog's finishing touches for web applications. None of these steps change the web technology setup:
 
-- The <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend Design</a> explains the use of secure cookies to transport access tokens.
-- The <a href='final-spa-overview.mdx'>Final SPA Overview</a> explains an updates to the React framework and a strong content security policy.
+- The <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend Design</a> explains the use of secure cookies to transport access tokens to APIs.
+- The <a href='final-spa-overview.mdx'>Final SPA Overview</a> explains updates to the React framework and to use a strong content security policy.
 - The <a href='api-journey-client-side.mdx'>API Journey Client Side</a> explains how web clients should handle API security challenges.
 - The <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a> explains modern web deployments with optimal global performance.
 
-Of course, in a real SPA you are likely to have additional requirements, like greater use of images and CSS. You may also prefer to do a little more work in the web host. You should be able to adapt this blog's web technology setup to add extra behaviors to meet your own requirements.
+Of course, in a real SPA you are likely to have additional requirements, like scalable ways to manage images and CSS. You may also prefer to do a little more work in the web host. You should be able to adapt this blog's web technology setup to add extra behaviors that meet your own requirements.
 
 ### Where Are We?
 
