@@ -30,13 +30,13 @@ Single page applications must be able to interact with APIs, so need an API mess
 
 By following web security best practices, vetted by experts, companies will avoid most vulnerabilities and perform better in security reviews. For web apps, [Cross Site Scripting (XSS)](https://owasp.org/www-community/attacks/xss) is a particular concern that you should address, separate to the OAuth implementation.
 
-If an app has XSS vulnerabilities, then an attacker may be able to access secured data in exactly the same way as the real web app. Therefore, reducing the impact of XSS exploits is now a major consideration when designing web solutions.
+If an app has XSS vulnerabilities, then an attacker may be able to access sensitive data in exactly the same way as the real web app. Therefore, reducing the impact of XSS exploits is now a major consideration when designing web solutions.
 
 ### Best Login Usability
 
 The authorization server can provide multiple ways for users to sign in to an SPA, and this can include options that are both user friendly and secure. In addition, an SPA should be in full control of usability and support features like multi-tab browsing.
 
-In particular, web applications should cope elegantly with API challenge responses that use HTTP status codes of 401 and 403. The frontend guides the user, rather than issuing an abrupt redirect. To enable that, JavaScript code should issue all requests for secured data.
+In particular, web applications should cope elegantly with API challenge responses that use HTTP status codes of 401 and 403. The frontend guides the user, rather than issuing an abrupt redirect. To enable that, JavaScript code should issue all API requests for sensitive data.
 
 ### Good Search Results
 
