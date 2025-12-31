@@ -75,7 +75,7 @@ The renderer process runs an SPA in the Chromium browser host, with the followin
 
 ### Electron Builds
 
-To build the Electron app I use webpack to produce bundles for both the main and renderer sides of the application. Two webpack builds run, using the techniques from the earlier post on <a href='web-technology-setup.mdx'>Web Technology Setup</a> blog post, to produce the following ECMAScript bundle files from the code layout and the *node_modules* folder:
+To build the Electron app I use webpack to produce ECMAScript bundles for both the main and renderer sides of the application. Two webpack builds run, using the techniques from the earlier post on <a href='web-technology-setup.mdx'>Web Technology Setup</a> blog post. The main build produces a *main.bundle.js* file and the renderer build produces *app.bundle.js* and *vendor.bundle.js* files.
 
 <div className='smallimage'>
     <img src='../images/430/bundles.jpg?v=20240922' alt='bundles' />
@@ -127,6 +127,8 @@ const config: webpack.Configuration = {
 
 export default config;
 ```
+
+For Electron apps it would be unnatural to use the webpack development server. Instead, I run the app during development from the built files in the *dist* folder. I therefore operate with all of the same assets and asset loading behaviors as production users. I build the renderer app in watch mode, so that whenever HTML, CSS or JavaScript code changes, the content in the *dist* folder updates. There is no automatic reloading, but I can easily use the *View / Reload* Electron menu option to reload the renderer app.
 
 ### Inter Process Communication
 
