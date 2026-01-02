@@ -621,26 +621,29 @@ public static getErrorStack(error: UIError): ErrorLine | null {
 }
 ```
 
-In debug builds of this blog's frontend applications I intentionally render SPA stack trace data in a raw format. In production apps, I could use a *Send Home* feature to receive this data:
+I then render stack traces as raw strings in debug builds:
 
 ![exception](../images/90/frontend-exception-display.jpg)
 
-I would save a backup of source map files for each application release. When a user experiences an error you can use tools like the [Online Source Mapper](https://sourcemaps.info) to find the original source location of an error. To do so, paste stack trace data into the left hand pane and the source map data into the small edit box:
+I can then use a [retrace tool](https://github.com/fgnass/retrace) to convert a raw stack trace back to its original unbundled lines of code, with logic similar to the following:
 
-![stack trace](../images/90/stack-trace.jpg)
+```javascript
+import fs from 'fs';
+import retrace from 'retrace';
 
-The right pane then displays an updated stack trace based on the original TypeScript lines of code. In the following example output you can see that the failure is at *line 55* of the *ApiClient.ts* source file:
+const sourceMap = fs.readFileSync('./mymodule.js.map', 'utf8');
+retrace.resolve = (url) => {
+  return sourceMap;
+};
 
-```markdown
-Error: simulating an exception at ApiClient.callApi (webpack:///./api/client/apiClient.ts:55:18)
-at async ApiClient.getCompanyList (webpack:///./api/client/apiClient.ts:31:15)
-at async CompaniesView.load (webpack:///./views/companiesView.ts:25:25)
-at async Router.loadView (webpack:///./views/router.ts:43:12)
-at async App.loadMainView (webpack:///./app/app.ts:118:8)
-at async App.execute (webpack:///./app/app.ts:51:12)
+const rawStack = fs.readFileSync('./stack.txt', 'utf8').replace(/\\n/g,'\n');
+console.log(rawStack);
+
+const originalCodeStack = await retrace.map(rawStack);
+console.log(originalCodeStack);
 ```
 
-Stack traces are most useful when there is a bug in the SPA's code that you cannot reproduce. If you verify that stack trace lookups work during development, you have solid options for resolving production problems later.
+In bundled applications I save source map files for each application release. I also rehearse exceptions during development, to verify that stack trace lookups will work as expected if I need to diagnose production stack traces later.
 
 ### Web Production Behaviors
 
