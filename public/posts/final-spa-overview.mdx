@@ -18,7 +18,7 @@ I deploy the overall system of the SPA and APIs to AWS. I upload the SPA's web s
 
 ![aws technologies](../images/220/aws-technologies.jpg)
 
-I deploy the API code sample to AWS as <a href='serverless-api-overview.mdx'>Serverless Lambda Functions</a> that the AWS API Gateway exposes to the internet. I find this API technology a little suboptimal in some areas, including performance, but it provides low cost backend hosting for this blog's demo APIs.
+I deploy the API code sample to AWS as <a href='serverless-api-overview.mdx'>Serverless Lambda Functions</a> that the AWS API Gateway exposes to the internet. I find this API technology a little suboptimal in some areas, including complexity and performance, but it provides low cost backend hosting for this blog's demo APIs.
 
 ### Online Deployment
 
@@ -151,7 +151,7 @@ The final SPA uses the following mainstream techniques to ensure good performanc
 | Content Delivery | Web latency is roughly equal for all global users, since a CDN ensures that all web downloads are fairly local. |
 | Static Content Caching | The SPA uses cache control headers for web assets, to serve future requests from the browser cache. |
 | API Response Caching | The SPA caches HTTP GET responses to prevent redundant API requests, such as during back navigation. |
-| Download Sizes | As the SPA's code grows I would aim for medium-sized downloads using bundle splitting techniques and micro-frontends. |
+| Download Sizes | As the SPA's code grows I would aim for medium-sized downloads using <a href='web-technology-setup.mdx#building-code-bundle-splitting'>bundle splitting techniques</a> and micro-frontends. |
 
 The final SPA's has a simple initial page to display a login button. Once rendered, all future SPA operations and page reloads use HTML resources from the browser's local cache.
 

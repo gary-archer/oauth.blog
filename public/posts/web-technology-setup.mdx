@@ -363,10 +363,10 @@ const config: webpack.Configuration = {
 
     mode: 'development',
     context: path.resolve(dirname, '.'),
-    target: ['web'],
+    target: 'web',
     devtool: 'source-map',
     entry: {
-        app: ['./src/app/app.ts']
+        app: './src/app/app.ts',
     },
     module: {
         rules: [
@@ -383,6 +383,7 @@ const config: webpack.Configuration = {
     output: {
         path: path.resolve(dirname, './dist'),
         filename: '[name].bundle.js',
+        chunkFilename: '[name].bundle.js',
         module: true,
         clean: true
     },
@@ -430,7 +431,7 @@ Once webpack has built files I use a simple file copy plugin to deploy other fil
 
 Some newer bundlers claim to provide a simpler developer experience, but I have found that they often result in different web delivery mechanisms during development and in deployed environments. As a mature bundler, webpack enables me to use the SPA during development with the same technical steps as production users.
 
-### Building Code: Web Compilation
+### Building Code: Compiler Settings
 
 Webpack has its own rules for resolving imports. You supply *extensions* to tell webpack to build both the SPA's TypeScript code and JavaScript code consumed from the *node_modules* folder. The [ts-loader library](https://github.com/TypeStrong/ts-loader) compiles TypeScript code into JavaScript using the settings in the *tsconfig.json* file. To compile the SPA's TypeScript code, use the <a href='https://github.com/privatenumber/tsx'>tsx loader utility</a> to run the webpack configuration file.
 
@@ -452,9 +453,9 @@ For SPAs, I ensure that output works in mainstream browsers for the last 5 years
 | Setting | Description |
 | ------- | ----------- |
 | [target](https://www.typescriptlang.org/tsconfig#target) | Building to ES2017 means built code runs in all mainstream desktop and mobile browsers and *await* statements are output to the built code. |
-| [module](https://www.typescriptlang.org/tsconfig#module) | ES2022 means bundled code uses the ECMAScript module format, which browsers have supported for years, and bundles may use top level await statements. |
+| [module](https://www.typescriptlang.org/tsconfig#module) | ES2022 means bundled code uses the ECMAScript module format, which browsers have supported for years, and the use of top level await statements. |
 
-### Building Code: ECMAScript Output
+### Building Code: Output Syntax
 
 Since the SPA builds to ES2017 JavaScript, the development build results remain close to the SPA's TypeScript code, with types removed. Keeping the built code similar to the developed code makes decompilation easier later.
 
@@ -479,6 +480,57 @@ Support for ES2017 features were added to all main mobile and desktop browsers i
 
 - [Can I use await in browser code?](https://caniuse.com/?search=await)
 - [Can I use top level await in browser code?](https://caniuse.com/?search=top-level%20await)
+
+### Building Code: Bundle Splitting
+
+The code setup supports bundle splitting to reduce the initial download size. You can then write the following type of syntax to trigger the download of additional incremental JavaScript bundles as the user navigates to new areas of the application:
+
+```typescript
+const module = await import('myLazyLoadedModule');
+const myObject = new module.MyClass();
+const result = myObject.myMethod();
+```
+
+The use of the *chunkFilename* setting means that webpack generates random bundle names like *506.bundle.js* for lazy loaded code. These bundles get built to the *dist* folder but are excluded from the *index.html* file.
+
+You can also use the [SplitChunksPlugin](https://webpack.js.org/plugins/split-chunks-plugin/) to split the vendor bundle into multiple chunks. The following example shows the approach. You could use this technique to build a separate vendor bundle that includes dependencies only used by lazy loaded code.
+
+```typescript
+optimization: {
+    splitChunks: {
+        cacheGroups: {
+            react: {
+                name: 'react',
+                chunks: 'all',
+                enforce: true,
+                test: (module: any) => {
+
+                    const includeChunk = (resource: string) => {
+                        return resource.indexOf('node_modules') !== -1 &&
+                               resource.indexOf('react') !== -1;
+                    };
+
+                    return module.resource && includeChunk(module.resource);
+                },
+            },
+            vendor: {
+                name: 'vendor',
+                chunks: 'all',
+                enforce: true,
+                test: (module: any) => {
+
+                    const includeChunk = (resource: string) => {
+                        return resource.indexOf('node_modules') !== -1 &&
+                               resource.indexOf('react') === -1;
+                    };
+
+                    return module.resource && includeChunk(module.resource);
+                },
+            }
+        }
+    },
+}
+```
 
 ### Building Code: API Compilation
 
