@@ -248,7 +248,7 @@ To test local log aggregation during development I disable pretty printing of JS
 
 ### Lambda Code Debugging
 
-If I need to debug the API's code, I use Visual Studio Code's debugging features to attach to the Serverless Offline process. The following configuration locates the Serverless Offline process running on port 446. I also need to set a *debugger;* statement at the location where I want the code to stop in the debugger. 
+If I need to debug the API's code, I use Visual Studio Code's debugging features to attach to the Node.js process within Serverless Offline. The following configuration locates the process if you install the [Tasks Shell Input](https://marketplace.visualstudio.com/items?itemName=augustocdias.tasks-shell-input) Visual Studio Code extension.
 
 ```json
 {
@@ -257,9 +257,20 @@ If I need to debug the API's code, I use Visual Studio Code's debugging features
        {
            "type": "node",
            "request": "attach",
-           "name": "Attach to Serverless Offline",
-           "processId": "${command:PickProcess}",
-           "port": 446
+           "name": "Attach to API",
+           "processId": "${input:findNodePID}",
+           "skipFiles": ["<node_internals>/**"]
+       }
+   ],
+   "inputs": [
+       {
+           "id": "findNodePID",
+           "type": "command",
+           "command": "shellCommand.execute",
+           "args": {
+               "command": "ps aux | grep [s]f-core.js | awk {'print $2'}",
+               "useFirstResult": true,
+           }
        }
    ]
 }
