@@ -483,22 +483,36 @@ Support for ES2017 features were added to all main mobile and desktop browsers i
 
 ### Building Code: Bundle Splitting
 
-The code setup supports bundle splitting to reduce the initial download size. You can then write the following type of syntax to trigger the download of additional incremental JavaScript bundles as the user navigates to new areas of the application:
+This blog's SPAs use a code setup that supports bundle splitting to reduce the initial download size. You could add a new class and dynamically use it from a view, with code similar to the following. When you navigate to that view, the browser tools would show an additional bundle download.
 
 ```typescript
-const module = await import('myLazyLoadedModule');
-const myObject = new module.MyClass();
-const result = myObject.myMethod();
+const module = await import('mySharedComponent');
+const component = new module.MySharedComponent();
+component.execute();
 ```
 
-The use of the *chunkFilename* setting means that webpack generates random bundle names like *506.bundle.js* for lazy loaded code. These bundles get built to the *dist* folder but are excluded from the *index.html* file.
+Webpack bundles are referred to as *chunks*, where you express *initial chunks* in the *index.html* file. The build also produces *non-initial chunks* and writes them to the output folder. Initial chunks contain references to non-initial chunks.
 
-You can also use the [SplitChunksPlugin](https://webpack.js.org/plugins/split-chunks-plugin/) to split the vendor bundle into multiple chunks. The following example shows the approach. You could use this technique to build a separate vendor bundle that includes dependencies only used by lazy loaded code.
+The [SplitChunksPlugin](https://webpack.js.org/plugins/split-chunks-plugin/) enables you to partition both your own code, and the *node_modules* folder, into chunks. The following example creates an extra chunk for React libraries and an extra chunk for shared components. Downloads of non-initial chunks occur on the first dynamic import that uses one of the chunk's exported classes or functions.
 
 ```typescript
 optimization: {
     splitChunks: {
         cacheGroups: {
+            vendor: {
+                name: 'vendor',
+                chunks: 'all',
+                enforce: true,
+                test: (module: any) => {
+
+                    const includeChunk = (resource: string) => {
+                        return resource.indexOf('node_modules') !== -1 &&
+                               resource.indexOf('react') === -1;
+                    };
+
+                    return module.resource && includeChunk(module.resource);
+                },
+            },
             react: {
                 name: 'react',
                 chunks: 'all',
@@ -513,15 +527,15 @@ optimization: {
                     return module.resource && includeChunk(module.resource);
                 },
             },
-            vendor: {
-                name: 'vendor',
+            shared: {
+                name: 'shared',
                 chunks: 'all',
                 enforce: true,
                 test: (module: any) => {
 
                     const includeChunk = (resource: string) => {
-                        return resource.indexOf('node_modules') !== -1 &&
-                               resource.indexOf('react') === -1;
+                        return resource.indexOf('node_modules') === -1 &&
+                               resource.indexOf('src/components') === -1;
                     };
 
                     return module.resource && includeChunk(module.resource);
