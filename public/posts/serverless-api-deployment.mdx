@@ -12,12 +12,10 @@ The API has a number of commands in its *package.json* file, which point to scri
 {
   "scripts": {
     "login": "sls login",
-    "lint": "npx eslint . --ignore-pattern dist",
+    "lint": "npx eslint ./src ./webpack",
     "start": "./start.sh",
     "testsetup": "./test/scripts/testsetup.sh",
     "test": "./test/scripts/test.sh",
-    "build": "rm -rf dist && tsc",
-    "buildRelease": "rm -rf dist && tsc --sourceMap false",
     "loadtest": "./test/scripts/loadtest.sh",
     "deploy": "./deploy.sh",
     "remove": "sls remove --stage deployed"
@@ -83,39 +81,119 @@ The Serverless API uses the same JSON based approach to configuration as earlier
 
 ### Building API Code
 
-I use *tsc* to build the lambda code from TypeScript to JavaScript with the following *tsconfig.json* settings:
+For Node.js APIs I usually include multiple compiled *.js* files in a deployment image like a Docker container. For Serverless APIs it is instead recommended to bundle code, to reduce otherwise slow startup times in the AWS lambda environment. Therefore I use webpack with the following configuration, to build a monolithic bundle file for each lambda function, containing its code and dependencies.
 
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "target": "ES2024",
-    "lib": ["ES2024"],
-    "module":"Node18",
-    "moduleResolution": "Node16",
-    "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "outDir": "dist",
-    "sourceMap": true
-  },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
-}
+```typescript
+const config: webpack.Configuration = {
+
+    target: 'node',
+    mode: 'production',
+    devtool: 'source-map',
+    context: path.resolve(dirname, '.'),
+    entry: {
+        getUserInfo: './src/host/lambda/getUserInfo.ts',
+        getCompanyList: './src/host/lambda/getCompanyList.ts',
+        getCompanyTransactions: './src/host/lambda/getCompanyTransactions.ts',
+    },
+    module: {
+        rules: [
+            {
+                test: /\.ts$/,
+                use: 'ts-loader',
+                exclude: /node_modules/,
+            }
+        ]
+    },
+    resolve: {
+        extensions: ['.ts', '.js']
+    },
+    output: {
+        path: path.resolve(dirname, './dist'),
+        filename: '[name].js',
+        library: {
+            type: 'module'
+        },
+        module: true,
+        clean: true,
+    },
+    experiments: {
+        outputModule: true,
+    },
+};
 ```
 
-The deployment package saves to a *.serverless* folder and excludes files deselected in the *package/patterns* section of the *serverless.yml* file. The deployment also excludes Node.js development dependencies:
+To disable the Serverless default build I add the following entry to the *serverless.yml* file:
 
-![deployment package](../images/630/deployment-package.jpg?v=20250126)
+```yaml
+build:
+  esbuild: false
+```
 
-The size of each lambda zip file is around 1.9MB. The Serverless framework includes [CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html) artifacts that automate the creation of AWS resources.
+### Packaging Upload Resources
+
+The GitHub repository's *deploy.sh* script initiates deployment. After doing a release build it runs an *sls package* command that creates zip files in the repository's *.serverless* folder, in advance of deploying assets to AWS. 
+
+![deployment package](../images/630/deployment-package.jpg?v=20251230)
+
+For each lambda I use the *serverless.yml* packaging settings to upload specific files, where the main file is the lambda's JavaScript bundle.
+
+```yaml
+functions:
+  
+  getUserInfo:
+    handler: dist/getUserInfo.handler
+    package:
+      include:
+        - dist/getUserInfo.js
+        - api.config.json
+        - package.json
+    events:
+      - http: 
+          path: /userinfo
+          method: get
+
+  getCompanyList:
+    handler: dist/getCompanyList.handler
+    package:
+      include:
+        - dist/getCompanyList.js
+        - data/companyList.json
+        - api.config.json
+        - package.json
+    events:
+      - http: 
+          path: /companies
+          method: get
+
+  getCompanyTransactions:
+    handler: dist/getCompanyTransactions.handler
+    package:
+      include:
+        - dist/getCompanyTransactions.js
+        - data/companyList.json
+        - data/companyTransactions.json
+        - api.config.json
+        - package.json
+    events:
+      - http: 
+          path: /companies/{id}/transactions
+          method: get
+          request: 
+            parameters: 
+              paths: 
+                id: true
+
+package:
+  individually: true
+  patterns:
+  - '!/**'
+```
+
+The size of each upload zip file is around 100KB and each lambda bundle is around 400KB. The Serverless framework also adds [CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html) artifacts that automate the creation of AWS resources.
 
 ### Registering an API Subdomain
 
-I created the main hosting domain of *authsamples.com* and its external HTTPS certificate in the earlier <a href='cloud-domain-setup.mdx'>Cloud Domain Setup</a>. I preconfigured the API subdomain in the AWS API Gateway and linked it to a deployment stage under *API Mappings*:
+In AWS you need some prerequisite setup before a deployment will work. I created the main hosting domain of *authsamples.com* and its external HTTPS certificate in the earlier <a href='cloud-domain-setup.mdx'>Cloud Domain Setup</a>. I preconfigured the API subdomain in the AWS API Gateway and linked it to a deployment stage under *API Mappings*:
 
 ![api subdomain](../images/630/api-subdomain.jpg?v=20250126)
 
@@ -127,7 +205,7 @@ In *Route 53 / Hosted Zones* I then created an *A Record* to map the generated d
 
 ### API Deployment
 
-The *deploy.sh* script runs the *sls deploy* command to upload the zip file and CloudFormation resources to AWS:
+The *deploy.sh* script continues by running the *sls deploy* command to upload the zip files and CloudFormation resources to AWS:
 
 ![deployment](../images/630/deployment.jpg?v=20250126)
 
@@ -145,13 +223,9 @@ The API has three internet endpoints at the below URLs, where the third URL is a
 - *https://api.authsamples.com/investments/companies*
 - *https://api.authsamples.com/investments/companies/id/transactions*
 
-The CloudFormation deploys the API implementation to the *Lambda* AWS service for the London region. I can inspect and even edit the compiled JavaScript of each lambda.
+The CloudFormation resources automate deployment to the *Lambda* AWS service for the London region. I can use the AWS console to inspect the deployed resources for each lambda.
 
 ![compiled code](../images/630/compiled-code.jpg?v=20250126)
-
-Although in lambda technology each individual function is its own microservice, that is rarely the desired behaviour. Instead, you typically want to deploy medium sized services that can share code. To enable this I deploy all API code for each individual lambda, so shared code and dependencies upload multiple times. 
-
-Lambdas can be packaged in other ways. For example, you can use [Lambda Layers](https://docs.aws.amazon.com/lambda/latest/dg/chapter-layers.html) to share code, use [Serverless Plugin Scripts](https://github.com/mvila/serverless-plugin-scripts) to control logic, or build a separate [Zip Package Artifact](https://www.serverless.com/framework/docs/providers/aws/guide/packaging#artifact) for each lambda. However, some of these techniques may require non-portable code layouts that add complexity.
 
 ### API Immediate Logs
 
@@ -169,7 +243,7 @@ You must activate [API Gateway CloudWatch Logs](https://aws.amazon.com/premiumsu
 
 ### Where Are We?
 
-I ported this blog's earlier Node.js API to run with low cost and zero maintenance in AWS, which works well for my code samples. Note however that I have to accept certain limitations, like the use of the AWS API gateway and Cloudwatch. In larger setups there can be benefits in choosing your own supporting components and avoiding vendor lock in.
+I ported this blog's earlier Node.js API to run with low cost and zero maintenance in AWS, which works well for my code samples. Note however that I have to accept certain limitations, like the use of the AWS API gateway and Cloudwatch. Instead, I prefer to make my own choices avoud which supporting components my APIs should use.
 
 ### Next
 
