@@ -96,7 +96,7 @@ This use of claims is similar to that in any moderately complex real-world syste
 
 ### View Models
 
-In frontend technology stacks, a view binds to *state* in its view model. The view model can also contain other *properties*. Both types of data can originate from APIs. The view model can create other values from the raw data (the model) that APIs return. The overall process is the Model View View Model (MVVM) pattern.
+In frontend technology stacks, a view binds to *state* in its view model. The view model can also contain additional non-bindable *properties*. Both types of data can originate from APIs. The view model can create other values from the raw data (the model) that APIs return. The overall process is the [Model–view–viewmodel (MVVM)](https://en.wikipedia.org/wiki/Model-view-viewmodel) pattern.
 
 The following example shows a View Model object for Kotlin on Android:
 
@@ -127,7 +127,7 @@ class MyViewModel: ObservableObject {
 
 When creating a view, you pass the view model as an input property. The view does not know about the internal properties of the view model, like a fetch client that calls APIs.
 
-Other technology stacks, like React, might not use view models explicitly, but you can follow the same pattern, where views receive *props* that contain a view model and the view model contains bindable state.
+Other technology stacks, like React, might not use view models explicitly, but you can follow the same pattern, where views receive *props* that contain a view model and the view model contains bindable API state.
 
 ### Views, Models and Data Loading
 
@@ -136,8 +136,7 @@ For a React app, I use code similar to the following to load views and call APIs
 ```typescript
 export function CompaniesView(props: CompaniesViewProps): JSX.Element {
 
-    const model = props.viewModel;
-    model.useState();
+    const model = props.viewModel.use();
 
     useEffect(() => {
         startup();

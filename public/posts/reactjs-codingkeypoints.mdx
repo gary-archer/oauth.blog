@@ -179,7 +179,7 @@ export interface CompaniesViewProps {
 }
 ```
 
-Views get recreated frequently, whereas I manage application state within view model classes that get created only once. I manage this by storing child view model references within the root *AppViewModel*:
+Views get recreated frequently, whereas I manage state returned from APIs within view model classes that get created only once. I manage this by storing child view model references within the root *AppViewModel*:
 
 ```typescript
 public getCompaniesViewModel(): CompaniesViewModel {
@@ -201,13 +201,12 @@ This technique is a basic but portable way to manage application state in fronte
 
 ### Separation of View Logic from General Logic
 
-I use the React framework's hook-based syntax to develop the SPA's views. In mobile development I use other frameworks, such as SwiftUI, which have their own view syntax.
+I use the React framework's hook-based syntax to develop the SPA's views. Views call *use* on the view model and the view model call's React's *useState* hook. This mechanism externalizes API concerns from views in the same way as mobile technology stacks.
 
 ```typescript
 export function CompaniesView(props: CompaniesViewProps): JSX.Element {
 
-    const model = props.viewModel;
-    model.useState();
+    const model = props.viewModel.use();
 
     useEffect(() => {
         startup();
@@ -216,7 +215,7 @@ export function CompaniesView(props: CompaniesViewProps): JSX.Element {
 }
 ```
 
-I avoid the use of frameworks like React or SwiftUI for non-view logic, such as that for API and OAuth requests. This leads to more natural object-based code that is easier to port across technologies.
+I avoid the use of frameworks like React for non-view logic, such as that for API and OAuth requests. This leads to more natural object-based code that I can implement equivalently for web and mobile.
 
 ### Triggering API Requests
 
