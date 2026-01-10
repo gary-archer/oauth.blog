@@ -117,8 +117,6 @@ public async validateAccessToken(accessToken: string): JwtClaims {
 
     const result = await jwtVerify(accessToken, this.jwksRetriever.remoteJWKSet, options);
     claims = result.payload;
-
-    this.logEntry.setIdentityData(this.getIdentityData(claims));
     return claims;
 }
 ```
