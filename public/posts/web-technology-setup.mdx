@@ -12,14 +12,14 @@ The main ingredient of an SPA is its coded logic to present views with data from
 
 ### Web Development Pipeline
 
-You then need to implement a web development pipeline, where the application code is central but there are a number of related behaviors. Modern web technology changes often and can feel overwhelming at times. I therefore like to articulate my important requirements at each stage of processing.
+You then need to implement a web development pipeline, where the application code is central but there are a number of related behaviors. Modern web technology changes often and can feel overwhelming at times. I therefore like to articulate my important requirements at each stage of processing and ensure that I understand how they are met.
 
 | Stage	| Description |
 | ----- | ----------- |
 | Download Dependencies | Before you write any real code you typically need a way to download third party libraries as dependencies. |
 | Write Code | To write non-trivial TypeScript code you need to import third party libraries and use their classes and functions. |
 | Execute Tasks | You sometimes need to execute arbitrary tasks as part of development, such as code quality checks or running tests. |
-| Build Code | You need to build code so that it runs in browsers, which involves compiling TypeScript. |
+| Build Code | You need to build code so that it runs reliably and efficiently in browsers, which involves compiling TypeScript. |
 | Execute Code | You execute compiled code in the browser, which is different to the code you develop. |
 | Decompile Code | When there is a problem, or to support debugging, you want to decompile to the original TypeScript code. |
 
@@ -56,7 +56,7 @@ You need to think about the potential for security vulnerabilities when you incl
 
 ### Downloading Dependencies:  Node Modules
 
-When you run *npm install* your dependencies get downloaded to a *node_modules* folder from which you import classes and functions:
+When you run *npm install* your dependencies get downloaded to a *node_modules* folder from which you import classes and functions. The following screenshot shows some type definition for the *oidc-client-ts* library.
 
 ![node modules](../images/90/node-modules.jpg)
 
@@ -64,7 +64,7 @@ You consume each library as JavaScript, even if it is coded in TypeScript. Each 
 
 ### Writing Code: Resolving Imports
 
-You import libraries in source files using one of the following syntaxes. The first syntax imports a newer *ECMAScript* module, whereas you use the second syntax to import older *CommonJS* modules.
+You import libraries in source files using one of the following syntaxes. The first syntax imports a subset of capabilities from an *ECMAScript* module, whereas you use the second syntax to import the whole of an older *CommonJS* module.
 
 ```typescript
 import {UserManager, UserManagerSettings} from 'oidc-client';
@@ -123,7 +123,7 @@ declare module 'some-legacy-library';
 
 ### Writing Code: Using TypeScript Libraries
 
-The *tsconfig.json* file for the SPA is a little different to that for the Node.js API. The *lib: DOM* option brings in browser type definitions and also enables the most modern coding syntax:
+The *tsconfig.json* file for the SPA is a little different to that for the Node.js API. The *lib: DOM* option brings in browser type definitions and *ES2024* enables the most modern coding syntax:
 
 ```json
 {
@@ -131,7 +131,7 @@ The *tsconfig.json* file for the SPA is a little different to that for the Node.
     "strict": true,
     "target": "ES2017",
     "lib": ["ES2024", "DOM"],
-    "module":"ES2022",
+    "module":"ES2015",
     "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true,
     "outDir": "dist",
@@ -177,7 +177,7 @@ export class CompaniesView {
 }
 ```
 
-Strong typing during coding allows the environment to make more checks and simplifies refactoring. I use ECMAScript modules so that the compiled code remains modern and closest to the original TypeScript syntax.
+Strong typing during coding allows the environment to make more checks and simplifies refactoring. I use ECMAScript modules so that the compiled code will remain modern and closest to the original TypeScript syntax.
 
 ### Writing Code: Styling
 
@@ -331,7 +331,7 @@ For the SPA, a build phase is essential, for the following reasons:
 | Browser Support | Produce JavaScript code that browsers can execute. |
 | Web Performance | Reduce code size to ensure small bundle sizes, so that the SPA performs well. |
 
-I use the [webpack](https://webpack.js.org/) tool, but only for one main task, to produce the JavaScript bundles expressed in the final *index.html* file:
+I use a web bundler, to produce optimized JavaScript bundles that I express in the final *index.html* file:
 
 ```html
 <!DOCTYPE html>
@@ -354,9 +354,9 @@ I use the [webpack](https://webpack.js.org/) tool, but only for one main task, t
 </html>
 ```
 
-### Building Code: Webpack Configuration
+### Building Code: Bundler Configuration
 
-Webpack requires a configuration object that you can create in TypeScript. The options can seem a little cryptic at first. Mostly though, you just need to specify the SPA's entry point source file, then provide an output folder for compiled bundles. The following example uses an entry point of *app.ts* and writes bundles to a *dist* folder.
+There are various web bundlers, and I use the [webpack](https://webpack.js.org/) tool. It requires a configuration object that you can create in TypeScript. The options can seem a little cryptic at first. Mostly though, you just need to specify the SPA's entry point source file, then provide an output folder for compiled bundles. The following example uses an entry point of *app.ts* and writes bundles to a *dist* folder.
 
 ```typescript
 const config: webpack.Configuration = {
@@ -429,7 +429,12 @@ const config: webpack.Configuration = {
 
 Once webpack has built files I use a simple file copy plugin to deploy other files to the *dist* folder. I then run the SPA with the same web files as a production user. Whenever I make changes to HTML, CSS or JavaScript files I get fast feedback in the browser.
 
-Some newer bundlers claim to provide a simpler developer experience, but I have found that they often result in different web delivery mechanisms during development and in deployed environments. As a mature bundler, webpack enables me to use the SPA during development with the same technical steps as production users.
+You could adapt this blog's SPAa to use an alternative web bundler if you prefer:
+
+- [Rollup](https://rollupjs.org/) requires a fairly complex configuration, like webpack, but can produce the cleanest compiled code for production releases. However, I find that its development options lack some important features.
+- [Vite](https://vite.dev/) provides a simpler configuration and some developer conveniences. However, it seems not designed to meet my main requirement to run with the same technical mechanisms during development and production.
+
+All in all I currently prefer webpack, since it is a mature, open source solution that seems to have a strong consumer-focus when you run into deeper requirements.
 
 ### Building Code: Compiler Settings
 
@@ -452,12 +457,12 @@ For SPAs, I ensure that output works in mainstream browsers for the last 5 years
 
 | Setting | Description |
 | ------- | ----------- |
-| [target](https://www.typescriptlang.org/tsconfig#target) | Building to ES2017 means built code runs in all mainstream desktop and mobile browsers and *await* statements are output to the built code. |
-| [module](https://www.typescriptlang.org/tsconfig#module) | ES2022 means bundled code uses the ECMAScript module format, which browsers have supported for years, and the use of top level await statements. |
+| [target](https://www.typescriptlang.org/tsconfig#target) | Building to ES2017 means built code runs in all mainstream desktop and mobile browsers. |
+| [module](https://www.typescriptlang.org/tsconfig#module) | ES2015 means bundled code uses the ECMAScript module format, which browsers have supported for years. |
 
 ### Building Code: Output Syntax
 
-Since the SPA builds to ES2017 JavaScript, the development build results remain close to the SPA's TypeScript code, with types removed. Keeping the built code similar to the developed code makes decompilation easier later.
+Since the SPA builds to ECMAScript modules, the development build results remain close to the SPA's TypeScript code, with types removed. Keeping the built code similar to the developed code makes decompilation easier later.
 
 ```typescript
 class CompaniesView {
@@ -476,10 +481,15 @@ class CompaniesView {
 }
 ```
 
-Support for ES2017 features were added to all main mobile and desktop browsers in around 2017. You can use online websites to check browser compatibility for any newer syntax:
+One current limitation is that webpack ECMAScript module syntax is not as clean as that produced by the rollup bundler. In future I would like code that runs in the browser to be as close as possible to my TypeScript code.
 
-- [Can I use await in browser code?](https://caniuse.com/?search=await)
-- [Can I use top level await in browser code?](https://caniuse.com/?search=top-level%20await)
+```text
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+    class CompaniesView {
+    ...
+    }
+}
+```
 
 ### Building Code: Bundle Splitting
 
@@ -548,13 +558,15 @@ optimization: {
 
 ### Building Code: API Compilation
 
-During development of TypeScript APIs, I avoid producing JavaScript files, since doing so adds confusion when you search the code base. Instead, Node.js can be asked to execute TypeScript files directly with the tsx tool. The Node.js runtime then uses ECMAScript modules built in-memory.
+During development of TypeScript APIs, I avoid producing JavaScript files unless there is a good reason. Node.js can be asked to execute TypeScript files directly with the tsx tool. The Node.js runtime then uses ECMAScript modules built in-memory.
 
 ```bash
 tsx watch src/host/startup/app.ts
 ```
 
-Deployed builds for Node.js APIs should instead run JavaScript code, for best performance. The initial API also has an *npm run buildRelease* command to produce deployable files to its *dist* folder. The most up to date Node.js options can be used for the API build. I avoid using bundle files for API code. By keeping built code easier to read, you are better able to diagnose potential production problems, and diagnose exception stack traces.
+Deployed builds for Node.js APIs should instead run JavaScript code, for best performance. The initial API also has an *npm run buildRelease* command to produce deployable files to its *dist* folder. The most up to date Node.js options can be used for the API build. Unless there is a good reason, I avoid using bundle files for API code. By keeping built code easier to read, you are better able to diagnose potential production problems, like exception stack traces.
+
+In some deployed environments, bundling can improve API startup times. For example, this blog's <a href='serverless-api-deployment.mdx'>Serverless Node.js API</a> is deployed as AWS lambda functions. I uses webpack bundling, which makes a noticeable differences to the cold start time when the API has been idle for a while.
 
 ### Executing Code: Development Web Host
 
