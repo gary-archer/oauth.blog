@@ -131,7 +131,7 @@ The *tsconfig.json* file for the SPA is a little different to that for the Node.
     "strict": true,
     "target": "ES2017",
     "lib": ["ES2024", "DOM"],
-    "module":"ES2015",
+    "module":"ES2020",
     "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true,
     "outDir": "dist",
@@ -429,12 +429,7 @@ const config: webpack.Configuration = {
 
 Once webpack has built files I use a simple file copy plugin to deploy other files to the *dist* folder. I then run the SPA with the same web files as a production user. Whenever I make changes to HTML, CSS or JavaScript files I get fast feedback in the browser.
 
-You could adapt this blog's SPAa to use an alternative web bundler if you prefer:
-
-- [Rollup](https://rollupjs.org/) requires a fairly complex configuration, like webpack, but can produce the cleanest compiled code for production releases. However, I find that its development options lack some important features.
-- [Vite](https://vite.dev/) provides a simpler configuration and some developer conveniences. However, it seems not designed to meet my main requirement to run with the same technical mechanisms during development and production.
-
-All in all I currently prefer webpack, since it is a mature, open source solution that seems to have a strong consumer-focus when you run into deeper requirements.
+You could adapt this blog's SPAs to use an alternative web bundler. I currently prefer webpack over other bundlers, since it is a mature, open source solution that seems to have a strong consumer-focus when you run into deeper requirements.
 
 ### Building Code: Compiler Settings
 
@@ -458,7 +453,7 @@ For SPAs, I ensure that output works in mainstream browsers for the last 5 years
 | Setting | Description |
 | ------- | ----------- |
 | [target](https://www.typescriptlang.org/tsconfig#target) | Building to ES2017 means built code runs in all mainstream desktop and mobile browsers. |
-| [module](https://www.typescriptlang.org/tsconfig#module) | ES2015 means bundled code uses the ECMAScript module format, which browsers have supported for years. |
+| [module](https://www.typescriptlang.org/tsconfig#module) | ES2020 enables bundles to contain ECMAScript modules and also the use of dynamic imports. |
 
 ### Building Code: Output Syntax
 
@@ -501,7 +496,7 @@ const component = new module.MySharedComponent();
 component.execute();
 ```
 
-Webpack bundles are referred to as *chunks*, where you express *initial chunks* in the *index.html* file. The build also produces *non-initial chunks* and writes them to the output folder. Initial chunks contain references to non-initial chunks.
+Webpack bundles are referred to as *chunks*, where you express *initial chunks* in the *index.html* file. The build also produces *non-initial chunks* and writes them to the output folder, with names like *506.bundle.js*. Initial chunks contain references to non-initial chunks.
 
 The [SplitChunksPlugin](https://webpack.js.org/plugins/split-chunks-plugin/) enables you to partition both your own code, and the *node_modules* folder, into chunks. The following example creates an extra chunk for React libraries and an extra chunk for shared components. Downloads of non-initial chunks occur on the first dynamic import that uses one of the chunk's exported classes or functions.
 

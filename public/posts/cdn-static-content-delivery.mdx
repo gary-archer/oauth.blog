@@ -34,11 +34,11 @@ cd oauth.websample.final/deployment/cloudfront
 
 ### SPA Release Builds
 
-The build script for the final SPA produces a root level *dist* folder containing static content to deploy. A real build system could provide content for multiple micro frontends within the same web domain. I build the release JavaScript bundles with minification enabled. I also use the [purgecss command line tool](https://github.com/FullHuman/purgecss) to reduce the size of the Bootstrap CSS file. The following screenshot shows the final assets. I do not deploy source map files but in a real system I would save them to help diagnose production stack traces.
+The build script for the final SPA produces a root level *dist* folder containing static content to deploy. A real build system could provide content for multiple micro frontends within the same web domain. I build the release JavaScript bundles with minification enabled. I also use the [purgecss tool](https://github.com/FullHuman/purgecss) to reduce the size of the Bootstrap CSS file. The following screenshot shows the final assets. I do not deploy source map files but in a real system I would save them to help diagnose production stack traces.
 
-<img src='../images/610/release-bundles.jpg' alt='release bundles' />
+<img src='../images/610/release-bundles.jpg?v=20260110' alt='release bundles' />
 
-I produce a final *index.html* file and use cache busting timestamps for JS and CSS files, to ensure that the browser's cache never serves old files after an upgrade. I also apply [subresource integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) attributes, to bind each resource to the HTML file. This may not solve any real security problems for my web deployment, but is a personal preference, to assert the correctness of assets shipped together.
+I produce a final *index.html* file with minimized assets. I use cache busting timestamps for JS and CSS files to ensure that the browser's cache never serves old files after an upgrade. I also apply [subresource integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) attributes, to bind each resource to the HTML file. This may not solve any real security problems for my web deployment, but is a personal preference, to assert the correctness of assets shipped together.
 
 ```html
 <!DOCTYPE html>
@@ -50,19 +50,20 @@ I produce a final *index.html* file and use cache busting timestamps for JS and 
         <base href='/spa/'>
         <title>OAuth Demo App</title>
 
-        <link rel='stylesheet' href='bootstrap.min.css?t=1650271813125' integrity='sha256-YvdLHPgkqJ8DVUxjjnGVlMMJtNimJ6dYkowFFvp4kKs='>
-        <link rel='stylesheet' href='app.css?t=1650271813125' integrity='sha256-B7pu+gcFspulW4zXfgczVtPcEuZ81tZRFYeRciEzWro='>
+        <link rel='stylesheet' href='bootstrap.min.css?t=1768071505199' integrity='sha256-DSheh43UZt7zrMp3qRhx89tu1ohvTPHGj847cgKXIoI='>
+        <link rel='stylesheet' href='app.min.css?t=1768071505199' integrity='sha256-XLjpon9xf4GXdXktU8j0Ru2HdHkD/sypdFXKNMFN2+A='>
+    </head>
     <body>
         <div id='root' class='container'></div>
 
-        <script type='module' src='vendor.bundle.js?t=1650271813125' integrity='sha256-yLQJi00XkopJDWGmjFgY/bNE72PBzwohkjbEoOfOjY0='></script>
-        <script type='module' src='react.bundle.js?t=1650271813125' integrity='sha256-hdh2E1CmilnpzH/kcBRSVEnQrt/lIKnwOG5nLgFdiNk='></script>
-        <script type='module' src='app.bundle.js?t=1650271813125' integrity='sha256-tYOvvC8IVdWFcxu2lXP89v1hsVTXL0Lt4kZnOKzqguk='></script>
+        <script type='module' src='vendor.bundle.min.js?t=1768071505199' integrity='sha256-8Szmbvuwj6NZ1o//8WhzB9QVCqLjnMSUbzlpWXp4GAY='></script>
+        <script type='module' src='react.bundle.min.js?t=1768071505199' integrity='sha256-Bjli/71wVFSPe9+iYyVFZSFXAj45mrrA0krTP+u0tn4='></script>
+        <script type='module' src='app.bundle.min.js?t=1768071505199' integrity='sha256-ByxgW9MSsCXTwQb8gCnMkgNZkyY4/SHGsoK6/IJ1Oxg='></script>
     </body>
 </html>
 ```
 
-A script called *rewriteIndexHtml.ts* produces the final HTML file while also keeping it readable. This script also removes the below line from release bundle files, to prevent production users ever seeing messages about missing source maps in the browser console:
+A script called *writeProductionAssets.ts* produces the final HTML file while also keeping it readable. This script also removes the below line from release bundle files, to prevent production users ever seeing messages about missing source maps in the browser console:
 
 ```markdown
 //# sourceMappingURL=app.bundle.js.map
@@ -105,16 +106,16 @@ When the *deploy.sh* script is run, it simply invokes *aws s3 cp* to copy the *d
 ```markdown
 upload: .package/favicon.ico to s3://www.authsamples.com/favicon.ico
 upload: .package/spa/index.html to s3://www.authsamples.com/spa/index.html
-upload: .package/spa/app.css to s3://www.authsamples.com/spa/app.css
+upload: .package/spa/app.min.css to s3://www.authsamples.com/spa/app.css
 upload: .package/spa/bootstrap.min.css to s3://www.authsamples.com/spa/bootstrap.min.css
-upload: .package/spa/app.bundle.js to s3://www.authsamples.com/spa/app.bundle.js
-upload: .package/spa/vendor.bundle.js to s3://www.authsamples.com/spa/vendor.bundle.js
-upload: .package/spa/react.bundle.js to s3://www.authsamples.com/spa/react.bundle.js
+upload: .package/spa/app.bundle.min.js to s3://www.authsamples.com/spa/app.bundle.js
+upload: .package/spa/vendor.bundle.min.js to s3://www.authsamples.com/spa/vendor.bundle.js
+upload: .package/spa/react.bundle.min.js to s3://www.authsamples.com/spa/react.bundle.js
 ```
 
 Once the upload completes a number of files exist in the S3 bucket, where the SPA files are located in an *spa* folder. Other micro frontends could be added in parallel folders, so that the deployment allows for future growth.
 
-![spa subfolder](../images/610/spa-subfolder.jpg?v=20241224)
+![spa subfolder](../images/610/spa-subfolder.jpg?v=20260110)
 
 The SPA uses the following default domain and serves content over plain HTTP:
 
