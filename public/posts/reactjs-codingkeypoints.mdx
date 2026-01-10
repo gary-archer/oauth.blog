@@ -158,9 +158,9 @@ return (
             <>
                 <SessionView {...getSessionProps()} />
                 <Routes>
-                    <Route path='/companies/:id' element={<TransactionsContainer {...getTransactionsProps()} />} />
+                    <Route path='/companies/:id' element={<TransactionsView {...getTransactionsProps()} />} />
                     <Route path='/loggedout'     element={<LoginRequiredView {...getLoginRequiredProps()} />} />
-                    <Route path='/*'             element={<CompaniesContainer {...getCompaniesProps()} />} />
+                    <Route path='/*'             element={<CompaniesView {...getCompaniesProps()} />} />
                 </Routes>
             </>
         }
@@ -173,20 +173,20 @@ return (
 React manages rendering when *state* changes, and views get created with *props*. I also like to use *view models* to handle operations such as API calls, and to keep the view classes focused on presentation:
 
 ```typescript
-export interface CompaniesContainerProps {
+export interface CompaniesViewProps {
     isMobileLayout: boolean;
-    viewModel: CompaniesContainerViewModel;
+    viewModel: CompaniesViewModel;
 }
 ```
 
 Views get recreated frequently, whereas I manage application state within view model classes that get created only once. I manage this by storing child view model references within the root *AppViewModel*:
 
 ```typescript
-public getCompaniesViewModel(): CompaniesContainerViewModel {
+public getCompaniesViewModel(): CompaniesViewModel {
 
     if (!this.companiesViewModel) {
 
-        this.companiesViewModel = new CompaniesContainerViewModel(
+        this.companiesViewModel = new CompaniesViewModel(
             this.fetchClient!,
             this.eventBus,
             this.viewModelCoordinator!,
@@ -204,7 +204,7 @@ This technique is a basic but portable way to manage application state in fronte
 I use the React framework's hook-based syntax to develop the SPA's views. In mobile development I use other frameworks, such as SwiftUI, which have their own view syntax.
 
 ```typescript
-export function CompaniesContainer(props: CompaniesContainerProps): JSX.Element {
+export function CompaniesView(props: CompaniesViewProps): JSX.Element {
 
     const model = props.viewModel;
     model.useState();

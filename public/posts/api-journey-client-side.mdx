@@ -58,9 +58,9 @@ The shell then lays out a tree of views, some of which call APIs when they load.
         <>
             <SessionView {...getSessionProps()} />
             <Routes>
-                <Route path='/companies/:id' element={<TransactionsContainer {...getTransactionsProps()} />} />
+                <Route path='/companies/:id' element={<TransactionsView {...getTransactionsProps()} />} />
                 <Route path='/loggedout'     element={<LoginRequiredView {...getLoginRequiredProps()} />} />
-                <Route path='/*'             element={<CompaniesContainer {...getCompaniesProps()} />} />
+                <Route path='/*'             element={<CompaniesView {...getCompaniesProps()} />} />
             </Routes>
         </>
     }
@@ -94,12 +94,47 @@ The API uses the following user attributes and frontend views visualise the use 
 
 This use of claims is similar to that in any moderately complex real-world system, with some <a href='user-data.mdx'>user attributes</a> stored in the identity data and others in the business data. Clients and APIs operate on both types of user attribute, in a way that you can easily extend.
 
+### View Models
+
+In frontend technology stacks, a view binds to *state* in its view model. The view model can also contain other *properties*. Both types of data can originate from APIs. The view model can create other values from the raw data (the model) that APIs return. The overall process is the Model View View Model (MVVM) pattern.
+
+The following example shows a View Model object for Kotlin on Android:
+
+```kotlin
+class MyViewModel(
+    private val fetchClient: FetchClient
+) : ViewModel() {
+
+     var myState: MutableState<MyApiData?> = mutableStateOf(null)
+     var myProperty: String
+}
+```
+
+The following example shows a View Model object for SwiftUI on iOS:
+
+```swift
+class MyViewModel: ObservableObject {
+
+    @Published var myState: MyApiData?
+    var myProperty: String
+    private let fetchClient: FetchClient
+
+    init(fetchClient: FetchClient) {
+        self.fetchClient = fetchClient
+    }
+}
+```
+
+When creating a view, you pass the view model as an input property. The view does not know about the internal properties of the view model, like a fetch client that calls APIs.
+
+Other technology stacks, like React, might not use view models explicitly, but you can follow the same pattern, where views receive *props* that contain a view model and the view model contains bindable state.
+
 ### Views, Models and Data Loading
 
 For a React app, I use code similar to the following to load views and call APIs. The view asks its view model to fetch data from APIs, which takes place asynchronously to avoid blocking the UI thread. The view then binds to the model's data, or renders an error when API requests fail unexpectedly:
 
 ```typescript
-export function CompaniesContainer(props: CompaniesContainerProps): JSX.Element {
+export function CompaniesView(props: CompaniesViewProps): JSX.Element {
 
     const model = props.viewModel;
     model.useState();

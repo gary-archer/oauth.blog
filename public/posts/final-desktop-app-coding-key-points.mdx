@@ -23,10 +23,10 @@ return (
         <>
             <SessionView {...getSessionProps()} />
             <Routes>
-                <Route path='/'              element={<CompaniesContainer {...getCompaniesProps()} />} />
-                <Route path='/companies/:id' element={<TransactionsContainer {...getTransactionsProps()} />} />
+                <Route path='/'              element={<CompaniesView {...getCompaniesProps()} />} />
+                <Route path='/companies/:id' element={<TransactionsView {...getTransactionsProps()} />} />
                 <Route path='/loggedout'     element={<LoginRequiredView {...getLoginRequiredProps()} />} />
-                <Route path='*'              element={<CompaniesContainer {...getCompaniesProps()} />} />
+                <Route path='*'              element={<CompaniesView {...getCompaniesProps()} />} />
             </Routes>
         </>
     </>
