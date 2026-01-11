@@ -117,8 +117,6 @@ public async validateAccessToken(accessToken: string): JwtClaims {
 
     const result = await jwtVerify(accessToken, this.jwksRetriever.remoteJWKSet, options);
     claims = result.payload;
-
-    this.logEntry.setIdentityData(this.getIdentityData(claims));
     return claims;
 }
 ```
@@ -243,7 +241,7 @@ When there is a server error, the API returns additional information to support 
   "utcTime": "2022-07-24T10:28:00.438Z"
 ```
 
-### APIs Writes Queryable Logs
+### APIs Write Queryable Logs
 
 I design API request logs to be easy for people to query. When there is a client error I write a log entry similar to this:
 

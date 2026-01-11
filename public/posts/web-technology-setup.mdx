@@ -432,7 +432,7 @@ const config: webpack.Configuration = {
 
 Once webpack has built files I use a simple file copy plugin to deploy other files to the *dist* folder. I then run the SPA with the same web files as a production user. Whenever I make changes to HTML, CSS or JavaScript files I get fast feedback in the browser.
 
-You could adapt this blog's SPAs to use an alternative web bundler. I currently prefer webpack over other bundlers, since it is a mature, open source solution that seems to have a strong consumer-focus when you run into deeper requirements.
+You could adapt this blog's SPAs to use an alternative web bundler. I currently prefer webpack over other bundlers, since it is a mature, open source solution that I find meets my deeper requirements, for both production and development, to avoid blocking issues.
 
 ### Building Code: Compiler Settings
 
@@ -479,7 +479,7 @@ class CompaniesView {
 }
 ```
 
-One current limitation is that webpack ECMAScript module syntax is not as clean as that produced by the rollup bundler. In future I would like code that runs in the browser to be as close as possible to my TypeScript code.
+One current webpack limitation is that the syntax of the output ECMAScript modules could be cleaner. In future I would like code that runs in the browser to be as close as possible to my original TypeScript code.
 
 ```text
 (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
