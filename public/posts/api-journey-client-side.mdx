@@ -53,8 +53,8 @@ The shell then lays out a tree of views, some of which call APIs when they load.
 <>
     <TitleView {...getTitleProps()} />
     <HeaderButtonsView {...getHeaderButtonProps()} />
-    {model.error && <ErrorSummaryView {...getErrorProps()} />}
-    {model.isLoaded &&
+    {error && <ErrorSummaryView {...getErrorProps()} />}
+    {isLoaded &&
         <>
             <SessionView {...getSessionProps()} />
             <Routes>

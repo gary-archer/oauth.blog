@@ -67,8 +67,8 @@ return (
     <>
         <TitleView {...getTitleProps()} />
         <HeaderButtonsView {...getHeaderButtonProps()} />
-        {model.error && <ErrorSummaryView {...getErrorProps()} />}
-        {model.isLoaded &&
+        {error && <ErrorSummaryView {...getErrorProps()} />}
+        {isLoaded &&
             <>
                 <SessionView {...getSessionProps()} />
                 <Routes>

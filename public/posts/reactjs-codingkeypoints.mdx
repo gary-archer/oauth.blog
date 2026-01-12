@@ -147,8 +147,8 @@ return (
     <>
         <TitleView {...getTitleProps()} />
         <HeaderButtonsView {...getHeaderButtonProps()} />
-        {model.error && <ErrorSummaryView {...getErrorProps()} />}
-        {model.isLoaded &&
+        {error && <ErrorSummaryView {...getErrorProps()} />}
+        {isLoaded &&
             <>
                 <SessionView {...getSessionProps()} />
                 <Routes>
@@ -195,12 +195,14 @@ This technique is a basic but portable way to manage application state in fronte
 
 ### Separation of View Logic from General Logic
 
-I use the React framework's hook-based syntax to develop the SPA's views. Views call *use* on the view model and the view model call's React's *useState* hook. This mechanism externalizes API concerns from views in the same way as mobile technology stacks.
+I use the React framework's hook-based syntax to develop the SPA's views. Views get API data from their view model, to externalize API concerns from views in the same way as in mobile technology stacks.
 
 ```typescript
 export function CompaniesView(props: CompaniesViewProps): JSX.Element {
 
-    const model = props.viewModel.use();
+    const model = props.viewModel;
+    const [companies, setCompanies] = useState(model.getCompanies());
+    const [error, setError] = useState(model.getError());
 
     useEffect(() => {
         startup();
