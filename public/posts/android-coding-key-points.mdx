@@ -112,10 +112,10 @@ private fun createViews() {
                 HeaderButtonsView(
                     that.model.eventBus,
                     that::onHome,
-                    that::onReloadData,
-                    that::onExpireAccessToken,
-                    that::onExpireRefreshToken,
-                    that::onStartLogout
+                    that.model::triggerDataReload,
+                    that.model::expireAccessToken,
+                    that.model::expireRefreshToken,
+                    that::onStartLogout,
                 )
 
                 if (model.error.value != null) {

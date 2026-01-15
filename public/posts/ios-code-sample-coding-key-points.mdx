@@ -86,9 +86,9 @@ var body: some View {
 
         HeaderButtonsView(
             onHome: self.onHome,
-            onReloadData: self.onReloadData,
-            onExpireAccessToken: self.model.onExpireAccessToken,
-            onExpireRefreshToken: self.model.onExpireRefreshToken,
+            onReloadData: self.model.triggerDataReload,
+            onExpireAccessToken: self.model.expireAccessToken,
+            onExpireRefreshToken: self.model.expireRefreshToken,
             onLogout: self.onLogout)
 
         if self.model.error != nil {

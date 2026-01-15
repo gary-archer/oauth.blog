@@ -17,11 +17,11 @@ When you operate APIs and API clients they need a number of technical qualities.
 
 To enable future-proof security, this blog uses OAuth 2.0 to secure APIs and clients. OAuth is a [family of specifications](https://datatracker.ietf.org/doc/html/rfc6749) for protecting data. Solutions are JSON-based and enable you to use the latest and most productive API, web and mobile technologies. A solid OAuth setup empowers developers with modern and extensible security capabilities.
 
-I have often seen people struggle to implement OAuth and realise its benefits, since it is a distributed architecture with many moving parts. An organization needs to introduce an intricate new component called the *Authorization Server* that outsources the deeper security from applications. You also need to make design choices that require insight, at both an architecture level and a code level.
+However, I have often seen people struggle to implement OAuth and realise its benefits, since it is a distributed architecture with many moving parts. An organization needs to introduce an intricate new component called the *Authorization Server* that outsources the deeper security from applications. You also need to make design choices that require insight, at both an architecture level and a code level.
 
 ### Blog Content
 
-I first explain my thoughts on the most important goals and requirements. I then  explain some techniques to meet them. This blog only covers basic OAuth security, but once you have the right setup and separation you are well-placed to implement more advanced use cases. In addition to OAuth integration I explain some lessons I've learned to enable resilient API and client journeys:
+I first explain my thoughts on the most important goals and requirements. I then explain some techniques to meet them. This blog only covers basic OAuth security, with a focus on reliable integrations. Once you have solid foundations you are well-placed to implement more advanced use cases. In addition to OAuth integration I explain some lessons I've learned to enable resilient API and client journeys:
 
 - Coding with portability to keep future options open.
 - Designing for manageability to avoid pain points.
