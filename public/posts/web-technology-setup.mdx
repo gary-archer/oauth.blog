@@ -479,16 +479,6 @@ class CompaniesView {
 }
 ```
 
-One current webpack limitation is that the syntax of the output ECMAScript modules could be cleaner. In future I would like code that runs in the browser to be as close as possible to my original TypeScript code.
-
-```text
-(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-    class CompaniesView {
-    ...
-    }
-}
-```
-
 ### Building Code: Bundle Splitting
 
 This blog's SPAs use a code setup that supports bundle splitting to reduce the initial download size. You could add a new class and dynamically use it from a view, with code similar to the following. When you navigate to that view, the browser tools would show an additional bundle download.
