@@ -51,9 +51,39 @@ root.render (
 );
 ```
 
+### Serving Web Files
+
+The main process serves web files to the renderer process with URLs that use the application's custom protocol scheme. The code to enable that is shown below. I only serve expected web files to minimize potential XSS threats against the file system.
+
+```typescript
+private async onReady(): Promise<void> {
+
+    protocol.handle(this.configuration.app.protocolScheme, this.onServeWebFiles);
+    this.window.loadURL(`${this.configuration.app.protocolScheme}:/index.html`);
+}
+
+private onServeWebFiles(request: Request): any {
+
+    const fileName = new URL(request.url).pathname.toLowerCase().slice(1);
+    const authorizedFiles = [
+        'index.html',
+        'bootstrap.min.css',
+        'app.css',
+        'vendor.bundle.js',
+        'react.bundle.js',
+        'app.bundle.js',
+    ];
+
+    if (authorizedFiles.indexOf(fileName) !== -1) {
+        const webFilePath = url.pathToFileURL(path.join(__dirname, fileName)).toString();
+        return net.fetch(webFilePath);
+    }
+}
+```
+
 ### Private URI Scheme Registration
 
-The *main.ts* source file is the entry point that receives deep link notifications. The app registers a private URI scheme at application startup, which writes entries to user specific areas of the operating system:
+The main process is also the entry point for deep link notifications, which also use the custom protocol scheme. The app registers the scheme at application startup, which writes entries to user specific areas of the operating system:
 
 ```typescript
 private async registerPrivateUriScheme(): Promise<void> {

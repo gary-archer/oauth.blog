@@ -9,7 +9,7 @@ Previously I summarised some backend technical behaviours in <a href='api-journe
 
 ### Configuration
 
-OAuth clients typically load their configuration at startup, to get details such as API base URLs and OAuth settings. A native app might use the following example configuration settings:
+OAuth clients typically load their configuration at startup, to get details such as API base URLs and OAuth settings. An app that acts as a public client might use configuration settings similar to those shown below:
 
 ```json
 {
@@ -20,12 +20,8 @@ OAuth clients typically load their configuration at startup, to get details such
         "authority":             "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_qqJgVeuTn",
         "clientId":              "1h8pildfi6a4bmfv2alj3fs6va",
         "redirectUri":           "https://www.authsamples.com/apps/finaldesktopapp/postlogin.html",
-        "privateSchemeName":     "x-authsamples-desktopapp",
         "scope":                 "openid profile https://api.authsamples.com/investments",
-        "customLogoutEndpoint":  "https://login.authsamples.com/logout",
-        "postLogoutRedirectUri": "https://www.authsamples.com/apps/finaldesktopapp/postlogout.html",
-        "logoutCallbackPath":    "/logoutcallback",
-        "delegationIdClaimName": "origin_jti"
+        "postLogoutRedirectUri": "https://www.authsamples.com/apps/finaldesktopapp/postlogout.html"
     }
 }
 ```

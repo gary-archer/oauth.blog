@@ -67,7 +67,8 @@ The final desktop app's configuration no longer uses HTTP ports, and now uses lo
     "app": {
         "apiBaseUrl": "https://api.authsamples.com/investments",
         "useProxy": false,
-        "proxyUrl": "http://127.0.0.1:8888"
+        "proxyUrl": "http://127.0.0.1:8888",
+        "protocolScheme": "x-authsamples-desktopapp"
     },
     "oauth": {
         "authority":             "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
@@ -76,7 +77,6 @@ The final desktop app's configuration no longer uses HTTP ports, and now uses lo
         "postLogoutRedirectUri": "https://www.authsamples.com/apps/finaldesktopapp/postlogout.html",
         "scope":                 "openid profile https://api.authsamples.com/investments",
         "customLogoutEndpoint":  "https://login.authsamples.com/logout",
-        "privateSchemeName":     "x-authsamples-desktopapp",
         "delegationIdClaimName": "origin_jti",
     }
 }
@@ -86,7 +86,15 @@ I created a new OAuth client for the final desktop app, which uses updated redir
 
 ![oauth client](../images/440/oauth-client.jpg?v=20240925)
 
-### External Web Pages
+### Protocol Scheme
+
+The updated desktop app uses a [custom protocol](https://www.electronjs.org/docs/latest/api/protocol) of *x-authsamples-desktopapp*. The renderer process uses the scheme to download web files from the main process. Using a custom protocol mitigates file-based XSS attacks from the renderer process.
+
+![custom protcol](../images/440/custom-protocol.jpg)
+
+The protocol scheme is also used as an OAuth private URI scheme, with which the desktop app receives OAuth repsonses and other deep links from the desktop operating system.
+
+### External Web Redirect URIs
 
 When a deep link runs after a redirect, the browser may refuse to invoke it for security reasons unless there is a user gesture. This is especially true if the redirects are entirely automatic, as for logouts or single-sign-on events. 
 
@@ -110,7 +118,7 @@ One downside of this approach is that, if the user doesn't click the *Return to 
 Before the desktop app can receive the login response, the browser presents a prompt to ask the user to confirm the deep link. To understand its final appearance in the different browsers you can build and run a packaged version of the app:
 
 ```bash
-./pack.sh
+./package.sh
 ```
 
 The [Electron Packager](https://github.com/electron/packager) then builds a binary that you could package further into an installation program:
@@ -216,7 +224,8 @@ To connect to local APIs, update the *apiBaseUrl* value in the desktop.config.js
     "app": {
         "apiBaseUrl": "https://api.authsamples-dev.com:446/investments",
         "useProxy": false,
-        "proxyUrl": "http://127.0.0.1:8888"
+        "proxyUrl": "http://127.0.0.1:8888",
+        "protocolScheme": "x-authsamples-desktopapp"
     },
     "oauth": {
         "authority":             "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
@@ -225,7 +234,6 @@ To connect to local APIs, update the *apiBaseUrl* value in the desktop.config.js
         "postLogoutRedirectUri": "https://www.authsamples.com/apps/finaldesktopapp/postlogout.html",
         "scope":                 "openid profile https://api.authsamples.com/investments",
         "customLogoutEndpoint":  "https://login.authsamples.com/logout",
-        "privateSchemeName":     "x-authsamples-desktopapp",
         "delegationIdClaimName": "origin_jti",
     }
 }

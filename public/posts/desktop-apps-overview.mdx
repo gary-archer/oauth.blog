@@ -43,7 +43,7 @@ A web client runs in a browser and has an addressable URL on which to receive lo
 
 ### Loopback Interface Authorization Responses
 
-According to RFC 8252, it should be possible to register a redirect URI that begins with *http://127.0.0.1* and the client can then use any port at runtime. Section 8.3 of RFC 8252 also explains that you should not use *localhost* in redirect URIs, since it can expose a connection outside the host computer. In practice, this leads to usability problems where the operating systems prompts users to allow incoming connections.
+According to RFC 8252, it should be possible to register a redirect URI that begins with *http://127.0.0.1* and the client can then use any port at runtime. Section 8.3 of RFC 8252 also explains that you should not use *localhost* in redirect URIs, since it can expose a connection outside the host computer. The use of *localhost* redirect URIs lead to usability problems where the operating systems prompts users to allow incoming connections.
 
 ### Run the Minimal AppAuth-JS Code Sample
 

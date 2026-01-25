@@ -132,7 +132,7 @@ For Electron apps it would be unnatural to use the webpack development server. I
 
 ### Inter Process Communication
 
-The Electron app follows Electron's [Security Best Practices](https://www.electronjs.org/docs/latest/tutorial/security) so that the renderer process runs with least privilege. It therefore does not have permissions to perform OAuth operations like running an HTTP server or opening the system browser. Instead, to initiate this type of operation, the desktop app uses Electron's [Inter-Process Communication](https://www.electronjs.org/docs/latest/tutorial/ipc). I also proxy API requests via the backend to keep tokens out of the Chromium browser. The main process registers some IPC event handlers for the following event names:
+The app follows the [Electron Security Best Practice](https://www.electronjs.org/docs/latest/tutorial/security) to run the renderer process with least privilege. It therefore does not have permissions to perform OAuth operations like running an HTTP server or opening the system browser. Instead, to initiate this type of operation, the desktop app uses Electron's [Inter-Process Communication](https://www.electronjs.org/docs/latest/tutorial/ipc). I also proxy API requests via the backend to keep tokens out of the Chromium browser. The main process registers some IPC event handlers for the following event names:
 
 ```typescript
 export class IpcEventNames {
@@ -225,6 +225,8 @@ export class MainIpcEvents {
 ```
 
 The main and renderer process can send JavaScript objects to each other. I wrote some custom serialization to return errors from the main process, so that the renderer process correctly receives error objects thrown by code in the main process.
+
+The Electron design choice to use a browser to render frontend views leads to IPC events, which add significant code complexity. That complexity is not present in desktop applications that perform native rendering, or in mobile applications that use native views.
 
 ### OAuth and API Classes
 
