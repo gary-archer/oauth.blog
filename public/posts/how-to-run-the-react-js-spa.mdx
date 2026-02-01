@@ -158,8 +158,7 @@ To make the SPA connect to one of this blog's final APIs, first ensure that the 
 ```bash
 export SECRETS_FOLDER="$HOME/secrets"
 export LOCALAPI=true
-./build.sh
-./run.sh
+./start.sh
 ```
 
 This runs some utility token handler components in a small docker compose network. You can study the deployment resources to get a feel for how this works. The SPA's configuration then routes to the API via the local backend for frontend rather than the cloud BFF:

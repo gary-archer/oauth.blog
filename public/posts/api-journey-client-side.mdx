@@ -9,19 +9,19 @@ Previously I summarised some backend technical behaviours in <a href='api-journe
 
 ### Configuration
 
-OAuth clients typically load their configuration at startup, to get details such as API base URLs and OAuth settings. An app that acts as a public client might use configuration settings similar to those shown below:
+When OAuth clients start they typically load their configuration settings into an object. An app that acts as an OAuth public client might use settings similar to those shown below:
 
 ```json
 {
     "app": {
-        "apiBaseUrl": "https://api.authsamples.com/investments",
+        "apiBaseUrl":             "https://api.authsamples-dev.com:446/api"
     },
     "oauth": {
-        "authority":             "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_qqJgVeuTn",
-        "clientId":              "1h8pildfi6a4bmfv2alj3fs6va",
-        "redirectUri":           "https://www.authsamples.com/apps/finaldesktopapp/postlogin.html",
-        "scope":                 "openid profile https://api.authsamples.com/investments",
-        "postLogoutRedirectUri": "https://www.authsamples.com/apps/finaldesktopapp/postlogout.html"
+        "authority":              "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
+        "clientId":               "hje94a2jj3lgkobkh57ikenhh",
+        "redirectUri":            "https://www.authsamples-dev.com/spa/",
+        "postLogoutRedirectUri":  "https://www.authsamples-dev.com/spa/loggedout",
+        "scope":                  "openid profile https://api.authsamples.com/investments"
     }
 }
 ```
