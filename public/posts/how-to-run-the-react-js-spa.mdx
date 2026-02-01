@@ -119,13 +119,17 @@ In earlier samples, the SPA performed its own OpenID Connect flow in JavaScript.
 
 ### Step 8: Run a Release Build
 
-You can run some scripts to test a release deployment and run the SPA at the same local computer URL. The *build.sh* script produces JavaScript release bundles. The *deploy.sh* script runs an Express Docker container that serves static content in the same way as the webpack development server. The *teardown.sh* script stops the Docker container.
+You can run some scripts to test a release deployment. The *build.sh* script produces JavaScript release bundles. The *deploy.sh* script runs a Docker container that uses Express to serve minimized static content. The *teardown.sh* script stops the Docker container.
 
 ```bash
 ./deployment/docker/build.sh
 ./deployment/docker/deploy.sh
 ./deployment/docker/teardown.sh
 ```
+
+After the *deploy.sh* script, browse to *https://www.authsamples-dev.com/spa/* and test a release deployment of the SPA. Release builds use web resource optimizations, like minification, compression and browser caching, but otherwise execute the same as development builds.
+
+![release build](../images/230/release-build.jpg)
 
 ### Local API Setup
 
