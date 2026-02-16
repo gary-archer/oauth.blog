@@ -132,7 +132,9 @@ For a React app, I use code similar to the following to load views and call APIs
 ```typescript
 export function CompaniesView(props: CompaniesViewProps): JSX.Element {
 
-    const model = props.viewModel.use();
+    const model = props.viewModel;
+    const [companies, setCompanies] = useState(model.getCompanies());
+    const [error, setError] = useState(model.getError());
 
     useEffect(() => {
         startup();
@@ -152,6 +154,8 @@ export function CompaniesView(props: CompaniesViewProps): JSX.Element {
 
     async function loadData(options?: ViewLoadOptions): Promise<void> {
         await model.callApi(options);
+        setCompanies(model.getCompanies());
+        setError(model.getError());
     }
 
     return (
