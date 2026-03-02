@@ -687,29 +687,15 @@ public static getErrorStack(error: UIError): ErrorLine | null {
 }
 ```
 
-I then render stack traces as raw strings in debug builds:
+In debug builds I render stack traces as raw strings in an error details dialog:
 
-![exception](../images/90/frontend-exception-display.jpg)
+![exception display](../images/90/frontend-exception-display.jpg?v=20260302)
 
-I can then use a [retrace tool](https://github.com/fgnass/retrace) to convert a raw stack trace back to its original unbundled lines of code, with logic similar to the following:
+Given a stack trace and sourcemap files, I can use an [Online Source Mapper](https://sourcemaps.info/) to paste in the exception stack trace and the source map contents. The tool then re-renders the call stack using locations from the original TypeScript code.
 
-```javascript
-import fs from 'fs';
-import retrace from 'retrace';
+![exception decompiled](../images/90/sourcemap-decompile.jpg)
 
-const sourceMap = fs.readFileSync('./mymodule.js.map', 'utf8');
-retrace.resolve = (url) => {
-  return sourceMap;
-};
-
-const rawStack = fs.readFileSync('./stack.txt', 'utf8').replace(/\\n/g,'\n');
-console.log(rawStack);
-
-const originalCodeStack = await retrace.map(rawStack);
-console.log(originalCodeStack);
-```
-
-In bundled applications I save source map files for each application release. I also rehearse exceptions during development, to verify that stack trace lookups will work as expected if I need to diagnose production stack traces later.
+Source map stack trace lookup also works for minified release builds, to provide a mechanism to help resolve production errors. I save source map files for each application release. Production builds can use a feature to send a stack trace rather than display it to the user.
 
 ### Web Production Behaviors
 
