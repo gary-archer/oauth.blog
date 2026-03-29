@@ -311,10 +311,7 @@ export interface OAuthService {
 The main process's *ApiService* uses the following shared function to manage API requests:
 
 ```typescript
-private async callApi(
-    method: Method,
-    url: string,
-    dataToSend: any = null): Promise<any> {
+private async callApi(method: string, url: string, dataToSend: any = null): Promise<any> {
 
     try {
 
@@ -323,28 +320,32 @@ private async callApi(
             throw ErrorFactory.fromLoginRequired();
         }
 
-        const headers: any = {
-            'Authorization': `Bearer ${accessToken}`,
+        const headers: HeadersInit = {
+            'authorization': `Bearer ${accessToken}`,
+            'accept': 'application/json',
         };
 
-        const requestOptions = {
-            url,
+        const options: RequestInit = {
             method,
-            data: dataToSend,
             headers,
-        } as AxiosRequestConfig;
+            dispatcher: this.httpProxy.getDispatcher() || undefined,
+        };
 
-        if (this.httpProxy.agent) {
-            requestOptions.httpsAgent = this.httpProxy.agent;
+        if (dataToSend) {
+            headers['content-type'] = 'application/json';
+            options.body = JSON.stringify(dataToSend);
         }
 
-        const response = await axios.request(requestOptions);
-        AxiosUtils.checkJson(response.data);
-        return response.data;
+        const response = await fetch(url, options);
+        if (response.ok) {
+            return await response.json();
+        }
+
+        throw await ErrorFactory.getFromApiResponseError(response);
 
     } catch (e: any) {
 
-        throw ErrorFactory.fromHttpError(e, url, 'API');
+        throw ErrorFactory.getFromFetchError(e, url, 'web API');
     }
 }
 ```
@@ -354,35 +355,35 @@ Meanwhile the renderer's *ApiClient* uses the following generic routine to invok
 ```typescript
 private async getDataFromApi(callback: () => Promise<any>): Promise<any> {
 
+    try {
+
+        return await callback();
+
+    } catch (e1: any) {
+
+        const error1 = ErrorFactory.fromException(e1);
+        if (error1.getStatusCode() !== 401) {
+            throw error1;
+        }
+
+        await this.oauthClient.refreshAccessToken();
+
         try {
 
             return await callback();
 
-        } catch (e1: any) {
+        } catch (e2: any) {
 
-            const error1 = ErrorFactory.fromException(e1);
-            if (error1.getStatusCode() !== 401) {
-                throw error1;
+            const error2 = ErrorFactory.fromException(e2);
+            if (error2.getStatusCode() !== 401) {
+                throw error2;
             }
 
-            await this.oauthClient.refreshAccessToken();
-
-            try {
-
-                return await callback();
-
-            } catch (e2: any) {
-
-                const error2 = ErrorFactory.fromException(e2);
-                if (error2.getStatusCode() !== 401) {
-                    throw error2;
-                }
-
-                this.oauthClient.clearLoginState();
-                throw ErrorFactory.fromLoginRequired();
-            }
+            this.oauthClient.clearLoginState();
+            throw ErrorFactory.fromLoginRequired();
         }
     }
+}
 ```
 
 When there is no token yet or token refresh fails with an *invalid_grant* error, views receive a *login_required* error and terminate API requests in a controlled manner. This error code is treated specially and results in a redirect to the *Login Required View*, which saves a return location to use once login completes:

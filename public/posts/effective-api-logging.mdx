@@ -339,22 +339,13 @@ When API requests return an HTTP 500 related status, request logs include both t
 
 ### Performance Instrumentation
 
-In places the API code contains statements to measure the performance of a particular routine. The time taken may need to include one or more *async await* operations:
+In places the API code contains statements to measure the performance of a particular routine. The time taken may need to include one or more *async await* operations.
 
 ```typescript
-public async getUserInfo(accessToken: string): Promise<UserInfoClaims> {
+public async getCompanyList(): Promise<Company[]> {
 
-    using breakdown = this.logEntry.createPerformanceBreakdown('userInfoLookup');
-
-    try {
-
-        const response = await axios.request(options as AxiosRequestConfig);
-        return ClaimsReader.userInfoClaims(response.data);
-
-    } catch (e: any) {
-
-        throw ErrorUtils.fromUserInfoError(e, this.configuration.userInfoEndpoint);
-    }
+    using breakdown = this.logEntry.createPerformanceBreakdown('selectCompanyListData');
+    return await readData(...);
 }
 ```
 
@@ -383,10 +374,6 @@ To see this output in the final APIs, change the logging configuration to use a 
       {
         "name": "validateToken",
         "millisecondsTaken": 84
-      },
-      {
-        "name": "userInfoLookup",
-        "millisecondsTaken": 292
       },
       {
         "name": "selectCompanyListData",

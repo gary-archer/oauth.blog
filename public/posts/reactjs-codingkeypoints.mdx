@@ -99,7 +99,6 @@ The SPA no longer uses a JavaScript security library to implement OpenID Connect
 ```json
 {
   "dependencies": {
-    "axios": "^1.13.2",
     "js-event-bus": "^1.1.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
@@ -396,30 +395,49 @@ The SPA retains full control over login usability. Rather than using a few lines
 
 ### API Requests with Cookies
 
-After login the SPA uses *HttpOnly SameSite=strict Secure* cookies to call APIs. The SPA must use the *withCredentials* flag to instruct the browser to send cookies to its backend for frontend. The SPA sends a custom header to enforce CORS preflight requests, as a CSRF prevention best practice. The SPA also sends some a correlation ID for logging and tracing purposes.
+After login the SPA uses *HttpOnly SameSite=strict Secure* cookies to call APIs. The SPA must use the *credentials: include* fetch option to instruct the browser to send cookies to its backend for frontend. The SPA sends a custom header to enforce CORS preflight requests, as a CSRF prevention best practice. The SPA also sends some a correlation ID for logging and tracing purposes.
 
 ```typescript
 private async callApiWithCredential(
-    method: Method,
+    method: string,
     url: string,
     fetchOptions: FetchOptions,
-    dataToSend: any): Promise<any> {
+    dataToSend: any = null): Promise<any> {
 
-    const headers: any = {
+    const headers: HeadersInit = {
+        'accept': 'application/json',
         'token-handler-version': '1',
-        'correlation-id': Guid.create().toString(),
+        'correlation-id': crypto.randomUUID(),
     };
 
-    const requestOptions = {
-        method,
-        url,
-        data: dataToSend,
-        headers,
-        withCredentials: true,
-    } as AxiosRequestConfig;
+    if (fetchOptions.causeError) {
+        headers['api-exception-simulation'] = 'FinalApi';
+    }
 
-    const response = await axios.request(requestOptions);
-    return response.data;
+    const options: RequestInit = {
+        method,
+        credentials: 'include',
+        headers,
+    };
+
+    if (dataToSend) {
+        headers['content-type'] = 'application/json';
+        options.body = JSON.stringify(dataToSend);
+    }
+
+    try {
+
+        const response = await fetch(url, options);
+        if (response.ok) {
+            return await response.json();
+        }
+
+        throw await ErrorFactory.getFromApiResponseError(response, 'web API');
+
+    } catch (e: any) {
+
+        throw ErrorFactory.getFromFetchError(e, url, 'web API');
+    }
 }
 ```
 

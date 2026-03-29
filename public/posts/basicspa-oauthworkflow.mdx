@@ -267,7 +267,7 @@ Meanwhile, the API performs some basic but readable error logging. Its logged er
 
 ```json
 {
-  "utcTime": "2025-05-29T17:12:23.969Z",
+  "utcTime": "2026-03-29T13:36:19.166Z",
   "path": "/api/companies",
   "method": "GET",
   "statusCode": 500,
@@ -276,32 +276,23 @@ Meanwhile, the API performs some basic but readable error logging. Its logged er
     "clientError": {
       "code": "jwks_download_error",
       "message": "Problem downloading token signing keys",
-      "id": 94934,
+      "id": 41671,
       "area": "BasicApi",
-      "utcTime": "2024-07-27T10:54:13.025Z"
+      "utcTime": "2026-03-29T13:36:19.210Z"
     },
     "serviceError": {
-      "details": {
-        "code": "ERR_BAD_REQUEST",
-        "description": "Request failed with status code 400"
-      },
+      "details": "ERR_JOSE_GENERIC, Expected 200 OK from the JSON Web Key Set HTTP response, URL: https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/xxx.jwks.json",
       "stack": [
-        "AxiosError: Request failed with status code 400",
-        "at settle (file:///home/gary/dev/oauth.websample1/api/node_modules/axios/lib/core/settle.js:19:12)",
-        "at IncomingMessage.handleStreamEnd (file:///home/gary/dev/oauth.websample1/api/node_modules/axios/lib/adapters/http.js:599:11)",
-        "at IncomingMessage.emit (node:events:530:35)",
-        "at endReadableNT (node:internal/streams/readable:1698:12)",
-        "at process.processTicksAndRejections (node:internal/process/task_queues:90:21)",
-        "at Axios.request (file:///home/gary/dev/oauth.websample1/api/node_modules/axios/lib/core/Axios.js:45:41)",
+        "JOSEError: Expected 200 OK from the JSON Web Key Set HTTP response",
+        "at fetchJwks (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/webapi/jwks/remote.js:29:15)",
         "at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
-        "at async JwksRetriever.fetchJwks (/home/gary/dev/oauth.websample1/api/src/host/oauth/jwksRetriever.ts:50:26)",
-        "at async fetchJwks (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/webapi/jwks/remote.js:17:22)",
         "at async RemoteJWKSet.reload (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/webapi/jwks/remote.js:143:9)",
         "at async RemoteJWKSet.getKey (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/webapi/jwks/remote.js:110:13)",
-        "at async flattenedVerify (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/webapi/jws/flattened/verify.js:73:15)",
+        "at async flattenedVerify (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/webapi/jws/flattened/verify.js:74:15)",
         "at async compactVerify (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/webapi/jws/compact/verify.js:15:22)",
         "at async jwtVerify (file:///home/gary/dev/oauth.websample1/api/node_modules/jose/dist/webapi/jwt/verify.js:5:22)",
-        "at async AccessTokenValidator.execute (/home/gary/dev/oauth.websample1/api/src/host/oauth/accessTokenValidator.ts:45:28)"
+        "at async AccessTokenValidator.execute (/home/gary/dev/oauth.websample1/api/src/host/oauth/accessTokenValidator.ts:44:28)",
+        "at async ApiController.authorizationHandler (/home/gary/dev/oauth.websample1/api/src/host/controller/apiController.ts:39:24)"
       ]
     }
   }

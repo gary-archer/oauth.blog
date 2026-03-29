@@ -170,23 +170,30 @@ Browsers usually inherit the system proxy settings, though command line override
 
 ### Proxy Settings for Node.js APIs
 
-In Node.js, this blog's APIs use a small [https-proxy-agent library](https://github.com/TooTallNate/proxy-agents). HTTP libraries such as [axios](https://github.com/axios/axios) allow you to configure an *httpAgent* or *httpsAgent* property and you use the option that corresponds to the scheme of the target URL. When connecting to HTTPS URLs I assign the value of the agent property from the following utility class:
+In Node.js, this blog's APIs use the proxy built into the [undici fetch library](https://github.com/nodejs/undici), and set the proxy URL that corresponds to the scheme of the target URL. The *undici* library also add a *dispatcher* property to fetch options that activates the proxy. When connecting to HTTPS URLs I use the following utility class:
 
 ```typescript
-import HttpsProxyAgent from 'https-proxy-agent';
+import {EnvHttpProxyAgent} from 'undici';
 
 export class HttpProxy {
 
-    private readonly agent: any;
+    private readonly agent: EnvHttpProxyAgent | null;
 
-    public constructor(useProxy: boolean, proxyUrl: string) {
+    public constructor(configuration: Configuration) {
 
-        if (useProxy) {
-            this.agent = HttpsProxyAgent(proxyUrl);
+        if (!configuration.api.useProxy) {
+
+            this.agent = null;
+
+        } else {
+
+            this.agent = new EnvHttpProxyAgent({
+                httpsProxy: configuration.api.proxyUrl,
+            });
         }
     }
 
-    public getAgent(): any {
+    public getDispatcher(): EnvHttpProxyAgent | null {
         return this.agent;
     }
 }

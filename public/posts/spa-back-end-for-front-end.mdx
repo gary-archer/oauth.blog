@@ -127,7 +127,7 @@ My online demo APIs use <a href='serverless-api-overview.mdx'>Serverless Hosting
 To work around this I implemented a [Serverless Token Handler](https://github.com/gary-archer/oauth.tokenhandler.serverless) that works as follows during API requests:
 
 - A wildcard lambda runs at *https://bff.authsamples.com/investments* to process cookies and enforce web specific security.
-- The wildcard lambda uses the Axios library to explicitly call *https://api.authsamples.com/investments* with an access token.
+- The wildcard lambda uses the Node.js fetch library to explicitly call *https://api.authsamples.com/investments* with an access token.
 
 Although this works well enough to meet this blog's basic requirements, it is in effect a home grown API gateway that is a little suboptimal in a number of areas, including performance, reliability and code complexity.
 

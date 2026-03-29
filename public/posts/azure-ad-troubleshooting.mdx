@@ -133,23 +133,28 @@ private async getGraphAccessToken(accessToken: string): Promise<string> {
         formData.append('scope', this.configuration.graphClient.scope);
         formData.append('requested_token_use', 'on_behalf_of');
 
-        const options = {
-            url: this.configuration.tokenEndpoint,
+        const options: RequestInit = {
             method: 'POST',
-            data: formData,
             headers: {
-                'content-type': 'application/x-www-form-urlencoded',
                 'accept': 'application/json',
+                'content-type': 'application/x-www-form-urlencoded',
+                'authorization': `Bearer ${accessToken}`,
             },
-            httpsAgent: this.httpProxy.agent,
+            body: formData.toString(),
+            dispatcher: this.httpProxy.getDispatcher() || undefined,
         };
 
-        const response = await axios.request(options as AxiosRequestConfig) as any;
-        return response.data.access_token!;
+        const response = await fetch(this.configuration.tokenEndpoint, options);
+        if (response.ok) {
+            const tokenData = await response.json() as any;
+            return tokenData.access_token;
+        }
 
-    } catch (e) {
+        throw await ErrorFactory.getFromFetchResponseError(response, 'Graph Token Endpoint');
 
-        throw ErrorFactory.fromUserInfoTokenGrantError(e, this.configuration.tokenEndpoint);
+    } catch (e: any) {
+
+        throw ErrorFactory.getFromFetchError(e, this.configuration.tokenEndpoint, 'Graph Token Endpoint');
     }
 }
 ```

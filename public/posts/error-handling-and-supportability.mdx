@@ -415,7 +415,7 @@ export class ServerErrorImpl extends ServerError {
 Catch errors when you when we want to assign a specific error code or capture third-party details. These concerns are best managed close to the source exception. You should usually only need a few catch blocks, when you deal with infrastructure:
 
 ```typescript
-public async validateToken(accessToken: string): Promise<JWTPayload> {
+public async validateAccessToken(accessToken: string): Promise<JWTPayload> {
 
     try {
 
@@ -424,13 +424,13 @@ public async validateToken(accessToken: string): Promise<JWTPayload> {
             issuer: this.configuration.issuer,
             audience: this.configuration.audience,
         };
-        const result = await jwtVerify(accessToken, this.jwksRetriever.remoteJWKSet, options);
 
+        const result = await jwtVerify(accessToken, this.jwksRetriever.remoteJWKSet, options);
         return result.payload;
 
     } catch (e: any) {
 
-        if (e instanceof AxiosError || e.code === 'ERR_JOSE_GENERIC') {
+        if (e?.cause?.code || e.code === 'ERR_JOSE_GENERIC') {
             throw ErrorUtils.fromSigningKeyDownloadError(e, this.configuration.jwksEndpoint);
         }
 

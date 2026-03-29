@@ -17,9 +17,8 @@ The SPA uses only a handful of external dependencies, expressed in its *package.
 ```json
 {
   "dependencies": {
-    "axios": "^1.13.2",
     "mustache": "^4.2.0",
-    "oidc-client-ts": "^3.4.1"
+    "oidc-client-ts": "^3.5.0"
   }
 }
 ```
@@ -335,26 +334,42 @@ public async getUserInfo(): Promise<UserInfo | null> {
 
 ### API Calls with Access Tokens
 
-The SPA can now successfully get an access token from the oidc-client-ts library and call the API with it. The [axios library](https://github.com/axios/axios) is used for HTTP requests:
+The SPA now successfully gets an access token from the *oidc-client-ts* library and uses the browser's *fetch* library to send the access token to the API.
 
 ```typescript
 private async callApiWithToken(
     url: string,
-    method: Method,
+    method: string,
     dataToSend: any,
     accessToken: string): Promise<any> {
 
-    const response = await axios.request({
-        url,
-        method,
-        data: dataToSend,
-        headers: {
-            'Authorization': `Bearer ${accessToken}`,
-        },
-    });
+    try {
 
-    AxiosUtils.checkJson(response.data);
-    return response.data;
+        const headers: HeadersInit = {
+            'accept': 'application/json',
+            'authorization': `Bearer ${accessToken}`,
+        };
+
+        const options: RequestInit = {
+            method,
+            headers,
+        };
+
+        if (dataToSend) {
+            headers['content-type'] = 'application/json';
+            options.body = JSON.stringify(dataToSend);
+        }
+
+        const response = await fetch(url, options);
+        if (response.ok) {
+            return await response.json();
+        }
+
+        throw await ErrorFactory.getFromApiResponseError(response);
+
+    } catch (e: any) {
+        throw ErrorFactory.getFromFetchError(e, url, 'web API');
+    }
 }
 ```
 
@@ -363,7 +378,6 @@ The API credential is a *Bearer Token*, and if an attacker can somehow intercept
 ### Safe Input Handling
 
 The SPA uses the [Mustache Template Library](https://github.com/janl/mustache.js/) to bind received API data to the SPA's DOM elements. This ensures that potentially dangerous input is escaped, to prevent malicious code execution. This blog's final SPA uses React, which provides similar input protection.
-
 
 ```typescript
 private renderData(data: CompanyTransactions): void {
