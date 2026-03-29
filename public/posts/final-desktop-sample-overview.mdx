@@ -24,11 +24,10 @@ git clone https://github.com/gary-archer/oauth.desktopsample.final
 
 ### Run the Code Sample
 
-After cloning the sample code, run the following commands to build and run the app:
+After cloning the sample code, run the following command to build and run the app:
 
 ```bash
-./build.sh
-./run.sh
+./start.sh
 ```
 
 ### Updated Login Flow
@@ -54,7 +53,7 @@ After login, the app stores tokens in desktop secure storage. The user can resta
 
 ### Logout
 
-The app also implements OpenID Connect RP initiated logout, which presents a similar completion page. My main motivation for a logout solution is to be able to force a new login, for a different user account, when using AWS Cognito as the authorization server.
+The app also implements OpenID Connect RP initiated logout, which presents a similar completion page. The logout solution enables the use of single sign-on, while also enabling logins for multiple test users.
 
 ![logout web page](../images/440/logout-web-page.jpg)
 
