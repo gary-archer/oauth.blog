@@ -78,11 +78,11 @@ This blog's APIs use Node.js 24 or later, with the following settings in the *ts
     "strict": true,
     "target": "ES2024",
     "lib": ["ES2024"],
-    "module":"Node18",
+    "module":"Node20",
     "moduleResolution": "Node16",
-    "allowSyntheticDefaultImports": true,
     "outDir": "dist",
-    "sourceMap": true
+    "sourceMap": true,
+    "rootDir": "./src"
   },
   "include": [
     "./src"
@@ -93,14 +93,7 @@ This blog's APIs use Node.js 24 or later, with the following settings in the *ts
 }
 ```
 
-You use the following settings when you import modules:
-
-| Setting | Desired Behaviour |
-| ------- | ----------------- |
-| [moduleResolution](https://www.typescriptlang.org/tsconfig#moduleResolution) | Use modern rules to resolve external modules. |
-| [allowSyntheticDefaultImports](https://www.typescriptlang.org/tsconfig#allowSyntheticDefaultImports) | Enable the cleanest import syntax for older CommonJS modules. |
-
-You also need to tell the compiler that the project's own source files use ECMAScript modules. To do so, specify *type=module* in the *package.json* file. For Node.js (non browser) code that use *type=module*, add a *.js* suffix to imports. During coding this is a TypeScript file, though it becomes JavaScript when executed:
+I also inform the compiler that the project's own source files use ECMAScript modules. To do so, I specify *type=module* in the *package.json* file. For Node.js (non browser) code that use *type=module*, add a *.js* suffix to imports. During coding this is a TypeScript file, though it becomes JavaScript when executed:
 
 ```typescript
 import {CompanyRepository} from '../repositories/companyRepository.js';
@@ -132,9 +125,9 @@ The *tsconfig.json* file for the SPA is a little different to that for the Node.
     "lib": ["ES2024", "DOM"],
     "module":"ES2020",
     "moduleResolution": "Bundler",
-    "allowSyntheticDefaultImports": true,
     "outDir": "dist",
-    "sourceMap": true
+    "sourceMap": true,
+    "rootDir": "./src"
   },
   "include": [
     "./src"
