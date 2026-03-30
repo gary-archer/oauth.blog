@@ -41,8 +41,8 @@ Node.js uses the *npm* tool to specify libraries in your application's *package.
     "eslint": "^10.1.0",
     "ts-loader": "^9.5.4",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.2",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.58.0",
     "webpack": "^5.105.4",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.2",
@@ -82,10 +82,10 @@ This blog's APIs use Node.js 24 or later, with the following settings in the *ts
     "moduleResolution": "Node16",
     "outDir": "dist",
     "sourceMap": true,
-    "rootDir": "./src"
+    "rootDir": "src"
   },
   "include": [
-    "./src"
+    "src"
   ],
   "exclude": [
     "node_modules"
@@ -127,10 +127,10 @@ The *tsconfig.json* file for the SPA is a little different to that for the Node.
     "moduleResolution": "Bundler",
     "outDir": "dist",
     "sourceMap": true,
-    "rootDir": "./src"
+    "rootDir": "src"
   },
   "include": [
-    "./src"
+    "src"
   ],
   "exclude": [
     "node_modules"
