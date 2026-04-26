@@ -76,8 +76,8 @@ This blog's APIs use Node.js 24 or later, with the following settings in the *ts
 {
   "compilerOptions": {
     "strict": true,
-    "target": "ES2024",
-    "lib": ["ES2024"],
+    "target": "ES2025",
+    "lib": ["ES2025"],
     "module":"Node20",
     "moduleResolution": "Node16",
     "outDir": "dist",
@@ -115,14 +115,14 @@ declare module 'some-legacy-library';
 
 ### Writing Code: Using TypeScript Libraries
 
-The *tsconfig.json* file for the SPA is a little different to that for the Node.js API. The *lib: DOM* option brings in browser type definitions and *ES2024* enables the most modern coding syntax:
+The *tsconfig.json* file for the SPA is a little different to that for the Node.js API. The *lib: DOM* option brings in browser type definitions and *ES2025* enables the most modern coding syntax:
 
 ```json
 {
   "compilerOptions": {
     "strict": true,
     "target": "ES2017",
-    "lib": ["ES2024", "DOM"],
+    "lib": ["ES2025", "DOM"],
     "module":"ES2020",
     "moduleResolution": "Bundler",
     "outDir": "dist",
