@@ -36,7 +36,7 @@ When I first integrated with Entra ID I ran into a problem where the access toke
 
 ![original access token](../images/200/original-access-token.jpg)
 
-After some research it turned out that this format of access token should only be received by Microsoft's APIs. This access token type always fails standards-based validation for your own APIs. I needed to use the second type of access token below:
+After some research it turned out that this format of access token should only be received by Microsoft's APIs. The default format of access token is heavily used to secure Azure resources during Azure infrastructure deployments. This access token type always fails standards-based validation for your own APIs. I needed to use the second type of access token below:
 
 | Access Token Type | Description |
 | ----------------- | ----------- |
@@ -101,9 +101,9 @@ It is common in OAuth for a client to request a mix of OpenID Connect and custom
 
 ### 7. User Info Flow
 
-The SPA downloads personal data from the OpenID Connect userinfo endpoint. This requires a Graph access token so I use the [On Behalf Of Flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-on-behalf-of-flow) to swap the SPA's access token for a Graph access token. However, that flow requires a client credential, and you cannot safely store one in an SPA. Therefore, the SPA cannot use this flow directly. Instead the SPA routes its userinfo request via its API.
+The SPA downloads personal data from the OpenID Connect userinfo endpoint, which uses Microsoft Graph. When using Entra ID, Graph is considered to be an Azure infrastructure resource. To access Graph, you must get a Graph access token. Therefore I use the [On Behalf Of Flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-on-behalf-of-flow) to swap the SPA's access token for a Graph access token. However, that flow requires a client credential, and you cannot safely store one in an SPA. Therefore, the SPA cannot use this flow directly. 
 
-The SPA calls the first URL below. The API performs the token exchange request and sends the Graph access token to the second URL to get userinfo. The API returns the resulting userinfo to the SPA:
+In a real deployment, the SPA could route its Graph userinfo request via an API gateway. The demo SPA instead routes to Graph via its API. The SPA calls the first URL below. The API performs the token exchange request and sends the Graph access token to the second URL to get userinfo. The API returns the resulting userinfo to the SPA:
 
 - *https://api.authsamples-dev.com/oauthuserinfo*
 - *https://graph.microsoft.com/oidc/userinfo*
