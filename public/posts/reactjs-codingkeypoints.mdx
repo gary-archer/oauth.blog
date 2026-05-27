@@ -15,7 +15,7 @@ These earlier SPAs used access tokens in the browser, which is no longer recomme
 
 ### HTML Markup
 
-The final SPA uses the same HTML markup as earlier SPAs:
+The final SPA uses the same format of HTML markup as earlier SPAs:
 
 ```html
 <!DOCTYPE html>
@@ -40,9 +40,9 @@ The final SPA uses the same HTML markup as earlier SPAs:
 </html>
 ```
 
-### Web Host
+### Security Headers
 
-During development I continue to use the webpack development server. For the final SPA I use additional security settings to use a restrictive content security policy during development:
+The final SPA uses security hardened settings, and returns a number of security headers. This includes setting a highly restrictive content security policy during development:
 
 ```typescript
 function getWebHostSecurityHeaders(): Headers {
@@ -89,8 +89,6 @@ function getWebHostSecurityHeaders(): Headers {
     ];
 }
 ```
-
-The project also contains an Express web host that you can find in the *deployments/docker/webhost* folder. You can use the Express host to test delivery of static content release builds to the browser. The Docker web host uses compression and writes response headers to enable browser caching. I say more about release behaviors at the end of this blog post.
 
 ### React Library Setup
 

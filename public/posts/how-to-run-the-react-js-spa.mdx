@@ -10,17 +10,37 @@ Clone the code sample's GitHub repository to your local computer with the follow
 git clone https://github.com/gary-archer/oauth.websample.final
 ```
 
-![repo](../images/230/repo.jpg?v=20242212)
+![repo](../images/230/repo.jpg?v=20260527)
 
-### Step 2: View the React Code
+### Step 2: View the Code Layout
 
-The main SPA code is located in an */spa* subfolder and has a standard file layout, with React code within the views folder:
+The SPA code assets are separated into *src*, *build* and *tools* folders. The *build* folder contains rollup configuration for development and production builds. The *tools* folder runs Express as a development web server.
 
 <div className='smallimage'>
-    <img src='../images/230/code-layout.jpg?v=20251230' alt='code layout' />
+    <img src='../images/230/code-layout.jpg?v=20260527' alt='code layout' />
 </div>
 
-Views have identical behaviour to those from this blog's <a href='basicspa-codingkeypoints.mdx'>Earlier SPA Code Samples</a>:
+The main *package.json* and *tsconfig.json* are centred on the SPA's behavior. The *build* and *tools* folders contain their own *package.json* and *tsconfig.json* files, to run small Node.js processes. For example, the *package.json* in the *build* folder contains rollup dependencies, which helps to reduce technical noise for the SPA.
+
+```json
+{
+   devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.2",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-replace": "^6.0.3",
+    "@rollup/plugin-terser": "^1.0.0",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@types/node": "^24.10.3",
+    "open": "^11.0.0",
+    "purgecss": "^7.0.2",
+    "rollup": "^4.60.4",
+    "rollup-plugin-copy": "^3.5.0",
+    "tslib": "^2.8.1"
+  }
+}
+```
+
+Users of the React application drive behavior from strongly-typed views that use JSX syntax. Views have identical behaviour to those from this blog's <a href='basicspa-codingkeypoints.mdx'>Earlier SPA Code Samples</a>.
 
 ```jsx
 export function TitleView(props: TitleViewProps): JSX.Element {
@@ -40,17 +60,9 @@ export function TitleView(props: TitleViewProps): JSX.Element {
 }
 ```
 
-React provides a modern toolset that helps to enable productivity:
-
-| Benefit | Description |
-| ------- | ----------- |
-| Markup | A strongly typed and secure way to work with markup and the DOM, including handling of dangerous input. |
-| Components | A componentized development model, that promotes clean code and a separation of concerns. |
-| Ecosystem | Web development best practice techniques from the React community. |
-
 ### Step 3: Configure DNS and SSL
 
-You need to use this blog's web development domain. Add a local DNS entry in your hosts file, which exists at one of these locations:
+You need to use this blog's web development domain to run the SPA as an OAuth client. To do so, add a local DNS entry in your hosts file, which exists at one of these locations:
 
 | OS | Path |
 | -- | ---- |
@@ -77,17 +89,45 @@ You should then ensure that your browser trusts the root certificate at the belo
 certs/authsamples-dev.ca.crt
 ```
 
-### Step 4: Run the SPA
+### Step 4: Build and Run the SPA
 
-Open a terminal and run the following command from the root folder, to build and run the code:
+Open a terminal and run the following command from the root folder, to build and run the SPA's code for development:
 
 ```bash
 ./start.sh
 ```
 
-The Webpack development server serves HTML, CSS and JavaScript static content resources and opens the default browser at *https://www.authsamples-dev.com*.
+The command uses the current terminal window to run two child processes. The first child process starts the Express HTTP server, which uses port 443 to serve static content and also to run a web socket server. When the rollup build completes, it writes bundles to the *dist* folder, then opens the default browser at *https://www.authsamples-dev.com*. The browser then downloads static content from the Express HTTP server, which serves content from the *dist* folder. 
 
-![spa build](../images/230/spa-build.jpg?v=20251230)
+```typescript
+const server = spawn(
+    'tsx',
+    ['tools/developmentWebServer.ts'],
+    {
+        stdio: 'inherit',
+        shell: process.platform === 'win32',
+    }
+);
+
+const rollup = spawn(
+    'rollup',
+    ['--config', 'build/rollup.config.ts', '--watch'],
+    {
+        stdio: 'inherit',
+        shell: process.platform === 'win32',
+        env: {
+            ...process.env,
+            NODE_OPTIONS: '--import tsx',
+        },
+    }
+);
+```
+
+Rollup runs in watch mode, and rebuilds bundles when code changes, to write updated files to the *dist* folder. It then calls the Express HTTP server's */reload* endpoint, which sends a web socket notification to the browser. The browser then runs code to reload itself, so that the SPA implements live reload during development.
+
+![spa build](../images/230/spa-build.jpg?v=20260527)
+
+These behaviors are trickier to implement in rollup than in webpack. The benefit is that rollup produces cleaner ECMAScript output. I continue to serve bundles in a technically equivalent manner for both development and release builds, as for earlier SPAs.
 
 ### Step 5: Sign In to the SPA
 
@@ -119,7 +159,7 @@ In earlier samples, the SPA performed its own OpenID Connect flow in JavaScript.
 
 ### Step 8: Run a Release Build
 
-You can run some scripts to test a release deployment. The *build.sh* script produces JavaScript release bundles. The *deploy.sh* script runs a Docker container that uses Express to serve minimized static content. The *teardown.sh* script stops the Docker container.
+You can run some scripts to test a release deployment. The *build.sh* script produces JavaScript release bundles ready for deployment to a CDN. The *deploy.sh* script runs a Docker container that uses Express to serve minimized static content. The *teardown.sh* script stops the Docker container.
 
 ```bash
 ./deployment/docker/build.sh
@@ -127,7 +167,7 @@ You can run some scripts to test a release deployment. The *build.sh* script pro
 ./deployment/docker/teardown.sh
 ```
 
-After the *deploy.sh* script, browse to *https://www.authsamples-dev.com/spa/* and test a release deployment of the SPA. Release builds use web resource optimizations, like minification, compression and browser caching, but otherwise execute the same as development builds.
+After running the *build.sh* and *deploy.sh* scripts, browse to *https://www.authsamples-dev.com/spa/* and test a release deployment of the SPA. Release builds use web resource optimizations, like minification, compression and browser caching, but otherwise integrate with the browser using the same technical mechanisms as development builds.
 
 ![release build](../images/230/release-build.jpg)
 

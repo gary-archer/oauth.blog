@@ -35,9 +35,9 @@ This architecture requires extra moving parts. There is a learning curve to unde
 
 There are other types of cookie issuing solutions for web applications, but they deliver suboptimal solutions since they are not tailored to an SPA's requirements. The following notes explain the two most common types:
 
-- **Reverse Proxy**. Development setups and deployments use a reverse proxy that implements security. When requests for HTML files do not have a session cookie the browser is abrubtly redirected. In some implementations, fetch requests may also experience abrupt redirects, or APIs may not receive access tokens. You therefore lose technical control.
+- **Reverse Proxy**. Development setups and deployments use a reverse proxy that implements security. When requests for HTML files do not have a session cookie the browser is abrubtly redirected. In some implementations, fetch requests may also experience abrupt redirects. Some reverse proxies may not even support forwarding access tokens to APIs. This type of solution loses technical control.
 
-- **Website**. Developers run a complex local setup where their web host comes into contact with sensitive API data and typically uses a website cookie framework. The web host may use server-side rendering to return HTML and data together. It requires a runtime and other server dependencies that limits developer setups and deployments, and the frontend loses technical control.
+- **Website**. Developers run a complex local setup where their web host comes into contact with sensitive API data and typically uses a website cookie framework. The web host may use server-side rendering to return HTML and data together. It requires a runtime and other server dependencies that limits developer setups and deployments, and the frontend again loses technical control.
 
 Instead, my BFF uses a separation of concerns to meet my requirements, where both the SPA and APIs retain full technical control. The frontend can reliably handle API 401 responses and use short-lived cookies, even when 401s occur for concurrent API requests.
 
@@ -114,7 +114,7 @@ More generally there can be reliability and productivity benefits when you inves
 
 ### Token Handlers
 
-I do not explain the token handler pattern in this blog, but you can study the following resources to understand the SPA's cookie layer. The full stack token handler demonstrates the preferred implementation, where the OAuth Proxy logic executes in a high performance API gateway:
+I do not explain the token handler pattern in this blog, but you can study the following resources to understand the SPA's cookie layer. The OAuth Proxy logic should execute in a high performance API gateway:
 
 - [OAuth Agent](https://github.com/curityio/cloud-native-oauth-security-examples/tree/main/chapter-13-browser-based-apps/backend-for-frontend/oauth-agent)
 - [OAuth Proxy](https://github.com/curityio/cloud-native-oauth-security-examples/tree/main/resources/apigateway/curity-oauth-proxy)

@@ -18,17 +18,17 @@ I deploy the overall system of the SPA and APIs to AWS. I upload the SPA's web s
 
 ![aws technologies](../images/220/aws-technologies.jpg)
 
-I deploy the API code sample to AWS as <a href='serverless-api-overview.mdx'>Serverless Lambda Functions</a> that the AWS API Gateway exposes to the internet. I find this API technology a little suboptimal in some areas, including complexity and performance, but it provides low cost backend hosting for this blog's demo APIs.
-
-### Online Deployment
-
-Any reader can run the AWS deployed version of the SPA from this blog's <a href='quick-start.mdx'>Cloud Samples Quick Start</a> page. You can sign in to the SPA with a test user account, then test OAuth lifecycle events via the demo app's buttons:
+I deploy the API code sample to AWS as <a href='serverless-api-overview.mdx'>Serverless Lambda Functions</a> that the AWS API Gateway exposes to the internet. This API technology enables low cost backend hosting for this blog's demo APIs. Any reader can use the <a href='quick-start.mdx'>Cloud Samples Quick Start</a> page to run the secured SPA from its CDN. Sign in to the SPA with a test user account, then test OAuth lifecycle events via the demo app's buttons.
 
 ![online spa](../images/220/online-spa.jpg?v=20240713)
 
-### Proeductive Development
+### Technology Modernization
 
-The final SPA is a React app that runs at a */spa* path. Additional paths, for other micro-frontends, could run within the same web domain, to keep the code base manageable as it grows. From a security viewpoint, any additional apps added to the web domain should be for the same business area. All apps then share each other's API cookies and also each other's cross site scripting threats.
+This blog's initial SPAs used vanilla TypeScript, Bootstrap for CSS and webpack as a bundler and development web server. The final SPA uses React, with [Rollup](https://rollupjs.org/) as a bundler that produces the best ECMAScript code output to run in the browser. These changes may give the final SPA greater developer appeal, but they do not change the <a href='web-technology-setup.mdx'>Web Technology Setup</a>.
+
+### Micro Frontend Design
+
+The final SPA runs at a */spa* path. Additional paths, for other micro-frontends, could run within the same web domain, to keep the code base manageable as it grows. From a security viewpoint, any additional apps added to the web domain should be for the same business area. All apps then share each other's API cookies and also each other's cross site scripting threats.
 
 <div className='smallimage'>
     <img src='../images/220/code-layout.jpg?v=20251230' alt='code layout' />
@@ -38,7 +38,7 @@ The SPA uses cookies issued by utility APIs but its code and web host manage onl
 
 ### Development URLs
 
-You use the following URLs during local development and only the first of these runs on the local computer:
+I use the following URLs during local development and only the first of these runs on the local computer:
 
 | Component | Base URL |
 | --------- | -------- |
@@ -58,7 +58,7 @@ A second entry exists to run the SPA during development, which has an equivalent
 
 ![oauth client development](../images/220/oauth-client-development.jpg?v=20240713)
 
-### React Code
+### React Views
 
 The SPA's code now uses React as a web framework, to enable richer coding options in areas like view development, navigation and code splitting. The SPA renders a tree of views which leads to concurrent API requests. The SPA must synchronise the triggering of both token renewal and user re-authentication when tokens expire.
 
