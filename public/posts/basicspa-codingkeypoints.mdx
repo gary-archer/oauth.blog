@@ -31,7 +31,7 @@ I separate the SPA's concerns into a number of TypeScript classes, and in partic
 
 ### SPA Views
 
-The SPA's deployed HTML is minimal. The application's code builds to JavaScript bundle files that the browser can execute. The browser downloads the *indeex.html* file which triggers the download of CSS files and JavaScript bundles. At runtime, JavaScript creates HTML elements within the *root* element.
+The SPA's deployed HTML is minimal. The application's code builds to JavaScript bundle files that the browser can execute. The browser downloads the *index.html* file which triggers the download of CSS files and JavaScript bundles. At runtime, JavaScript creates HTML elements within the *root* element.
 
 ```html
 <!DOCTYPE html>
@@ -55,7 +55,7 @@ The SPA's deployed HTML is minimal. The application's code builds to JavaScript 
 
 ### Static Content Hosting
 
-I use the webpack development server to serve static content in a productive manner. I configure a local HTTPS setup with the following settings and use hot reloading when the frontend code changes, as is common in SPA development.
+For this blog's early SPAs I use the webpack development server to serve static content in a productive manner. I configure a local HTTPS setup with the following settings and use hot reloading when the frontend code changes, as is common in SPA development.
 
 ```typescript
 const devServer: webpackDevServer.Configuration = {
@@ -431,7 +431,7 @@ private renderData(data: CompanyTransactions): void {
 
 ### Styling and Layout
 
-The runtime markup uses CSS classes like *row*, *col-* and *card* from the [Bootstrap Grid System](https://getbootstrap.com/docs/5.3/layout/grid/), which provides an intuitive way to arrange content into rows and columns, where card elements have their own inner rows and columns. The layout capabilities enable me to present the companies view, which is usually a list, as a card based layout on mobile layouts:
+For this blog's early SPAs I use Bootstrap, as a basic CSS solution. More cutting edge CSS solutions can require many webpack plugins, which I want to avoid, to keep the focus on TypeScript code. Bootstrap provides a technically simple [Grid System](https://getbootstrap.com/docs/5.3/layout/grid/) for arranging content into rows and columns, where card elements have their own inner rows and columns. The layout capabilities enable me to present the companies view, which is usually a list, as a card based layout on mobile layouts.
 
 <div className='smallimage'>
     <img src='../images/50/mobile-companies.jpg' alt='mobile companies' />
