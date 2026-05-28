@@ -53,9 +53,24 @@ root.render (
 
 ### Serving Web Files
 
-The main process serves web files to the renderer process with URLs that use the application's custom protocol scheme. The code to enable that is shown below. I only serve expected web files to minimize potential XSS threats against the file system.
+The main process's entry point class now serves web files to the renderer process with URLs that use the application's custom protocol scheme. The code to enable that is shown below. I only serve expected web files to minimize potential XSS threats against the file system.
 
 ```typescript
+public execute(): void {
+
+    ...
+    
+    protocol.registerSchemesAsPrivileged([{
+            scheme: this.configuration.app.protocolScheme,
+            privileges: {
+                standard: true,
+                secure: true,
+                supportFetchAPI: true,
+                corsEnabled: true,
+            },
+        }]);
+}
+
 private async onReady(): Promise<void> {
 
     protocol.handle(this.configuration.app.protocolScheme, this.onServeWebFiles);
@@ -64,20 +79,29 @@ private async onReady(): Promise<void> {
 
 private onServeWebFiles(request: Request): any {
 
-    const fileName = new URL(request.url).pathname.toLowerCase().slice(1);
-    const authorizedFiles = [
+    let fileName = new URL(request.url).pathname.toLowerCase();
+    if (fileName.startsWith('/')) {
+        fileName = fileName.slice(1);
+    }
+
+    console.log(fileName);
+    const authorizedFiles = new Set([
         'index.html',
         'bootstrap.min.css',
         'app.css',
         'vendor.bundle.js',
         'react.bundle.js',
         'app.bundle.js',
-    ];
+    ]);
 
-    if (authorizedFiles.indexOf(fileName) !== -1) {
-        const webFilePath = url.pathToFileURL(path.join(__dirname, fileName)).toString();
-        return net.fetch(webFilePath);
+    if (!authorizedFiles.has(fileName)) {
+        console.log(`Unauthorized file: ${fileName}`);
+        fileName = 'index.html';
     }
+
+    const filePath = path.join(__dirname, fileName);
+    console.log(`Final value: ${filePath}`);
+    return net.fetch(url.pathToFileURL(filePath).toString());
 }
 ```
 
