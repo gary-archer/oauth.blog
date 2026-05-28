@@ -426,7 +426,7 @@ Once webpack has built files I use a simple file copy plugin to deploy other fil
 
 ### Building Code: Compiler Settings
 
-Webpack has its own rules for resolving imports. You supply *extensions* to tell webpack to build both the SPA's TypeScript code and JavaScript code consumed from the *node_modules* folder. The [ts-loader library](https://github.com/TypeStrong/ts-loader) compiles TypeScript code into JavaScript using the settings in the *tsconfig.json* file. To compile the SPA's TypeScript code, use the <a href='https://github.com/privatenumber/tsx'>tsx loader utility</a> to run the webpack configuration file.
+Webpack has its own rules for resolving imports. You supply *extensions* to tell webpack to build both the SPA's TypeScript code and JavaScript code consumed from the *node_modules* folder. The [ts-loader library](https://github.com/TypeStrong/ts-loader) compiles TypeScript code into JavaScript using the settings in the *tsconfig.json* file. To compile the SPA's TypeScript code, use the <a href='https://github.com/privatenumber/tsx'>tsx utility</a> to run the webpack configuration file.
 
 ```bash
 NODE_OPTIONS='--import tsx' webpack --config webpack.config.ts
