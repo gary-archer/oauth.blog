@@ -13,36 +13,35 @@ I provided two earlier plain TypeScript SPA and API code samples:
 
 These earlier SPAs used access tokens in the browser, which is no longer recommended. Therefore, the final SPA instead uses utility API components that issue cookies, so that API credentials are unavailable to JavaScript code.
 
-### HTML Markup
+### Development Web Server
 
-The final SPA uses the same format of HTML markup as earlier SPAs:
+The final SPA uses Express as a development web server. The server exposes a utility reload endpoint that rollup watch mode calls when bundles are rebuilt after code changes. The reload endpoint sends a notification to the browser client, which reloads itself.
 
-```html
-<!DOCTYPE html>
-<html lang='en'>
-    <head>
-        <meta charset='utf-8'>
-        <meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>
+```typescript
+const server = https.createServer(httpsOptions, app);
+const wss = new WebSocketServer({
+    server,
+    path: '/reload'
+});
 
-        <base href='/spa/'>
-        <title>OAuth Demo App</title>
+app.get('/reload', (request: Request, response: Response) => {
 
-        <link rel='stylesheet' href='bootstrap.css'>
-        <link rel='stylesheet' href='app.css'>
-    </head>
-    <body>
-        <div id='root' class='container'></div>
+    console.log('Web socket server broadcasting reload event ...');
+    for (const client of wss.clients) {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send('reload');
+        }
+    }
+    response.sendStatus(204);
+});
 
-        <script type='module' src='vendor.bundle.js'></script>
-        <script type='module' src='react.bundle.js'></script>
-        <script type='module' src='app.bundle.js'></script>
-    </body>
-</html>
+const spaBasePath = '/spa/';
+const spaPhysicalRoot = 'dist';
+app.use(spaBasePath, express.static(spaPhysicalRoot));
+app.get('*_', handleNotFoundPath);
 ```
 
-### Security Headers
-
-The final SPA uses security hardened settings, and returns a number of security headers. This includes setting a highly restrictive content security policy during development:
+The development web server returns security headers during the download of web resources. Headers include a highly restrictive content security policy.
 
 ```typescript
 function getWebHostSecurityHeaders(): Headers {
@@ -89,6 +88,63 @@ function getWebHostSecurityHeaders(): Headers {
     ];
 }
 ```
+
+### ECMAScript Build
+
+The final SPA uses the rollup bundler to produce clean ECMAScript bundles whose code runs in the browser. A partial configuration is shown here, and is similar to the webpack configuration from this blog's earlier SPAs. Getting your preferred results typically requires the use of built-in or custom plugins, where you can customize behaviors.
+
+```typescript
+const isDevelopment = process.env.ROLLUP_WATCH === 'true';
+const outputFolder = 'dist';
+
+const options: RollupOptions = {
+
+    input: 'src/index.tsx',
+    output: {
+        dir: outputFolder,
+        format: 'esm',
+        entryFileNames: 'app.bundle.js',
+        chunkFileNames: '[name].bundle.js',
+    },
+
+    plugins: [
+
+        nodeResolve({
+            browser: true,
+        }),
+
+        commonjs(),
+        typescript(),
+
+        copy({
+            targets: [
+                { src: 'favicon.ico', dest: outputFolder },
+                { src: 'index.html', dest: outputFolder },
+            ],
+        }),
+
+        isDevelopment ? [
+
+            copy({
+                targets: [
+                    { src: 'css/*', dest: outputFolder },
+                ],
+            }),
+
+            copyConfiguration(),
+            copyOnEdit(),
+            notifyBrowser(),
+
+        ] : [
+
+            terser(),
+            finalizeBundles(),
+            writeCssAndHtml(buildId, outputFolder),
+        ]
+    ],
+};
+```
+
 
 ### React Library Setup
 
