@@ -10,19 +10,56 @@ The earlier <a href='api-architecture-node.mdx'>Node.js API</a> used the Express
     <img src='../images/640/code-layout.jpg' alt='code layout' />
 </div>
 
-### Running Serverless Offline
+### Run the Code
 
-Serverless Offline provides HTTPS entry points to APIs, translates incoming requests to the lambda format and then calls lambda handlers. I run *sls offline* with HTTPS details, including certificates and keys from the API's *certs* folder:
+When you run *npm start* to run the API for development, a helper module runs two child processes. The first child process runs rollup in watch mode. The second child process runs Serverless Offline, which provides HTTPS entry points for the API, translates incoming requests to the lambda format and then calls lambda handlers, to invoke the bundled code.
 
-```bash
-npx sls offline \
-  --useInProcess \
-  --noPrependStageInUrl \
-  --noSponsor \
-  --prefix 'investments' \
-  --host '0.0.0.0' \
-  --httpPort 446 \
-  --httpsProtocol certs
+```typescript
+const server = spawn(
+    'sls',
+    [
+        'offline',
+        '--config',
+        'serverless.yml',
+        '--noPrependStageInUrl',
+        '--noSponsor',
+        '--prefix',
+        'investments',
+        '--reloadHandler',
+        '--host',
+        '0.0.0.0',
+        '--httpPort',
+        '446',
+        '--httpsProtocol',
+        'certs',
+    ],
+    {
+        stdio: 'inherit',
+        shell: process.platform === 'win32',
+    }
+);
+
+const rollup = spawn(
+    'rollup',
+    ['--config', 'build/rollup.config.ts', '--watch'],
+    {
+        stdio: 'inherit',
+        shell: process.platform === 'win32',
+        env: {
+            ...process.env,
+            NODE_OPTIONS: '--import tsx',
+        },
+    }
+);
+
+function shutdown() {
+    rollup.kill();
+    server.kill();
+    process.exit();
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
 ```
 
 ### Lambda Entry Points
@@ -282,7 +319,7 @@ Due to the use of source maps in debug builds, I can step through the original l
 
 ### Where Are We?
 
-I invested in a productive test setup to develop Serverless APIs and use portable techniques for coding, testing and deployment whenever possible. Although I quite like the Serverless framework, it is time consuming to ensure that all of the important behaviours work both in development and deployed systems. Instead, I prefer to be able to run more complete environments on a development computer, including security components like the API gateway and authorization server.
+I provided a productive setup for Serverless APIs, that aims to use portable techniques for coding, testing and deployment. Although I quite like the Serverless framework, it is time consuming to ensure that all of the important behaviours work both in development and deployed systems. Instead, I prefer to be able to run more complete environments on a development computer, including security components like the API gateway and authorization server.
 
 ### Next
 
