@@ -91,7 +91,8 @@ function getWebHostSecurityHeaders(): Headers {
 
 ### ECMAScript Build
 
-The final SPA uses the Rollup bundler to produce clean ECMAScript bundles whose code runs in the browser. A partial configuration is shown here, and is similar to the webpack configuration from this blog's earlier SPAs. Getting your preferred results typically requires the use of built-in or custom plugins, where you can customize behaviors.
+The final SPA uses the Rollup bundler to produce clean ECMAScript bundles whose code runs in the browser. A partial configuration is shown below, and is similar to the webpack configuration from this blog's earlier SPAs. Getting your preferred results typically requires the use of built-in or custom plugins, where you can customize behaviors. During the overall build, an *esbuild* plugin translates TypeScript code to JavaScript.
+
 
 ```typescript
 const isDevelopment = process.env.ROLLUP_WATCH === 'true';
@@ -114,7 +115,12 @@ const options: RollupOptions = {
         }),
 
         commonjs(),
-        typescript(),
+        
+        esbuild({
+            tsconfig: './tsconfig.json',
+            target: 'es2020',
+            jsx: 'automatic',
+        }),
 
         copy({
             targets: [
