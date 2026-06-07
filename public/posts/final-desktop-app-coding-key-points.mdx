@@ -4,10 +4,10 @@ Previously I summarised the behaviour of the <a href='final-desktop-sample-overv
 
 ### Code Layout
 
-The app has the same code layout as the initial desktop code sample, to represent the Electron main and renderer process, along with some shared code:
+The app has a similar code layout to the initial desktop code sample. The main code represents the Electron main process and the Electron renderer process, along with some shared code. The *build* and *tools* folder manage Rollup builds and live reloading.
 
 <div className='smallimage'>
-    <img src='../images/450/code-layout.jpg' alt='code layout' />
+    <img src='../images/450/code-layout.jpg?v=20260607' alt='code layout' />
 </div>
 
 
@@ -109,7 +109,7 @@ const options: RollupOptions = {
 export default defineConfig(options);
 ```
 
-### Serving Web Files
+### Serving Web Static Content
 
 The main process's entry point class now serves web files to the renderer process with URLs that use the application's custom protocol scheme. The code to enable that is shown below. I only serve expected web files to minimize potential XSS threats against the file system. During development, the main process serves an additional bundle to support live reload. 
 

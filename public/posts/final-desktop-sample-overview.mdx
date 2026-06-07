@@ -8,7 +8,7 @@ The completed desktop code sample demonstrates these main features:
 
 | Feature | Description |
 | ------- | ----------- |
-| Technology Modernization | I upgradee from plain TypeScript with webpack to a React app and the rollup bundler. |
+| Technology Modernization | I upgraded from plain TypeScript with webpack to a React app and the Rollup bundler. |
 | Deep Linking | The app receieves login responses using private URI scheme based redirect URIs, to enable desktop deep links. |
 | Secure Token Storage | I save OAuth tokens across app restarts using operating system encryption private to the app and user. |
 
@@ -30,9 +30,9 @@ After cloning the sample code, run the following command to build and run the ap
 ./start.sh
 ```
 
-This command starts two child windows, to build code for the main and renderer processes using the [Rollup](https://rollupjs.org/) bundler, and to run a live reload server that notifies the frontend after code changes.
+This command starts a child window that builds code for the main side of the app, then builds code for the renderer side of the app in watch mode, then runs a live reload server that notifies the frontend after renderer code changes.
 
-![child windows](../images/440/child-windows.jpg)
+![child windows](../images/440/child-window.jpg)
 
 ### Updated Login Flow
 
