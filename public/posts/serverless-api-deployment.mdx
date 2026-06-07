@@ -120,7 +120,12 @@ export default lambdaFilenames.map((filename: string) => {
             }),
 
             commonjs(),
-            typescript(),
+            
+            esbuild({
+                tsconfig: './tsconfig.json',
+                target: 'es2022',
+            }),
+
             isDevelopment ? [] : [ terser() ]
         ],
     };
