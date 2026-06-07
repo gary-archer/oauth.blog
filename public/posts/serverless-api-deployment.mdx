@@ -82,7 +82,7 @@ The Serverless API uses the same JSON based approach to configuration as earlier
 
 ### Building API Code
 
-For Node.js APIs I usually include multiple compiled *.js* files in a deployment image like a Docker container. For Serverless APIs it is instead recommended to bundle code, to reduce otherwise slow startup times in the AWS lambda environment. I bundle code using rollup with the following configuration, to build a monolithic bundle file for each lambda function, containing its code and dependencies.
+For Node.js APIs I usually include multiple compiled *.js* files in a deployment image like a Docker container. For Serverless APIs it is instead recommended to bundle code, to reduce otherwise slow startup times in the AWS lambda environment. I use [Rollup](https://rollupjs.org/) to bundle code, with the following configuration, to build a monolithic bundle file for each lambda function, containing its code and dependencies.
 
 ```typescript
 const lambdaFilenames = fs.readdirSync('./src/host/lambda');

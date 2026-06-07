@@ -8,7 +8,7 @@ The completed desktop code sample demonstrates these main features:
 
 | Feature | Description |
 | ------- | ----------- |
-| React Update | I update from plain TypeScript to a more complete frontend technology stack. |
+| Technology Modernization | I upgradee from plain TypeScript with webpack to a React app and the rollup bundler. |
 | Deep Linking | The app receieves login responses using private URI scheme based redirect URIs, to enable desktop deep links. |
 | Secure Token Storage | I save OAuth tokens across app restarts using operating system encryption private to the app and user. |
 
@@ -24,11 +24,15 @@ git clone https://github.com/gary-archer/oauth.desktopsample.final
 
 ### Run the Code Sample
 
-After cloning the sample code, run the following command to build and run the app:
+After cloning the sample code, run the following command to build and run the app.
 
 ```bash
 ./start.sh
 ```
+
+This command starts two child windows, to build code for the main and renderer processes using the [Rollup](https://rollupjs.org/) bundler, and to run a live reload server that notifies the frontend after code changes.
+
+![child windows](../images/440/child-windows.jpg)
 
 ### Updated Login Flow
 

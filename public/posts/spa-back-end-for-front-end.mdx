@@ -37,7 +37,7 @@ There are other types of cookie issuing solutions for web applications, but they
 
 - **Reverse Proxy**. Development setups and deployments use a reverse proxy that implements security. When requests for HTML files do not have a session cookie the browser is abrubtly redirected. In some implementations, fetch requests may also experience abrupt redirects. Some reverse proxies may not even support forwarding access tokens to APIs. This type of solution loses technical control.
 
-- **Website**. Developers run a complex local setup where their web host comes into contact with sensitive API data and typically uses a website cookie framework. The web host may use server-side rendering to return HTML and data together. It requires a runtime and other server dependencies that limits developer setups and deployments, and the frontend again loses technical control.
+- **Website**. Developers run a complex local setup where their web host comes into contact with sensitive API data and typically uses a website cookie framework. The web host may use server-side rendering to return HTML and data together. It requires a runtime and other server dependencies that complicates developer setups and limits deployments. The frontend again loses technical control.
 
 Instead, my BFF uses a separation of concerns to meet my requirements, where both the SPA and APIs retain full technical control. The frontend can reliably handle API 401 responses and use short-lived cookies, even when 401s occur for concurrent API requests.
 
@@ -94,7 +94,7 @@ To run the SPA during development you use a domain-based URL of *https://www.aut
 
 ![spa](../images/210/spa.jpg?v=20240713)
 
-### Full Stack Development Environment
+### Full Stack Development EnvOpenID Connectironment
 
 It gets more complicated when you need to run both the SPA and APIs locally, which you should avoid most of the time. Such a setup is possible but you need to invest in a local BFF setup and deal with port limitations. The final SPA has a full stack local deployment that uses docker containers, where an API gateway runs on port 444. The API then runs locally on port 446:
 

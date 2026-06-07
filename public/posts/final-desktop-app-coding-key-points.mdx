@@ -10,6 +10,7 @@ The app has the same code layout as the initial desktop code sample, to represen
     <img src='../images/450/code-layout.jpg' alt='code layout' />
 </div>
 
+
 ### React Update
 
 I updated the Electron app to use React. This mostly involved just copying in the completed views from this blog's <a href='reactjs-codingkeypoints'>Final SPA</a>:
@@ -51,9 +52,66 @@ root.render (
 );
 ```
 
+### Rollup Builds
+
+The final desktop app uses Rollup and build techniques summarized in the <a href='reactjs-codingkeypoints.mdx'>Final SPA - Code Details</a>. The build produces bundles for both the *main* and *renderer* sides of the desktop app. The essential parts of the configuration for the *main* build are shown below, and the *renderer* build has a similar configuration.
+
+```typescript
+const isDevelopment = process.env.BUILD === 'debug';
+const outputFolder = 'dist';
+
+const options: RollupOptions = {
+
+    input: './src/main.ts',
+    output: {
+        dir: outputFolder,
+        format: 'esm',
+        entryFileNames: 'main.bundle.js',
+    },
+
+    external: [
+        'electron',
+        'electron-store',
+        ...builtinModules,
+        ...builtinModules.map((m) => `node:${m}`),
+    ],
+
+    plugins: [
+
+        nodeResolve({
+            preferBuiltins: true,
+        }),
+
+        commonjs(),
+        json(),
+        esbuild({
+            tsconfig: './tsconfig-main.json',
+            target: 'es2022',
+        }),
+
+        replace({
+            'IS_DEBUG': JSON.stringify(isDevelopment),
+            preventAssignment: true,
+        }),
+
+        copy({
+            targets: [
+                { src: 'desktop.config.json', dest: outputFolder },
+                { src: 'src/preload.js', dest: outputFolder },
+                { src: 'package.json', dest: outputFolder },
+            ],
+        }),
+
+        isDevelopment ? [] : [ terser() ]
+    ],
+};
+
+export default defineConfig(options);
+```
+
 ### Serving Web Files
 
-The main process's entry point class now serves web files to the renderer process with URLs that use the application's custom protocol scheme. The code to enable that is shown below. I only serve expected web files to minimize potential XSS threats against the file system.
+The main process's entry point class now serves web files to the renderer process with URLs that use the application's custom protocol scheme. The code to enable that is shown below. I only serve expected web files to minimize potential XSS threats against the file system. During development, the main process serves an additional bundle to support live reload. 
 
 ```typescript
 public execute(): void {
@@ -61,14 +119,14 @@ public execute(): void {
     ...
     
     protocol.registerSchemesAsPrivileged([{
-            scheme: this.configuration.app.protocolScheme,
-            privileges: {
-                standard: true,
-                secure: true,
-                supportFetchAPI: true,
-                corsEnabled: true,
-            },
-        }]);
+        scheme: this.configuration.app.protocolScheme,
+        privileges: {
+            standard: true,
+            secure: true,
+            supportFetchAPI: true,
+            corsEnabled: true,
+        },
+    }]);
 }
 
 private async onReady(): Promise<void> {
@@ -77,37 +135,119 @@ private async onReady(): Promise<void> {
     this.window.loadURL(`${this.configuration.app.protocolScheme}:/index.html`);
 }
 
-private onServeWebFiles(request: Request): any {
+private onServeWebFiles(request: Request): Promise<Response> {
 
     let fileName = new URL(request.url).pathname.toLowerCase();
     if (fileName.startsWith('/')) {
         fileName = fileName.slice(1);
     }
 
-    console.log(fileName);
     const authorizedFiles = new Set([
         'index.html',
         'bootstrap.min.css',
         'app.css',
         'vendor.bundle.js',
+        'vendor.bundle.js.map',
         'react.bundle.js',
+        'react.bundle.js.map',
         'app.bundle.js',
+        'app.bundle.js.map',
     ]);
 
+    if (IS_DEBUG) {
+        authorizedFiles.add('livereload.bundle.js');
+    }
+
     if (!authorizedFiles.has(fileName)) {
-        console.log(`Unauthorized file: ${fileName}`);
         fileName = 'index.html';
     }
 
-    const filePath = path.join(__dirname, fileName);
-    console.log(`Final value: ${filePath}`);
-    return net.fetch(url.pathToFileURL(filePath).toString());
+    const filePath = path.join(app.getAppPath(), fileName);
+    const filePathUrl = pathToFileURL(filePath).toString();
+    return net.fetch(filePathUrl);
 }
 ```
 
+### Live Reload
+
+For the final SPA, the live reload behavior was integrated into the web static content host. For the final desktop app, the main process serves static content. When the renderer rollup build completes, it calls the */reload* endpoint of a small live reload server, which then sends a web socket notification to the renderer process, so that it can reload itself.
+
+```typescript
+import express, {Request, Response} from 'express';
+import http from 'http';
+import {WebSocketServer, WebSocket} from 'ws';
+
+const port = 35729;
+const app = express();
+
+const server = http.createServer(app);
+const wss = new WebSocketServer({
+    server,
+    path: '/reload'
+});
+
+app.get('/reload', (request: Request, response: Response) => {
+
+    console.log('Web socket server broadcasting reload event ...');
+    for (const client of wss.clients) {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send('reload');
+        }
+    }
+    response.sendStatus(204);
+});
+
+server.listen(port, () => {
+    console.log(`Live reload server is listening on HTTP port ${port} ...`);
+});
+```
+
+### Web Response Headers
+
+The main process sets response headers when it serves static files to the Chromium browser. The main security responsibility is to set a strong content security policy, to prevent JavaScript being able to interact with malicious hosts.
+
+```typescript
+session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+
+    let connectSrcHosts = "'self'";
+    if (IS_DEBUG) {
+        connectSrcHosts += ' ws://localhost:35729';
+    }
+
+    let policy = '';
+    policy += "default-src 'none';";
+    policy += " script-src 'self';";
+    policy += " style-src 'self';";
+    policy += ` connect-src ${connectSrcHosts};`;
+    policy += " child-src 'self';";
+    policy += " img-src 'self';";
+    policy += " object-src 'none';";
+    policy += " frame-ancestors 'none';";
+    policy += " base-uri 'self';";
+    policy += " form-action 'self'";
+
+    const responseHeaders: Record<string, string | string[]> = {
+        ...details.responseHeaders,
+        'content-security-policy': policy,
+    };
+
+    if (IS_DEBUG) {
+        responseHeaders['cache-control'] = 'no-cache, must-revalidate';
+    } else {
+        responseHeaders['cache-control'] = 'public, max-age=31536000, immutable';
+    }
+
+    callback({
+        responseHeaders,
+    });
+});
+```    
+
+In development mode, the response headers must implement a couple of behaviors in order for live reload to work. The CSP must allow connections between the browser and the live reload server, and response headers must prevent caching of previously built browser files.
+
 ### Private URI Scheme Registration
 
-The main process is also the entry point for deep link notifications, which also use the custom protocol scheme. The app registers the scheme at application startup, which writes entries to user specific areas of the operating system:
+The main process is also the entry point for deep link notifications, which use the custom protocol scheme. The app registers the scheme at application startup, which writes entries to user specific areas of the operating system:
 
 ```typescript
 private async registerPrivateUriScheme(): Promise<void> {
@@ -248,7 +388,7 @@ This can lead to the following scenarios:
 - One or both views may need to refresh an access token.
 - One or both views may need to trigger a login redirect.
 
-The desktop code sample handles these conditions in the same manner with the same React code as this blog's final SPA code sample. See the <a href='reactjs-codingkeypoints.mdx'>Final SPA - Code Details</a> blog post to understand the API client logic.
+The desktop code sample handles these conditions with the same React code as this blog's final SPA code sample. See the <a href='reactjs-codingkeypoints.mdx'>Final SPA - Code Details</a> blog post to understand the API client logic.
 
 ### AppAuth Libraries
 
