@@ -128,7 +128,7 @@ const config: webpack.Configuration = {
 export default config;
 ```
 
-For Electron apps it would be unnatural to use the webpack development server, since the main process serves static content. Instead, I run the app during development from the built files in the *dist* folder. I therefore operate with all of the same web resources and asset loading behaviors as production users.
+For Electron apps it would be unnatural to use the webpack development server, since the main process serves static content. Instead, I run the app during development from the built files in the *dist* folder. I therefore develop with all of the same web resources and asset loading behaviors as production users.
 
 I build the renderer app in watch mode, so that whenever HTML, CSS or JavaScript code changes, the content in the *dist* folder updates. I can then use the *View / Reload* Electron menu option to reload the renderer app. In the next desktop code sample, I demonstrate how to go beyond this and implement live reload behavior.
 
