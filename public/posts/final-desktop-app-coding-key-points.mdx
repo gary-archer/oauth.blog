@@ -102,7 +102,7 @@ const options: RollupOptions = {
             ],
         }),
 
-        isDevelopment ? [] : [ terser() ]
+        ...(isDevelopment ? [] : [ terser() ]),
     ],
 };
 

@@ -126,7 +126,7 @@ export default lambdaFilenames.map((filename: string) => {
                 target: 'es2022',
             }),
 
-            isDevelopment ? [] : [ terser() ]
+            ...(isDevelopment ? [] : [ terser() ]),
         ],
     };
 

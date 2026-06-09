@@ -129,7 +129,7 @@ const options: RollupOptions = {
             ],
         }),
 
-        isDevelopment ? [
+        ...(isDevelopment ? [
 
             copy({
                 targets: [
@@ -146,7 +146,7 @@ const options: RollupOptions = {
             terser(),
             finalizeBundles(),
             writeCssAndHtml(buildId, outputFolder),
-        ]
+        ]),
     ],
 };
 ```
