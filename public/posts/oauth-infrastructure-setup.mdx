@@ -14,14 +14,14 @@ When working with OAuth, I recommend designing URLs for a development computer, 
 
 When I created this blog I purchased a <a href='cloud-domain-setup.mdx'>cloud domain</a> called *authsamples.com* and configured a number of subdomains. When you run this blog's code samples, you use a mix of components, some of which run on your local computer and some of which run in the cloud.
 
-The ones that run locally use a domain called *authsamples-dev.com*. This is a fictional domain that is an alias to your local loopback address of *http://127.0.0.1*. You configure subdomain aliases in your local computer's *hosts file*, at one of these locations:
+Components that run locally use the fictional domain *authsamples-dev.com*. This is an alias to your local loopback address of *http://127.0.0.1*. You configure subdomain aliases in your local computer's *hosts file*, at one of these locations:
 
 | Operating System | Path |
 | ---------------- | ---- |
 | Windows | c:\system32\drivers\etc\hosts |
 | macOS / Linux | /etc/hosts |
 
-For the first code sample, you configure the following subdomains. By using real-world URLs on a development computer you can design deployments and do early verification of their reliability:
+For the first code sample, you configure the following subdomains.
 
 ```markdown
 127.0.0.1 www.authsamples-dev.com api.authsamples-dev.com
@@ -29,7 +29,7 @@ For the first code sample, you configure the following subdomains. By using real
 
 ### Step 2: Choose an Initial Authorization Server
 
-By default, this blog's code samples point to my low cost deployment of the AWS Cognito authorization server at *https://login.authsamples.com*. Anyone can run frontend code samples that point to it, then sign in and run an OAuth application lifecycle.
+By default, this blog's code samples use my low cost AWS Cognito authorization server at *https://login.authsamples.com*. Anyone can run frontend code samples that point to it, then sign in and run an OAuth application lifecycle.
 
 ![authorization server domain](../images/80/domain.jpg)
 
@@ -38,7 +38,7 @@ A key point when starting with OAuth is to point your apps to HTTPS endpoints de
 | Type | Description |
 | ---- | ----------- |
 | Cloud Hosted | A cloud platform's authorization server, such as those from AWS or Microsoft, with internet OAuth endpoints. |
-| Cloud Native | A docker based authorization server, with local OAuth endpoints and better visibility into how the authorization server works. |
+| Cloud Native | A Docker based authorization server, with local OAuth endpoints and better visibility into how the authorization server works. |
 
 Either provides a convenient option when getting started with OAuth. This blog shows how to integrate user-facing apps and APIs, using portable code. Your applications are then compliant with any standards-based authorization server.
 
@@ -123,7 +123,7 @@ The configuration of OAuth clients includes token lifetimes. This blog's code sa
 
 ### Step 9: Configure Applications
 
-You configure applications with OAuth settings, whose values you provide as input to security libraries. In application code I store these in one or more *Configuration* objects. In this blog I use JSON configuration files to populate that object in a natural way. If you prefer you can use other options, such as environment variables.
+You configure applications with OAuth settings, whose values you provide as input to security libraries. In application code I store these in one or more *Configuration* objects. In this blog I use JSON configuration files to populate configuration objects in a natural way. If you prefer you can use alternative deployments for configuration, such as environment variables.
 
 The *authority* URL is typically the base URL of the authorization server. You can often provide this value as input to security libraries, which append the metadata path and call the OpenID Connect discovery endpoint. Therefore, you avoid the need to configure multiple endpoints in frontend applications.
 
@@ -164,18 +164,18 @@ The OAuth configuration for an API focuses on how it downloads token signing pub
 }
 ```
 
-### Step 10: Build Apps that use OAuth Standards
+### Step 10: Build Portable Apps that use OAuth Standards
 
-A key objective should be to use security libraries so that you integrate OAuth in a standards-based and portable manner. In this blog I never use vendor-specific libraries to integrate with the authorization server:
+A key objective should be to use security libraries so that you integrate OAuth in the following areas in a standards-based and portable manner. In this blog I never use vendor-specific libraries from a particular authorization server provider:
 
 | Area | Description |
 | ---- | ----------- |
-| Clients | Getting logins working in a user friendly way, along with related operations such as user creation and account recovery. |
-| APIs | Protecting data with OAuth, using access token validation and claims-based authorization. |
+| Clients | Standards-based code flow, to authenticate users and get an access token to enable API access. |
+| APIs | Standards-based access token validation, to authenticate requests and get values for authorization. |
 
 ### Step 11: Clarify Requirements
 
-During the journey of integrating OAuth into apps, you will form a better idea of what you need from the authorization server. Before committing to an implementation, ensure there are no blocking issues in your end-to-end flows, in areas such as user account data, claims issuance and user authentication behaviours.
+During the journey of integrating OAuth into apps, you will form a better idea of what you need from the authorization server. Before committing to an implementation, ensure there are no blocking issues in your end-to-end flows, in areas such as values you can store against user accounts, values you can issue to access tokens, or the login user experience.
 
 If your initial choice of authorization server does not meet your requirements you can then spend some time reviewing alternative choices. When your clients and APIs integrate OAuth in a standards-based way, switching authorization servers requires only minimal changes to application code.
 

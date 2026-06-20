@@ -54,7 +54,7 @@ The SPA's deployed HTML is minimal. The application's code builds to JavaScript 
 
 ### Web Host
 
-I use a simple Node.js Express server as the web host, from which the browser downloads web static content over HTTPS. The most essential code to do so is shown below. The SPA web host is a technically simple component. In particular, the web host should never come into contact with sensitive data. 
+I use the [Node.js Express HTTP Server](https://expressjs.com/en/) as the web host, from which the browser downloads web static content over HTTPS. The most essential code to do so is shown below. The SPA web host is a technically simple component. In particular, the web host should never come into contact with sensitive data. 
 
 ```typescript
 const app = express();

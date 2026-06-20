@@ -8,7 +8,7 @@ When designing token validation in APIs there are a few factors to consider:
 
 | Factor | Description |
 | ------ | ----------- |
-| Straightforward Code | Validating a JWT should not require a great amount of code or complicate your API. |
+| Straightforward Code | Validating JWT access tokens should not require a great amount of code or complicate your API. |
 | Enable API Authorization | The output from JWT validation should provide the main values the API needs for authorization. |
 | Best Security Capabilities | Aim to use modern, secure and efficient JWT algorithms. |
 | Developer Understanding | You should understand how the validation works, so that you can ensure it is doing the right things. |
@@ -20,7 +20,7 @@ Some technology stacks provide a *Resource Server Framework* that operates like 
 
 ### JOSE Libraries
 
-This blog provides APIs developed in the following languages and in each case a [JavaScript Object Signing and Encryption (JOSE)](https://datatracker.ietf.org/wg/jose/about/) library is used, to enable up-to-date security options when needed:
+This blog provides APIs developed in the following languages and in each case I use a [JavaScript Object Signing and Encryption (JOSE)](https://datatracker.ietf.org/wg/jose/about/) library with up-to-date security options:
 
 | Technology | JOSE Library |
 | ---------- | ------------ |

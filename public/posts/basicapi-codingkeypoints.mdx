@@ -12,17 +12,17 @@ The API uses TypeScript code and endpoints are exposed using the [Node.js Expres
 
 ### Dependencies
 
-The API only uses a handful of third-party libraries, declared in its *package.json* file. The most interesting dependency is the [jose security library](https://github.com/panva/jose) that validates JWTs:
+The API only uses a handful of third-party libraries, declared in its *package.json* file. The most interesting dependency is the [jose security library](https://github.com/panva/jose) that I use to validate JWT access tokens:
 
 ```json
 {
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.2.1",
-    "jose": "^6.2.2",
+    "jose": "^6.2.3",
     "on-headers": "^1.0.2",
-    "undici": "^7.24.6",
-    "winston": "^3.17.0"
+    "undici": "^8.4.1",
+    "winston": "^3.19.0"
   },
 }
 ```
@@ -105,7 +105,7 @@ The API uses a JSON configuration file in a similar manner to the SPA. The API c
 
 ### API Hosting
 
-In development mode, the API loads OpenSSL issued certificates and listens at *https://api.authsamples-dev.com:446*. Using real-world domain-based URLs enables me to think more about the client experience.
+In development mode, the API loads OpenSSL issued certificates and listens at *https://api.authsamples-dev.com:446*.
 
 ```typescript
 public async startListening(): Promise<void> {
@@ -137,7 +137,7 @@ In deployed mode the API would be hosted behind an API gateway that provides the
 
 ### Service Logic Classes
 
-A mainstream way to run the API's business logic for an API request is to run a controller object, which then calls other testable business objects. In this blog's early API code samples I manually wire up an *ApiController* object with its dependencies. This blog's final APIs instead use a dependency injection framework.
+A mainstream way to run the API's business logic for an API request is to run a controller object, which then calls other testable business objects. In this blog's early API code samples I manually wire up an *ApiController* object with its dependencies.
 
 ```typescript
 public async getCompanyList(request: Request, response: Response): Promise<void> {
