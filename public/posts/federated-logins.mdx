@@ -2,7 +2,7 @@
 
 Previously I explained this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. Next I provide a brief and simplified overview of some key points that developers should understand about OAuth and user authentication.
 
-### The OpenID Connect Code Flow
+### The Code Flow
 
 OAuth clients must never implement user authentication in code. Instead, clients run an authorization code flow to hand over authentication to the authorization server. The earlier post on <a href='basicspa-oauthworkflow.mdx'>OAuth Messages</a> explains how this works. You should then have many possible ways to authenticate users, including those listed below.
 
@@ -13,7 +13,7 @@ OAuth clients must never implement user authentication in code. Instead, clients
 - External identity providers (business partners).
 - Custom authentication using the authorization server's extensibility.
 
-The authentication details are externalized to the authorization server and can evolve without needing to update code in clients. Once authentication completes, the client receives an authorization code in the browser response and swaps it for tokens, In particular, the client receives an access token from the authorization server and can call APIs in the correct manner.
+The authentication details are externalized from clients to the authorization server and can evolve without needing to update code in clients. Once authentication completes, the client receives an authorization code in the browser response and swaps it for tokens, In particular, the client receives an access token from the authorization server and can call APIs in the correct manner.
 
 ### Federated Logins
 
@@ -25,23 +25,23 @@ In a correct federated flow the authorization server runs a second authorization
 - Authorization server redirects the browser to the external identity provider.
 - User authenticates at the external identity provider.
 - External identity provider returns an authorization code to the authorization server.
-- Authorization server posts the code to the external identity provider, gets and verifies external tokens.
+- Authorization server posts the authorization code to the external identity provider, gets a signed assertion and verifies it.
 - Authorization server returns an authorization code to the client.
 - Client posts the code to the authorization server to get tokens.
 
-To enable such a flow, you configure a *federated login* using steps similar to the following. The authorization server can potentially choose from multiple security standards to integrate with the external identity provider:
+The authorization server can potentially choose from multiple security standards to integrate with the external identity provider, though most commonly it uses OpenID Connect. To enable such a flow, you configure a *federated login* using steps similar to the following. 
 
 - Register the identity provider as an authentication method in the authorization server and assign it an *Issuer URI*, *Client ID*, *Client Credential* and *Scope*.
 - Register the authorization server as a client in the external identity provider and assign it a *Redirect URI*, *Client ID*, *Client Credential* and *Scope*.
 
 ### Authentication Logic
 
-The authorization server should provide an authentication toolbox. During an authorization code flow, the user may perform various other actions in addition to the use of authentication methods, such as one or more of those listed below:
+During a code flow, the user may perform various other actions in addition to the use of authentication methods, such as one or more of those listed below. Therefore, the authorization server must provide a flexible authentication toolbox. 
 
-- User registration.
-- Account recovery.
-- Custom screens that prompt users for input.
-- Custom logic that operates on data.
+- User sign up and activation, to populate a user account with attributes.
+- Account recovery, if the user loses their login credential.
+- Authentication updates, to enable the user to run a new type of login.
+- Custom actions needed to update user accounts with new attributes.
 
 ### Consistent API User Identity
 
@@ -58,11 +58,11 @@ At times you may run into custom authentication requirements. In such cases, avo
 - The user interacts with HTML forms that run in the browser to capture proofs of the user's identity.
 - The HTML forms call authorization server endpoints that verify proofs of the user's identity.
 
-An authorization server should provide extensibility to enable custom authentication with your own frontend forms and backend logic. The extensibility should prevent you from ever running into blocking authentication issues. For example, you should be able to integrate with an external identity provider even if it does not follow security standards correctly.
+An authorization server should provide extensibility to enable custom authentication with your own frontend forms and backend logic. The extensibility should prevent you from ever running into blocking authentication issues. For example, you should be able to implement extensions that work around external identity providers that use non-standard implementations of security standards.
 
 ### Where Are We?
 
-I explained how OAuth should enable your users to authenticate in many possible ways. When reviewing an authorization server's authentication capabilities, look for a good variety of built-in authentication methods, standards that enable federation and extensibility so that you can implement custom logic and custom authentication methods.
+I explained how OAuth should enable your users to authenticate in many possible ways. When reviewing an authorization server's authentication capabilities, look for a good variety of built-in authentication methods, standards that enable federation and extensibility, so that you can keep application code simple and avoid blocking issues.
 
 ### Next
 

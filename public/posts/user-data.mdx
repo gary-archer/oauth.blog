@@ -41,7 +41,7 @@ As a simplified version of this concept, this blog's example setup stores the fo
 
 ### Identifying Users to APIs
 
-After an OAuth migration, APIs will by default receive access tokens containing only the generated subject claim. This might be a UUID such as *9a7a33fe-e3f6-47c7-aef9-1ff96df9aa1b* and may not be useful to APIs that operate on business data. Instead, you typically need to provide a more useful user identity in access tokens. This blog's API code samples therefore include the *manager_id* claim in access tokens:
+After an OAuth migration, APIs will by default receive access tokens containing only the generated subject claim. This might be a UUID that is not useful to APIs that operate on business data. Instead, you typically need to provide a more useful user identity in access tokens. This blog's API code samples therefore include the *manager_id* claim in access tokens:
 
 ![token claims](../images/120/token-claims.jpg)
 
@@ -53,10 +53,10 @@ You may also need to call the authorization server's user management APIs for ot
 
 | Use Case | Description |
 | -------- | ----------- |
-| Existing User Migration | A migration process reads existing users in bulk from an existing data source and imports them into the authorization server. |
-| Administrator User Creation | An administrator creates users and assigns attributes across both data sources. |
-| Self-Sign-Up | A user signs up and provides proof of their identity, after which attributes save to both data sources. |
-| Profile Edits | A user edits their profile in an application form and data is saved to both data sources. |
+| Existing User Migration | A migration process reads existing users in bulk from an existing user data source and imports them into the authorization server. |
+| Administrator User Creation | An administrator creates users and assigns attributes across multiple user data sources. |
+| Self-Sign-Up | A user signs up and provides proof of their identity, after which attributes save to multiple user data sources. |
+| Profile Edits | A user edits their profile in an application form and data is saved to multiple user data sources. |
 
 When using OAuth, you decide whether you want to use self-sign-up during an authorization code flow. If you enable self-sign-up, the authorization server presents account creation forms. An advanced authorization server may be able to call an API that your provide, to create a business user identity for the new user. When the authorization code flow completes, your APIs receive all of the correct token claims for the new user.
 
@@ -70,9 +70,11 @@ It is also common for clients to need to get user attributes from business data,
 
 ![api userinfo](../images/120/api-userinfo.jpg?v=20240822)
 
+That is, frontends may need to get user attributes from both the authorization server and their APIs. Although this may seem to add complexity, the separation prevents deeper problems like needing to frequently remodel authorization server user account data.
+
 ### Where Are We?
 
-I explained the main design choices when storing user attributes in an OAuth architecture. A clean separation between core identity fields and business-specific attributes can provide the best manageability for APIs and clients.
+I explained the main design choices when storing user attributes in an OAuth architecture. In mature systems, a clean separation between core identity fields and business-specific attributes can provide the best manageability for APIs and clients.
 
 ### Next
 

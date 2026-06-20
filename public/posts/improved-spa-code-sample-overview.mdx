@@ -1,10 +1,10 @@
 # Updated SPA and API - Overview
 
-Previously I summarised the use of <a href='id-tokens.mdx'>ID Tokens</a> in applications. Next I explain how to complete the initial SPA and API code sample, to add the main frontend session behaviours and to add claims-based authorization to the API.
+Previously I summarised the use of <a href='id-tokens.mdx'>ID Tokens</a> in applications. Next I explain an update to the initial SPA and API code sample, to add the main frontend session behaviours and to flexibly manage authorization data in the API.
 
 ### Code Sample Goal
 
-The updated SPA code sample aims to complete OAuth session management in the SPA, while also providing an extensible way to manage authorization claims in APIs.
+The updated SPA code sample aims to complete OAuth session management in the SPA, with good usability. The updated API focuses on extensible ways to manage authorization data needed to implement business rules.
 
 ### New Features
 
@@ -14,10 +14,9 @@ The updated SPA and API code sample has the following additional behaviours, to 
 | ------- | ----------- |
 | Claims Based Authorization | The API provides a more complete and future-proof claims-based authorization solution. |
 | In-Memory Token Storage | The SPA now stores OAuth tokens only in-memory, to improve the browser security a little. |
-| Silent Token Renewal | The SPA now supports silent access token renewal using the SSO cookie. |
+| Silent Token Renewal | The SPA now uses silent access token renewal using the SSO cookie. |
 | Multi Tab Browsing | The token renewal solution should enable multi tab-browsing without noticeable user impact. |
 | Logout | The SPA implements a basic form of logout, including logout across multiple browser tabs. |
-| Real-World URLs | Both the SPA and API run on a development computer using real-world HTTPS URLs. |
 
 ### Step 1. Code Download
 
@@ -86,13 +85,13 @@ The API configuration is also updated, to require the *investments* scope:
 
 ### Step 4. Configure DNS and SSL
 
-Update the hosts file on your computer to include this blog's local development domains, described in the earlier <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a> post:
+Your computer's hosts must include this blog's local development domains, described in the earlier <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a> post:
 
 ```markdown
 127.0.0.1 www.authsamples-dev.com api.authsamples-dev.com
 ```
 
-The API and web static content hosting use SSL so you must create development certificates. Ensure that OpenSSL 3+ is installed and then run the following commands:
+The API and development web server use SSL so you must create development certificates. Ensure that OpenSSL 3+ is installed and then run the following commands:
 
 ```bash
 export SECRETS_FOLDER="$HOME/secrets"
@@ -108,7 +107,7 @@ certs/authsamples-dev.ca.crt
 
 ### Step 5. Build and Run the SPA and API
 
-Next, run the following script, to build the code and run the API at *https://api.authsamples-dev.com:446/api*. The SPA then continues to runs at *https://www.authsamples-dev.com/spa*.
+Next, run the API at *https://api.authsamples-dev.com:446/api* and the SPA at *https://www.authsamples-dev.com/spa*.
 
 ```bash
 ./start.sh
@@ -129,20 +128,16 @@ Continue to use the following AWS Cognito test account to sign in to the SPA:
 - User = *guestuser@example.com*
 - Password = *GuestPassword1*
 
-You can also use a second test account with higher privileges, to see additional API data in the SPA:
+You can also use a second test account with higher privileges, which gets access to additional data:
 
 - User = *guestadmin`@`example.com*
 - Password = *GuestPassword1*
 
-The updated SPA shows different data depending on the user since the API now applies claims-based authorization.
-
 ### Step 7. View Updated Access Tokens
 
-After a login the SPA receives the following access token. This now contains an *investments* scope and custom claims for *manager_id* and *role*. The API uses these values for its authorization:
+After login, the SPA receives an updated access token, which contains an *investments* scope and custom claims for *manager_id* and *role*. The <a href='managed-authorization-server-setup.mdx'>Cloud Authorization Server Setup</a> post explains how the authorization server resolves these claim values.
 
 ![token scopes and claims](../images/170/token-scopes-and-claims.jpg)
-
-For details on how the authorization server issues these scopes and claims see the <a href='managed-authorization-server-setup.mdx'>Cloud Authorization Server Setup</a> blog post.
 
 ### Step 8. API uses Claims Based Authorization
 
@@ -211,7 +206,7 @@ The secondary user data is then rendered in a basic tooltip:
 
 ### Step 10. Test Token Renewal
 
-The SPA attempts to refresh in-memory access tokens silently when they expire. You can simulated this if you click *Expire Token* then *Reload Data*:
+The SPA attempts to refresh in-memory access tokens silently when they expire. You can simulate this if you click *Expire Token* then *Reload Data*:
 
 ![token expiry testing](../images/170/token-expiry-testing.jpg?v=20240813)
 
@@ -232,7 +227,7 @@ Although the SPA's code implements the renewal flow correctly, every iframe toke
 
 ### 12. Logout
 
-The SPA also implements logout functionality. The SPA removes its own tokens, then redirects to the authorization server sending the SSO cookie. The authorization server expires the SSO cookie to end the user's session, then redirects the browser back to its *Post Logout Redirect URI*, which renders the following view:
+The SPA also implements logout functionality. The SPA removes its own tokens, then redirects to the authorization server, sending the SSO cookie. The authorization server expires the SSO cookie to end the user's session, then redirects the browser back to its *Post Logout Redirect URI*, which renders the following view:
 
 ![logged out screen](../images/170/logged-out-screen.jpg?v=20240813)
 

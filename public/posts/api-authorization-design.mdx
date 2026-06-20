@@ -1,12 +1,12 @@
 # API Authorization Behaviour
 
-In <a href='user-data.mdx'>User Data Management</a> I explained how any moderately complex real-world system typically stores *core user attributes* separately to *volatile business user attributes*. You also need to deal with both types of data when you authorize requests in your API code.
+In <a href='user-data.mdx'>User Data Management</a> I explained how mature real-world systems typically store *core user attributes* separately to *volatile business user attributes*. You also need to deal with both types of data when you authorize requests in your API code.
 
 In this post I suggest how to use access tokens for authorization in APIs. I summarise a few OAuth mechanisms, which you can read more about in many other OAuth resources. This post's main focus is manageability when you implement API authorization.
 
 ### Real-World API Authorization
 
-Real-world authorization usually includes a number of fine-grained permissions. A token identifying the user is sent to one or more APIs, which might need to enforce business rules such as these:
+Real-world authorization usually includes a number of fine-grained permissions. An access token identifying the user is sent to one or more APIs, which might need to enforce business rules such as these:
 
 - User *bob* has full access to orders from his own branch.
 - User *bob* has read access to orders from other branches in his area.
@@ -21,8 +21,8 @@ The OAuth 2.0 authorization framework enables you to protect business data using
 | Step | Description |
 | ---- | ----------- |
 | Token Validation | Access token cryptograhic verification, to ensure the integrity of the message credential. |
-| Scope Checks | Boundary checks to ensure an access token's validity for a particular area of data. |
-| Claims-Based Authorization | Detailed permission checks against resources, using claims and fine-grained permissions to apply business rules. |
+| Scope Checks | Boundary checks to ensure an access token's validity for a particular area of data or high-privilege operation. |
+| Claims-Based Authorization | Detailed permission checks against resources, using claims and other fine-grained permissions to apply business rules. |
 
 ### Step 1: Token Validation
 
@@ -44,11 +44,11 @@ In OAuth you use scopes to restrict API privileges that you grant to clients. Yo
 | sales | You might assign this scope for use at general API endpoints that deal with selling products to the public. |
 | finance | You might use this scope for high security API endpoints that provide access to money values and operations. |
  
-A client with an access token that contains only a *sales* scope can never successfully access data from *finance* API endpoints. The API would immediately reject the access token with a 403 forbidden error. This is true even if the user has finance rights in other clients.
+A client with an access token that contains only a *sales* scope can never successfully access data from *finance* API endpoints. The API would immediately reject the access token with a 403 forbidden error. This is true even if the user has *finance* rights in other clients.
 
 ### Scopes and Manageability
 
-You cannot use scopes for dynamic purposes, such as different scope values per user. Aim to keep scopes fairly high level. In this blog I use a fictional *investments* scope and frontend clients need access tokens with this scope to call any endpoint of my example APIs. Creating too many scopes too early can cause productivity problems, like needing to frequently update clients with new scopes or write access token versioning code in APIs. I would only add new scopes for high privilege operations or to extend APIs to new business areas.
+You cannot use scopes for dynamic purposes, such as different scope values per user. Aim to keep scopes fairly high level. In this blog I use a fictional *investments* scope and frontend clients need access tokens with this scope to call endpoints of my example APIs. Creating too many scopes too early can cause productivity problems, like needing to frequently update clients with new scopes or write access token versioning code in APIs. I would only add new scopes for high privilege operations or to extend APIs to new business areas.
 
 You don't usually need many scopes since you use claims for most authorization. Yet you should design scopes in terms of end-to-end flows. If multiple APIs call each other, they should each validate an access token and implement business authorization. When a user is present, each API should receive the user identity and its required scopes and claims in its access token. The source API can send its current access token or use OAuth token exchange to get a new one from the authorization server with different scopes. 
 
@@ -72,7 +72,7 @@ An API should require its own identity to be present in the audience (aud) claim
 
 Claims enable the deeper OAuth authorization behaviour. For each scope that the authorization server issues to access tokens, it also issues a set of claims. The <a href='managed-authorization-server-setup.mdx'>Cloud Authorization Server Setup</a> blog post explains how I configure scopes and claims for this blog's default authorization server. 
 
-You can issue any data values as access token claims and they can vary per user, so claims are much more flexible than scopes. In more advanced use cases, APIs may not know how to authorize solely from a user ID in an access token. Instead, OAuth enables you to design solutions where the authorization server provides APIs with runtime claims, which may originate from trusted third-party systems.
+You can issue any data values as access token claims and the authorization server resolves them per user, so claims are much more flexible than scopes. In many use cases, APIs need dynamic runtime values to authorize correctly. OAuth enables you to design solutions where the authorization server provides APIs with runtime claims, whose values may originate from trusted third-party systems.
 
 ### Claims Principal
 
@@ -166,9 +166,9 @@ This blog's APIs use the following form of access token payload. When you design
 }
 ```
 
-In the token payload the scope restricts access to an *investments* business area. The scope and audience would allow the access token to be used by a small set of related APIs. A custom claim for *manager_id* provides a business user identity to the API. A custom *role* claim is issued to the access token, and the API might use it to look up volatile role permissions.
+In the token payload, the scope restricts access to an *investments* business area. The scope and audience would allow the access token to be used by a small set of related APIs. A custom claim for *manager_id* provides a business user identity to the API. A custom *role* claim is issued to the access token, and the API might use it to look up volatile role permissions.
 
-When this blog's APIs first receive a particular access token, they use the *manager_id* to look up the following extra user values from a trusted source, like a database. Therefore, these authorization values also derive from access token claims. The API authorization code uses these values in an identical way to true claims from the access token:
+When this blog's APIs first receive a particular access token, they use the *manager_id* to look up the following extra claims from a trusted source, like a database. Therefore, these values also derive from access token claims, and the API authorization code uses them in an identical way to true claims from the access token:
 
 | Extra Claim | Description |
 | ----------- | ----------- |

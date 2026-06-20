@@ -4,7 +4,7 @@ In the previous post I described the behaviour of the <a href='improved-spa-code
 
 ### Web Technology Setup
 
-The updated SPA continues to use vanilla TypeScript code and this blog's <a href='web-technology-setup.mdx'>Web Technology Setup</a>. That post explains how the SPA uses the rollup bundler to build modern ECMAScript bundles and an Express HTTP server to serve them. The setup uses a restrictive content security policy and live reloading during development.
+The updated SPA continues to use vanilla TypeScript code and this blog's <a href='web-technology-setup.mdx'>Web Technology Setup</a>. That post explains how the SPA uses the rollup bundler to build modern ECMAScript bundles and an Express HTTP server to serve them. The web development setup uses a restrictive content security policy and live reloading during development.
 
 ### SPA OAuth Configuration Changes
 
@@ -14,7 +14,7 @@ I use additional settings from the *oidc-client-ts* library to use the following
 - Silent token renewal via iframes.
 - Logout.
 
-The SPA's OAuthClient class therefore uses some updated *oidc-client-ts* library settings:
+The SPA's OAuthClient class therefore uses additional library settings:
 
 ```typescript
 public constructor(configuration: OAuthConfiguration) {
@@ -41,7 +41,7 @@ public constructor(configuration: OAuthConfiguration) {
 
 ### Silent Token Renewal Implementation
 
-The SPA consists of a main window and a dynamic iframe that implements iframe redirects. JavaScript applications run on both of these windows, yet I want to avoid the need for separate HTML files or JavaScript bundles for the iframe application. Therefore, the entry point *index.ts* file now contains the following code, to detect whether the frame or top level window runs:
+The SPA consists of a main window and a dynamic iframe that implements invisible authorization redirects. JavaScript applications run on both of these windows, yet I want to avoid the need for separate HTML files or JavaScript bundles for the iframe application. Therefore, the entry point *index.ts* file now contains the following code, to detect whether the frame or top level window runs:
 
 ```typescript
 if (window.top === window.self) {
@@ -56,7 +56,7 @@ if (window.top === window.self) {
 }
 ```
 
-Initially, the iframe app does not exist. The main window creates it when it initiates token renewal. The oidc-client-ts library spins up an iframe and runs an authorization code flow with PKCE, using the OpenID Connect *prompt=none* parameter:
+When the main window calls *signinSilent*, the oidc-client-ts library creates an iframe and runs an authorization code flow with PKCE, using the OpenID Connect *prompt=none* parameter:
 
 ```typescript
 private async performAccessTokenRenewalViaIframeRedirect(): Promise<void> {
@@ -79,11 +79,11 @@ private async performAccessTokenRenewalViaIframeRedirect(): Promise<void> {
 }
 ```
 
-An instance of the *IFrameApp* class gets instantiated when the authorization server sends a redirect response back to the SPA, with a URL of the following form, containing the authorization code:
+The *IFrameApp* object gets instantiated when the authorization server sends a redirect response back to the SPA, with a URL of the following form, containing the authorization code:
 
 - *https://www.authsamples-dev.com/spa?code=xxx&state=yyy*
 
-The job of the iframe app is to POST the response URL to the SPA's main window, which then exchanges the code for tokens. The SPA then stores the tokens in-memory.
+The job of the iframe app is to call the *signinSilentCallback* method of the oidc-client-ts library:
 
 ```typescript
 export class IFrameApp {
@@ -116,7 +116,7 @@ export class IFrameApp {
 }
 ```
 
-The oidc-client-ts library uses the [PostMessage API](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) to send the authorization response URL from the iframe to the main window. You can use code such as the following to intercept the posted message and view the data:
+The oidc-client-ts library then uses the [PostMessage API](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) to send the authorization response URL from the iframe to the main window. In the SPA's code, you could add a listener to intercept the posted message and view its data:
 
 ```typescript
 window.addEventListener('message', (evt) => {
@@ -132,7 +132,7 @@ When the main window exchanges the code for token it uses the PKCE *code_verifie
 
 Iframe-based token renewal does not work with this blog's default authorization server, since it issues its SSO cookie with *SameSite=lax* instead of *SameSite=none*, which is required to send third-party cookies. This means, whenever the access token expires, or the user reloads the page, the user experiences an OpenID Connect login redirect.
 
-Even if the cookie behaviour was fixed, this is also the behaviour in the Safari browser or Chrome incognito mode. These browsers drop all third party cookies except for certain exceptions, like top level redirects. Therefore, the updated code sample correctly represents the future state of iframe based token renewal.
+Even if the cookie behaviour was fixed, this is also the behaviour in the Safari browser or in incognito browser windows. These browsers drop all third party cookies except for certain exceptions, like top level redirects that display the window's domain name to the user. Therefore, the updated code sample correctly represents the future state of iframe based token renewal.
 
 ### Updated API Flow
 
@@ -194,7 +194,7 @@ userStore: new WebStorageStateStore({ store: localStorage }),
 automaticSilentRenew: true,
 ```
 
-For best reliability, you could also store a refresh token in local storage and avoid the use of iframe-based access token refresh completely. Yet local storage is the least secure way to manage tokens in the browser, with greatest XSS threats. When you also store refresh tokens, you make threats much worse, since an attacker can potentially use a refresh token to get new access tokens without needing to supply a client credential.
+For best reliability, you could also store a refresh token in local storage and avoid the use of iframe-based access token refresh completely. Yet local storage is the least secure way to manage tokens in the browser, with greatest XSS threats. When you store refresh tokens in the browser, you make threats much worse, since an attacker can potentially use a refresh token to get new access tokens without needing to supply a client credential.
 
 ```json
 {
@@ -213,7 +213,6 @@ For best reliability, you could also store a refresh token in local storage and 
 }
 ```
 
-
 ### The SPA OAuth Journey
 
 When you implement the traditional SPA flow using only JavaScript code, you typically undergo the following journey:
@@ -230,33 +229,26 @@ Eventually, you come to realise that to solve the security, usability and reliab
 Once the SPA has an access token it uses it to get two sources of user information. The SPA now explicitly sends the access token to the OpenID connect userinfo endpoint. Yet the SPA also renders user attributes not stored in the authorization server. It gets them by calling the API, then renders data from both sources in the top right of the view.
 
 ```typescript
-public async load(oauthClient: OAuthClient, apiClient: ApiClient): Promise<void> {
+private renderData(oauthUserInfo: OAuthUserInfo, apiUserInfo: ApiUserInfo) {
 
-    const oauthUserInfo = await oauthClient.getUserInfo();
-    const apiUserInfo = await apiClient.getUserInfo();
+    const viewModel = {
+        userName: this.getUserNameForDisplay(oauthUserInfo),
+        title: this.getUserTitle(apiUserInfo),
+        regions: this.getUserRegions(apiUserInfo),
+    };
 
-    if (oauthUserInfo && apiUserInfo) {
+    const htmlTemplate =
+        `<div class='text-right font-bold relative inline-block group'>
+            {{userName}}
+            <div class='tooltip'>
+                <small>{{title}}</small>
+                <br />
+                <small>{{regions}}</small>
+            </div>
+        </div>`;
 
-        const viewModel = {
-            userName: this.getUserNameForDisplay(oauthUserInfo),
-            title: this.getUserTitle(apiUserInfo),
-            regions: this.getUserRegions(apiUserInfo),
-        };
-
-        const htmlTemplate =
-            `<div class='text-end mx-auto'>
-                <div class='fw-bold basictooltip'>{{userName}}
-                    <div class='basictooltiptext'>
-                        <small>{{title}}</small>
-                        <br />
-                        <small>{{regions}}</small>
-                    </div>
-                </div>
-            </div>`;
-
-        const html = mustache.render(htmlTemplate, viewModel);
-        DomUtils.html('#username', html);
-    }
+    const html = mustache.render(htmlTemplate, viewModel);
+    DomUtils.html('#username', html);
 }
 ```
 
@@ -286,9 +278,7 @@ public async startLogout(): Promise<void> {
 
 ### SPA Multi Tab Logout
 
-The sample also supports multi-tab logout, described in the earlier <a href='logout.mdx'>Logout</a> post. Rather than attempting to use single-logout solutions that send the SSO cookie from iframes, the SPA simply watches an *isLoggedOut* boolean in local storage, using the [Browser Storage API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API).
-
-If a user runs multiple tabs and signs out on one of them, the following code then run in all other tabs, each of which simply removes its tokens and redirects the user to the logged out view.
+The sample also supports multi-tab logout, described in the earlier <a href='logout.mdx'>Logout</a> post. Rather than attempting to use single-logout solutions that send the SSO cookie from iframes, the SPA simply watches an *isLoggedOut* boolean in local storage, using the [Browser Storage API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API). If a user runs multiple tabs and signs out on one of them, the following code runs in all other tabs, each of which simply removes its tokens and redirects the user to the logged out view.
 
 ```typescript
 private onStorageChange(event: StorageEvent): void {

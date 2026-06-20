@@ -4,14 +4,14 @@ The previous post I explained some <a href='updated-spa-coding-key-points.mdx'>S
 
 ### API Authorization Implementation
 
-In the first sample's <a href='basicapi-codingkeypoints.mdx'>API Code Details</a> we explained that OAuth processing consists of the following two main code areas:
+In the first sample's <a href='basicapi-codingkeypoints.mdx'>API Code Details</a> I explained that OAuth processing consists of the following two main code areas:
 
 | Responsibility | Description |
 | -------------- | ----------- |
 | Authenticate Requests | Verify incoming access tokens and return a 401 error response for invalid tokens. |
 | Set up Authorization | Read claims needed for authorization, then pass them through to the API's business logic. |
 
-The updated API implements <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a> in the same way as the first code sample, but now also implements this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. This starts with enforcing its required scope:
+The updated API implements <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a> in the same way as the first code sample, but now also implements this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. The API security login begins with enforcing required scopes:
 
 ```typescript
 const scopes = ClaimsReader.getClaim(claims['scope'] as string, 'scope');
@@ -130,7 +130,7 @@ public async authorizeRequestAndGetClaims(request: Request): Promise<ClaimsPrinc
 }
 ```
 
-When a token is first received, the extra claims are cached using the [Node Memory Cache](https://github.com/mpneuried/nodecache). A time-to-live is set that must not exceed the access token's *exp* (expiry) claim:
+When a token is first received, the API caches extra claims using the [Node Memory Cache](https://github.com/mpneuried/nodecache). The code sets a time-to-live that does not exceed the access token's *exp* (expiry) claim:
 
 ```typescript
 public addClaimsForToken(accessTokenHash: string, claims: ExtraClaims, expiry: number): void {
@@ -149,7 +149,7 @@ public addClaimsForToken(accessTokenHash: string, claims: ExtraClaims, expiry: n
 }
 ```
 
-When the API receives the same access token on subsequent API requests, it immediately retrieves cached claims. This ensures that the API performs well:
+When the API receives the same access token on subsequent API requests, it immediately retrieves cached claims.
 
 ```typescript
 public getClaimsForToken(accessTokenHash: string): ExtraClaims | null {
@@ -164,7 +164,7 @@ public getClaimsForToken(accessTokenHash: string): ExtraClaims | null {
 }
 ```
 
-When getting started with OAuth secured APIs you should not need complex code like this. Instead, derive the claims principal directly from the access token. The above authorization blog post says more about the technique.
+This mechanism can be useful in some types of mature systems, that need to authorize using user attributes from both the authorization server and business data. It avoids the need to frequently add business user attributes to the authorization server.
 
 ### User Info
 
