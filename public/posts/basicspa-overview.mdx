@@ -2,7 +2,6 @@
 
 In the <a href='web-architecture-goals.mdx'>Web Architecture Goals</a> post I summarised some desired qualities. This blog's first code deliverable is an end-to-end web and API code sample that you can run on a development computer. The web application is a Single Page Application and the end-to-end flow integrates an SPA, API and authorization server.
 
-
 ### Business Focused Development
 
 The following table summarises the business-like behaviours that the initial code sample demonstrates.
@@ -10,16 +9,16 @@ The following table summarises the business-like behaviours that the initial cod
 | Behaviour | Description |
 | --------- | ----------- |
 | Authorization Server | Developers can connect to a cloud authorization server from code running on their computer. |
-| SPA Security | The SPA uses the authorization code flow (PKCE) for logins and uses access tokens to call the API. |
+| SPA Security | The SPA uses strong browser security and uses the authorization code flow for logins. It then uses access tokens to call APIs. |
 | API Security | The API validates JWT access tokens, then works with claims to implement authorization. |
 | Reliable | Both the SPA and API handle expiry and other failure conditions in a solid manner. |
 | Real World URLs | The SPA makes cross domain calls to the API on the local computer, and you can view its OAuth messages. |
 
-The overall goal is a productive technical setup that would help to enable a fast time to market at a real organization. To achieve that goal I use modern technical tools but also run the web frontend like a real user during development.
+The code sample uses a production-like setup on a development workstation. Identical technical behaviors would execute in deployed environments. At a real organization this would prevent mistakes and improve the time to market.
 
-### SPAs in 2021
+### SPA 1 Goal
 
-This example SPA uses the traditional SPA solution, with a JavaScript OpenID Connect implementation. It is now considered more secure for your production apps to instead use a <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend</a> approach. Before this blog integrates a BFF it explains the traditional SPA flow and the web development and deployment benefits it enables.
+The initial SPA code sample highlights a secure, modern web development setup and its productivity. The OAuth integration separates concerns so that web developers only focus on the customer experience, which is the correct architecture. Future SPAs will extend the initial SPA, to add session management and security hardening.
 
 ### Code Download
 
@@ -39,7 +38,7 @@ The SPA and API use the following respected open source libraries:
 
 | Component | Library | Features |
 | --------- | ------- | -------- |
-| SPA | [oidc-client-ts](https://github.com/authts/oidc-client-ts) | Implements OpenID Connect lifecycle events for a browser-based client, including logins, logouts and token renewal. |
+| SPA | [oidc-client-ts](https://github.com/authts/oidc-client-ts) | Implements OAuth and OpenID Connect for browser-based clients, to enable user logins, token retrieval and session management. |
 | API | [jose](https://github.com/panva/jose) | Validates JWT access tokens, returns claims and manages looking up and caching of token signing public keys. |
 
 ### Programming Languages
@@ -51,9 +50,7 @@ This blog uses multiple technologies, and they are all modern and cross platform
 | SPA | TypeScript | Chrome / Edge / Firefox / Safari / Mobile |
 | API | Node.js + TypeScript | Windows / macOS / Linux |
 
-### Basic Web Technology
-
-For this blog's early SPAs I use some simple technology choices, to use vanilla TypeScript and a simple CSS solution. The initial frontend goal is a modern development setup with reduced complexity and best reliability, that would work in any technology stack. Later in this blog, the <a href='final-spa-overview.mdx'>Final SPA</a> uses more cutting edge web frameworks.
+For this blog's early SPAs I use vanilla TypeScript code, to avoid the overhead of more complex web frameworks. OAuth integration in popular web frameworks can work in the same way, as I illustrate in this blog's <a href='final-spa-overview.mdx'>Final SPA</a>, which uses the same patterns in React.
 
 ### Web and API Hosting
 
@@ -64,14 +61,16 @@ In OAuth, you should separate web and API hosting, so that API developers deal w
 | API | https://api.authsamples.com |
 | Web Static Content | https://www.authsamples.com |
 
-On a development computer I almost never use URLs like *http://localhost:3000* for secure application development. Instead, I use real-world domain names and HTTPS for the hosting of APIs and web static content. I use a *-dev* suffix for URLs to represent the local environment.
+On a development computer I almost never use URLs like *http://localhost:3000* for application development. Instead, I use real-world domain names and HTTPS for web and API hosting. I use a *-dev* suffix for URLs to represent the local environment.
 
 | Component | Base URL |
 | --------- | -------- |
 | API | https://api.authsamples-dev.com |
 | Web Static Content | https://www.authsamples-dev.com |
 
-This type of setup requires some extra initial work. Once completed, you have maximum capabiltiies for testing security, reliability and deployments on a development computer. As you shall see, you can also continue to take full advantage of the developer experience features of modern technology stacks.
+The web static content host also applies a restrictive Content Security Policy (CSP), to protect against XSS threats. Developing with domain names encourages web developers to more fully understand browser behaviors and improve the security of their SPAs.
+
+The use of domain names requires some initial infrastructure work. Once complete, you run with the same security as production systems, so you can avoid most deployment mistakes. You also have rich capabilities for testing OAuth flows on a development workstation.
 
 ### Code Sample Theme
 

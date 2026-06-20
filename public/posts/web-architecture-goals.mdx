@@ -4,7 +4,7 @@ The <a href='home.mdx'>Home Page</a> described OAuth in terms of overall goals f
 
 ### Time to Market
 
-Often the main high level goal for an organization is a fast and predictable time to market for end user functionality. Yet often in software there are hidden complexities that prevent that from being a reality. Web development with a clean separation of concerns can get the foundations right and reduce work for developers.
+Often the main high level goal for an organization is a fast and predictable time to market for end user functionality. Yet often in software there are hidden complexities that prevent that from being a reality. Setups with a clean separation of concerns can get the foundations right and reduce work for web developers.
 
 ### Best User Experience
 
@@ -12,11 +12,11 @@ The modern web uses client-side technology to separate HTML and data concerns an
 
 ### Productive Frontend Development
 
-Sites like [The Modern Web](https://modern-web.dev/) promote technologies that are easier to manage from a development viewpoint than older website solutions. Developers no longer need to battle with a web backend that dictates frontend behaviour. 
+Sites like [The Modern Web](https://modern-web.dev/) promote technologies and patterns that are easier to manage from a development viewpoint than older website solutions. Developers no longer need to battle with a web backend that dictates frontend behaviour. 
 
 ![The Modern Web](../images/10/modern-web.jpg)
 
-OAuth also improves productivity, since it enables web apps to externalise data protection to APIs, and user authentication to the authorization server. As a result, web developers should never need to implement backend security, which greatly simplifies their responsibilities.
+Frontend developers should externalize data security to APIs, and user authentication to the authorization server. OAuth enables such a setup, to reduce web developer responsibilities, so that most development work focuses on the customer experience.
 
 ### Good Global Performance
 
@@ -26,19 +26,19 @@ You are likely to want good global performance for your internet web application
 
 ### Best Security Capabilities
 
-The browser front end must be able to interact with APIs, so need an API message credential. APIs must return only correct and allowed data for each user, so the user must be authenticated first. *OAuth 2.0* and *OpenID Connect* are the standards that provide the most powerful options to issue access tokens as API message credentials, and authenticate the user in many possible ways.
+The browser front end must be able to interact with APIs, so needs an API message credential. APIs must return only correct and allowed data for each user, so the user must be authenticated first. *OAuth 2.0* and *OpenID Connect* are the standards that provide the most powerful options to issue least privilege access tokens as API message credentials, and authenticate the user in many possible ways.
 
 ### Prevent Browser Threats
 
 By following web security best practices, vetted by experts, companies will avoid most vulnerabilities and perform better in security reviews. For web apps, [Cross Site Scripting (XSS)](https://owasp.org/www-community/attacks/xss) is a particular concern that you should address, separate to the OAuth implementation.
 
-If an app has XSS vulnerabilities, then an attacker may be able to access sensitive data in exactly the same way as the real web app. Therefore, reducing the impact of XSS exploits is now a major consideration when designing web solutions.
+If an app has XSS vulnerabilities, then an attacker may be able to access sensitive data in exactly the same way as the real web app. Therefore, web developers must follow best practices to both prevent XSS exploits, and to reduce its impact if it ever occurs.
 
 ### Best Login Usability
 
-The authorization server can provide multiple ways for users to sign in to an SPA, and this can include options that are both user friendly and secure. In addition, an SPA should be in full control of usability and support features like multi-tab browsing.
+The authorization server can provide multiple ways for users to sign in to an SPA, register an account or recover their account. Users should be able to use modern cryptographic authentication methods, which also provide a modern user experience.
 
-Web applications should cope elegantly with API challenge responses that use HTTP status codes of 401 and 403. The frontend guides the user, rather than issuing an abrupt redirect. To enable that, JavaScript code should issue all API requests for sensitive data.
+Web applications should support multi-tab browsing and also cope elegantly with API challenge responses that use HTTP status codes of 401 and 403. The SPA must retain usability control, rather than a web host abruptly redirecting the frontend.
 
 ### Good Search Results
 
@@ -67,7 +67,7 @@ Portability is often overlooked, but it is common to want to keep your options o
 
 ### This Blog's SPA Code Samples
 
-This blog's posts and the accompanying code samples explain OAuth features and design patterns gradually:
+This blog's web content and code samples explain OAuth features and design patterns gradually:
 
 | Stage | Description |
 | ----- | ----------- |
