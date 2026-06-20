@@ -52,76 +52,9 @@ The SPA's deployed HTML is minimal. The application's code builds to JavaScript 
 </html>
 ```
 
-### Web Host
+### Web Technology Setup
 
-I use the [Node.js Express HTTP Server](https://expressjs.com/en/) as the web host, from which the browser downloads web static content over HTTPS. The most essential code to do so is shown below. The SPA web host is a technically simple component. In particular, the web host should never come into contact with sensitive data. 
-
-```typescript
-const app = express();
-app.use('/*_', setSecurityHeaders);
-
-const pfxData = await fs.readFile('../certs/authsamples-dev.ssl.p12');
-const httpsOptions = {
-    pfx: pfxData,
-    passphrase: 'Password1',
-};
-
-const server = https.createServer(httpsOptions, app);
-
-const spaBasePath = '/spa/';
-const spaPhysicalRoot = 'dist';
-app.use(spaBasePath, express.static(spaPhysicalRoot));
-
-const port = 443;
-server.listen(port, () => {
-    console.log(`Web host is listening on HTTPS port ${port} ...`);
-});
-```
-
-The static content gets loaded from the *dist* folder, which contains the following files, which the rollup bundler writes. During development, whenever I change code in an editor, the web resources get updated.
-
-```markdown
-index.html
-app.bundle.js
-vendor.bundle.js
-app.css
-spa.config.json
-favicon.ico
-```
-
-The web host returns a number of [recommended security headers](https://owasp.org/www-project-secure-headers/), the most important of which is to apply a restrictive content security policy to the browser environment. During development the SPA can only interact with resources from its web host, the trusted authorization server and trusted APIs.
-
-```typescript
-function setSecurityHeaders(request: Request, response: Response, next: NextFunction): any {
-
-    const trustedHosts = [
-        'https://api.authsamples-dev.com:446',
-        'https://cognito-idp.eu-west-2.amazonaws.com',
-        'https://login.authsamples.com',
-    ];
-
-    let policy = "default-src 'none';";
-    policy += " script-src 'self';";
-    policy += ` connect-src 'self' ${trustedHosts.join(' ')};`;
-    policy += " child-src 'self';";
-    policy += " img-src 'self';";
-    policy += " style-src 'self';";
-    policy += " object-src 'none';";
-    policy += " frame-ancestors 'none';";
-    policy += " base-uri 'self';";
-    policy += " form-action 'self'";
-
-    response.setHeader('content-security-policy', policy);
-    response.setHeader('strict-transport-security', 'max-age=31536000; includeSubdomains; preload');
-    response.setHeader('x-frame-options', 'DENY');
-    response.setHeader('x-xss-protection', '1; mode=block');
-    response.setHeader('x-content-type-options', 'nosniff');
-    response.setHeader('referrer-policy', 'same-origin');
-    next();
-}
-```
-
-The web development server also implements live reloading when I edit the SPA's TypeScript code or CSS styles, to update the *dist* folder and refresh the page. I explain much more about web mechanics, like rollup builds and live reloads, in the <a href='web-technology-setup.mdx'>Web Technology Setup</a> post. Ultimately, rollup transpiles the SPA's code to modern ECMAScript code that executes in the browser.
+The SPA uses this blog's <a href='web-technology-setup.mdx'>Web Technology Setup</a>. That post explains how the SPA uses the rollup bundler to build modern ECMAScript bundles and use an Express HTTP server to serve them. The web development setup uses a restrictive content security policy and live reloading during development.
 
 ### SPA Entry Point
 
@@ -458,14 +391,6 @@ private renderData(data: CompanyTransactions): void {
     const html = mustache.render(htmlTemplate, viewModel);
     DomUtils.html('#main', html);
 }
-```
-
-### Styling and Layout
-
-The SPA uses styles from the *tailwindcss* framework. I use layout styles to arrange elements into rows and columns. I use appearance styles when rendering UI elements like buttons and labels. The application uses an *app.css* file to import tailwindcss. The build process produces a final *app.css* with the parts of the framework that my TypeScript code references.
-
-```css
-@import 'tailwindcss';
 ```
 
 ### Navigation via Hash Change Events
