@@ -1,14 +1,14 @@
 # Microsoft Entra ID SPA and API Setup
 
-The previous post provided some <a href='updated-api-coding-key-points.mdx'>API Code Details</a> for the second code sample. Next I port the code sample to [Microsoft Entra ID](https://www.microsoft.com/en-us/security/business/identity-access/microsoft-entra-id) and use the same libraries in the SPA and API.
+The previous post provided some <a href='updated-api-coding-key-points.mdx'>API Code Details</a> for the second code sample. Next I port the second code sample to [Microsoft Entra ID](https://www.microsoft.com/en-us/security/business/identity-access/microsoft-entra-id) and use the same libraries in the SPA and API.
 
 ### Code Sample Goal
 
-This code sample is an exercise to highlight that OAuth implementations should be portable. When an authorization server implements vendor-specific behavior, security libraries may not work out-of-the-box and you may need to apply workarounds.
+This code sample is an exercise in writing portable OAuth code, to run the <a href='improved-spa-code-sample-overview.mdx'>Updated SPA and API Code Sample</a> in Entra ID. It highlights how to use standards-based security libraries even when you run into an authorization server that departs from OAuth standards and uses vendor-specific logic.
 
-### Main Objective
+### Entra ID Integration
 
-The goal of the Entra ID code sample is to match the <a href='improved-spa-code-sample-overview.mdx'>Second SPA and API Code Sample</a>, ideally with exactly the same code. Only the configuration should need changing:
+To integrate with Entra ID, I should only need to update the SPA and API configuration settings:
 
 | Area | Description |
 | ---- | ----------- |
@@ -28,12 +28,12 @@ git clone https://github.com/gary-archer/oauth.websample.entraid
 
 ### Local Computer Hosting
 
-In this post I explain some setup details for the Entra ID authorization server. The following components run at these URLs in the end-to-end flow:
+In this post I explain some setup details for the Entra ID authorization server. The SPA and API run at the following URLs:
 
 | Component | URL |
 | --------- | --- |
-| Secured API | *https://api.authsamples-dev.com/api* |
-| Secured SPA | *https://www.authsamples-dev.com/spa* |
+| API | *https://api.authsamples-dev.com:446/api* |
+| SPA | *https://www.authsamples-dev.com/spa* |
 
 To get a working system you would need to follow the steps in this post for your own Microsoft account and then reconfigure the apps. The configuration is a little complex though, due to my requirement to issue custom claims to access tokens.
 
@@ -45,7 +45,7 @@ I used the [Azure Free Trial](https://azure.microsoft.com/en-gb/free/) offer and
 
 ### Step 2. Log in to the Entra ID Portal
 
-After email confirmation I visited [https://entra.microsoft.com](https://entra.microsoft.com) and could manage a directory whose domain name is based on by registration email:
+After email confirmation I visited [https://entra.microsoft.com](https://entra.microsoft.com) to use a directory whose domain name is based on my registration email:
 
 ![azure directory](../images/190/azure-directory.jpg)
 
@@ -72,7 +72,7 @@ I assigned each user *First name* and *Last name* fields. The *Object ID* field 
 
 ![built in user attributes](../images/190/built-in-user-attributes.jpg)
 
-I then did an initial login for each user with the following steps in a new incognito browser window, to configure the user for MFA, as Entra ID requires. I used the Google authenticator app on my mobile device.
+I then did an initial login for each user with the following steps in a new incognito browser window. Entra ID requires each user to use multi-factor authentication (MFA). I used the Google authenticator app on my mobile device as a second factor.
 
 - In the Entra ID Portal, reset the user's password to get a temporary one.
 - Login to the SPA and reset the password when prompted.
@@ -124,11 +124,11 @@ I navigated to the *Custom User Attributes* screen and added the fields to the u
 
 ![custom user attributes](../images/190/custom-user-attributes.jpg)
 
-Populating these values for my two test user accounts was a little convoluted and took me some time to understand. Eventually, I created a new client called *UserAdmin* without setting a platform. I then generated a client secret. In total my account uses the following registrations:
+Populating these values for my two test user accounts was convoluted and took me some time to understand. Eventually, I created a new client called *UserAdmin* without setting a platform. I then generated a client secret. In total my account uses the following registrations:
 
 ![app registrations](../images/190/app-registrations.jpg)
 
-Entra ID automatically creates the extensions app and stores custom user attributes there. The *UserAdmin* app is a backend client for administering all user accounts with the client credentials flow. Therefore I granted it *User.ReadWriteAll* application permissions (not delegated permissions). To populate the values for my two test user accounts I had to write some client code to call the Graph API. I did this as a bash script that uses the [jq](https://github.com/jqlang/jq) tool. The code sample repository contains the script:
+Entra ID automatically creates the extensions app and stores custom user attributes there. The *UserAdmin* app is a backend client with which I can administer user accounts. Therefore I granted it *User.ReadWriteAll* application permissions (not delegated permissions). To populate the values for my two test user accounts I had to write some client code to call the Graph API. I did this as a bash script that uses the [jq](https://github.com/jqlang/jq) tool. The code sample repository contains the script:
 
 - [utils/populate_custom_user_attributes.sh](https://github.com/gary-archer/oauth.websample.entraid/blob/master/utils/populate-custom-user-attributes.sh)
 
@@ -143,13 +143,13 @@ To customise access tokens you edit the API client registration, starting by sel
 
 ![edit api client](../images/190/edit-api-client.jpg)
 
-A *Single Sign On* tab is then available from which you can select *Attributes & Claims*. Here I added the custom claims using a source location of *Directory Schema Extension*. I used a *custom_* prefix to avoid conflicts with the built-in *role* claim:
+A *Single Sign On* tab is then available from which you can select *Attributes & Claims*. Here I added the custom claims using a source location of *Directory Schema Extension*. I used a *custom_* prefix to avoid conflicts with Entra ID's *role* claim for employees:
 
 ![directory schema extensions](../images/190/directory-schema-extensions.jpg)
 
 ### Step 8. Download the Code Sample
 
-You can then download the code, then open it in Visual Studio Code:
+You can download the code sample, then open it in Visual Studio Code:
 
 ```bash
 git clone https://github.com/gary-archer/oauth.websample.entraid
@@ -158,12 +158,12 @@ git clone https://github.com/gary-archer/oauth.websample.entraid
 Identify the configuration files containing OAuth settings used by the UI and API:
 
 <div className='smallimage'>
-    <img src='../images/190/code-layout.jpg?v=20251230' alt='code layout' />
+    <img src='../images/190/code-layout.jpg?v=20260620' alt='code layout' />
 </div>
 
 ### Step 9. Update SPA Configuration
 
-For the SPA update both the *Tenant ID* and the SPA's *Client ID* to your own value:
+For the SPA's *spa.config.json* file, update both the *Tenant ID* and the SPA's *Client ID* to match your value:
 
 ```json
 {
@@ -182,7 +182,7 @@ For the SPA update both the *Tenant ID* and the SPA's *Client ID* to your own va
 
 ### Step 10. Update API Configuration
 
-For the API configuration, replace the *Tenant ID* with your own value. Also update the *Audience* and *Client ID* values with those for the API:
+For the API's *api.config.json* file, update the *Tenant ID*, *Audience* and *Client ID* values to match your values:
 
 ```json
 {
@@ -214,11 +214,9 @@ For the API configuration, replace the *Tenant ID* with your own value. Also upd
 }
 ```
 
-This configuration is equivalent to that of the earlier <a href='improved-spa-code-sample-overview.mdx'>Updated SPA and API</a>, which ran against AWS Cognito. The Graph details in the configuration are explained in the next post.
-
 ### Step 11. Configure DNS and SSL
 
-Update the hosts file on your computer to include this blog's local development domains, described in the earlier <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a> post:
+The SPA requires the hosts file on your computer to include this blog's development domains, described in the <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a>:
 
 ```markdown
 127.0.0.1 www.authsamples-dev.com api.authsamples-dev.com
@@ -246,11 +244,11 @@ Next, run the following script, to build the code and run the API over SSL on po
 ./start.sh
 ```
 
-Login completes successfully and you can run the same SPA and API that I previously ran against AWS Cognito. There are some minor OAuth differences but both apps use essentially the same code.
+With the correct configuration, login completes successfully and you can run the same SPA and API that I previously ran against AWS Cognito. There are some minor OAuth differences but both apps use essentially the same code.
 
 ### Where Are We?
 
-I have provided a working Entra ID setup and in the next post I explain further details about the SPA and API OAuth end-to-end flow.
+I explained an Entra ID setup to run a standards-based SPA and API. In the next post I provide further details on how to run the SPA and API, and troubleshoot the OAuth end-to-end flow.
 
 ### Next
 

@@ -2,9 +2,13 @@
 
 Previously I explained the <a href='azure-active-directory-setup.mdx'>Microsoft Entra ID SPA and API Setup</a>. In this post I explain some differences I had to overcome to adapt this blog's <a href='improved-spa-code-sample-overview.mdx'>Updated SPA and API</a> to Entra ID.
 
+### Web Technology Setup
+
+The updated SPA continues to use vanilla TypeScript code and this blog's <a href='web-technology-setup.mdx'>Web Technology Setup</a>. That post explains how the SPA uses the rollup bundler to build modern ECMAScript bundles and an Express HTTP server to serve them. The web development setup uses a restrictive content security policy and live reloading during development.
+
 ### 1. SPA and API
 
-The SPA implements OpenID Connect and its lifecycle events. The API validates access tokens and uses claims-based authorization to protect its fictional data. The correct data is then rendered based on the logged in user:
+The SPA implements OAuth and OpenID Connect lifecycle events using Entra ID. The API validates Entra ID access tokens and uses claims-based authorization to protect its fictional data. The correct data is then rendered based on the signed in user:
 
 ![spa](../images/200/spa.jpg?v=20240822)
 
@@ -36,18 +40,18 @@ When I first integrated with Entra ID I ran into a problem where the access toke
 
 ![original access token](../images/200/original-access-token.jpg)
 
-After some research it turned out that this format of access token should only be received by Microsoft's APIs. The default format of access token is heavily used to secure Azure resources during Azure infrastructure deployments. This access token type always fails standards-based validation for your own APIs. I needed to use the second type of access token below:
+After some research it turned out that this format of access token should only be received by Microsoft's APIs. This form of access token is used heavily to secure Azure resources during Azure infrastructure deployments. This access token type always fails standards-based validation for your own APIs. To resolve my problem, I needed to use the second type of access token below:
 
 | Access Token Type | Description |
 | ----------------- | ----------- |
 | Microsoft APIs | These tokens contain a *nonce* field in the JWT header and are not designed for custom APIs to validate. |
 | Custom APIs | Custom APIs need to receive an access token with their required scope(s) and an audience matching the registered API client. |
 
-I therefore updated to the scope and permission settings from the previous blog post. The API then receives a normal JWT access token with the correct issuer and audience, and without a *nonce* in the JWT header. The API's JWT validation then succeeds:
+I therefore updated to the scope and permission settings from the previous blog post. The API then receives a normal JWT access token with the correct issuer and audience, and without a *nonce* in the JWT header. The API's JWT validation then succeeds.
 
 ![final access token](../images/200/final-access-token.jpg)
 
-The access token contains a couple of technical user identifiers. The *oid* claim is the permanent user account ID, which is the same across all Entra ID applications. The *sub* claim is issued as a unique identifier private to the client. The access token contains the custom claims explained in the previous post to enable the API to implement authorization in a convenient way. I was unable to exclude personal data from the access token, even if I removed all Graph permissions from the API's registered client.
+The access token contains a couple of technical user identifiers. The *oid* claim is the permanent user account ID, which is the same across all Entra ID applications. The *sub* claim is a unique user identifier private to the client. The access token contains the custom claims explained in the previous post to enable the API to implement authorization in a convenient way. I was unable to exclude personal data from the access token, even if I removed all Graph permissions from the API's registered client.
 
 ### 5. SPA OpenID Connect Configuration Changes
 
@@ -101,9 +105,9 @@ It is common in OAuth for a client to request a mix of OpenID Connect and custom
 
 ### 7. User Info Flow
 
-The SPA downloads personal data from the OpenID Connect userinfo endpoint, which uses Microsoft Graph. When using Entra ID, Graph is considered to be an Azure infrastructure resource. To access Graph, you must get a Graph access token. Therefore I use the [On Behalf Of Flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-on-behalf-of-flow) to swap the SPA's access token for a Graph access token. However, that flow requires a client credential, and you cannot safely store one in an SPA. Therefore, the SPA cannot use this flow directly. 
+The SPA downloads personal data from the OpenID Connect userinfo endpoint, which uses Microsoft Graph. When using Entra ID, Graph is considered to be an Azure infrastructure resource. To access Graph, you must get a Graph access token. Therefore I use the [On Behalf Of Flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-on-behalf-of-flow) to swap the SPA's access token for a Graph access token. However, that flow requires a client credential, and you cannot safely store one in an SPA. 
 
-In a real deployment, the SPA could route its Graph userinfo request via an API gateway. The demo SPA instead routes to Graph via its API. The SPA calls the first URL below. The API performs the token exchange request and sends the Graph access token to the second URL to get userinfo. The API returns the resulting userinfo to the SPA:
+Therefore, the SPA must route its Graph userinfo request via an API. The SPA calls the first URL below. The API performs the token exchange request and sends the Graph access token to the second URL to get userinfo. The API returns the resulting userinfo to the SPA:
 
 - *https://api.authsamples-dev.com/oauthuserinfo*
 - *https://graph.microsoft.com/oidc/userinfo*
@@ -114,7 +118,7 @@ To implement the *On Behalf Of* flow, the API sends a request to the Entra ID to
 
 ![on behalf of](../images/200/on-behalf-of.jpg?v=20240822)
 
-Next the API sends the returned access token to the Graph endpoint to get userinfo and return it to the SPA, which renders the user's name in the top right corner of the browser:
+Next the API sends the returned access token to the Graph endpoint to get the following userinfo, which it returns to the SPA, so that the SPA can render the signed in user's name:
 
 ![userinfo](../images/200/userinfo.jpg?v=20240822)
 
@@ -166,13 +170,11 @@ The SPA uses almost identical code to the previous code sample, which used AWS C
 - <a href='basicspa-codingkeypoints.mdx'>SPA 1 - Code Details</a>
 - <a href='basicapi-codingkeypoints.mdx'>SPA 2 - Code Details</a>
 
-A point of interest is that Entra ID correctly supports the traditional iframe-based silent token renewal solution for SPAs. It does so by issuing SSO cookies with the *SameSite=none* property, and correctly handles the OpenID Connect *prompt=none* request parameter.
-
-In the SPA you can click *Expire Access Token* followed by *Reload Data* to force the API to return a 401 response. The SPA then runs an iframe redirect to refresh access tokens. Doing so avoids redirecting the whole window and impacting the user, after which the SPA receives a new access token.
+Entra ID correctly supports the traditional iframe-based silent token renewal solution for SPAs. It does so by issuing SSO cookies with the *SameSite=none* property. In the SPA you can click *Expire Access Token* followed by *Reload Data* to force the API to return a 401 response. The SPA then runs an iframe redirect to refresh access tokens. Doing so avoids redirecting the whole window and impacting the user, after which the SPA receives a new access token.
 
 ![iframe token renewal](../images/200/iframe-token-renewal.jpg?v=20240822)
 
-This flow is no longer reliable in all browsers though. Some browsers, like Safari, refuse to send the SSO cookie from an iframe with default browser settings.
+This flow is no longer reliable in all browsers though. Some browsers, like Safari with default settings, refuse to send third-party SSO cookies from an iframe.
 
 ### 9. Multi-Tab Browsing
 
@@ -180,19 +182,15 @@ Since the SPA uses in-memory token storage, opening a new tab / window, or reloa
 
 ### 10. Multi-Tab Logout
 
-Entra ID supports RP-initiated logout in the standard way, so I use the *oidc-client-ts* implementation to send an end session request. The Entra ID code sample implements multi-tab logout in a similar manner to this blog's previous SPA.
+Entra ID supports RP-initiated logout in the standard way, so I use the *oidc-client-ts* implementation to send an end session request. The SPA also continues to implement multi-tab logout by listening for updates to local storage from other browser tabs.
 
 ### 11. Extensible API Claims
 
-The API follows this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a> and uses some values for authorization that are not contained in the Entra ID access token. These are included in the *ClaimsPrincipal* object injected into the API's business logic. The earlier <a href='updated-api-coding-key-points.mdx'>API Code Details</a> blog post explained the techniques.
-
-### 12. Code Portability
-
-Entra ID has some vendor-specific behaviour for userinfo and access tokens which adds a little complexity. Yet with a little work I was able to port the previous SPA and API code sample so that it works for Entra ID.
+The API follows this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a> and uses some values for authorization that are not contained in the Entra ID access token. These are included in the *ClaimsPrincipal* object injected into the API's business logic. The earlier <a href='updated-api-coding-key-points.mdx'>API Code Details</a> blog post explained the details.
 
 ### Where Are We?
 
-I explained the types of technique you may have to use during OAuth integrations. Ideally, authorization server providers should follow OAuth standards, though many of them implement custom behaviour that makes portability non-trivial. I always aim to keep the code in my APIs and clients as standards-based as possible, to give myself the best future choices.
+I explained the types of technique you may have to use during OAuth integrations. Ideally, authorization server providers should follow OAuth standards, though many of them implement custom behaviour that makes portability non-trivial. Despite that, I always aim to use standards-based portable code in my OAuth-secured APIs and clients, to simplify migrations as much as possible.
 
 ### Next
 
