@@ -170,7 +170,7 @@ private onServeWebFiles(request: Request): Promise<Response> {
 
 ### Live Reload
 
-For the final SPA, the live reload behavior was integrated into the web static content host. For the final desktop app, the main process serves static content. When the renderer rollup build completes, it calls the */reload* endpoint of a small live reload server, which then sends a web socket notification to the renderer process, so that it can reload itself.
+For the final SPA, the live reload behaviour was integrated into the web static content host. For the final desktop app, the main process serves static content. When the renderer rollup build completes, it calls the */reload* endpoint of a small live reload server, which then sends a web socket notification to the renderer process, so that it can reload itself.
 
 ```typescript
 import express, {Request, Response} from 'express';
@@ -243,7 +243,7 @@ session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
 });
 ```    
 
-In development mode, the response headers must implement a couple of behaviors in order for live reload to work. The CSP must allow connections between the browser and the live reload server, and response headers must prevent caching of previously built browser files.
+In development mode, the response headers must implement a couple of behaviours in order for live reload to work. The CSP must allow connections between the browser and the live reload server, and response headers must prevent caching of previously built browser files.
 
 ### Private URI Scheme Registration
 

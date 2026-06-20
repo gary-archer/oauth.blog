@@ -12,10 +12,10 @@ The main ingredient of an SPA is its coded logic to present views with data from
 
 ### Web Development Pipeline
 
-You then need to implement a web development pipeline, where the application code is central but there are a number of related behaviors. Modern web technology changes often and can feel overwhelming at times. I therefore like to articulate my important requirements at each stage of processing and ensure that I understand how they are met.
+You then need to implement a web development pipeline, where the application code is central but there are a number of related behaviours. Modern web technology changes often and can feel overwhelming at times. I therefore like to articulate my important requirements at each stage of processing and ensure that I understand how they are met.
 
-| Stage	| Behaviors |
-| ----- | --------- |
+| Stage	| Behaviours |
+| ----- | ---------- |
 | Download Dependencies | Before you write any real code you typically need a way to download third party libraries as dependencies. |
 | Write Code | To write non-trivial TypeScript code you need to import third party libraries and use their classes and functions. |
 | Execute Tasks | You sometimes need to execute arbitrary tasks as part of development, such as code quality checks or running tests. |
@@ -689,7 +689,7 @@ Given a stack trace and sourcemap files, I can use an [Online Source Mapper](htt
 
 Source map stack trace lookup also works for minified release builds, to provide a mechanism to help resolve production errors. For a real SPA I would save source map files for each application release. Production frontends could use a feature to *send home* a stack trace rather than display it to the user.
 
-### Web Production Behaviors
+### Web Production Behaviours
 
 Once you have a productive web pipeline, you are well placed to productionize and apply finishing touches to the web technology. The following blog posts explore this blog's finishing touches for web applications. None of these steps change the web technology setup:
 
@@ -698,7 +698,7 @@ Once you have a productive web pipeline, you are well placed to productionize an
 - The <a href='api-journey-client-side.mdx'>API Journey Client Side</a> explains how web clients should handle API security challenges.
 - The <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a> explains modern web deployments with optimal global performance.
 
-Of course, in a real SPA you are likely to have additional requirements. You may also prefer to do a little more work in the web host. You should be able to adapt this blog's web technology setup to add extra behaviors that meet your own requirements.
+Of course, in a real SPA you are likely to have additional requirements. You may also prefer to do a little more work in the web host. You should be able to adapt this blog's web technology setup to add extra behaviours that meet your own requirements.
 
 ### Where Are We?
 

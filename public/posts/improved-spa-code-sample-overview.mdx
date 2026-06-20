@@ -2,6 +2,10 @@
 
 Previously I summarised the use of <a href='id-tokens.mdx'>ID Tokens</a> in applications. Next I explain how to complete the initial SPA and API code sample, to add the main frontend session behaviours and to add claims-based authorization to the API.
 
+### Code Sample Goal
+
+The updated SPA code sample aims to complete OAuth session management in the SPA, while also providing an extensible way to manage authorization claims in APIs.
+
 ### New Features
 
 The updated SPA and API code sample has the following additional behaviours, to implement the OpenID Connect features that the SPA needs to run a complete application lifecycle:
@@ -14,10 +18,6 @@ The updated SPA and API code sample has the following additional behaviours, to 
 | Multi Tab Browsing | The token renewal solution should enable multi tab-browsing without noticeable user impact. |
 | Logout | The SPA implements a basic form of logout, including logout across multiple browser tabs. |
 | Real-World URLs | Both the SPA and API run on a development computer using real-world HTTPS URLs. |
-
-### SPAs in 2021
-
-This example SPA uses the traditional SPA solution, with a JavaScript OpenID Connect implementation. It is now considered more secure for your production apps to instead use a <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend</a> approach. Before this blog integrates a BFF it explains the traditional SPA flow and the web development and deployment benefits it enables.
 
 ### Step 1. Code Download
 
@@ -34,7 +34,7 @@ git clone https://github.com/gary-archer/oauth.websample2
 The SPA uses the same components as the initial code sample, with SPA code that runs in the browser and an API backend.
 
 <div className='smallimage'>
-    <img src='../images/170/code-layout.jpg' alt='code layout' />
+    <img src='../images/170/code-layout.jpg?v=20260620' alt='code layout' />
 </div>
 
 ### Step 3. View Updated Configuration
@@ -114,9 +114,9 @@ Next, run the following script, to build the code and run the API at *https://ap
 ./start.sh
 ```
 
-The SPA terminal window builds JavaScript bundles and serves them using the webpack development server on port 443:
+The SPA terminal window builds JavaScript bundles and serves them using a development web server on port 443:
 
-![spa build](../images/170/spa-build.jpg?v=20251230)
+![spa build](../images/170/spa-build.jpg?v=20260620)
 
 The API terminal window listens for requests from the SPA on port 446:
 
@@ -146,11 +146,7 @@ For details on how the authorization server issues these scopes and claims see t
 
 ### Step 8. API uses Claims Based Authorization
 
-The API's OAuth processing reads the token claims and also looks up extra values that it needs to implement its authorization. I provide further details on my design choices in the <a href='api-authorization-design.mdx'>API Authorization Behaviour</a> blog post.
-
-![extensible claims](../images/170/extensible-claims.jpg)
-
-The API serves hard coded JSON data, representing multiple regions:
+The API's OAuth processing reads the token claims and also looks up extra values that it needs to implement its authorization. I provide further details on my design choices in the <a href='api-authorization-design.mdx'>API Authorization Behaviour</a> blog post. The API then serves JSON data for multiple regions:
 
 ```json
 [
@@ -173,7 +169,7 @@ The API serves hard coded JSON data, representing multiple regions:
 ]
 ```
 
-Each user has access to data from an array of regions, and the default guest user only has access to the US region, so I cannot see items 1 and 3. Therefore the API filters those values from the results it returns to the SPA:
+Each user has access to data from an array of regions, and the default guest user only has access to the USA region, so is not authorized to view items 1 and 3. Therefore the API filters those values from the results it returns to the SPA:
 
 ![filtered list](../images/170/filtered-list.jpg?v=20240813)
 
@@ -185,7 +181,7 @@ The SPA handles this *Not Found For User* API error code specially and redirects
 
 ### Step 9. SPA Downloads User Info
 
-As for the first code sample, the SPA continues to get name details for display from the OpenID Connect userinfo endpoint:
+As for the first code sample, the SPA continues to get name details for display from the OpenID Connect userinfo endpoint, which returns the following core JSON user attributes:
 
 ```json
 {
@@ -232,7 +228,7 @@ The updated code sample implements the traditional SPA token renewal flow, where
 
 ![iframe renewal request](../images/170/iframe-renewal-request.jpg?v=2051230)
 
-Although the SPA's code implements the renewal flow correctly, every iframe token renewal fails, since AWS Cognito cookies do not support this flow. The user experiences an OpenID Connect redirect whenever the access token expires or the user refreshes the page. With third-party cookie deprecation, that is the expected future behavior, and I say more about it in the <a href='user-sessions-and-token-renewal.mdx'>Iframe Access Token Renewal</a> post.
+Although the SPA's code implements the renewal flow correctly, every iframe token renewal fails, since AWS Cognito cookies do not support this flow. The user experiences an OpenID Connect redirect whenever the access token expires or the user refreshes the page. With third-party cookie deprecation, that is the expected future behaviour, and I say more about it in the <a href='user-sessions-and-token-renewal.mdx'>Iframe Access Token Renewal</a> post.
 
 ### 12. Logout
 
@@ -246,7 +242,7 @@ A boolean flag is also stored in session storage after logout. Other tabs use th
 
 ### Where Are We?
 
-I have added missing features to the SPA and API behaviour, to improve SPA session management and to enable the API to authorize requests correctly. Overall security and token renewal still have some issues, which I resolve later, in the <a href='final-spa-overview.mdx'>Final SPA</a>.
+I have added missing features to the SPA and API behaviour, to improve SPA session management and to enable the API to authorize requests correctly. The SPA still has some security and usability issues, which I resolve later, in the <a href='final-spa-overview.mdx'>Final SPA</a>.
 
 ### Next
 

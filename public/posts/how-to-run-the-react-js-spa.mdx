@@ -20,7 +20,7 @@ The SPA code assets are separated into *src*, *build* and *tools* folders. The *
     <img src='../images/230/code-layout.jpg?v=20260527' alt='code layout' />
 </div>
 
-The main *package.json* and *tsconfig.json* are centred on the SPA's behavior. The *build* and *tools* folders contain their own *package.json* and *tsconfig.json* files, to run small Node.js processes. For example, the *package.json* in the *build* folder contains Rollup dependencies, which helps to reduce technical noise for the SPA.
+The main *package.json* and *tsconfig.json* are centred on the SPA's behaviour. The *build* and *tools* folders contain their own *package.json* and *tsconfig.json* files, to run small Node.js processes. For example, the *package.json* in the *build* folder contains Rollup dependencies, which helps to reduce technical noise for the SPA.
 
 ```json
 {
@@ -39,7 +39,7 @@ The main *package.json* and *tsconfig.json* are centred on the SPA's behavior. T
 }
 ```
 
-Users of the React application drive behavior from strongly-typed views that use JSX syntax. Views have identical behaviour to those from this blog's <a href='basicspa-codingkeypoints.mdx'>Earlier SPA Code Samples</a>.
+Users of the React application drive behaviour from strongly-typed views that use JSX syntax. Views have identical behaviour to those from this blog's <a href='basicspa-codingkeypoints.mdx'>Earlier SPA Code Samples</a>.
 
 ```jsx
 export function TitleView(props: TitleViewProps): JSX.Element {
@@ -126,7 +126,7 @@ Rollup runs in watch mode, and rebuilds bundles when code changes, to write upda
 
 ![spa build](../images/230/spa-build.jpg?v=20260527)
 
-These behaviors are trickier to implement in Rollup than in webpack. The benefit is that Rollup produces cleaner ECMAScript output. I continue to serve bundles in a technically equivalent manner for both development and release builds, as for earlier SPAs.
+These behaviours are trickier to implement in Rollup than in webpack. The benefit is that Rollup produces cleaner ECMAScript output. I continue to serve bundles in a technically equivalent manner for both development and release builds, as for earlier SPAs.
 
 ### Step 5: Sign In to the SPA
 

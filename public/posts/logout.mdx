@@ -4,7 +4,7 @@ Previously I explained how <a href='user-sessions-and-token-renewal.mdx'>Iframe-
 
 ### Logouts and Users
 
-Most commonly, users simply close the app to finish interacting with an app, rather than explicitly signing out. A big reason why many organizations want to support logout functionality in an OAuth-secured app is for test purposes. It can be useful to sign in to a frontend application using multiple test accounts with different user preferences or access rights.
+Most commonly, users simply close the app to finish interacting with an app, rather than explicitly signing out. Many organizations want to support logout functionality in an OAuth-secured app for test purposes. It can be useful to sign in to a frontend application using multiple test accounts with different user preferences or access rights.
 
 ### OpenID Connect Logout Standards
 
@@ -12,7 +12,7 @@ OpenID Connect logout supports multiple standards related to single logout. Howe
 
 ### RP Initiated Logout Request Messages
 
-This involves an HTTP top level redirect to the *End Session Endpoint*, and the request message commonly uses the following query parameters, where the client either sends a *client_id* or *id_token_hint* to the authorization server to identify itself.
+The most basic form of OpenID Connect logout sends an HTTP top level redirect to the authorization server's *End Session Endpoint*, and the request message commonly uses the following query parameters, where the client either sends a *client_id* or *id_token_hint* to the authorization server to identify itself.
 
 | Field | Description |
 | ----- | ----------- |
@@ -40,7 +40,7 @@ When logout has completed, this blog's code samples return the user to a *Post L
 
 ### Multi Tab Logout in SPAs
 
-It used to be possible for SPAs to use [OpenID Connect Session Management](https://openid.net/specs/openid-connect-session-1_0.html). In this flow, an iframe within each browser window polls the authorization server, sending it the SSO cookie, to check whether the user logged out elsewhere. However, since the SSO cookie is third-party, some browsers now refuse to send it from an iframe. Yet you can implement multi-tab logout if you simply store a boolean setting in local storage and use the [Browser Storage API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API) to watch for changes across tabs. This blog's code samples use this approach.
+It used to be possible for SPAs to use [OpenID Connect Session Management](https://openid.net/specs/openid-connect-session-1_0.html). In this flow, an iframe within each browser window polls the authorization server, sending it the SSO cookie, to check whether the user logged out elsewhere. However, since the SSO cookie is third-party, some browsers now refuse to send it from an iframe. Yet you can implement multi-tab logout if you simply store a boolean setting in local storage and use the [Browser Storage API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API) to watch for changes across tabs. I use this approach in subsequent SPA code samples.
 
 ![multi tab logout](../images/160/multi-tab-logout.jpg?v=20240822)
 
@@ -69,7 +69,7 @@ Sometimes developers also expect all access tokens to be immediately rejected by
 
 ### Where Are We?
 
-I explained how OAuth logout does not always work as perfectly as you may expect. It can be difficult to reason about single logout solutions. They  can add complexity and you may run into cookie-based limitations. Therefore, this blog follows a practical approach and keeps logout implementations simple.
+I explained how OAuth logout does not always work as perfectly as you may expect. It can be difficult to reason about single logout solutions. They  can add complexity and you may run into third-party cookie issues. Therefore, this blog follows a practical approach and keeps logout implementations simple.
 
 ### Next
 

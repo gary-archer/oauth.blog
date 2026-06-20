@@ -1,6 +1,6 @@
 # SSL Trust Configuration
 
-Previously I explained how to use an <a href='http-debugging-setup.mdx'>HTTP Proxy</a> to trace OAuth-related requests. Next, I explain how to enable HTTPS connections for development. Future code samples use SSL for all backend connections. I use *SSL* as the colloquial term, to represent [transport level security (TLS) v1.3](https://en.wikipedia.org/wiki/Transport_Layer_Security#TLS_1.3).
+Previously I explained how to use an <a href='http-debugging-setup.mdx'>HTTP Proxy</a> to trace OAuth-related requests. Next, I explain how to enable HTTPS connections for development. I use *SSL* as the everyday term, to represent [transport level security (TLS) v1.3](https://en.wikipedia.org/wiki/Transport_Layer_Security#TLS_1.3).
 
 ### Productive OAuth Development
 
@@ -8,15 +8,15 @@ When using OAuth, security components may require you to run an SSL setup on you
 
 ### SSL for Cloud Environments
 
-Later in this blog I create a <a href="cloud-domain-setup.mdx">Cloud Domain Setup</a> for a deployed domain of *authsamples.com*, which runs in AWS. I then use [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) to create AWS issued certificates for these subdomains, that are trusted by clients that call the SSL endpoints.
+Later in this blog I create a <a href="cloud-domain-setup.mdx">Cloud Domain Setup</a> for a deployed domain of *authsamples.com*, which runs in AWS. I then use [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) to create AWS wildcard certificates for these subdomains, that are trusted by clients that call the SSL endpoints.
 
 ![managed certificates](../images/110/managed-certificates.jpg?v=20241231)
 
-I use a similar approach for a development computer, for an *authsamples-dev.com* domain. I create a wildcard certificate for the domain and its subdomains. Be aware though, that in most real deployed environments, your APIs do not directly use SSL certificates. Instead, you typically configure SSL certificates in an API gateway placed in front of APIs.
+In real deployed environments, internet SSL certificates for APIs are typically managed by an API gateway, and internet SSL certificates for SPAs are typically managed by a content delivery network.
 
 ### Development Certificate Issuance
 
-Some online tutorials create standalone self-signed certificates for *localhost* in a way that does not match real-world certificates. I prefer to instead follow these main steps:
+On a development computer, I create a SSL certificates and keys for the *authsamples-dev.com* domain and its subdomains. To do so, I use the following steps:
 
 - Create a root certificate authority for development.
 - Create SSL server certificates issued by the root CA, with real-world domain names.
@@ -51,12 +51,12 @@ extendedKeyUsage = serverAuth
 subjectAltName=DNS:example.com,DNS:api.example.com,DNS:www.example.com
 ```
 
-Next, run commands to create an SSL private key and public certificate:
+Next, I run commands to create an SSL private key and public certificate:
 
 - Use the private key to sign a certificate signing request (CSR).
 - Request an X509 certificate with the CSR.
 - Act as a certificate authority that accepts the request and applies a policy to issue a certificate.
-- Save the SSL key and certificate to a password protected PKCS#12 file with a *.p12* or *.pfx* extension.
+- Save the SSL key and certificate to a password protected PKCS#12 file with a *.p12* extension.
 
 ```bash
 openssl ecparam -name prime256v1 -genkey -noout -out $DOMAIN.ssl.key
@@ -104,7 +104,7 @@ You can use an [Online Certificate Decoder](https://certlogik.com/decoder/) and 
 
 ### This Blog's SSL Code Samples
 
-This blog's code samples include bash scripts that you can run to create OpenSSL certificates for local development. When APIs start, they load the password-protected P12 file, then listen on SSL port 443:
+This blog's code samples include bash scripts that you can run to create OpenSSL certificates for local development. When SPAs or APIs start, they load the password-protected P12 file, then listen on a port. I use port 443 for SPAs and port 446 for APIs.
 
 ```typescript
 public async startListening(): Promise<void> {
@@ -132,7 +132,7 @@ public async startListening(): Promise<void> {
 }
 ```
 
-Is is therefore straightforward to upgrade your local connections to SSL. Tools may enable you to verify the details of the client to server connection. For example, the Google Chrome browser enables you to view SSL strength from *More Tools / Developer Tools / Security*, where you can verify that the connection uses TLS 1.3.
+Is is therefore straightforward to run SPAs and APIs using SSL. Tools may enable you to verify the details of the client to server connection. For example, the Google Chrome browser enables you to view SSL strength from *More Tools / Developer Tools / Security*, where you can verify that the connection uses TLS 1.3.
 
 ![local ssl](../images/110/local-ssl.jpg?v=20240728)
 
@@ -179,7 +179,7 @@ To configure root certificate trust, I start by creating a local trust bundle fi
 | HTTP Proxy Running  | Trust the proxy root certificate. |
 | HTTP Proxy Not Running | Trust the development root certificate. |
 
-The bundle file has multiple entries as shown here:
+My *~/trusted-ca-certs.crt* certificate bundle file has multiple entries as shown here:
 
 ```markdown
 # authsamples-dev.com
@@ -242,7 +242,7 @@ You may need to split the root certificates into individual files. To manage upd
 
 ### Trust a Root Certificate in Browsers
 
-Browsers mostly inherit SSL trust from their operating system default trust stores. You therefore enable certificate trust as I explain above, though there are some browser exceptions. On Firefox, you must navigate to *Options / Privacy & Security / Certificates / View Certificates / Authorities / Import* to import a root certificate. You must also do so if you run Google Chrome on Linux. When you add trust, select the option to *Trust this CA to identify websites*.
+Browsers mostly inherit SSL trust from their operating system default trust stores. You therefore enable certificate trust as I explain above, though there are some browser exceptions. On Firefox, you must navigate to *Options / Privacy & Security / Certificates / View Certificates / Authorities / Import* to import a root certificate. You must also import a root CA into the browser if you run Google Chrome on Linux. When you add trust, select the option to *Trust this CA to identify websites*.
 
 ![firefox trust](../images/110/firefox-trust.jpg?v=20240728)
 
@@ -294,27 +294,27 @@ For this blog's <a href='desktop-apps-overview.mdx'>OAuth Secured Desktop Apps</
 Command line tools usually use the default operating system trust store, so that these commands work once the tools trust root certificates:
 
 ```bash
-curl https://api.authsamples-dev.com/api/companies
-openssl s_client -connect api.authsamples-dev.com:443
+curl https://api.authsamples-dev.com:446/api/companies
+openssl s_client -connect api.authsamples-dev.com:446
 ```
 
-When required, you can use a different certificate bundle file via an override. The OpenSSL output can provide detailed output on any trust errors.
+When required, you can override the certificate bundle file. The OpenSSL output can provide detailed output on any trust errors.
 
 ```bash
-curl --cacert ~/trusted-ca-certs.crt https://api.authsamples-dev.com/api/companies
-openssl s_client -CAfile ~/trusted-ca-certs.crt -connect api.authsamples-dev.com:443
+curl --cacert ~/trusted-ca-certs.crt https://api.authsamples-dev.com:446/api/companies
+openssl s_client -CAfile ~/trusted-ca-certs.crt -connect api.authsamples-dev.com:446
 ```
 
 ### Trusting a Root Certificate in iOS and Android
 
-Mobile SSL trust has its own complexities, which are covered in the later posts on mobile setup:
+Mobile SSL trust has its own complexities, which are covered in the following posts on mobile setup:
 
 - <a href='android-https-debugging.mdx'>Android HTTPS Debugging</a>
 - <a href='ios-https-debugging.mdx'>iOS HTTPS Debugging</a>
 
 ### Where Are We?
 
-I explained how to upgrade the development setup so that you can use real-world HTTPS URLs for development. When doing so you should also learn how to configure trust so that you can view OAuth-related requests.
+I explained how to upgrade development setups to use real-world HTTPS URLs for backend components. When doing so you should also learn how to configure trust so that you can view OAuth-related requests.
 
 ### Next
 

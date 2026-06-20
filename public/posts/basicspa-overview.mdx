@@ -2,6 +2,10 @@
 
 In the <a href='web-architecture-goals.mdx'>Web Architecture Goals</a> post I summarised some desired qualities. This blog's first code deliverable is an end-to-end web and API code sample that you can run on a development computer. The web application is a Single Page Application and the end-to-end flow integrates an SPA, API and authorization server.
 
+### Code Sample Goal
+
+The initial SPA code sample demonstrates secure, modern, productive OAuth development setups. The OAuth integration separates concerns so that web developers focus on the customer experience, while API developers protect data. Future code samples will extend the initial SPA and API further.
+
 ### Business Focused Development
 
 The following table summarises the business-like behaviours that the initial code sample demonstrates.
@@ -14,11 +18,7 @@ The following table summarises the business-like behaviours that the initial cod
 | Reliable | Both the SPA and API handle expiry and other failure conditions in a solid manner. |
 | Real World URLs | The SPA makes cross domain calls to the API on the local computer, and you can view its OAuth messages. |
 
-The code sample uses a production-like setup on a development workstation. Identical technical behaviors would execute in deployed environments. At a real organization this would prevent mistakes and improve the time to market.
-
-### SPA 1 Goal
-
-The initial SPA code sample highlights a secure, modern web development setup and its productivity. The OAuth integration separates concerns so that web developers only focus on the customer experience, which is the correct architecture. Future SPAs will extend the initial SPA, to add session management and security hardening.
+The code sample uses a production-like setup on a development workstation. Identical technical behaviours would execute in deployed environments. At a real organization this would prevent mistakes and improve the time to market.
 
 ### Code Download
 
@@ -68,7 +68,7 @@ On a development computer I almost never use URLs like *http://localhost:3000* f
 | API | https://api.authsamples-dev.com |
 | Web Static Content | https://www.authsamples-dev.com |
 
-The web static content host also applies a restrictive Content Security Policy (CSP), to protect against XSS threats. Developing with domain names encourages web developers to more fully understand browser behaviors and improve the security of their SPAs.
+The web static content host also applies a restrictive Content Security Policy (CSP), to protect against XSS threats. Developing with domain names encourages web developers to more fully understand browser behaviours and improve the security of their SPAs.
 
 The use of domain names requires some initial infrastructure work. Once complete, you run with the same security as production systems, so you can avoid most deployment mistakes. You also have rich capabilities for testing OAuth flows on a development workstation.
 

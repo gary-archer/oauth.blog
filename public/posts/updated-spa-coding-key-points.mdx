@@ -2,6 +2,10 @@
 
 In the previous post I described the behaviour of the <a href='improved-spa-code-sample-overview.mdx'>Updated SPA and API Code Sample</a>. Next I summarise some changes to the SPA code, with a particular focus on <a href='user-sessions-and-token-renewal.mdx'>Iframe-Based Access Token Renewal</a> and its difficulties.
 
+### Web Technology Setup
+
+The updated SPA continues to use vanilla TypeScript code and this blog's <a href='web-technology-setup.mdx'>Web Technology Setup</a>. That post explains how the SPA uses the rollup bundler to build modern ECMAScript bundles and an Express HTTP server to serve them. The setup uses a restrictive content security policy and live reloading during development.
+
 ### SPA OAuth Configuration Changes
 
 I use additional settings from the *oidc-client-ts* library to use the following features in the SPA:
@@ -128,7 +132,7 @@ When the main window exchanges the code for token it uses the PKCE *code_verifie
 
 Iframe-based token renewal does not work with this blog's default authorization server, since it issues its SSO cookie with *SameSite=lax* instead of *SameSite=none*, which is required to send third-party cookies. This means, whenever the access token expires, or the user reloads the page, the user experiences an OpenID Connect login redirect.
 
-Even if the cookie settings was fixed, this is also the behavior in the Safari browser or Chrome incognito mode. These browsers drop all third party cookies except for certain exceptions, like top level redirects. Therefore, the updated code example correctly represents the future state of iframe based token renewal.
+Even if the cookie behaviour was fixed, this is also the behaviour in the Safari browser or Chrome incognito mode. These browsers drop all third party cookies except for certain exceptions, like top level redirects. Therefore, the updated code sample correctly represents the future state of iframe based token renewal.
 
 ### Updated API Flow
 
@@ -219,7 +223,7 @@ When you implement the traditional SPA flow using only JavaScript code, you typi
 - You must then manage page reloads and multi-tab browsing, and token refresh becomes considerably more difficult.
 - You then become aware that, even with very careful code, your SPA still has security and reliability issues.
 
-Eventually, you come to realise that to solve the security, usability and reliability conditions, you need a backend component that assists the SPA with its security and also serves the SPA to ensure the best usability and reliability. You can realise such a solution with a correctly designed <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend</a> as I show later in this blog. An important part of this design is error responses that put the SPA in control.
+Eventually, you come to realise that to solve the security, usability and reliability conditions, you need a backend component that assists the SPA with its security and also serves the SPA to ensure the best usability and reliability. You can realise such a solution with a correctly designed <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend</a>, as I show later in this blog.
 
 ### SPA Calls API to get User Info
 
@@ -299,7 +303,7 @@ private onStorageChange(event: StorageEvent): void {
 
 ### Where Are We?
 
-I explained the code to complete the traditional SPA flow, with in-memory storage of access tokens, and the SSO cookie used for token refresh. The use of iframes was a successful technique, but in 2021 it is no longer considered secure or reliable.
+I explained the code to complete the traditional SPA flow, with in-memory storage of access tokens, and the SSO cookie used for token refresh. The use of iframes was once a successful technique, but it is no longer reliable or considered the most secure option.
 
 ### Next
 

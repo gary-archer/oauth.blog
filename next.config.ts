@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
     devIndicators: false,
 };
 
-// MDX plugins require special behavior
+// MDX plugins require special behaviour
 // https://nextjs.org/docs/app/guides/mdx#using-plugins-with-turbopack
 const mdxConfig: NextMDXOptions = {
     options: {

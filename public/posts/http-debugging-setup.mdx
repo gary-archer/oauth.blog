@@ -29,7 +29,7 @@ I use the *-ssl-insecure* option when upstream components use my own OpenSSL gen
 
 After running the above command, you must configure the operating system to use an HTTP proxy, with *host=127.0.0.1* and *port=8888*. A little later in this post I provide screenshots to show how to do so on Windows, macOS and Linux computers.
 
-Next, browse to http://mitm.it and follow the instructions so that your browser trusts the HTTP proxy's root certificate authority. You can then capture OAuth and API requests, including those sent from this blog's code samples:
+Next, browse to *http://mitm.it* and follow the instructions so that your browser trusts the HTTP proxy's root certificate authority. You can then capture OAuth and API requests, including those sent from this blog's code samples:
 
 ![mitm cert docs](../images/100/mitm-cert-docs.jpg)
 
@@ -37,7 +37,7 @@ You can then browse to internet sites and capture traffic. For this blog's compo
 
 ![mitm trace](../images/100/mitm-trace.jpg?v=20240714)
 
-The initial code sample uses HTTP so has to use *localhost* URLs, due to behaviours specific to AWS Cognito and the oidc-client-ts library. However, proxy tools typically do not capture *localhost* requests. Although you may be able to get a capture working, the most productive option is to use HTTPS URLs with real-world domain names. I use this approach for all subsequent code samples.
+Proxy tools typically do not capture *localhost* requests. Although you may be able to get a capture working, the most productive option is to use HTTPS URLs with real-world domain names. I use HTTPS for all of this blog's code samples.
 
 ### Automated Setup
 
@@ -72,7 +72,7 @@ def load(loader):
     ctx.options.view_filter = "~d authsamples|cognito"
 ```
 
-Next, I perform any environment specific configuration, explained in the following sections. I then debug HTTP/S messages for the components of interest. Finally, when I finish debugging, I run the *stop.sh* script to free resources.
+Next, I perform any environment specific configuration, explained in the following sections. I then debug HTTPS messages for the components of interest. Finally, when I finish debugging, I run the *stop.sh* script to free resources.
 
 ### Debug the Initial SPA and API
 
@@ -170,7 +170,7 @@ Browsers usually inherit the system proxy settings, though command line override
 
 ### Proxy Settings for Node.js APIs
 
-In Node.js, this blog's APIs use the proxy built into the [undici fetch library](https://github.com/nodejs/undici), and set the proxy URL that corresponds to the scheme of the target URL. The *undici* library also add a *dispatcher* property to fetch options that activates the proxy. When connecting to HTTPS URLs I use the following utility class:
+In Node.js, this blog's APIs use the proxy built into the [undici fetch library](https://github.com/nodejs/undici), and set the proxy URL that corresponds to the scheme of the target URL. The *undici* library adds a *dispatcher* property to fetch options that activates the proxy. When connecting to HTTPS URLs I use the following utility class:
 
 ```typescript
 import {EnvHttpProxyAgent} from 'undici';
@@ -228,7 +228,7 @@ public sealed class HttpProxy
 }
 ```
 
-The .NET code then wires up the custom handler to the *HttpClient* class that sends HTTP/S requests:
+The .NET code then wires up the custom handler to the *HttpClient* class that sends HTTPS requests:
 
 ```csharp
 public async Task<IEnumerable<Claim>> GetUserInfoAsync(string accessToken)
@@ -297,30 +297,30 @@ It is also possible to override the system proxy settings via [Electron Command 
 
 ### Command Line Tools
 
-I commonly use the *curl* and *openssl* tools to make HTTP/S requests, on Windows, macOS and Linux operating systems. These command line tools look for one or both of the below environment variables, depending on the scheme of the target URL:
+I commonly use the *curl* and *openssl* tools to make HTTPS requests, on Windows, macOS and Linux operating systems. These command line tools look for one or both of the below environment variables, depending on the scheme of the target URL:
 
-| Environment Variable | Used For |
-| -------------------- | -------- |
-| http_proxy | Browsing to HTTP URLs |
-| https_proxy | Browsing to HTTPS URLs |
+| Environment Variable | Used To |
+| -------------------- | ------- |
+| http_proxy | Call HTTP URLs |
+| https_proxy | Call HTTPS URLs |
 
-To use curl to connect to an HTTP URL I use commands of this form to capture traffic in an HTTP proxy:
+To use curl to connect to an HTTPS URL I use commands of this form to capture traffic in an HTTP proxy:
 
 ```bash
-export http_proxy=http://127.0.0.1:8888
-curl -H "Authorization Bearer xxx" https://api.authsamples-dev.com/api/companies
+export https_proxy=http://127.0.0.1:8888
+curl -H "Authorization Bearer xxx" https://api.authsamples-dev.com:446/api/companies
 ```
 
 To use OpenSSL to connect to an HTTPS URL I use commands of this form to capture traffic in an HTTP proxy:
 
 ```bash
 export https_proxy=http://127.0.0.1:8888
-openssl s_client -connect api.authsamples-dev.com:443
+openssl s_client -connect api.authsamples-dev.com:446
 ```
 
 ### Proxy Settings for iOS and Android
 
-Use of HTTP proxy tools for mobile apps is more intricate, involving quirks of both simulators and devices. I explain the techniques that I use in these later posts:
+Use of HTTP proxy tools for mobile apps is more intricate, involving quirks of both simulators and devices. I explain the techniques that I use in the following posts:
 
 - <a href='android-https-debugging.mdx'>Android HTTPS Debugging</a>
 - <a href='ios-https-debugging.mdx'>iOS HTTPS Debugging</a>
@@ -333,13 +333,13 @@ In the following screenshot I used the expression *~u /token*, for a request fro
 
 ![proxy breakpoint](../images/100/proxy-breakpoint.jpg?v=20240714)
 
-This type of technique can be used to verify that your OAuth client processes OAuth *error* and *error_description* fields correctly. The sample SPA receives and renders error details in a way that helps to enable fast problem resolution:
+This type of technique can be used to verify that your OAuth client processes OAuth *error* and *error_description* fields correctly. This blog's frontend applications handle OAuth errors and render details in a way that helps to enable fast problem resolution:
 
 ![breakpoint error result](../images/100/breakpoint-error-result.jpg?v=20251230)
 
 ### Where Are We?
 
-I showed how to use an HTTP proxy tool to capture HTTP/S messages from clients and APIs, regardless of their technology. Doing so improves troubleshooting options during development and also promotes a solid understanding of the OAuth standards-based messages.
+I showed how to use an HTTP proxy tool to capture HTTPS messages from clients and APIs, regardless of their technology. Doing so improves troubleshooting options during development and also promotes a solid understanding of the OAuth standards-based messages.
 
 ### Next
 
