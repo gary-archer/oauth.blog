@@ -40,7 +40,7 @@ fi
 # Build the blog to static content
 #
 rm -rf dist 2>/dev/null
-npm run buildRelease
+npm run build
 if [ $? -ne 0 ]; then
   exit 1
 fi
