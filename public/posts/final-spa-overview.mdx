@@ -62,11 +62,11 @@ A second entry exists to run the SPA during development, which has an equivalent
 
 This blog's initial SPAs used vanilla TypeScript to demonstrate generic OAuth integration patterns that work in any SPA framework. The final SPA uses React, to enable a richer ecosystem of best practices, in areas like JSX view development and navigation. 
 
-From an API viewpoint, the SPA now renders a tree of views which leads to concurrent API requests. The SPA must synchronise the triggering of both token renewal and user re-authentication when tokens expire.
+From an API viewpoint, the SPA now renders a tree of JSX views that result in concurrent API requests. The SPA must synchronise the triggering of both token renewal and user re-authentication when tokens expire.
 
 ```jsx
 return (
-    <>
+    <div className='sm:px-8 md:px-16 lg:px-24 py-2'>
         <TitleView {...getTitleProps()} />
         <HeaderButtonsView {...getHeaderButtonProps()} />
         {error && <ErrorSummaryView {...getErrorProps()} />}
@@ -80,7 +80,7 @@ return (
                 </Routes>
             </>
         }
-    </>
+    </div>
 );
 ```
 
@@ -107,31 +107,7 @@ Earlier SPAs in this blog used hash-based routing. The final SPA instead uses Re
 </html>
 ```
 
-When the app loads, the React application reads the base path from the *index.html* file and supplies it to the React router. The app then uses relative routes within the */spa/* base path.
-
-### Strongest Browser Security
-
-The SPA sends a *HttpOnly SameSite=strict Secure* cookie when it calls APIs, where the cookie contains an encrypted access token. Cookies are issued by utility APIs that restrict API access to the SPA's precise origin. The SPA also uses a strong content security policy to restrict the actions of malicious JavaScript in the event on an XSS exploit. The web host returns the following security headers:
-
-```markdown
-content-security-policy:
-  default-src 'none';
-  script-src 'self';
-  connect-src 'self' https://bff.authsamples.com;
-  child-src 'self';
-  img-src 'self';
-  style-src 'self';
-  object-src 'none'
-  frame-ancestors 'none';
-  base-uri 'self';
-  form-action 'self';
-
-strict-transport-security: max-age=63072000; includeSubdomains; preload
-x-frame-options: DENY
-x-xss-protection: 1; mode=block 
-x-content-type-options: nosniff
-referrer-policy: same-origin
-```
+When the app loads, the React application reads the base path from the *index.html* file and supplies it to the React router. The React router expresses relative routes within the */spa/* base path.
 
 ### Modern Web Performance
 

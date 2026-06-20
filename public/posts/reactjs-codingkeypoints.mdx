@@ -4,7 +4,7 @@ Previously I explained <a href='how-to-run-the-react-js-spa.mdx'>How to Run the 
 
 ### Web Technology Setup
 
-The final SPA continues to use this blog's <a href='web-technology-setup.mdx'>Web Technology Setup</a>. That post explains how the SPA uses the rollup bundler to build modern ECMAScript bundles and an Express HTTP server to serve them. The web development setup uses a restrictive content security policy and live reloading during development.
+The final SPA continues to use this blog's <a href='web-technology-setup.mdx'>Web Technology Setup</a>. That post explains how the SPA uses the rollup bundler to build modern ECMAScript bundles and use an Express HTTP server to serve them. The web development setup uses a restrictive content security policy and live reloading during development.
 
 ### Previous Samples
 
@@ -19,7 +19,7 @@ These earlier SPAs used access tokens in the browser, which is no longer recomme
 
 ### React Library Setup
 
-The SPA no longer uses a JavaScript security library to implement OpenID Connect. Instead, the *package.json* dependencies focus mainly on view-related logic and API requests.
+The SPA no longer uses a JavaScript security library to implement OpenID Connect. Instead, the *package.json* dependencies focus mainly on view-related logic.
 
 ```json
 {
@@ -36,7 +36,7 @@ The SPA no longer uses a JavaScript security library to implement OpenID Connect
 
 ### Entry Point
 
-The entry point to the SPA begins with an *index.tsx* file. The SPA uses the React router to implement path-based routing. The router uses the base path expressed in the *index.html* file:
+The SPA code begins with an *index.tsx* file that uses the base path expressed in the *index.html* file to initialize a path-based router:
 
 ```typescript
 import React, {StrictMode} from 'react';
@@ -65,7 +65,7 @@ root.render (
 
 ### Routes and Navigation
 
-In the *app.tsx* module of the main SPA, views now use JSX syntax. Routes enable users to navigate and swap out the main area of the SPA.
+The *App* component uses JSX syntax to initialize a tree of views. These include path-based navigation routes within the SPA's base path.
 
 ```jsx
 return (
@@ -98,7 +98,7 @@ export interface CompaniesViewProps {
 }
 ```
 
-Views get recreated frequently, whereas I manage state returned from APIs within view model classes that get created only once. I manage this by storing child view model references within the root *AppViewModel*:
+Views get recreated frequently, whereas I manage state returned from APIs within view model classes that get created only once. I manage view model state by storing child view model references within the root *AppViewModel*:
 
 ```typescript
 public getCompaniesViewModel(): CompaniesViewModel {
@@ -120,7 +120,7 @@ This technique is a basic but portable way to manage application state in fronte
 
 ### Separation of View Logic from General Logic
 
-I use the React framework's hook-based syntax to develop the SPA's views. Views get API data from their view model, to externalize API concerns from views in the same way as in mobile technology stacks.
+I use the React framework's hook-based syntax to develop the SPA's views. Views get API data from their view model, to externalize API concerns from views.
 
 ```typescript
 export function CompaniesView(props: CompaniesViewProps): JSX.Element {
@@ -149,15 +149,17 @@ async function startup(): Promise<void> {
 }
 ```
 
-The code to call APIs originates in the view, which forwards the request to its view model. On completion of each API request the view model rebinds any data or error values to the React state, to trigger a rendering update in the view:
+The code to call APIs originates in the view, which forwards the request to its view model. After each API request, the view rebinds any data or error values to the React state, to trigger a rendering update in the view:
 
 ```typescript
 async function loadData(options?: ViewLoadOptions): Promise<void> {
     await model.callApi(options);
+    setCompanies(model.getCompanies());
+    setError(model.getError());
 }
 ```
 
-The view model logic is business-focused and uses a *fetch* client to deal with lower level aspects. The *ViewModelCoordinator* object provides a mechanism to trigger a new login redirect when the API session expires:
+The view model logic is business-focused and uses a *fetch* client to deal with lower level aspects. The *ViewModelCoordinator* object assists view models, and triggers a new login redirect when the API session expires:
 
 ```typescript
 public async callApi(options?: ViewLoadOptions): Promise<void> {
@@ -192,7 +194,7 @@ public async callApi(options?: ViewLoadOptions): Promise<void> {
 
 ### Concurrent API Requests
 
-In previous code samples, API requests ran in a sequential manner, and error handling was also sequential:
+In previous SPAs, API requests ran in a sequential manner, and error handling was also sequential:
 
 - First the main view called the API to get data and render results in the main area of the page.
 - Next the userinfo view called the API, then displayed the user name in the top right.
@@ -203,11 +205,11 @@ In a real-world SPA it is more likely that multiple API requests could be in-fli
 
 ### Concurrent View Errors
 
-In the event of a view experiencing a problem it renders its own *Error Summary View*. You can rehearse concurrent API errors if you long press the *Reload Data* button for a few seconds. The SPA then renders an error link for each view that made a failed API request:
+In the event of a view experiencing a problem it renders its own *Error Summary View*. You can rehearse concurrent API errors if you long press the *Reload Data* button for a few seconds. The SPA then sends a custom header in API requests, used for API error simulation. The SPA renders an error link for each view that made a failed API request:
 
 ![error summary](../images/240/error-summary.jpg?v=20240713)
 
-When clicked, a summary view uses a React modal dialog to display the *Error Details View* from earlier code samples. The final SPA uses an error display with details to help enable fast problem resolution.
+When clicked, a summary view uses a React modal dialog to display the *Error Details View* from earlier code samples. The final SPA uses an error display with details returned from the API, to help enable fast problem resolution.
 
 ![error details](../images/240/error-details.jpg?v=20240713)
 
@@ -274,7 +276,7 @@ public async login(currentLocation: string): Promise<void> {
 }
 ```
 
-The page load handler processes the login response. The result is to issue encrypted session cookies, which contain the underlying OAuth tokens, to the browser.
+The page load handler processes the authorization response and sends it to the OAuth agent. The result is to issue encrypted session cookies, which contain the underlying OAuth tokens, to the browser.
 
 ```typescript
 public async handlePageLoad(): Promise<string | null> {
@@ -321,7 +323,7 @@ The SPA retains full control over login usability. Rather than using a few lines
 
 ### API Requests with Cookies
 
-After login the SPA uses *HttpOnly SameSite=strict Secure* cookies to call APIs. The SPA must use the *credentials: include* fetch option to instruct the browser to send cookies to its backend for frontend. The SPA sends a custom header to enforce CORS preflight requests, as a CSRF prevention best practice. The SPA also sends a correlation ID for logging and tracing purposes.
+After login the SPA uses *HttpOnly SameSite=strict Secure* cookies to call APIs. The SPA must use the *credentials: include* fetch option to instruct the browser to send cookies to its backend for frontend. The token handler requires the SPA to send a custom header to enforce CORS preflight requests, which prevents other web origins from sending the SPA's cookies. The SPA also sends a correlation ID for logging and tracing purposes.
 
 ```typescript
 private async callApiWithCredential(
@@ -458,7 +460,7 @@ public async execute(action: () => Promise<void>): Promise<void> {
 
 The final SPA deals reliably with some tricky areas, in the lower-level plumbing classes. Once written, web developers at a real organization could grow the web code base by adding new view and view model classes. An early focus on security, development setups, deployment and reliability supports the valuable future business logic.
 
-There is one remaining post for this blog's final SPA, on <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a>. It is part of this blog's cloud theme and covers web release builds in more depth. The SPA's static content gets uploaded to a content delivery network which deploys it to hundreds of global locations for globally equal performance.
+There is one remaining post for this blog's final SPA, on <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a>. It is part of this blog's cloud theme and covers web release builds in more depth. The SPA's static content gets uploaded to a content delivery network which deploys it to hundreds of global locations to enable globally equal web performance.
 
 ### Where Are We?
 

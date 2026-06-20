@@ -19,14 +19,14 @@ Users of the React application drive behaviour from strongly-typed views that us
 ```jsx
 export function TitleView(props: TitleViewProps): JSX.Element {
 
-    return  (
-        <div className='row'>
-            <div className='col-8 my-auto'>
+    return (
+        <div className='flex px-2 mt-2 items-center'>
+            <div className='w-2/3'>
                 <HeadingView />
             </div>
             {props.userInfo &&
-                <div className='col-4 my-auto'>
-                    <UserInfoView {...props.userInfo}/>
+                <div className='w-1/3'>
+                    <UserInfoView {...props.userInfo} />
                 </div>
             }
         </div>
@@ -77,7 +77,7 @@ The SPA terminal window builds JavaScript bundles and serves them using a develo
 
 ### Step 5: Sign In to the SPA
 
-You will then be prompted to sign in, and can do so with this test credential:
+You will then be prompted to sign in, and can do so with the following test credential:
 
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
@@ -88,13 +88,13 @@ After login, the SPA sends an HttpOnly encrypted cookie containing an AWS Cognit
 
 ### Step 6: View Secure Cookies
 
-When the SPA makes API requests it sends a short-lived access token encrypted into an *HttpOnly SameSite=strict Secure* cookie. Since Cognito uses RS256 JWTs, the cookie size is around 1.5KB, which is comfortably below browser 4KB cookie size limits. You can use browser tools to view secure cookies, which are for the backend for frontend subdomain and not the web origin. The SPA does not require any cookies to download static content, and does not use cookies when the user performs navigation operations:
+When the SPA makes API requests it sends a short-lived access token encrypted into an *HttpOnly SameSite=strict Secure* cookie. Since Cognito uses RS256 JWTs, the cookie size is around 1.5KB, which is comfortably below browser 4KB cookie size limits. You can use browser tools to view secure cookies, which are for the backend for frontend subdomain and not the web origin. The SPA does not require any cookies to download static content, and does not use cookies when the user performs web navigations:
 
 ![cookie properties](../images/230/cookie-properties.jpg?v=20240817)
 
 ### Step 7: View Updated SPA Configuration
 
-In earlier samples, the SPA performed its own OpenID Connect flow in JavaScript. This work is now done by remote token handler components, and the SPA configuration is therefore reduced primarily to a backend for frontend base URL:
+In earlier samples, the SPA performed its own JavaScript code flow. This work is now done by remote token handler components, and the SPA configuration is therefore simplified, primarily to a backend for frontend base URL:
 
 ```json
 {
@@ -119,7 +119,7 @@ After running the *build.sh* and *deploy.sh* scripts, browse to *https://www.aut
 
 ### Local API Setup
 
-Web developers only need to work on a single component, the SPA, and that is the preferred development setup. If required, you can also connect the SPA to an API on the local computer, though you then need to manage cookies for this routing. One way to do so is to run a local token handler. To do so, first ensure that a docker engine is installed, and also the *envsubst* tool.
+Web developers only need to work on a single component, the SPA, and that is the preferred development setup. If required, you can also connect the SPA to an API on the local computer, though you then need to manage cookies for this routing. One way to do so is to run a local token handler. To do so, first ensure that a Docker engine is installed, and also the *envsubst* tool.
 
 ### Step A: Run the API
 
@@ -147,7 +147,7 @@ export LOCALAPI=true
 ./start.sh
 ```
 
-This runs some utility token handler components in a small docker compose network. You can study the deployment resources to get a feel for how this works. The SPA's configuration then routes to the API via the local backend for frontend rather than the cloud BFF:
+This runs some utility token handler components in a small Docker Compose network. You can study the deployment resources to get a feel for how this works. The SPA's configuration then routes to the API via the local backend for frontend rather than the cloud BFF:
 
 ```json
 {
@@ -164,7 +164,7 @@ When you now use the SPA it calls the local API rather than a cloud API. The API
 
 ### Step E: Free Docker Resources
 
-To free resources in the docker compose network, run the following command:
+To free resources in the Docker Compose network, run the following command:
 
 ```bash
 ./teardown.sh
@@ -172,7 +172,7 @@ To free resources in the docker compose network, run the following command:
 
 ### Where Are We?
 
-I explained how to run the final SPA code sample, which has more moving parts than earlier code samples. The SPA can be run as a single component under development with a pure SPA developer experience. The app is in control of its own OpenID Connect flow. After user logins, the SPA calls deployed API components using secure cookies.
+I explained how to run the final SPA code sample, which has more moving parts than earlier code samples. The SPA can be run as a single component under development with a pure SPA developer experience. The app is in control of its own OAuth and OpenID Connect flow. After user logins, the SPA calls deployed API components using secure cookies.
 
 ### Next
 

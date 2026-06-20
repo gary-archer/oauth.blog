@@ -96,7 +96,7 @@ To run the SPA during development you use a domain-based URL of *https://www.aut
 
 ### Full Stack Development Environment
 
-It gets more complicated when you need to run both the SPA and APIs locally, which you should avoid most of the time. Such a setup is possible but you need to invest in a local BFF setup and deal with port limitations. The final SPA has a full stack local deployment that uses docker containers, where an API gateway runs on port 444. The API then runs locally on port 446:
+It gets more complicated when you need to run both the SPA and APIs locally, which you should avoid most of the time. Such a setup is possible but you need to invest in a local BFF setup and deal with port limitations. The final SPA has a full stack local deployment that uses Docker containers, where an API gateway runs on port 444. The API then runs locally on port 446:
 
 | Component | Base URL |
 | --------- | -------- |
@@ -110,11 +110,11 @@ Developers must then also add the *bfflocal* subdomain to the hosts file. You ca
 
 ![spa and api](../images/210/spa-and-api.jpg?v=20240915)
 
-More generally there can be reliability and productivity benefits when you invest in setups that enable development and testing together. You can decide to run some components locally from code, with other components running in deployed environments or in docker.
+More generally there can be reliability and productivity benefits when you invest in setups that enable development and testing together. You can decide to run some components locally from code, with other components running in deployed environments or in Docker.
 
 ### Token Handler Implementation
 
-I do not explain the token handler pattern in this blog, but you can study the following resources to understand how utility API components issue SameSite cookies and use CORS to restrict their usage to the SPA's precice web origin.
+I do not explain the token handler pattern in this blog, but you can study the following resources to understand how utility API components issue SameSite cookies and use CORS to restrict their usage to the SPA's precise web origin.
 
 - [OAuth Agent](https://github.com/curityio/cloud-native-oauth-security-examples/tree/main/chapter-13-browser-based-apps/backend-for-frontend/oauth-agent)
 - [OAuth Proxy](https://github.com/curityio/cloud-native-oauth-security-examples/tree/main/resources/apigateway/curity-oauth-proxy)
