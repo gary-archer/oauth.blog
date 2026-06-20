@@ -14,9 +14,7 @@ This blog provides an <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastruct
 
 ### How to View OAuth Messages
 
-Most of the time I trace HTTP/S messages using an HTTP development proxy rather than browser tools. This allows me to view traffic from both the SPA and API together. See the below post if you are new to this type of tool:
-
-- <a href='http-debugging-setup.mdx'>HTTP Proxy Setup</a>
+Most of the time I trace HTTP/S messages using an HTTP development proxy rather than browser tools. This allows me to view traffic from both the SPA and API together. See the <a href='http-debugging-setup.mdx'>HTTP Proxy Setup</a> post if you are new to this type of tool:
 
 ### Step 1. SPA Downloads its Configuration
 
@@ -26,7 +24,7 @@ The sample first downloads configuration settings from the server, to avoid hard
 
 ### Step 2. SPA Initiates an Authorization Redirect
 
-The SPA client needs to get an access token with which to call its APIs, and needs to initiate user authentication to get one. The SPA uses the *oidc-client-ts* library to create an authorization request URL containing OpenID Connect keywords. The SPA sets its location to this URL, to cause a front channel browser redirect to Cognito's authorization endpoint. The security library also generates a random state that it saves to session storage.
+The SPA client needs to get an access token with which to call its APIs, and needs to initiate user authentication to get one. The SPA uses the *oidc-client-ts* library to create an authorization request URL containing OAuth and OpenID Connect parameters. Parameters include some randomly generated values, like the *state* parameter. The SPA sets its location to this URL, to cause a front channel browser redirect to Cognito's authorization endpoint.
 
 ![Authorization Request](../images/40/authorization-request.jpg?v=20251230)
 
@@ -53,7 +51,7 @@ When the authorization server receives the request, it validates the request par
 
 ![User Authentication](../images/40/user-authentication.jpg?v=20240727)
 
-In some use cases, you can configure the authorization server to request user consent after user authentication completes. The user then grants third-party clients particular API permissions that clients request using the *scope* parameter. In this blog's examples, there are no third-party clients. I represent APIs and clients built by the same organization, which owns the data. Therefore, I do not configure user consent.
+In some use cases, you can configure the authorization server to request user consent after user authentication completes. The user then grants third-party clients particular API permissions that clients request using the *scope* parameter. In this blog's examples, there are no third-party clients so I do not activate user consent. I represent APIs and clients built by the same organization, which owns the data.
 
 ### Step 5. An Authenticated User Session Begins
 
@@ -73,19 +71,19 @@ The authorization server returns an authorization response to the SPA, containin
 
 ![Authorization Response](../images/40/authorization-response.jpg?v=20251230)
 
-The SPA receives the response on its redirect URI, which can be a particular path, such as */callback*, or you can use the base URL of the SPA. If you use the base URL, many web technology stacks will issue an extra redirect if the redirect URI does not include a */* suffix.
+The SPA receives the authorization response on its redirect URI, which can be a particular path, such as */callback*, or you can use the SPA's base URL. If you use the base URL, some web technology stacks issue an extra redirect if the redirect URI does not include a */* suffix.
 
 If the SPA has a stored state in session storage it asks the security library to process the authorization response. The library makes recommended OAuth checks like verifying that the response state parameter matches the request state parameter.
 
-### Step 7. SPA Swaps Code for Tokens
+### Step 7. SPA Swaps the Authorization Code for Tokens
 
 As part of its response processing, the library makes a direct HTTPS back channel request to the authorization server's token endpoint. This is an *Authorization Code Grant* message, which swaps the code for tokens:
 
 ![Authorization Code Grant](../images/40/authorization-code-grant.jpg?v=20240727)
 
-In OAuth there are multiple grant messages and this is just one of them. When possible, your OAuth clients should provide a credential before they receive tokens, but an SPA has nowhere secure to store such a credential. The SPA is therefore considered a *public client* and gets tokens in a less secure way than *confidential clients*.
+When possible, your OAuth clients should provide a credential before they receive tokens, but an SPA has nowhere secure to store such a credential. The SPA is therefore considered a *public client* and gets tokens in a less secure way than *confidential clients*.
 
-The result of all grant messages is to receive tokens. I configure the authorization server to return access tokens with a short 15 minute expiry. Before accepting tokens, the security library cryptographically validates the ID token. 
+The result of an OAuth grant request is a token response. I configure the authorization server to return access tokens with a short 15 minute expiry. Before accepting tokens, the security library cryptographically validates the ID token. 
 
 ![Token Response](../images/40/token-response.jpg?v=20240727)
 
@@ -154,14 +152,14 @@ After a successful user login, the SPA calls APIs with an access token. You can 
 }
 ```
 
-The access token is a JWT that is digitally signed and which must be verified by APIs. The values in the payload are *claims* that you use to restrict access token privileges. After an API verifies the JWT's digital signature it can trust the claims contained in the JWT payload. The following are built-in OAuth protocol claims that the API uses:
+The access token that APIs receive is a JSON Web Token (JWT) that is digitally signed and verifiable. The values in the payload are *claims* that you use to restrict access token privileges. After an API verifies the JWT's digital signature it can trust the claims contained in the JWT payload. The following are built-in OAuth protocol claims that the API uses:
 
 - **sub**: A unique immutable identifier for the user.
 - **iss**: The authorization server that issued the token.
 - **exp**: The time when the token expires.
 - **scope**: Scopes can represent business areas within your APIs.
 
-The authorization server should also issue an *audience (aud)* claim, which can be an array, to represent one or more related APIs. In larger API deployments, the *scope* and *aud* claims provide mechanisms to restrict the APIs that accept the access token. The access token can also contain custom claims that the API uses for its business authorization. I say much more about scopes and claims later in this blog.
+The authorization server should also issue an *audience (aud)* claim, which can be an array, to represent one or more related APIs. In larger API deployments, the *scope* and *aud* claims provide mechanisms to restrict the APIs that accept the access token. The access token can also contain custom claims that the API uses for its business authorization. I say much more about scopes and claims later in subsequent posts.
 
 ### Step 11. View ID Token Claims
 
@@ -187,10 +185,9 @@ Because the SPA included the *openid* scope, OpenID Connect is used and the SPA 
 }
 ```
 
-
 ### Step 12. SPA Downloads User Info
 
-Next the oidc-client-ts library sends the access token to the authorization server's userinfo endpoint, to get additional details for the user. I always code apps to receive personal data from this endpoint, rather than from the ID token. The frontend uses this API response to display the user's name details.
+Next the oidc-client-ts library sends the access token to the authorization server's userinfo endpoint, to get additional details for the user. I always code apps to receive personal data from this endpoint, rather than from the ID token. The frontend uses this API response to display the user's name details, to help prevent unintentional disclosure of Personally Identifiable Information (PII).
 
 ![User info](../images/40/userinfo.jpg?v=20240727)
 
@@ -319,7 +316,7 @@ Of course, I cannot really change time to expire a token, so this test operation
 
 ### Step 18. SPA Handles Access Token Expiry
 
-The SPA code expects 401 responses and should recover with no impact on usability. In the first code sample there is no token renewal so the user is redirected to sign in again, which is not a good user experience. Due to the SSO session cookie issued earlier, a single sign-on event occurs and new tokens are issued to the SPA automatically. The SPA can then continue to call the API with its new access token.
+The SPA code expects 401 responses and should recover with no impact on usability. In the first code sample there is no token refresh so the user is redirected to sign in again, which is not a good user experience. Due to the SSO session cookie issued earlier, a single sign-on event occurs and new tokens are issued to the SPA automatically. The SPA can then continue to call the API with its new access token.
 
 ### Where Are We?
 

@@ -4,26 +4,27 @@ The <a href='basicspa-oauthworkflow.mdx'>SPA and API OAuth Messages</a> post exp
 
 ### SPA Code
 
-The SPA downloads the following types of static resources to the browser. In this blog I use only basic HTML and CSS, so that the main code focus for SPAs is the JavaScript logic:
+The SPA downloads the following types of static resources to the browser.
 
 | Area | Implementation Details |
 | ---- | ---------------------- |
 | HTML | I use a single static *index.html* page and its DOM elements are updated dynamically. |
-| CSS | I use [Bootstrap](https://getbootstrap.com/docs/5.3/getting-started/introduction/) to control layout in a mobile first manner, and for most styling. |
+| CSS | I use [tailwindcss](https://tailwindcss.com/) as a utility CSS framework, to control layout and appearance. |
 | JavaScript | I use TypeScript code that gets compiled to JavaScript bundles when it runs in the browser. |
 
-The SPA uses only a handful of external dependencies, expressed in its *package.json* file. The most interesting of these is the *oidc-client-ts* library, which implements OpenID Connect in JavaScript.
+The SPA uses only a handful of external dependencies, expressed in its *package.json* file. The most interesting of these is the *oidc-client-ts* library, which provides a JavaScript OAuth and OpenID Connect implementation.
 
 ```json
 {
   "dependencies": {
     "mustache": "^4.2.0",
-    "oidc-client-ts": "^3.5.0"
+    "oidc-client-ts": "^3.5.0",
+    "tailwindcss": "^4.3.0"
   }
 }
 ```
 
-I separate the SPA's concerns into a number of TypeScript classes, and in particular I keep plumbing separated from the application's important business logic. In a real SPA the views and view models represent your business value:
+I separate the SPA's concerns into a number of TypeScript classes, and in particular I keep plumbing separated from the application's important business logic. In a real SPA the views and view models represent your business value.
 
 <div className='smallimage'>
     <img src='../images/50/spa-code.jpg?v=20250122' alt='SPA code' />
@@ -40,12 +41,10 @@ The SPA's deployed HTML is minimal. The application's code builds to JavaScript 
         <meta charset='utf-8'>
         <base href='/spa/'>
         <title>OAuth Demo App</title>
-
-        <link rel='stylesheet' href='bootstrap.min.css'>
         <link rel='stylesheet' href='app.css'>
     </head>
     <body>
-        <div id='root' class='container'></div>
+        <div id='root'></div>
 
         <script type='module' src='vendor.bundle.js'></script>
         <script type='module' src='app.bundle.js'></script>
@@ -53,40 +52,76 @@ The SPA's deployed HTML is minimal. The application's code builds to JavaScript 
 </html>
 ```
 
-### Static Content Hosting
+### Web Host
 
-For this blog's early SPAs I use the webpack development server to serve static content in a productive manner. I configure a local HTTPS setup with the following settings and use hot reloading when the frontend code changes, as is common in SPA development.
+I use a simple Node.js Express server as the web host, from which the browser downloads web static content over HTTPS. The most essential code to do so is shown below. The SPA web host is a technically simple component. In particular, the web host should never come into contact with sensitive data. 
 
 ```typescript
-const devServer: webpackDevServer.Configuration = {
+const app = express();
+app.use('/*_', setSecurityHeaders);
 
-    server: {
-        type: 'https',
-        options: {
-            pfx: fs.readFileSync('../certs/authsamples-dev.ssl.p12'),
-            passphrase: 'Password1',
-        },
-    },
-    static: {
-        directory: path.join(dirname, './dist'),
-        publicPath: '/spa/',
-    },
-    port: 443,
-    open: 'https://www.authsamples-dev.com/spa',
-    devMiddleware: {
-        writeToDisk: true,
-    },
-    historyApiFallback: {
-        index: '/spa/',
-    },
-    hot: true,
-    allowedHosts: [
-        'www.authsamples-dev.com',
-    ],
+const pfxData = await fs.readFile('../certs/authsamples-dev.ssl.p12');
+const httpsOptions = {
+    pfx: pfxData,
+    passphrase: 'Password1',
 };
+
+const server = https.createServer(httpsOptions, app);
+
+const spaBasePath = '/spa/';
+const spaPhysicalRoot = 'dist';
+app.use(spaBasePath, express.static(spaPhysicalRoot));
+
+const port = 443;
+server.listen(port, () => {
+    console.log(`Web host is listening on HTTPS port ${port} ...`);
+});
 ```
 
-The webpack development server is just a thin wrapper around the Express HTTP server. The important point is that there is only minimal web host development and the web host never comes into contact with sensitive data. The <a href='web-technology-setup.mdx'>Web Technology Setup</a> blog post explains more about my JavaScript technology requirements.
+The static content gets loaded from the *dist* folder, which contains the following files, which the rollup bundler writes. During development, whenever I change code in an editor, the web resources get updated.
+
+```text
+index.html
+app.bundle.js
+vendor.bundle.js
+app.css
+spa.config.json
+favicon.ico
+```
+
+The web host returns a number of [recommended security headers](https://owasp.org/www-project-secure-headers/), the most important of which is a restrictive content security policy. During development the SPA can only interact with resources from its web host, the trusted authorization server and trusted APIs.
+
+```typescript
+function setSecurityHeaders(request: Request, response: Response, next: NextFunction): any {
+
+    const trustedHosts = [
+        'https://api.authsamples-dev.com:446',
+        'https://cognito-idp.eu-west-2.amazonaws.com',
+        'https://login.authsamples.com',
+    ];
+
+    let policy = "default-src 'none';";
+    policy += " script-src 'self';";
+    policy += ` connect-src 'self' ${trustedHosts.join(' ')};`;
+    policy += " child-src 'self';";
+    policy += " img-src 'self';";
+    policy += " style-src 'self';";
+    policy += " object-src 'none';";
+    policy += " frame-ancestors 'none';";
+    policy += " base-uri 'self';";
+    policy += " form-action 'self'";
+
+    response.setHeader('content-security-policy', policy);
+    response.setHeader('strict-transport-security', 'max-age=31536000; includeSubdomains; preload');
+    response.setHeader('x-frame-options', 'DENY');
+    response.setHeader('x-xss-protection', '1; mode=block');
+    response.setHeader('x-content-type-options', 'nosniff');
+    response.setHeader('referrer-policy', 'same-origin');
+    next();
+}
+```
+
+The web development server also implements live reloading when I edit the SPA's TypeScript code or CSS styles, to update the *dist* folder and refresh the page. I explain much more about web mechanics, like rollup builds and live reloads, in the <a href='web-technology-setup.mdx'>Web Technology Setup</a> post. Ultimately, rollup transpiles the SPA's code to modern ECMAScript code that executes in the browser.
 
 ### SPA Entry Point
 
@@ -239,7 +274,7 @@ private async callApi(path: string, method: Method, dataToSend?: any): Promise<a
 }
 ```
 
-Before running a login redirect, the *OAuthClient* stores the SPA's current location in session storage and then issues a full screen redirect. In this blog, I only use full-screen redirects, since that is the most standard way to implement logins with fewest user experience issues.
+Before running a login redirect, the *OAuthClient* stores the SPA's current location in session storage and then issues a full screen redirect. In this blog, I always use full-screen redirects, since that is the most standard way to implement logins with fewest user experience issues.
 
 ```typescript
 private async startLogin(currentLocation: string): Promise<void> {
@@ -308,7 +343,7 @@ Note also that the SPA only processes authorization responses when it has a stor
 
 - Users returning to the app after hitting the back button after login.
 - Users who bookmark the authorization server's login page.
-- Attacks that paste malicious authorization responses into the application.
+- Technical users who paste malicious authorization responses into the application.
 
 ### Rendering User Info
 
@@ -377,7 +412,7 @@ The API credential is a *Bearer Token*, and if an attacker can somehow intercept
 
 ### Safe Input Handling
 
-The SPA uses the [Mustache Template Library](https://github.com/janl/mustache.js/) to bind received API data to the SPA's DOM elements. This ensures that potentially dangerous input is escaped, to prevent malicious code execution. This blog's final SPA uses React, which provides similar input protection.
+The SPA uses the [Mustache Template Library](https://github.com/janl/mustache.js/) to bind received API data to the SPA's DOM elements. This ensures that potentially dangerous input is escaped, to help prevent malicious code execution.
 
 ```typescript
 private renderData(data: CompanyTransactions): void {
@@ -394,29 +429,25 @@ private renderData(data: CompanyTransactions): void {
     };
 
     const htmlTemplate =
-        `<div class='card border-0'>
-            <div class='card-header row fw-bold'>
-                <div class='col-12 text-center mx-auto fw-bold'>
-                    {{title}}
-                </div>
+        `<div class='mt-3'>
+            <div class='bg-gray-100 p-3 text-center font-bold'>
+                {{title}}
             </div>
-            <div class='row'>
+            <div class='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 p-3'>
                 {{#transactions}}
-                    <div class='col-lg-4 col-md-6 col-xs-12'>
-                        <div class='card'>
-                            <div class='card-body'>
-                                <div class='row'>
-                                    <div class='col-6'>Transaction ID</div>
-                                    <div class='col-6 text-end valuecolor fw-bold'>{{id}}</div>
-                                </div>
-                                <div class='row'>
-                                    <div class='col-6'>Investor ID</div>
-                                    <div class='col-6 text-end valuecolor fw-bold'>{{investorId}}</div>
-                                </div>
-                                <div class='row'>
-                                    <div class='col-6'>Amount USD</div>
-                                    <div class='col-6 text-end moneycolor fw-bold'>{{formattedAmountUsd}}</div>
-                                </div>
+                    <div class='rounded-lg border border-gray-300'>
+                        <div class='p-3'>
+                            <div class='flex mt-1'>
+                                <div class='w-1/2'>Transaction ID</div>
+                                <div class='w-1/2 text-right font-bold text-blue-700'>{{id}}</div>
+                            </div>
+                            <div class='flex mt-1'>
+                                <div class='w-1/2'>Investor ID</div>
+                                <div class='w-1/2 text-right font-bold text-blue-700'>{{investorId}}</div>
+                            </div>
+                            <div class='flex mt-1'>
+                                <div class='w-1/2'>Amount USD</div>
+                                <div class='w-1/2 text-right font-bold text-green-700'>{{formattedAmountUsd}}</div>
                             </div>
                         </div>
                     </div>
@@ -431,11 +462,11 @@ private renderData(data: CompanyTransactions): void {
 
 ### Styling and Layout
 
-For this blog's early SPAs I use Bootstrap, as a basic CSS solution. More cutting edge CSS solutions can require many webpack plugins, which I want to avoid, to keep the focus on TypeScript code. Bootstrap provides a technically simple [Grid System](https://getbootstrap.com/docs/5.3/layout/grid/) for arranging content into rows and columns, where card elements have their own inner rows and columns. The layout capabilities enable me to present the companies view, which is usually a list, as a card based layout on mobile layouts.
+The SPA uses styles from the *tailwindcss* framework. I use layout styles to arrange elements into rows and columns. I use appearance styles when rendering UI elements like buttons and labels. The application uses an *app.css* file to import tailwindcss. The build process produces a final *app.css* with the parts of the framework that my TypeScript code references.
 
-<div className='smallimage'>
-    <img src='../images/50/mobile-companies.jpg' alt='mobile companies' />
-</div>
+```css
+@import 'tailwindcss';
+```
 
 ### Navigation via Hash Change Events
 
