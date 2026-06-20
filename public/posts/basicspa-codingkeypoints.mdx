@@ -89,7 +89,7 @@ spa.config.json
 favicon.ico
 ```
 
-The web host returns a number of [recommended security headers](https://owasp.org/www-project-secure-headers/), the most important of which is a restrictive content security policy. During development the SPA can only interact with resources from its web host, the trusted authorization server and trusted APIs.
+The web host returns a number of [recommended security headers](https://owasp.org/www-project-secure-headers/), the most important of which is to apply a restrictive content security policy to the browser environment. During development the SPA can only interact with resources from its web host, the trusted authorization server and trusted APIs.
 
 ```typescript
 function setSecurityHeaders(request: Request, response: Response, next: NextFunction): any {

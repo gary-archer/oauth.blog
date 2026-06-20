@@ -1,6 +1,6 @@
 # Web Technology Setup
 
-Previously I suggested an <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a>. In this post I explain how this blog uses web technology, primarily for browser based apps. I also highlight differences for Node.js code, such as APIs. The main technical goal is a business-like development setup that matches deployed systems, so that security, reliability and deployment aspects work the same locally and in production.
+Previously I summarized an <a href='oauth-infrastructure-setup.mdx'>OAuth Infrastructure Setup</a>. In this post I explain a business-like SPA development setup, where web asset delivery and web security works the same for both local development and in production systems. I also highlight some minor differences between my SPA setup and Node.js API setup.
 
 ### Web Application Code
 
@@ -21,11 +21,11 @@ You then need to implement a web development pipeline, where the application cod
 | Execute Tasks | You sometimes need to execute arbitrary tasks as part of development, such as code quality checks or running tests. |
 | Build Code | You need to build code so that it runs reliably and efficiently in browsers, which involves compiling TypeScript. |
 | Execute Code | You execute compiled code in the browser, which is different to the code you develop. |
-| Decompile Code | When there is a problem, or to support debugging, you want to decompile to the original TypeScript code. |
+| Decompile Code | When there is a problem, or to support debugging, you want to decompile release JavaScript to the original TypeScript code. |
 
 ### Downloading Dependencies: Package Manager
 
-Node.js uses the *npm* tool to specify libraries in your application's *package.json* file. The built code uses the entries in the *dependencies* section at runtime. You also need a number entries in the *devDependencies* section, to work with TypeScript code. I use the [Node.js workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces) feature to manage build and tool dependencies in child folders, to keep the SPA's functional dependencies easy to understand.
+Node.js uses the *npm* tool to specify libraries in your application's *package.json* file. The built code uses the entries in the *dependencies* section at runtime. You also need a number of entries in the *devDependencies* section, to work with TypeScript code. I use the [Node.js workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces) feature to manage build and tool dependencies in child folders, to keep the SPA's functional dependencies easy to understand.
 
 ```json
 {
@@ -53,7 +53,7 @@ You need to think about the potential for security vulnerabilities when you incl
 
 ### Downloading Dependencies:  Node Modules
 
-When you run *npm install* your dependencies get downloaded to a *node_modules* folder from which you import classes and functions. The following screenshot shows some type definition for the *oidc-client-ts* library.
+When you run *npm install*, your dependencies get downloaded to a *node_modules* folder from which you import classes and functions. The following screenshot shows some type definition for the *oidc-client-ts* library.
 
 ![node modules](../images/90/node-modules.jpg)
 
@@ -68,7 +68,7 @@ import {UserManager, UserManagerSettings} from 'oidc-client';
 import mustache from 'mustache';
 ```
 
-I inform the compiler that the project's own source files use ECMAScript modules. To do so, I specify *type=module* in the *package.json* file and then use ECMAScript rules for importing modules.
+I inform the compiler that the project's own source files use ECMAScript classes. To do so, I specify *type=module* in the *package.json* file and then use ECMAScript rules for importing modules.
 
 In SPA code, the *tsconfig.json* file uses *moduleResolution=Bundler*, and I import files without an extension:
 
@@ -90,7 +90,7 @@ To use some libraries without compilation errors, TypeScript requires type defin
 npm view @types/node --json | grep '"24.' | sort -rV | head -n 1
 ```
 
-I use a *typings.d.ts* file to inform the SPA that certain statements, like CSS imports or development-specific flags, should not cause a TypeScript error. For libraries without type definitions, I could also use a *declare module* statement to get past compiler errors.
+I use a *typings.d.ts* file to inform the SPA that certain statements, like CSS imports or development-specific flags, should not cause a TypeScript error. For libraries without type definitions, I could use a *declare module* statement to get past compiler errors.
 
 ```typescript
 declare module '*.css';
@@ -142,7 +142,7 @@ export class CompaniesView {
         this.apiClient = apiClient;
     }
 
-    public async load(): Promise {
+    public async load(): Promise<void> {
 
         try {
             const data =  await this.apiClient.getCompanyList();
@@ -154,7 +154,7 @@ export class CompaniesView {
 }
 ```
 
-Strong typing during coding allows the environment to make more checks and simplifies refactoring. I use ECMAScript modules so that compiled code that runs in the browser remains modern and largely maintains the original TypeScript syntax.
+Strong typing during coding allows the environment to make more checks and simplifies refactoring. The use of ECMAScript modules means that the compiled code that runs in the browser remains largely the same as the original TypeScript code.
 
 ### Writing Code: Styling
 
@@ -261,7 +261,7 @@ For the SPA, a build phase is essential, for the following reasons:
 | Reason | Description |
 | ------ | ----------- |
 | Browser Support | Produce JavaScript code that browsers can execute. |
-| Web Performance | Reduce code size to ensure small bundle sizes, so that the SPA performs well. |
+| Web Performance | Reduce code to small bundles, so that the SPA performs well. |
 
 I use a web bundler, to produce optimized JavaScript bundles that I express in the final *index.html* file:
 
@@ -335,7 +335,7 @@ const options: RollupOptions = {
 export default defineConfig(options);
 ```
 
-This blog's SPA build also runs a series of plugins, to build code for the browser, convert libraries that use CommonJS to ECMAScript and other tasks. In particular, the [ESBuild](https://esbuild.github.io/) tool is a modern option with which to compile the SPA's TypeScript code.
+This blog's SPA build also runs a series of plugins, to perform a number of tasks. TypeScript code is built to run in the browser, eliminate unused code from the *node_modules* folder, convert libraries that use CommonJS to ECMAScript, set an *IS_DEBUG* variable for development builds, and so on. In particular, the [ESBuild](https://esbuild.github.io/) tool is a modern option with which to compile the SPA's TypeScript code.
 
 ```json
 {
@@ -378,7 +378,7 @@ Web bundlers are a little daunting when you are new to modern web technology. Th
 
 ### Building Code: Running the Bundler
 
-To run the bundler for development I use the following command. ESBuild then compiles code using the settings from the SPA's *tsconfig.json* file. The *target=ES2017* setting supports mainstream desktop and mobile browsers, and *module=ES2020* setting enables the use of bundle splitting.
+To run the bundler for development I use the following commands. ESBuild then compiles code using the settings from the SPA's *tsconfig.json* file. The *target=ES2017* setting supports mainstream desktop and mobile browsers, and *module=ES2020* setting enables the use of bundle splitting as a mechanism to improve user performance.
 
 ```bash
 rm -rf dist && NODE_OPTIONS='--import tsx' rollup --config build/rollup.config.ts --watch
@@ -420,7 +420,7 @@ class CompaniesView {
 
 ### Building Code: Bundle Splitting
 
-In the SPA you can download only *initial* bundles when the user runs the SPA. If you keep initial bundles small you get a fast time to first render. In TypeScript code you can then use dynamic imports to download *non-initial* bundles after a navigation event.
+When users first run an SPA they trigger a download of all *initial* bundles that the *index.html* file references. If you keep initial bundles small you get a fast time to first render. In TypeScript code you can then use dynamic imports to enable users to download additional bundles after a navigation event.
 
 ```typescript
 const module1 = await import('component1');
@@ -429,7 +429,7 @@ const component1 = new module.SharedComponent1();
 const component2 = new module.SharedComponent1();
 ```
 
-By default, a new module will be produced for each module, or you can update the rollup *manualChunks* function to explicitly control the bundle to which dynamic modules get written to, as shown here.
+Rollup produces new *non-initial* bundles when you use dynamic imports, where *initial* bundles contain references to *non-initial* bundles. By default, a new module will be produced for each module, or you can update the rollup *manualChunks* function to explicitly control the bundle to which dynamic modules get written to.
 
 ```json
 manualChunks: (id: string) => {
@@ -441,15 +441,43 @@ manualChunks: (id: string) => {
 }
 ```
 
+### Building Code: CSS
+
+Rollup also uses [postcss](https://github.com/postcss/postcss) and tailwindcss plugins to produce a final *app.css* file from the styles that I use. The plugin therefore eliminates unused code in a similar manner to how rollup eliminates unused TypeScript code, to keep download sizes small.
+
+```json
+{
+    plugins: [
+        ...
+
+        postcss({
+            extract: 'app.css',
+            plugins: [
+                tailwind(),
+            ]
+        }),
+    ]
+}
+```
+
+The built *app.css* file uses CSS rules that the browser interprets. In a real SPA, a framework like tailwindcss promotes understanding of modern CSS best practices.
+
+```css
+/*! tailwindcss v4.3.1 | MIT License | https://tailwindcss.com */
+@layer properties;
+@layer theme, base, components, utilities;
+...
+```
+
 ### Building Code: API Compilation
 
-For TypeScript APIs, I avoid producing JavaScript files during development, since it complicates searches on the code base. Instead, the [tsx](https://github.com/privatenumber/tsx) tool can build TypeScript files in memory and execute the compiled code.
+For TypeScript APIs, I avoid producing JavaScript files during development, since it complicates searches on the code base. Instead, the [tsx](https://github.com/privatenumber/tsx) tool can build TypeScript files to JavaScript in memory and then execute the JavaScript.
 
 ```bash
 tsx watch src/host/startup/app.ts
 ```
 
-Deployed builds for Node.js APIs should instead run JavaScript code, for best performance. API builds can simply use the *tsc* tool to transpile each TypeScript file to JavaScript in a *dist* folder. using the settings in the *tsconfig.json* file.
+Deployed builds for Node.js APIs should instead run JavaScript code, for best performance. API builds can simply use the *tsc* tool to transpile each TypeScript file to JavaScript in a *dist* folder, using the settings in the *tsconfig.json* file.
 
 I always use the most up to date stable Node.js options for API builds. Unless there is a good reason, I avoid using bundle files for API code. By keeping built code easier to read, you are better able to diagnose potential production problems, like exception stack traces.
 
@@ -457,56 +485,165 @@ In some deployed environments, bundling improves API startup times. This blog's 
 
 ### Executing Code: Development Web Host
 
-After the web build, the SPA's HTML, CSS and JavaScript bundles can be served from any HTTP server. For example, Node.js Express can serve static content using the following minimal code:
+After the web build, the SPA's HTML, CSS and JavaScript bundles can be served from the *dist* folder using an HTTP server. For a development web server I use the Node.js Express HTTP server for this task, with the following essential code.
 
 ```typescript
 const app = express();
-app.use('/spa', express.static('./dist'));
-app.listen(8000, () => {
-      console.log('Serving web static content ...');
-  });
+app.use('/*_', setSecurityHeaders);
+
+const pfxData = await fs.readFile('../certs/authsamples-dev.ssl.p12');
+const httpsOptions = {
+    pfx: pfxData,
+    passphrase: 'Password1',
+};
+
+const server = https.createServer(httpsOptions, app);
+
+const spaBasePath = '/spa/';
+const spaPhysicalRoot = 'dist';
+app.use(spaBasePath, express.static(spaPhysicalRoot));
+
+const port = 443;
+server.listen(port, () => {
+    console.log(`Web host is listening on HTTPS port ${port} ...`);
+});
+```
+
+The web host returns a number of [recommended security headers](https://owasp.org/www-project-secure-headers/), the most important of which is to apply a restrictive content security policy to the browser environment. During development the SPA can only interact with resources from its web host, the trusted authorization server and trusted APIs.
+
+```typescript
+function setSecurityHeaders(request: Request, response: Response, next: NextFunction): any {
+
+    const trustedHosts = [
+        'https://api.authsamples-dev.com:446',
+        'https://cognito-idp.eu-west-2.amazonaws.com',
+        'https://login.authsamples.com',
+    ];
+
+    let policy = "default-src 'none';";
+    policy += " script-src 'self';";
+    policy += ` connect-src 'self' ${trustedHosts.join(' ')};`;
+    policy += " child-src 'self';";
+    policy += " img-src 'self';";
+    policy += " style-src 'self';";
+    policy += " object-src 'none';";
+    policy += " frame-ancestors 'none';";
+    policy += " base-uri 'self';";
+    policy += " form-action 'self'";
+
+    response.setHeader('content-security-policy', policy);
+    response.setHeader('strict-transport-security', 'max-age=31536000; includeSubdomains; preload');
+    response.setHeader('x-frame-options', 'DENY');
+    response.setHeader('x-xss-protection', '1; mode=block');
+    response.setHeader('x-content-type-options', 'nosniff');
+    response.setHeader('referrer-policy', 'same-origin');
+    next();
+}
 ```
 
 A lightweight web host is the most critical part of the web technology setup. Since the web host never comes into contact with sensitive data from APIs, you significantly simplify frontend developer setups. Web developers operate like mobile developers, and get sensitive data by calling API internet URLs. When APIs return challenge responses with HTTP status codes of 401 or 403, frontend developers can handle them with full usability control.
 
-This blog's SPAs use a development static content host. For early SPAs I use the webpack development server, which uses Node.js Express under the hood. To serve static content locally using SSL and a custom domain name I use the following configuration. I like to write bundles to disk during development so that I can understand how my built code is returned to the browser.
+### Executing Code: Live Reloading
+
+When I make frontend code changes to TypeScript code or to CSS styles, rollup writes updated bundles to the *dist* folder and runs the following plugin, to open the browser after the first build, or to notify the development web host on subsequent builds.
 
 ```typescript
-const devServer: webpackDevServer.Configuration = {
+let isOpen = false;
+export function notifyBrowser(): Plugin {
 
-    server: {
-        type: 'https',
-        options: {
-            pfx: fs.readFileSync('../certs/authsamples-dev.ssl.p12'),
-            passphrase: 'Password1',
-        },
-    },
-    static: {
-        directory: path.join(dirname, './dist'),
-        publicPath: '/spa/',
-    },
-    port: 443,
-    open: 'https://www.authsamples-dev.com/spa',
-    devMiddleware: {
-        writeToDisk: true,
-    },
-    historyApiFallback: {
-        index: '/spa/',
-    },
-    hot: false,
-    allowedHosts: [
-        'www.authsamples-dev.com',
-    ],
+    const plugin: Plugin = {
+        name: 'notify-browser',
+        async writeBundle(): Promise<void> {
+
+            const webHostUrl = 'https://www.authsamples-dev.com';
+            if (!isOpen) {
+
+                isOpen = true;
+                open(`${webHostUrl}/spa/`);
+
+            } else {
+
+                await fetch(`${webHostUrl}/reload`);
+            }
+        }
+    };
+
+    return plugin;
+}
+```
+
+The development web host runs a web socket server on the same host and port that it uses to serve static content. The web host also exposes a REST */livereload* endpoint that the rollup plugin calls, after which the server sends a web socket notification to the browser:
+
+```typescript
+const wss = new WebSocketServer({
+    server,
+    path: '/reload'
+});
+
+app.get('/reload', (request: Request, response: Response) => {
+
+    console.log('Web socket server broadcasting reload event ...');
+    for (const client of wss.clients) {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send('reload');
+        }
+    }
+    response.sendStatus(204);
+});
+```
+
+In development mode, the SPA uses a dynamic import to load a live reload script:
+
+```typescript
+if (IS_DEBUG) {
+    await import('./livereload');
+}
+```
+
+The live reload script receives the web socket notification and refreshes the page. The overall mechanism provides fast feedback when you edit files during development.
+
+```typescript
+export const ws = new WebSocket(`wss://${location.host}/reload`);
+ws.onmessage = (event: MessageEvent<string>) => {
+    if (event.data === 'reload') {
+        location.reload();
+    }
 };
 ```
 
-Although I get some developer conveniences like page reloading when I make frontend code changes, the main behavior I want from a development web static content host is to serve web assets in the same way as for production users. My development web host also supports secure behaviors like setting a strong content security policy during development. The only difference during development is that I use a non-optimized build with debugging support.
+The deeper part of the live reload behaviour is the use of production mechanisms for web asset delivery and web security during development. This setup enables you to find and resolve technical issues early. The only development difference is a non-optimized build with debugging support.
 
 ### Decompiling Code: Debugging
 
-To step through code in GitHub repositories with multiple projects I use a [Visual Studio Code Workspace File](https://code.visualstudio.com/docs/editing/workspaces/workspaces). I then use Visual Studio Code's *Open workspace from file* option, after which I can use the *Run and Debug* tab to choose the project to debug. 
+To step through code in GitHub repositories with multiple projects I use a [Visual Studio Code Workspace File](https://code.visualstudio.com/docs/editing/workspaces/workspaces). I then use Visual Studio Code's *Open workspace from file* option and select the *.workspace* file. I then use the *Run and Debug* tab to choose the project to debug. 
 
-For a TypeScript API I add a */.vscode/launch.json* configuration file with settings similar to those shown below.
+To debug a TypeScript SPA I add a */.vscode/launch.json* configuration file with settings similar to those shown below.
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch SPA",
+            "url": "https://www.authsamples-dev.com/spa/"
+        }
+    ]
+}
+```
+
+From the *Debug and Run* tab I can choose *Launch SPA* and then operate the SPA while setting breakpoints to inspect the state of variables:
+
+![spa debug](../images/90/spa-debug.jpg)
+
+If you inspect bundle files, their last line references a source map file that browser developer tools download when a debug session starts. Source maps enable TypeScript code debugging while the corresponding JavaScript code executes in the browser.
+
+```markdown
+//# sourceMappingURL=app.bundle.js.map
+```
+
+To debug a TypeScript API I use a similar mechanism, where the */.vscode/launch.json* file uses settings similar to those shown below.
 
 ```json
 {
@@ -525,53 +662,9 @@ For a TypeScript API I add a */.vscode/launch.json* configuration file with sett
 }
 ```
 
-For a TypeScript SPA I add a */.vscode/launch.json* configuration file with settings similar to those shown below.
-
-```json
-{
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "chrome",
-            "request": "launch",
-            "name": "Launch SPA",
-            "url": "https://www.authsamples-dev.com/spa/"
-        }
-    ]
-}
-```
-
-From the *Debug and Run* tab I can choose *Launch API* and *Launch SPA*, then operate the SPA while setting breakpoints to inspect the state of variables:
-
-![spa debug](../images/90/spa-debug.jpg)
-
-If you inspect bundle files, their last line references a source map file that browser developer tools download when a debug session starts. Source maps enable TypeScript code debugging while the corresponding JavaScript code executes in the browser.
-
-```markdown
-//# sourceMappingURL=app.bundle.js.map
-```
-
 ### Decompiling Code: SPA Exception Stack Traces
 
-The webpack configuration uses separate development and production configurations. The development configuration references the development web server configuration, includes a property that enables code debugging, and also sets a property to let JavaScript know whether it should run in debug mode:
-
-```typescript
-const devConfig: webpack.Configuration = {
-
-    mode: 'development',
-    devServer,
-    output: Object.assign({}, baseConfig.output, {
-        devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]',
-    }),
-    plugins:[
-        new webpack.DefinePlugin({
-            IS_DEBUG: 'true',
-        }),
-    ],
-};
-```
-
-To prevent TypeScript compilation errors, I reference the *IS_DEBUG* variable in the SPA's *typings.d.ts* file. The SPA's error handling code uses the variable to decide whether to render stack traces:
+The bundler configuration sets a property *IS_DEBUG=true* in development builds. The SPA's error handling code uses the variable to decide whether to render stack traces:
 
 ```typescript
 public static getErrorStack(error: UIError): ErrorLine | null {
@@ -601,7 +694,7 @@ Source map stack trace lookup also works for minified release builds, to provide
 Once you have a productive web pipeline, you are well placed to productionize and apply finishing touches to the web technology. The following blog posts explore this blog's finishing touches for web applications. None of these steps change the web technology setup:
 
 - The <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend Design</a> explains the use of secure cookies to transport access tokens to APIs.
-- The <a href='final-spa-overview.mdx'>Final SPA Overview</a> explains updates to the React framework, the Rollup bundler and a strong content security policy.
+- The <a href='final-spa-overview.mdx'>Final SPA Overview</a> explains updates to a React app that sends cookies in API requests.
 - The <a href='api-journey-client-side.mdx'>API Journey Client Side</a> explains how web clients should handle API security challenges.
 - The <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a> explains modern web deployments with optimal global performance.
 
@@ -609,7 +702,7 @@ Of course, in a real SPA you are likely to have additional requirements. You may
 
 ### Where Are We?
 
-I summarized a thought process to ensure a modern, productive and business-like web development setup. In particular, I separate web and API concerns so that the web host does not deal with data security. Next, I explain some development setups to enable the use of HTTPS and HTTP proxies, so that you have rich options to view OAuth and API messages, when developing within a distributed architecture.
+I summarized steps to ensure a modern, secure, productive and business-like web development setup. In particular, I separate web and API concerns so that the web host does not deal with data security. Next, I explain some development setups to enable the use of HTTPS and HTTP proxies, so that you have rich options to view OAuth and API messages, when developing within a distributed architecture.
 
 ### Next
 
