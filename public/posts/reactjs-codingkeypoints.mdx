@@ -1,6 +1,10 @@
 # Final SPA - Code Details
 
-Previously I explained <a href='how-to-run-the-react-js-spa.mdx'>How to Run the Final SPA</a>, which uses cookies to transport short-lived access tokens to APIs. Next I describe the main changes to the SPA's code, with a particular focus on API requests. See also the <a href='api-journey-client-side.mdx'>Client Side API Journey</a> for a summary of the requirements being met.
+Previously I explained <a href='how-to-run-the-react-js-spa.mdx'>How to Run the Final SPA</a>, to use cookies to transport short-lived access tokens to APIs. Next I describe the main changes to the SPA's code, with a particular focus on API requests. See also the <a href='api-journey-client-side.mdx'>Client Side API Journey</a> for a summary of the requirements being met.
+
+### Web Technology Setup
+
+The final SPA continues to use this blog's <a href='web-technology-setup.mdx'>Web Technology Setup</a>. That post explains how the SPA uses the rollup bundler to build modern ECMAScript bundles and an Express HTTP server to serve them. The web development setup uses a restrictive content security policy and live reloading during development.
 
 ### Previous Samples
 
@@ -13,145 +17,6 @@ I provided two earlier plain TypeScript SPA and API code samples:
 
 These earlier SPAs used access tokens in the browser, which is no longer recommended. Therefore, the final SPA instead uses utility API components that issue cookies, so that API credentials are unavailable to JavaScript code.
 
-### Development Web Server
-
-The final SPA uses Express as a development web server. The server exposes a utility reload endpoint that Rollup watch mode calls when bundles are rebuilt after code changes. The reload endpoint sends a notification to the browser client, which reloads itself.
-
-```typescript
-const server = https.createServer(httpsOptions, app);
-const wss = new WebSocketServer({
-    server,
-    path: '/reload'
-});
-
-app.get('/reload', (request: Request, response: Response) => {
-
-    console.log('Web socket server broadcasting reload event ...');
-    for (const client of wss.clients) {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send('reload');
-        }
-    }
-    response.sendStatus(204);
-});
-
-const spaBasePath = '/spa/';
-const spaPhysicalRoot = 'dist';
-app.use(spaBasePath, express.static(spaPhysicalRoot));
-app.get('*_', handleNotFoundPath);
-```
-
-The development web server returns security headers during the download of web resources. Headers include a highly restrictive content security policy.
-
-```typescript
-function getWebHostSecurityHeaders(): Headers {
-
-    const bffHost = (process.env.LOCALAPI === 'true') ?
-        'https://bfflocal.authsamples-dev.com:444' : 'https://bff.authsamples-dev.com';
-
-    let policy = "default-src 'none';";
-    policy += " script-src 'self';";
-    policy += ` connect-src 'self' ${bffHost};`;
-    policy += " child-src 'self';";
-    policy += " img-src 'self';";
-    policy += " style-src 'self';";
-    policy += " object-src 'none';";
-    policy += " frame-ancestors 'none';";
-    policy += " base-uri 'self';";
-    policy += " form-action 'self'";
-
-    return [
-        {
-            key: 'content-security-policy',
-            value: policy,
-        },
-        {
-            key: 'strict-transport-security',
-            value: 'max-age=31536000; includeSubdomains; preload',
-        },
-        {
-            key: 'x-frame-options',
-            value: 'DENY',
-        },
-        {
-            key: 'x-xss-protection',
-            value: '1; mode=block',
-        },
-        {
-            key: 'x-content-type-options',
-            value: 'nosniff',
-        },
-        {
-            key: 'referrer-policy',
-            value: 'same-origin',
-        },
-    ];
-}
-```
-
-### ECMAScript Build
-
-The final SPA uses the Rollup bundler to produce clean ECMAScript bundles whose code runs in the browser. A partial configuration is shown below, and is similar to the webpack configuration from this blog's earlier SPAs. Getting your preferred results typically requires the use of built-in or custom plugins, where you can customize behaviours. During the overall build, an *esbuild* plugin translates TypeScript code to JavaScript.
-
-
-```typescript
-const isDevelopment = process.env.ROLLUP_WATCH === 'true';
-const outputFolder = 'dist';
-
-const options: RollupOptions = {
-
-    input: 'src/index.tsx',
-    output: {
-        dir: outputFolder,
-        format: 'esm',
-        entryFileNames: 'app.bundle.js',
-        chunkFileNames: '[name].bundle.js',
-    },
-
-    plugins: [
-
-        nodeResolve({
-            browser: true,
-        }),
-
-        commonjs(),
-        
-        esbuild({
-            tsconfig: './tsconfig.json',
-            target: 'es2020',
-            jsx: 'automatic',
-        }),
-
-        copy({
-            targets: [
-                { src: 'favicon.ico', dest: outputFolder },
-                { src: 'index.html', dest: outputFolder },
-            ],
-        }),
-
-        ...(isDevelopment ? [
-
-            copy({
-                targets: [
-                    { src: 'css/*', dest: outputFolder },
-                ],
-            }),
-
-            copyConfiguration(),
-            copyOnEdit(),
-            notifyBrowser(),
-
-        ] : [
-
-            terser(),
-            finalizeBundles(),
-            writeCssAndHtml(buildId, outputFolder),
-        ]),
-    ],
-};
-```
-
-
 ### React Library Setup
 
 The SPA no longer uses a JavaScript security library to implement OpenID Connect. Instead, the *package.json* dependencies focus mainly on view-related logic and API requests.
@@ -160,10 +25,11 @@ The SPA no longer uses a JavaScript security library to implement OpenID Connect
 {
   "dependencies": {
     "js-event-bus": "^1.1.1",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "react-modal": "^3.16.3",
-    "react-router-dom": "^7.10.1"
+    "react-router-dom": "^7.17.0",
+    "tailwindcss": "^4.3.0"
   },
 }
 ```
@@ -203,7 +69,7 @@ In the *app.tsx* module of the main SPA, views now use JSX syntax. Routes enable
 
 ```jsx
 return (
-    <>
+    <div className='sm:px-8 md:px-16 lg:px-24 py-2'>
         <TitleView {...getTitleProps()} />
         <HeaderButtonsView {...getHeaderButtonProps()} />
         {error && <ErrorSummaryView {...getErrorProps()} />}
@@ -217,7 +83,7 @@ return (
                 </Routes>
             </>
         }
-    </>
+    </div>
 );
 ```
 
@@ -349,7 +215,7 @@ Before any such concurrent API requests can run, the SPA must calculate the user
 
 ### Getting the User's Authenticated Status
 
-Clients that use tokens can determine whether the user is authenticated by the presence of tokens, which is the technique I use for native apps later in this blog. For SPAs with cookies, I use a similar technique of storing a boolean *isLoggedIn=true* flag in local storage. Initially, this flag is not set and the SPA must initiate user authentication.
+Clients that use tokens can determine whether the user is authenticated by the presence of tokens, which is the technique I use for native apps later in this blog. For SPAs with cookies, I use a technically equivalent technique of storing a boolean *isLoggedIn=true* flag in local storage. Initially, this flag is not set and the SPA must initiate user authentication.
 
 ### Login Detection
 
@@ -373,7 +239,7 @@ private handleAllViewsLoaded(): void {
 }
 ```
 
-### API Driven OpenID Connect
+### API Driven OAuth Lifecycle
 
 The final SPA continues to drive its own authentication flow, with the help of a remote OAuth agent. The SPA uses the following operations and this blog's earlier SPA code samples used pretty much the same interface.
 
@@ -455,7 +321,7 @@ The SPA retains full control over login usability. Rather than using a few lines
 
 ### API Requests with Cookies
 
-After login the SPA uses *HttpOnly SameSite=strict Secure* cookies to call APIs. The SPA must use the *credentials: include* fetch option to instruct the browser to send cookies to its backend for frontend. The SPA sends a custom header to enforce CORS preflight requests, as a CSRF prevention best practice. The SPA also sends some a correlation ID for logging and tracing purposes.
+After login the SPA uses *HttpOnly SameSite=strict Secure* cookies to call APIs. The SPA must use the *credentials: include* fetch option to instruct the browser to send cookies to its backend for frontend. The SPA sends a custom header to enforce CORS preflight requests, as a CSRF prevention best practice. The SPA also sends a correlation ID for logging and tracing purposes.
 
 ```typescript
 private async callApiWithCredential(
@@ -501,7 +367,7 @@ private async callApiWithCredential(
 }
 ```
 
-When the current access token expires, the SPA makes a token refresh request to get new tokens and rewrite cookies with new tokens. The SPA then retries the original API request with updated cookies. It is also possible that the user could close all browser windows when the *isLoggedIn=true* flag is set. The next time the user runs the app, session cookies are no longer present and APIs return 401 responses. The SPA, and this blog's native apps, cope reliably with these conditions using the following overall algorithm for API requests:
+When the current access token expires, the SPA instructs the OAuth Agent to get new tokens and rewrite cookies with new tokens. The SPA then retries the original API request with updated cookies. It is also possible that the user could close all browser windows when the *isLoggedIn=true* flag is set. The next time the user runs the app, session cookies are no longer present and APIs return 401 responses. The SPA, and this blog's native apps, cope reliably with these conditions using the following overall algorithm for API requests:
 
 ```typescript
 private async getDataFromApiWithTokenRefresh(url: string, options: FetchOptions): Promise<any> {
@@ -592,11 +458,11 @@ public async execute(action: () => Promise<void>): Promise<void> {
 
 The final SPA deals reliably with some tricky areas, in the lower-level plumbing classes. Once written, web developers at a real organization could grow the web code base by adding new view and view model classes. An early focus on security, development setups, deployment and reliability supports the valuable future business logic.
 
-There is one remaining post for this blog's final SPA, on <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a>. It is part of this blog's cloud theme and covers web release builds in more depth. The SPA's static content gets uploaded to a content delivery network which deploys it to hundreds of global locations for globally equal performance. The SPA's deployment is portable and runs the same in all environments.
+There is one remaining post for this blog's final SPA, on <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a>. It is part of this blog's cloud theme and covers web release builds in more depth. The SPA's static content gets uploaded to a content delivery network which deploys it to hundreds of global locations for globally equal performance.
 
 ### Where Are We?
 
-I security hardened this blog's final SPA, by using token handler API components to perform the OpenID Connect and cookie issuing work. This migration was done without any adverse effects on the web side of the architecture. The SPA code uses a modern web framework with a frontend-only focus and its deployment is able to take full advantage of modern web hosting.
+I security hardened this blog's final SPA, by using token handler utility APIs to perform the OAuth and cookie issuing work. This migration was done without any adverse effects on the web side of the architecture. The SPA code uses a modern web framework with a frontend-only focus and its deployment is able to take full advantage of modern web hosting.
 
 ### Next
 

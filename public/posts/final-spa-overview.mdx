@@ -1,16 +1,20 @@
 # Final SPA - Overview
 
-Previously I explained the <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend</a> setup for the final SPA, where remote API components issue cookies on behalf of the SPA. Next I summarise the main frontend behaviours of the completed SPA, after which I show how to run it locally.
+Previously I explained the <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend</a> setup for the final SPA, where remote API components issue cookies on behalf of the SPA. Next I summarise the updated behaviours of the completed SPA, after which I show how to run it locally.
+
+### Code Sample Goal
+
+The main goal of the SPA is security hardening to remove all OAuth tokens from the browser, and instead to use SameSite cookies to transport access tokens to APIs. Along the way this solves the token renewal usability problems of <a href='improved-spa-code-sample-overview.mdx'>Earlier SPAs</a>. Once implemented, the SPA is ready for production deployments to a high performance content delivery network.
 
 ### Key Features
 
-The final SPA improves on the previous <a href='improved-spa-code-sample-overview.mdx'>Updated SPA</a>, to meet some key requirements. It is difficult to satisfy all of these at the same time:
+The final SPA completes the SPA architecture to meet all of the following requirements:
 
 | Requirement | Description |
 | ----------- | ----------- |
 | Best Browser Security | The SPA calls APIs using the strongest *HttpOnly SameSite=strict* cookies, with no tokens in the browser. |
 | Globally Equal Performance | Deploy the SPA to a content delivery network, so that web latency is roughly the same at any global location. |
-| Pure SPA Development | Web developers use production security but work only on modern frontends, with small code bases and usability control. |
+| Pure SPA Development | Web developers run with production security but work only on modern frontends, with small code bases and usability control. |
 
 ### Cloud Hosting
 
@@ -22,16 +26,12 @@ I deploy the API code sample to AWS as <a href='serverless-api-overview.mdx'>Ser
 
 ![online spa](../images/220/online-spa.jpg?v=20240713)
 
-### Technology Modernization
-
-This blog's initial SPAs used vanilla TypeScript, Bootstrap for CSS and webpack as a bundler and development web server. The final SPA uses React, with [Rollup](https://rollupjs.org/) as a bundler that produces the best ECMAScript code output to run in the browser. These changes may give the final SPA greater developer appeal, but they do not change the <a href='web-technology-setup.mdx'>Web Technology Setup</a>.
-
 ### Micro Frontend Design
 
 The final SPA runs at a */spa* path. Additional paths, for other micro-frontends, could run within the same web domain, to keep the code base manageable as it grows. From a security viewpoint, any additional apps added to the web domain should be for the same business area. All apps then share each other's API cookies and also each other's cross site scripting threats.
 
 <div className='smallimage'>
-    <img src='../images/220/code-layout.jpg?v=20251230' alt='code layout' />
+    <img src='../images/220/code-layout.jpg?v=20260620' alt='code layout' />
 </div>
 
 The SPA uses cookies issued by utility APIs but its code and web host manage only web concerns, with all cookie aspects externalized from SPA development. The resources in the *deployment* folder represent web static content hosting variations. The next post explains how to run the SPA and its development web host locally.
@@ -60,7 +60,9 @@ A second entry exists to run the SPA during development, which has an equivalent
 
 ### React Views
 
-The SPA's code now uses React as a web framework, to enable richer coding options in areas like view development, navigation and code splitting. The SPA renders a tree of views which leads to concurrent API requests. The SPA must synchronise the triggering of both token renewal and user re-authentication when tokens expire.
+This blog's initial SPAs used vanilla TypeScript to demonstrate generic OAuth integration patterns that work in any SPA framework. The final SPA uses React, to enable a richer ecosystem of best practices, in areas like JSX view development and navigation. 
+
+From an API viewpoint, the SPA now renders a tree of views which leads to concurrent API requests. The SPA must synchronise the triggering of both token renewal and user re-authentication when tokens expire.
 
 ```jsx
 return (
@@ -82,8 +84,6 @@ return (
 );
 ```
 
-### Path Based Routing
-
 Earlier SPAs in this blog used hash-based routing. The final SPA instead uses React's support for path-based routes. The SPA continues to use a *base* path expressed in the index.html file:
 
 ```html
@@ -95,12 +95,10 @@ Earlier SPAs in this blog used hash-based routing. The final SPA instead uses Re
 
         <base href='/spa/'>
         <title>OAuth Demo App</title>
-
-        <link rel='stylesheet' href='bootstrap.css'>
         <link rel='stylesheet' href='app.css'>
     </head>
     <body>
-        <div id='root' class='container'></div>
+        <div id='root'></div>
 
         <script type='module' src='vendor.bundle.js'></script>
         <script type='module' src='react.bundle.js'></script>
@@ -135,26 +133,11 @@ x-content-type-options: nosniff
 referrer-policy: same-origin
 ```
 
-### Optimized Web Performance
+### Modern Web Performance
 
-The time to first render in a secured web application is not immediate and requires the following steps. The browser makes multiple static content and HTTP requests. Modern networks and the latest HTTP/2 functionality help to manage the steps efficiently:
+When web hosting is suboptimal, web content must travel thousands of miles to reach the user's browser. This will never perform well, regardless of optimizations that performance teams or web developers try to implement. The final SPA uses content delivery network hosting for web content, to solve this problem in the standard way.
 
-| Step | Description |
-| ---- | ----------- |
-| Unauthenticated Access | The time to download HTML resources and run code to detect the user's authentication status. |
-| OAuth Login | The time to redirect to the authorization server and present login screens, then return to the SPA. |
-| Secure SPA Access | The application reload, followed by API requests to get sensitive data specific to the user. |
-
-The final SPA uses the following mainstream techniques to ensure good performance:
-
-| Aspect | Responsibilities |
-| ------ | ---------------- |
-| Content Delivery | Web latency is roughly equal for all global users, since a CDN ensures that all web downloads are fairly local. |
-| Static Content Caching | The SPA uses cache control headers for web assets, to serve future requests from the browser cache. |
-| API Response Caching | The SPA caches HTTP GET responses to prevent redundant API requests, such as during back navigation. |
-| Download Sizes | As the SPA's code grows I would aim for medium-sized downloads using <a href='web-technology-setup.mdx#building-code-bundle-splitting'>bundle splitting techniques</a> and micro-frontends. |
-
-The final SPA's has a simple initial page to display a login button. Once rendered, all future SPA operations and page reloads use HTML resources from the browser's local cache.
+The time to first render in an OAuth-secured SPA is also not always understood. The final SPA's first page is a login required page that downloads initial web assets and renders quickly. All subsequent web downloads are served directly from the browser cache, until the next SPA upgrade or the user clears their browsing history.
 
 ![first render](../images/220/first-render.jpg)
 
@@ -162,7 +145,7 @@ The SPA uses CORS when it calls APIs, which is standard in any pure SPA architec
 
 ### Where Are We?
 
-I summarised the behaviour of the final SPA's web architecture. Development uses a modern web framework and there is an early focus on security, deployment, performance and reliability. You can scale both URLs and code as the web code base grows.
+I summarised the behaviour of this blog's final SPA. Development uses a modern web framework and there is an early focus on security, deployment, performance and reliability. The web architecture also scales effectively as code as the web code base grows.
 
 ### Next
 
