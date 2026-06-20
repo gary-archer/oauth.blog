@@ -337,7 +337,7 @@ export default defineConfig(options);
 
 This blog's SPA build also runs a series of plugins, to perform a number of tasks. TypeScript code is built to run in the browser, eliminate unused code from the *node_modules* folder, convert libraries that use CommonJS to ECMAScript, set an *IS_DEBUG* variable for development builds, and so on. In particular, the [ESBuild](https://esbuild.github.io/) tool is a modern option with which to compile the SPA's TypeScript code.
 
-```json
+```typescript
 {
     plugins: [
 
@@ -401,7 +401,7 @@ vendor.bundle.js.map
 
 Since the SPA builds to ECMAScript modules, the development build results remain close to the SPA's TypeScript code, with types removed. Keeping the built code similar to the developed code makes decompilation easier later.
 
-```typescript
+```javascript
 class CompaniesView {
     constructor(apiClient) {
         this.apiClient = apiClient;
@@ -431,13 +431,15 @@ const component2 = new module.SharedComponent1();
 
 Rollup produces new *non-initial* bundles when you use dynamic imports, where *initial* bundles contain references to *non-initial* bundles. By default, a new module will be produced for each module, or you can update the rollup *manualChunks* function to explicitly control the bundle to which dynamic modules get written to.
 
-```json
-manualChunks: (id: string) => {
-    if (id.includes('component1') || id.includes('component2')) {
-      return 'shared';
-    }
+```typescript
+{
+    manualChunks: (id: string) => {
+        if (id.includes('component1') || id.includes('component2')) {
+            return 'shared';
+        }
 
-    ...
+        ...
+    },
 }
 ```
 
@@ -445,7 +447,7 @@ manualChunks: (id: string) => {
 
 Rollup also uses [postcss](https://github.com/postcss/postcss) and tailwindcss plugins to produce a final *app.css* file from the styles that I use. The plugin therefore eliminates unused code in a similar manner to how rollup eliminates unused TypeScript code, to keep download sizes small.
 
-```json
+```typescript
 {
     plugins: [
         ...
@@ -456,7 +458,7 @@ Rollup also uses [postcss](https://github.com/postcss/postcss) and tailwindcss p
                 tailwind(),
             ]
         }),
-    ]
+    ],
 }
 ```
 
