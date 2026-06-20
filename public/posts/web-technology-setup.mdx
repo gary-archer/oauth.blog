@@ -21,7 +21,7 @@ You then need to implement a web development pipeline, where the application cod
 | Execute Tasks | You sometimes need to execute arbitrary tasks as part of development, such as code quality checks or running tests. |
 | Build Code | You need to build code so that it runs reliably and efficiently in browsers, which involves compiling TypeScript. |
 | Execute Code | You execute compiled code in the browser, which is different to the code you develop. |
-| Decompile Code | When there is a problem, or to support debugging, you want to decompile release JavaScript to the original TypeScript code. |
+| Decompile Code | When there is a problem, or to support debugging, you want to decompile JavaScript to the original TypeScript code. |
 
 ### Downloading Dependencies: Package Manager
 
@@ -53,7 +53,7 @@ You need to think about the potential for security vulnerabilities when you incl
 
 ### Downloading Dependencies:  Node Modules
 
-When you run *npm install*, your dependencies get downloaded to a *node_modules* folder from which you import classes and functions. The following screenshot shows some type definition for the *oidc-client-ts* library.
+When you run *npm install*, your dependencies get downloaded to a *node_modules* folder from which you import classes and functions. The following screenshot shows some type definitions for the *oidc-client-ts* library.
 
 ![node modules](../images/90/node-modules.jpg)
 
@@ -335,7 +335,7 @@ const options: RollupOptions = {
 export default defineConfig(options);
 ```
 
-This blog's SPA build also runs a series of plugins, to perform a number of tasks. TypeScript code is built to run in the browser, eliminate unused code from the *node_modules* folder, convert libraries that use CommonJS to ECMAScript, set an *IS_DEBUG* variable for development builds, and so on. In particular, the [ESBuild](https://esbuild.github.io/) tool is a modern option with which to compile the SPA's TypeScript code.
+This blog's SPA build also runs a series of plugins, to perform a number of tasks. These tasks process the *node_modules* folder, include only used code from dependencies, then build that code to ECMAScript output for the browser. The tasks also set an *IS_DEBUG* variable for development builds and use the [ESBuild](https://esbuild.github.io/) tool to compile the SPA's TypeScript code.
 
 ```typescript
 {
@@ -374,11 +374,11 @@ This blog's SPA build also runs a series of plugins, to perform a number of task
 }
 ```
 
-Web bundlers are a little daunting when you are new to modern web technology. The use of plugins may seem complex but they provide you with technical control.
+Web bundlers are a little daunting when you are new to modern web technology. The use of plugins may seem complex but they provide technical control that enables optimal web builds.
 
 ### Building Code: Running the Bundler
 
-To run the bundler for development I use the following commands. ESBuild then compiles code using the settings from the SPA's *tsconfig.json* file. The *target=ES2017* setting supports mainstream desktop and mobile browsers, and *module=ES2020* setting enables the use of bundle splitting as a mechanism to improve user performance.
+To run the bundler for development I use the following commands. ESBuild then compiles code using the settings from the SPA's *tsconfig.json* file. The *target=ES2017* setting supports mainstream desktop and mobile browsers, and *module=ES2020* setting enables the use of bundle splitting as a mechanism to improve the download efficiency of web assets.
 
 ```bash
 rm -rf dist && NODE_OPTIONS='--import tsx' rollup --config build/rollup.config.ts --watch
@@ -429,7 +429,7 @@ const component1 = new module.SharedComponent1();
 const component2 = new module.SharedComponent1();
 ```
 
-Rollup produces new *non-initial* bundles when you use dynamic imports, where *initial* bundles contain references to *non-initial* bundles. By default, a new module will be produced for each module, or you can update the rollup *manualChunks* function to explicitly control the bundle to which dynamic modules get written to.
+Rollup produces new *non-initial* bundles when you use dynamic imports, where *initial* bundles contain references to *non-initial* bundles. By default, a new bundle gets produced for each module, or you can update the rollup *manualChunks* function to explicitly control the bundle to which dynamic modules get written to. The first user action that uses a component in the bundle triggers its download.
 
 ```typescript
 {
@@ -462,7 +462,7 @@ Rollup also uses [postcss](https://github.com/postcss/postcss) and tailwindcss p
 }
 ```
 
-The built *app.css* file uses CSS rules that the browser interprets. In a real SPA, a framework like tailwindcss promotes understanding of modern CSS best practices.
+The built *app.css* file uses CSS rules that the browser interprets. Frameworks like tailwindcss help to promote understanding of modern CSS best practices.
 
 ```css
 /*! tailwindcss v4.3.1 | MIT License | https://tailwindcss.com */
@@ -487,7 +487,7 @@ In some deployed environments, bundling improves API startup times. This blog's 
 
 ### Executing Code: Development Web Host
 
-After the web build, the SPA's HTML, CSS and JavaScript bundles can be served from the *dist* folder using an HTTP server. For a development web server I use the Node.js Express HTTP server for this task, with the following essential code.
+After the web build, the SPA's HTML, CSS and JavaScript bundles can be served from the *dist* folder using an HTTP server. I use the Node.js Express HTTP server as a development web host, with the following essential code.
 
 ```typescript
 const app = express();
@@ -697,14 +697,14 @@ Once you have a productive web pipeline, you are well placed to productionize an
 
 - The <a href='spa-back-end-for-front-end.mdx'>Backend for Frontend Design</a> explains the use of secure cookies to transport access tokens to APIs.
 - The <a href='final-spa-overview.mdx'>Final SPA Overview</a> explains updates to a React app that sends cookies in API requests.
-- The <a href='api-journey-client-side.mdx'>API Journey Client Side</a> explains how web clients should handle API security challenges.
+- The <a href='api-journey-client-side.mdx'>API Journey Client Side</a> explains how web clients should handle API security challenge responses.
 - The <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a> explains modern web deployments with optimal global performance.
 
 Of course, in a real SPA you are likely to have additional requirements. You may also prefer to do a little more work in the web host. You should be able to adapt this blog's web technology setup to add extra behaviours that meet your own requirements.
 
 ### Where Are We?
 
-I summarized steps to ensure a modern, secure, productive and business-like web development setup. In particular, I separate web and API concerns so that the web host does not deal with data security. Next, I explain some development setups to enable the use of HTTPS and HTTP proxies, so that you have rich options to view OAuth and API messages, when developing within a distributed architecture.
+I summarized steps to ensure a modern, secure, productive and business-like web development setup. In particular, I separate web and API concerns so that the web host does not deal with data security. Next, I explain some development setups to enable the use of HTTP proxy tools for debugging, so that you have rich options to view OAuth and API messages, when developing within a distributed architecture.
 
 ### Next
 
