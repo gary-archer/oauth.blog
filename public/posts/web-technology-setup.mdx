@@ -25,29 +25,27 @@ You then need to implement a web development pipeline, where the application cod
 
 ### Downloading Dependencies: Package Manager
 
-Node.js uses the *npm* tool to specify libraries in your application's *package.json* file. The built code uses the entries in the *dependencies* section at runtime. You typically require a number of plumbing entries in the *devDependencies* section to produce the built code.
+Node.js uses the *npm* tool to specify libraries in your application's *package.json* file. The built code uses the entries in the *dependencies* section at runtime. You also need a number entries in the *devDependencies* section, to work with TypeScript code. I use the [Node.js workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces) feature to manage build and tool dependencies in child folders, to keep the SPA's functional dependencies easy to understand.
 
 ```json
 {
   "dependencies": {
     "mustache": "^4.2.0",
-    "oidc-client-ts": "^3.5.0"
+    "oidc-client-ts": "^3.5.0",
+    "tailwindcss": "^4.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/mustache": "^4.2.5",
-    "@types/node": "^24.10.3",
-    "copy-webpack-plugin": "^14.0.0",
-    "eslint": "^10.1.0",
-    "ts-loader": "^9.5.4",
-    "tsx": "^4.21.0",
-    "typescript": "^6.0.2",
-    "typescript-eslint": "^8.58.0",
-    "webpack": "^5.105.4",
-    "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.2",
-    "webpack-merge": "^6.0.1"
-  }
+    "eslint": "^10.5.0",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.0"
+  },
+  "workspaces": [
+    "build",
+    "tools"
+  ]
 }
 ```
 
@@ -63,40 +61,25 @@ You consume each library as JavaScript, even if it is coded in TypeScript. Each 
 
 ### Writing Code: Resolving Imports
 
-You import libraries in source files using one of the following syntaxes. The first syntax imports a subset of capabilities from an *ECMAScript* module, whereas you use the second syntax to import the whole of an older *CommonJS* module.
+You import third-party libraries in source files using one of the following syntaxes. The first syntax imports a subset of capabilities from a module, whereas you use the second syntax to import the whole of a module.
 
 ```typescript
 import {UserManager, UserManagerSettings} from 'oidc-client';
 import mustache from 'mustache';
 ```
 
-This blog's APIs use Node.js 24 or later, with the following settings in the *tsconfig.json* file, which controls TypeScript behaviors. I typically use the latest released (non-experimental) settings. You use some settings when you import modules and other settings when you build TypeScript code to JavaScript, to enable browser execution.
+I inform the compiler that the project's own source files use ECMAScript modules. To do so, I specify *type=module* in the *package.json* file and then use ECMAScript rules for importing modules.
 
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "target": "ES2025",
-    "lib": ["ES2025"],
-    "module":"Node20",
-    "moduleResolution": "Node16",
-    "outDir": "dist",
-    "sourceMap": true,
-    "rootDir": "src"
-  },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
-}
-```
-
-I also inform the compiler that the project's own source files use ECMAScript modules. To do so, I specify *type=module* in the *package.json* file. For Node.js (non browser) code that uses *type=module*, add a *.js* suffix to imports. During coding this is a TypeScript file, though it becomes JavaScript when executed.
+In SPA code, the *tsconfig.json* file uses *moduleResolution=Bundler*, and I import files without an extension:
 
 ```typescript
-import {CompanyRepository} from '../repositories/companyRepository.js';
+import {ApiClient} from '../api/client/apiClient';
+```
+
+In API code, the *tsconfig.json* file uses *moduleResolution=Node16* and I import files with a *.js* extension. During coding the referenced file uses TypeScript, though it becomes JavaScript when executed.
+
+```typescript
+import {CompanyService} from '../../logic/services/companyService.js';
 ```
 
 ### Writing Code: Using Type Definition Files
@@ -107,15 +90,17 @@ To use some libraries without compilation errors, TypeScript requires type defin
 npm view @types/node --json | grep '"24.' | sort -rV | head -n 1
 ```
 
-For libraries with no type definitions, I occasionally need to add a *typings.d.ts* file to the project and then use a *declare module* statement. This gets past compiler errors, so that my experience is no worse than developing in JavaScript, though I lose type checking or intellisense.
+I use a *typings.d.ts* file to inform the SPA that certain statements, like CSS imports or development-specific flags, should not cause a TypeScript error. For libraries without type definitions, I could also use a *declare module* statement to get past compiler errors.
 
 ```typescript
+declare module '*.css';
+declare const IS_DEBUG: boolean;
 declare module 'some-legacy-library';
 ```
 
 ### Writing Code: Using TypeScript Libraries
 
-The *tsconfig.json* file for the SPA is a little different to that for the Node.js API. The *lib: DOM* option brings in browser type definitions and *ES2025* enables the most modern coding syntax.
+The SPA's *tsconfig.json* uses *lib: DOM*, to bring in browser type definitions, and *ES2025* enables the most modern coding syntax.
 
 ```json
 {
@@ -173,77 +158,29 @@ Strong typing during coding allows the environment to make more checks and simpl
 
 ### Writing Code: Styling
 
-For this blog's early SPAs I use [Bootstrap](https://getbootstrap.com/docs/5.3/getting-started/introduction/) as a simple CSS solution. I use the library's built-in styles, to enable grid based layouts.
+I use [tailwindcss](https://tailwindcss.com/) as a utility CSS solution. I keep styling pretty simple, mostly using built-in styles. TypeScript views use a layout that arranges the SPA's UI elements into rows and columns.
 
 ```html
-<div class='row listRow'>
-    <div class='col-2 my-auto text-center'>
-        {{name}}
-    </div>
-    <div class='col-2 my-auto text-center'>
-        {{region}}
-    </div>
-    <div class='col-2 my-auto text-center'>
-        <a href='#company={{id}}'>View Transactions</a>
-    </div>
-    <div class='col-2 my-auto moneycolor fw-bold text-end'>
-        {{formattedTargetUsd}}
-    </div>
-    <div class='col-2 my-auto moneycolor fw-bold text-end'>
-        {{formattedInvestmentUsd}}
-    </div>
-    <div class='col-2 my-auto fw-bold text-end'>
-        {{noInvestors}}
-    </div>
+<div class='grid grid-cols-12 bg-gray-100 p-3'>
+    <div class='col-span-2 font-bold text-center'>Account</div>
+    <div class='col-span-2 font-bold text-center'>Region</div>
+    <div class='col-span-2'></div>
+    <div class='col-span-2 font-bold text-right'>Target USD</div>
+    <div class='col-span-2 font-bold text-right'>Investment USD</div>
+    <div class='col-span-2 font-bold text-right'># Investors</div>
 </div>
 ```
 
-My app's CSS file is therefore a single global file, containing only padding, colours and minor adjustments to support mobile layouts.
+My *app.css* file consists primarily of a tailwind import:
 
 ```css
-.row
-{
-    margin-top: 5px;
-}
-.listRow
-{
-    height: 80px;
-}
-.mobileHeaderRow
-{
-    height: 60px;
-}
-.mobileRow
-{
-    height: 40px;
-}
-.valuecolor
-{
-    color: blue;
-}
-.moneycolor
-{
-    color:green;
-}
-.largetext
-{
-    font-size: larger;
-}
-.errorcolor
-{
-    color:red;
-}
-.errorlinecolor
-{
-    color:darkblue;
-}
-@media all and (max-width: 992px)
-{
-    body
-    {
-        font-size: 0.85em;
-    }
-}
+@import 'tailwindcss';
+```
+
+I then import the CSS into my JavaScript code. This mechanism enables the web build to produce a final *app.css* file, without tailwindcss styles that I do not use.
+
+```typescript
+import './app.css';
 ```
 
 ### Executing Tasks
@@ -330,125 +267,137 @@ I use a web bundler, to produce optimized JavaScript bundles that I express in t
 
 ```html
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang='en'>
     <head>
         <meta charset='utf-8'>
         <base href='/spa/'>
         <title>OAuth Demo App</title>
-
-        <link rel='stylesheet' href='bootstrap.min.css'>
         <link rel='stylesheet' href='app.css'>
     </head>
     <body>
-        <div id='root' class='container'></div>
+        <div id='root'></div>
 
         <script type='module' src='vendor.bundle.js'></script>
         <script type='module' src='app.bundle.js'></script>
     </body>
 </html>
+
 ```
 
 ### Building Code: Bundler Configuration
 
-There are various web bundlers, and this blog's early SPAs use the [webpack](https://webpack.js.org/) tool. It requires a configuration object that you can create in TypeScript. The options can seem a little cryptic at first. Mostly though, you just need to specify the SPA's entry point source file, then provide an output folder for compiled bundles. The following example uses an entry point of *app.ts* and writes bundles to a *dist* folder.
+This blog uses the [rollup](https://rollupjs.org/) bundler, since it produces the most modern ECMAScript final code from my TypeScript code. This bundler also gives me technical control and allows me to run with a restrictive content security policy during development. For rollup I use a number of additional dependencies that I express in the SPA's *build/package.json* file.
+
+```json
+{
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.2",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-replace": "^6.0.3",
+    "@rollup/plugin-terser": "^1.0.0",
+    "@tailwindcss/postcss": "^4.3.0",
+    "@types/node": "^24.10.3",
+    "cssnano": "^8.0.1",
+    "open": "^11.0.0",
+    "postcss": "^8.5.15",
+    "rollup": "^4.60.4",
+    "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-esbuild": "^6.2.1",
+    "rollup-plugin-postcss": "^4.0.2"
+  }
+}
+```
+
+With rollup, you essentially create a *rollup.config.ts* file that points the bundler to the SPA's entry point TypeScript file and express rules for producing output bundles to a *dist* folder.
 
 ```typescript
-const config: webpack.Configuration = {
+const isDevelopment = process.env.ROLLUP_WATCH === 'true';
+const outputFolder = 'dist';
+const options: RollupOptions = {
 
-    mode: 'development',
-    context: path.resolve(dirname, '.'),
-    target: 'web',
-    devtool: 'source-map',
-    entry: {
-        app: './src/app/app.ts',
-    },
-    module: {
-        rules: [
-            {
-                test: /\.ts$/,
-                use: 'ts-loader',
-                exclude: /node_modules/
-            }
-        ]
-    },
-    resolve: {
-        extensions: ['.ts', '.js']
-    },
+    input: 'src/app.ts',
     output: {
-        path: path.resolve(dirname, './dist'),
-        filename: '[name].bundle.js',
-        chunkFilename: '[name].bundle.js',
-        module: true,
-        clean: true
-    },
-    experiments: {
-        outputModule: true,
-    },
-    optimization: {
-        splitChunks: {
-            cacheGroups: {
-                vendor: {
-                    chunks: 'initial',
-                    name: 'vendor',
-                    test: /node_modules/,
-                    enforce: true
-                },
+
+        dir: outputFolder,
+        format: 'esm',
+        entryFileNames: 'app.bundle.js',
+        chunkFileNames: '[name].bundle.js',
+        manualChunks: (id: string) => {
+
+            if (!id.includes('node_modules')) {
+                return null;
             }
-        }
+
+            return 'vendor';
+        },
     },
-    plugins: [
-        new CopyPlugin({
-            patterns: [
-                {
-                    from: 'index.html',
-                    to: path.resolve('dist'),
-                },
-                {
-                    from: 'css',
-                    to: path.resolve('dist'),
-                },
-                {
-                    from: 'favicon.ico',
-                    to: path.resolve('dist'),
-                },
-                {
-                    from: 'spa.config.json',
-                    to: path.resolve('dist'),
-                },
-            ]
-        }),
-    ]
 };
+export default defineConfig(options);
 ```
 
-Once webpack has built files I use a simple file copy plugin to deploy other files to the *dist* folder. I then run the SPA with the same web files as a production user. Whenever I make changes to HTML, CSS or JavaScript files I get fast feedback in the browser.
+This blog's SPA build also runs a series of plugins, to build code for the browser, convert libraries that use CommonJS to ECMAScript and other tasks. In particular, the [ESBuild](https://esbuild.github.io/) tool is a modern option with which to compile the SPA's TypeScript code.
 
-### Building Code: Compiler Settings
+```json
+{
+    plugins: [
 
-Webpack has its own rules for resolving imports. You supply *extensions* to tell webpack to build both the SPA's TypeScript code and JavaScript code consumed from the *node_modules* folder. The [ts-loader library](https://github.com/TypeStrong/ts-loader) compiles TypeScript code into JavaScript using the settings in the *tsconfig.json* file. To compile the SPA's TypeScript code, use the <a href='https://github.com/privatenumber/tsx'>tsx utility</a> to run the webpack configuration file.
+        nodeResolve({
+            browser: true,
+        }),
+
+        commonjs(),
+
+        replace({
+            'IS_DEBUG': JSON.stringify(isDevelopment),
+            preventAssignment: true,
+        }),
+
+        esbuild({
+            tsconfig: './tsconfig.json',
+            target: 'es2020',
+        }),
+
+        copy({
+            targets: [
+                { src: 'favicon.ico', dest: outputFolder },
+                { src: 'index.html', dest: outputFolder },
+                { src: 'spa.config.json', dest: outputFolder },
+            ],
+        }),
+
+        ...(isDevelopment ? [
+            notifyBrowser(),
+        ] : [
+            terser(),
+        ]),
+    ],
+}
+```
+
+Web bundlers are a little daunting when you are new to modern web technology. The use of plugins may seem complex but they provide you with technical control.
+
+### Building Code: Running the Bundler
+
+To run the bundler for development I use the following command. ESBuild then compiles code using the settings from the SPA's *tsconfig.json* file. The *target=ES2017* setting supports mainstream desktop and mobile browsers, and *module=ES2020* setting enables the use of bundle splitting.
 
 ```bash
-NODE_OPTIONS='--import tsx' webpack --config webpack.config.ts
+rm -rf dist && NODE_OPTIONS='--import tsx' rollup --config build/rollup.config.ts --watch
 ```
 
-The SPA's application code builds to an *app.bundle.js* file. I configure webpack to build a second, larger bundle, called *vendor.bundle.js*, containing third-party code from the *node_modules* folder. The build outputs the following files to a *dist* folder. The source map files can be used to step through code in a debugger, or to diagnose exception stack traces.
+Rollup outputs the following files to the *dist* folder, in a deployment-ready structure. The *app.bundle.js* bundle contains the SPA's built code and the *vendor.bundle.js* bundle contains the built code for dependencies from the *node_modules* folder. The source map files enable stepping through the SPA's code in a debugger, and the ability to get the original TypeScript line of code from an exception stack trace.
 
 ```markdown
-vendor.bundle.js
-vendor.bundle.js.map
 app.bundle.js
 app.bundle.js.map
+app.css
+favicon.ico
+index.html
+livereload.bundle.js
+livereload.bundle.js.map
+spa.config.json
+vendor.bundle.js
+vendor.bundle.js.map
 ```
-
-For SPAs, I ensure that output works in mainstream browsers for the last 5 years or so. I also produce clean production JavaScript code that maintains the expressiveness of the original TypeScript code. I therefore use the following *tsconfig.json* output settings:
-
-| Setting | Description |
-| ------- | ----------- |
-| [target](https://www.typescriptlang.org/tsconfig#target) | Building to ES2017 means built code runs in all mainstream desktop and mobile browsers. |
-| [module](https://www.typescriptlang.org/tsconfig#module) | ES2020 enables bundles to contain ECMAScript modules and also the use of dynamic imports. |
-
-### Building Code: Output Syntax
 
 Since the SPA builds to ECMAScript modules, the development build results remain close to the SPA's TypeScript code, with types removed. Keeping the built code similar to the developed code makes decompilation easier later.
 
@@ -457,7 +406,7 @@ class CompaniesView {
     constructor(apiClient) {
         this.apiClient = apiClient;
     }
-    async load() {
+    async run() {
         
         try {
             const data = await this.apiClient.getCompanyList();
@@ -471,63 +420,40 @@ class CompaniesView {
 
 ### Building Code: Bundle Splitting
 
-The [SplitChunksPlugin](https://webpack.js.org/plugins/split-chunks-plugin/) enables you to partition both your own code, and the *node_modules* folder, into initial chunks. The following example creates an extra chunk named *shared* for components from a particular source folder. Chunks use ECMAScript imports to reference other chunks.
+In the SPA you can download only *initial* bundles when the user runs the SPA. If you keep initial bundles small you get a fast time to first render. In TypeScript code you can then use dynamic imports to download *non-initial* bundles after a navigation event.
 
 ```typescript
-optimization: {
-    splitChunks: {
-        cacheGroups: {
-            vendor: {
-                name: 'vendor',
-                chunks: 'all',
-                enforce: true,
-                test: (module: any) => {
-
-                    const includeChunk = (resource: string) => {
-                        return resource.indexOf('node_modules') !== -1;
-                    };
-
-                    return module.resource && includeChunk(module.resource);
-                },
-            },
-            shared: {
-                name: 'shared',
-                chunks: 'all',
-                enforce: true,
-                test: (module: any) => {
-
-                    const includeChunk = (resource: string) => {
-                        return resource.indexOf('node_modules') === -1 &&
-                               resource.indexOf('src/components') === -1;
-                    };
-
-                    return module.resource && includeChunk(module.resource);
-                },
-            }
-        }
-    },
-}
+const module1 = await import('component1');
+const module2 = await import('component2');
+const component1 = new module.SharedComponent1();
+const component2 = new module.SharedComponent1();
 ```
 
-This blog's SPAs use a code setup that supports bundle splitting, to reduce the initial download size. You could add a new class and dynamically use it from a view, with code similar to the following. Dynamic imports typically result in additional, generated chunk names. References to these *non-initial* chunks are included in *initial* chunks.
+By default, a new module will be produced for each module, or you can update the rollup *manualChunks* function to explicitly control the bundle to which dynamic modules get written to, as shown here.
 
-```typescript
-const module = await import('mySharedComponent');
-const component = new module.MySharedComponent();
-component.execute();
+```json
+manualChunks: (id: string) => {
+    if (id.includes('component1') || id.includes('component2')) {
+      return 'shared';
+    }
+
+    ...
+}
 ```
 
 ### Building Code: API Compilation
 
-During development of TypeScript APIs, I avoid producing JavaScript files unless there is a good reason. Node.js can be asked to execute TypeScript files directly with the tsx tool. The Node.js runtime then uses ECMAScript modules built in-memory.
+For TypeScript APIs, I avoid producing JavaScript files during development, since it complicates searches on the code base. Instead, the [tsx](https://github.com/privatenumber/tsx) tool can build TypeScript files in memory and execute the compiled code.
 
 ```bash
 tsx watch src/host/startup/app.ts
 ```
 
-Deployed builds for Node.js APIs should instead run JavaScript code, for best performance. The initial API has an *npm run buildRelease* command to produce deployable files to its *dist* folder. The most up to date Node.js options can be used for the API build. Unless there is a good reason, I avoid using bundle files for API code. By keeping built code easier to read, you are better able to diagnose potential production problems, like exception stack traces.
+Deployed builds for Node.js APIs should instead run JavaScript code, for best performance. API builds can simply use the *tsc* tool to transpile each TypeScript file to JavaScript in a *dist* folder. using the settings in the *tsconfig.json* file.
 
-In some deployed environments, bundling can improve API startup times. For example, this blog's <a href='serverless-api-deployment.mdx'>Serverless Node.js API</a> is deployed as AWS lambda functions. I uses webpack bundling, which makes a noticeable differences to the cold start time when the API has been idle for a while.
+I always use the most up to date stable Node.js options for API builds. Unless there is a good reason, I avoid using bundle files for API code. By keeping built code easier to read, you are better able to diagnose potential production problems, like exception stack traces.
+
+In some deployed environments, bundling improves API startup times. This blog's <a href='serverless-api-deployment.mdx'>Serverless Node.js API</a> uses rollup to deploy bundled AWS lambda functions, which makes a noticeable differences to cold start times when the API has been idle for a while.
 
 ### Executing Code: Development Web Host
 
@@ -621,7 +547,7 @@ From the *Debug and Run* tab I can choose *Launch API* and *Launch SPA*, then op
 
 If you inspect bundle files, their last line references a source map file that browser developer tools download when a debug session starts. Source maps enable TypeScript code debugging while the corresponding JavaScript code executes in the browser.
 
-```text
+```markdown
 //# sourceMappingURL=app.bundle.js.map
 ```
 
