@@ -4,7 +4,7 @@ Previously I explained <a href='how-to-run-the-react-js-spa.mdx'>How to Run the 
 
 ### Web Technology Setup
 
-The final SPA continues to use this blog's <a href='web-technology-setup.mdx'>Web Technology Setup</a>. That post explains how the SPA uses the rollup bundler to build modern ECMAScript bundles and use an Express HTTP server to serve them. The web development setup uses a restrictive content security policy and live reloading during development.
+The final SPA continues to use this blog's <a href='web-technology-setup.mdx'>Web Technology Setup</a>. That post explains how the SPA's entry point is an *index.html* file that references bundles. The development setup uses the rollup bundler to build modern ECMAScript bundles and an Express HTTP server to serve them. The web development setup also combines a restrictive content security policy with live reloading.
 
 ### Previous Samples
 
@@ -65,25 +65,14 @@ root.render (
 
 ### Routes and Navigation
 
-The *App* component uses JSX syntax to initialize a tree of views. These include path-based navigation routes within the SPA's base path.
+The *App* component uses JSX syntax to initialize navigation routes within the base path in the SPA's *index.html* file.
 
 ```jsx
-return (
-    <div className='sm:px-8 md:px-16 lg:px-24 py-2'>
-        <TitleView {...getTitleProps()} />
-        <HeaderButtonsView {...getHeaderButtonProps()} />
-        {error && <ErrorSummaryView {...getErrorProps()} />}
-        {isLoaded &&
-            <>
-                <SessionView {...getSessionProps()} />
-                <Routes>
-                    <Route path='/companies/:id' element={<TransactionsView {...getTransactionsProps()} />} />
-                    <Route path='/loggedout'     element={<LoginRequiredView {...getLoginRequiredProps()} />} />
-                    <Route path='/*'             element={<CompaniesView {...getCompaniesProps()} />} />
-                </Routes>
-            </>
-        }
-    </div>
+<Routes>
+    <Route path='/companies/:id' element={<TransactionsView {...getTransactionsProps()} />} />
+    <Route path='/loggedout'     element={<LoginRequiredView {...getLoginRequiredProps()} />} />
+    <Route path='/*'             element={<CompaniesView {...getCompaniesProps()} />} />
+</Routes>
 );
 ```
 

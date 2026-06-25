@@ -12,29 +12,7 @@ git clone https://github.com/gary-archer/oauth.websample.final
 
 ![repo](../images/230/repo.jpg?v=20260527)
 
-### Step 2: Use JSX Views
-
-Users of the React application drive behaviour from strongly-typed views that use JSX syntax. Views have identical behaviour to those from this blog's <a href='basicspa-codingkeypoints.mdx'>Earlier SPA Code Samples</a>.
-
-```jsx
-export function TitleView(props: TitleViewProps): JSX.Element {
-
-    return (
-        <div className='flex px-2 mt-2 items-center'>
-            <div className='w-2/3'>
-                <HeadingView />
-            </div>
-            {props.userInfo &&
-                <div className='w-1/3'>
-                    <UserInfoView {...props.userInfo} />
-                </div>
-            }
-        </div>
-    );
-}
-```
-
-### Step 3: Configure DNS and SSL
+### Step 2: Configure DNS and SSL
 
 You need to use this blog's web development domain to run the SPA as an OAuth client. To do so, add a local DNS entry in your hosts file, which exists at one of these locations:
 
@@ -63,7 +41,7 @@ You should then ensure that your browser trusts the root certificate at the belo
 certs/authsamples-dev.ca.crt
 ```
 
-### Step 4: Build and Run the SPA
+### Step 3: Build and Run the SPA
 
 Open a terminal and run the following command from the root folder, to build and run the SPA's code for development:
 
@@ -75,7 +53,7 @@ The SPA terminal window builds JavaScript bundles and serves them using a develo
 
 ![spa build](../images/230/spa-build.jpg?v=20260527)
 
-### Step 5: Sign In to the SPA
+### Step 4: Sign In to the SPA
 
 You will then be prompted to sign in, and can do so with the following test credential:
 
@@ -86,13 +64,13 @@ After login, the SPA sends an HttpOnly encrypted cookie containing an AWS Cognit
 
 ![spa data](../images/230/spa-data.jpg?v=20240713)
 
-### Step 6: View Secure Cookies
+### Step 5: View Secure Cookies
 
 When the SPA makes API requests it sends a short-lived access token encrypted into an *HttpOnly SameSite=strict Secure* cookie. Since Cognito uses RS256 JWTs, the cookie size is around 1.5KB, which is comfortably below browser 4KB cookie size limits. You can use browser tools to view secure cookies, which are for the backend for frontend subdomain and not the web origin. The SPA does not require any cookies to download static content, and does not use cookies when the user performs web navigations:
 
 ![cookie properties](../images/230/cookie-properties.jpg?v=20240817)
 
-### Step 7: View Updated SPA Configuration
+### Step 6: View Updated SPA Configuration
 
 In earlier samples, the SPA performed its own JavaScript code flow. This work is now done by remote token handler components, and the SPA configuration is therefore simplified, primarily to a backend for frontend base URL:
 
@@ -103,7 +81,7 @@ In earlier samples, the SPA performed its own JavaScript code flow. This work is
 }
 ```
 
-### Step 8: Run a Release Build
+### Step 7: Run a Release Build
 
 You can run some scripts to test a release deployment. The *build.sh* script produces JavaScript release bundles ready for deployment to a CDN. The *deploy.sh* script runs a Docker container that uses Express to serve minimized static content. The *teardown.sh* script stops the Docker container.
 

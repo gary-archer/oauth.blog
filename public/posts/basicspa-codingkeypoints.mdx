@@ -30,31 +30,9 @@ I separate the SPA's concerns into a number of TypeScript classes, and in partic
     <img src='../images/50/spa-code.jpg?v=20250122' alt='SPA code' />
 </div>
 
-### SPA Views
-
-The SPA's deployed HTML is minimal. The application's code builds to JavaScript bundle files that the browser can execute. The browser downloads the *index.html* file which triggers the download of CSS files and JavaScript bundles. At runtime, JavaScript creates HTML elements within the *root* element.
-
-```html
-<!DOCTYPE html>
-<html lang='en'>
-    <head>
-        <meta charset='utf-8'>
-        <base href='/spa/'>
-        <title>OAuth Demo App</title>
-        <link rel='stylesheet' href='app.css'>
-    </head>
-    <body>
-        <div id='root'></div>
-
-        <script type='module' src='vendor.bundle.js'></script>
-        <script type='module' src='app.bundle.js'></script>
-    </body>
-</html>
-```
-
 ### Web Technology Setup
 
-The SPA uses this blog's <a href='web-technology-setup.mdx'>Web Technology Setup</a>. That post explains how the SPA uses the rollup bundler to build modern ECMAScript bundles and use an Express HTTP server to serve them. The web development setup uses a restrictive content security policy and live reloading during development.
+The SPA uses this blog's <a href='web-technology-setup.mdx'>Web Technology Setup</a>. That post explains how the SPA's entry point is an *index.html* file that references bundles. The development setup uses the rollup bundler to build modern ECMAScript bundles and an Express HTTP server to serve them. The web development setup also combines a restrictive content security policy with live reloading.
 
 ### SPA Entry Point
 

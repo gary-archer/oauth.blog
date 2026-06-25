@@ -1,30 +1,19 @@
 # Web Content Delivery
 
-Previously I finalized the <a href='managed-authorization-server-setup.mdx'>Managed Authorization Server Setup</a>, using AWS Cognito. In this post I apply some finishing touches to the <a href='web-technology-setup.mdx'>Modern Web Technology Setup</a>, to complete the web architecture with deployment of static content to a content delivery network.
-
-### Global Web Performance
-
-In this post I demonstrate meeting performance goals from the earlier post on <a href='web-architecture-goals.mdx'>Web Architecture Goals</a>. AWS CloudFront is a content delivery network that provides optimized web hosting:
-
-![cdn](../images/610/cdn.jpg)
-
-To deploy the SPA I simply upload web assets to S3 after which CloudFront distributes them to many global *Edge Locations*, so that all users receive roughly equal web performance.
+Previously I finalized the <a href='managed-authorization-server-setup.mdx'>Managed Authorization Server Setup</a>, using AWS Cognito. In this post I apply some finishing touches to the <a href='web-technology-setup.mdx'>Web Technology Setup</a>, to complete the web architecture with deployment of static content to a content delivery network.
 
 ### CloudFront Domains
 
-In total I use the following domains for web content, each of which has an S3 bucket and a CloudFront distribution:
+This blog uses the following domains for web content, each of which has an S3 bucket and a CloudFront distribution. In the following sections I explain how I deploy to the *www* subdomain. The process works equivalently for the *mobile* subdomain.
 
 | Domain | Usage |
 | ------ | ----- |
 | www.authsamples.com | Serves web content for an online SPA that connects to APIs that use Serverless hosting. |
-| www.authsamples-k8s.com | Serves web content for an online SPA that connects to APIs that use Kubernetes hosting. |
 | mobile.authsamples.com | Serves assets used for native mobile logins and mobile deep linking. |
-
-This post covers the details for the first domain, and the steps for other domains are equivalent. First though I briefly summarise some build related steps that help to enable a good web deployment architecture.
 
 ### Automated Deployment
 
-In a previous post I explained <a href='how-to-run-the-react-js-spa.mdx'>How to Run the Final SPA</a>. To deploy to CloudFront I use the following commands, though the deployment requires access to my AWS account:
+In a previous post I explained <a href='how-to-run-the-react-js-spa.mdx'>How to Run the Final SPA</a>. To deploy to CloudFront I use the following commands, and the deployment requires access to my AWS account:
 
 ```bash
 git clone https://github.com/gary-archer/oauth.websample.final
@@ -34,11 +23,11 @@ cd oauth.websample.final/deployment/cloudfront
 
 ### SPA Release Builds
 
-The build script for the final SPA produces a *dist* folder containing static content to deploy. Release JavaScript bundles are minified and use randomized file names. I also use the [purgecss tool](https://github.com/FullHuman/purgecss) to reduce the size of the Bootstrap CSS file. The following screenshot shows the final assets. I do not deploy source map files but in a real system I would save them to help diagnose production stack traces.
+The build script for the final SPA produces a *dist* folder containing minimized static content, and then produces a *.package* folder with the files to upload. The *.package* folder excludes source map files, but in a real system I would save them to help diagnose production stack traces.
 
-<img src='../images/610/release-bundles.jpg?v=20260529' alt='release bundles' />
+<img src='../images/610/release-bundles.jpg?v=20260625' alt='release bundles' />
 
-I produce a final *index.html* file with minimized assets. The randomized file names trigger new downloads after an upgrade. I also apply [subresource integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) attributes, to bind each resource to the HTML file. This may not solve any real security problems for my web deployment, but is a personal preference, to assert the correctness of assets shipped together.
+The build steps also produces a final *index.html* file that references minimized assets. The randomized file names trigger new downloads after an upgrade. I also apply [subresource integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) attributes, to bind each resource to the HTML file. This may not solve any real security problems for my web deployment, but is a personal preference, to assert the correctness of assets shipped together.
 
 ```html
 <!DOCTYPE html>
@@ -49,21 +38,19 @@ I produce a final *index.html* file with minimized assets. The randomized file n
 
         <base href='/spa/'>
         <title>OAuth Demo App</title>
-
-        <link rel='stylesheet' href='bootstrap.4d702f0a.css' integrity='sha256-DSheh43UZt7zrMp3qRhx89tu1ohvTPHGj847cgKXIoI='>
-        <link rel='stylesheet' href='app.4d702f0a.css' integrity='sha256-wpxzyiZ9mWTR+PUw5uUNfN6T2uaGdKuk0TgnUFwsPyY='>
+        <link rel='stylesheet' href='app.b318e9c9.css' integrity='sha256-gWb7kP9AsUFYeBd2uc3GzT+7poOXE34bZiAEU/+wTcs='>
     </head>
     <body>
-        <div id='root' class='container'></div>
+        <div id='root'></div>
 
-        <script type='module' src='vendor.4d702f0a.bundle.js' integrity='sha256-Xr32GpFjvOxN7gfVzL7mTk7dDevf4005XoD0kdnrNQc='></script>
-        <script type='module' src='react.4d702f0a.bundle.js' integrity='sha256-dZfGc3TNsav7cYV3lJtIDswxuyzLDTUME0/r/py0phs='></script>
-        <script type='module' src='app.4d702f0a.bundle.js' integrity='sha256-7Sd6YKpoVylA3orG0y1wZa0KbJPVL3G9Y9NqrBNdN1o='></script>
+        <script type='module' src='vendor.b318e9c9.bundle.js' integrity='sha256-AAi81ovJP4NRlxcudu6sdQTe/WaEGNpI/boOYB1PTVA='></script>
+        <script type='module' src='react.b318e9c9.bundle.js' integrity='sha256-cHkY6uELEDHsuimGjdkwolKbvelS47XR37hg7gtyYh8='></script>
+        <script type='module' src='app.b318e9c9.bundle.js' integrity='sha256-o+dX4AiFiA8KLBmb8FkGuijjkFHhQQMBIrwFtRLpFVo='></script>
     </body>
 </html>
 ```
 
-A Rollup custom plugin named *writeCssAndHtml* handles the [writeBundle](https://rollupjs.org/plugin-development/#writebundle) event to produce the final HTML file while also keeping it readable. A separate custom plugin named *finalizeBundles* handles the [generateBundle](https://rollupjs.org/plugin-development/#generatebundle*) event to remove the below line from release bundles, to prevent production users ever seeing messages about missing source maps in the browser console.
+A Rollup custom plugin named *writeIndexHtml* handles the [writeBundle](https://rollupjs.org/plugin-development/#writebundle) event to produce the final HTML file while also keeping it readable. A separate custom plugin named *finalizeBundles* handles the [generateBundle](https://rollupjs.org/plugin-development/#generatebundle*) event to remove the below line from release bundles, to prevent production users ever seeing messages about missing source maps in the browser console.
 
 ```markdown
 //# sourceMappingURL=app.bundle.js.map
@@ -71,7 +58,7 @@ A Rollup custom plugin named *writeCssAndHtml* handles the [writeBundle](https:/
 
 ### SPA Deployed Configuration
 
-In development, the SPA downloads an *spa.config.json* file, whose content would depend on the domain in which the SPA runs. Use of a configuration file provides a mechanism where binaries can be built once and then promoted down a pipeline. Code never then needs changing, if for example a completely new test environment needs to be created.
+In development, the SPA downloads an *spa.config.json* file, whose content would depend on the domain in which the SPA runs. Use of a configuration file provides a mechanism where binaries can be built once and then promoted down a pipeline. If I needed to spin up a new environment, I could use existing bundles and a new configuration file.
 
 ```json
 {
@@ -106,12 +93,11 @@ When the *deploy.sh* script is run, it simply invokes *aws s3 cp* to copy the *d
 ```markdown
 Deploying files to S3 ...
 upload: .package/favicon.ico to s3://www.authsamples.com/favicon.ico
-upload: .package/spa/app.4d702f0a.css to s3://www.authsamples.com/spa/app.4d702f0a.css
-upload: .package/spa/bootstrap.4d702f0a.css to s3://www.authsamples.com/spa/bootstrap.4d702f0a.css
 upload: .package/spa/index.html to s3://www.authsamples.com/spa/index.html
-upload: .package/spa/vendor.4d702f0a.bundle.js to s3://www.authsamples.com/spa/vendor.4d702f0a.bundle.js
-upload: .package/spa/app.4d702f0a.bundle.js to s3://www.authsamples.com/spa/app.4d702f0a.bundle.js
-upload: .package/spa/react.4d702f0a.bundle.js to s3://www.authsamples.com/spa/react.4d702f0a.bundle.js
+upload: .package/spa/app.b318e9c9.bundle.js to s3://www.authsamples.com/spa/app.b318e9c9.bundle.js
+upload: .package/spa/react.b318e9c9.bundle.js to s3://www.authsamples.com/spa/react.b318e9c9.bundle.js
+upload: .package/spa/vendor.b318e9c9.bundle.js to s3://www.authsamples.com/spa/vendor.b318e9c9.bundle.js
+upload: .package/spa/app.b318e9c9.css to s3://www.authsamples.com/spa/app.b318e9c9.css
 ```
 
 Once the upload completes a number of files exist in the S3 bucket, where the SPA files are located in an *spa* folder. Other micro frontends could be added in parallel folders, so that the deployment allows for future growth.
@@ -136,11 +122,11 @@ During the <a href='cloud-domain-setup.mdx'>Cloud Domain Setup</a> post I explai
 
 ### CloudFront Distribution
 
-In AWS I created a CloudFront distribution that maps to the S3 bucket. I then added *www.authsamples.com* as an alternative name and assigned the certificate:
+The role of CloudFront is to distribute web assets uploaded to S3 to many global *Edge Locations*, so that all users receive roughly equal web performance. To enable that, I created a CloudFront distribution that maps to the S3 bucket. I then added *www.authsamples.com* as an alternative name and assigned the certificate:
 
 ![cloudfront distro](../images/610/cloudfront-distro.jpg?v=20241224)
 
-Next I edited *Origin Settings* and chose the *Create new OAC* option to create a policy that grants the CloudFront distribution access to the S3 bucket:
+Next I edited *Origin Settings* and chose the *Create new OAC* option to create an *Origin Access Control* policy that grants the CloudFront distribution access to the S3 bucket:
 
 ![cloudfront origin settings](../images/610/cloudfront-origin-settings.jpg?v=20241224)
 
@@ -188,11 +174,11 @@ There are four essential behaviours that the CDN host needs to provide, summaris
 | Behaviour | Description |
 | --------- | ----------- |
 | Compression | Web resources should be compressed to reduce download sizes and improve performance. |
-| Security Headers | Security headers should be set to provide a security policy to the browser. |
+| Security Headers | Security headers should be set, in particular to provide a content security policy to the browser. |
 | Performance Headers | The cache-control header should be set to prevent redundant requests from the browser to the CDN. |
 | Document Serving | Serve the *index.html* and static resources like JavaScript bundles while also handling invalid paths. |
 
-These are configured under the *Behaviours* settings of the CloudFront distribution, which can link to CloudFront policies or functions. I created a *Response Headers Policy* and activated compression and most security headers using the visual user interface:
+These are configured under the *Behaviors* settings of the CloudFront distribution, which can link to CloudFront policies or functions. I created a *Response Headers Policy* and activated compression and most security headers using the visual user interface:
 
 ![csp](../images/610/csp.jpg?v=20241224)
 
@@ -284,15 +270,15 @@ function handler(event) {
 }
 ```
 
-To make the function active, I configured them against the CloudFront functions of the distribution:
+To make the Cloudfront functions active, I configured them against the CloudFront functions of the distribution:
 
 ![cloudfront functions](../images/610/cloudfront-functions.jpg)
 
-The code that runs within the CDN only manages web concerns and never deals with data security. If the code was to call APIs it would add considerable complexity to both deployment systems and developer setups. AWS is likely to impose short HTTP request timeouts and small message sizes for API calls from Cloudfront functions, which would lead to reliability problems. 
+The code that runs within the CDN only manages web concerns and never deals with data security. If the code was to call APIs it would add considerable complexity to both deployment systems and developer setups. AWS is likely to impose short HTTP request timeouts and small message sizes for API calls from Cloudfront functions, which would lead to reliability problems for web users. 
 
 ### SPA Upgrades
 
-When you upload changes to HTML assets they do not automatically deploy to all of the global edge locations. To prevent users from receiving old content, force edge locations to pull a new index.html from the S3 origin. The *deploy.sh* script does so by executing a CloudFront invalidation, which produces the following output.
+When you upload changes to HTML assets they do not automatically deploy to all of the global edge locations. To prevent users from receiving old content, force edge locations to pull a new index.html from the S3 origin. The *deploy.sh* script does so by executing a CloudFront invalidation, which produces output similar to the following.
 
 ```json
 {

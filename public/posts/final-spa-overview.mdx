@@ -66,7 +66,7 @@ From an API viewpoint, the SPA now renders a tree of JSX views that result in co
 
 ```jsx
 return (
-    <div className='sm:px-8 md:px-16 lg:px-24 py-2'>
+    <ContainerView>
         <TitleView {...getTitleProps()} />
         <HeaderButtonsView {...getHeaderButtonProps()} />
         {error && <ErrorSummaryView {...getErrorProps()} />}
@@ -80,34 +80,11 @@ return (
                 </Routes>
             </>
         }
-    </div>
+    </ContainerView>
 );
 ```
 
-Earlier SPAs in this blog used hash-based routing. The final SPA instead uses React's support for path-based routes. The SPA continues to use a *base* path expressed in the index.html file:
-
-```html
-<!DOCTYPE html>
-<html lang='en'>
-    <head>
-        <meta charset='utf-8'>
-        <meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>
-
-        <base href='/spa/'>
-        <title>OAuth Demo App</title>
-        <link rel='stylesheet' href='app.css'>
-    </head>
-    <body>
-        <div id='root'></div>
-
-        <script type='module' src='vendor.bundle.js'></script>
-        <script type='module' src='react.bundle.js'></script>
-        <script type='module' src='app.bundle.js'></script>
-    </body>
-</html>
-```
-
-When the app loads, the React application reads the base path from the *index.html* file and supplies it to the React router. The React router expresses relative routes within the */spa/* base path.
+Earlier SPAs in this blog used hash-based routing. The final SPA instead uses React's support for path-based routes. The SPA continues to express a */spa* base path in its *index.html* file. When the app loads, the React application reads the base path from the *index.html* file and supplies it to the React router. The React router expresses relative routes within the */spa/* base path.
 
 ### Modern Web Performance
 

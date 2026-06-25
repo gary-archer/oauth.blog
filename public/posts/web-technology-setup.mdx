@@ -59,6 +59,30 @@ When you run *npm install*, your dependencies get downloaded to a *node_modules*
 
 You consume each library as JavaScript, even if it is coded in TypeScript. Each library should include an *index.d.ts* file for TypeScript consumers, which enables type checking and intellisense for its public interface.
 
+### Writing Code: HTML
+
+The SPA's entry point is its *index.html* file, which references JavaScript and CSS bundles produced during the build phase. The following minimal content is served to the browser and JavaScript code creates HTML elements at runtime. Those HTML elements include sensitive data that the SPA receives from API requests.
+
+```html
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <base href='/spa/'>
+        <title>OAuth Demo App</title>
+        <link rel='stylesheet' href='app.css'>
+    </head>
+    <body>
+        <div id='root'></div>
+
+        <script type='module' src='vendor.bundle.js'></script>
+        <script type='module' src='app.bundle.js'></script>
+    </body>
+</html>
+```
+
+A major feature of the SPA architecture style is that the web host never comes into contact with sensitive data. The simplicity of the web host enables productive development setups and the use of content delivery networks to deliver web resources to the browser.
+
 ### Writing Code: Resolving Imports
 
 You import third-party libraries in source files using one of the following syntaxes. The first syntax imports a subset of capabilities from a module, whereas you use the second syntax to import the whole of a module.
@@ -263,26 +287,7 @@ For the SPA, a build phase is essential, for the following reasons:
 | Browser Support | Produce JavaScript code that browsers can execute. |
 | Web Performance | Reduce code to small bundles, so that the SPA performs well. |
 
-I use a web bundler, to produce optimized JavaScript bundles that I express in the final *index.html* file:
-
-```html
-<!DOCTYPE html>
-<html lang='en'>
-    <head>
-        <meta charset='utf-8'>
-        <base href='/spa/'>
-        <title>OAuth Demo App</title>
-        <link rel='stylesheet' href='app.css'>
-    </head>
-    <body>
-        <div id='root'></div>
-
-        <script type='module' src='vendor.bundle.js'></script>
-        <script type='module' src='app.bundle.js'></script>
-    </body>
-</html>
-
-```
+In an SPA you use a web bundler to produce JavaScript bundles that the *index.html* file references. Those bundles must be built before the *index.html* file downloads and the SPA runs.
 
 ### Building Code: Bundler Configuration
 
@@ -543,7 +548,7 @@ function setSecurityHeaders(request: Request, response: Response, next: NextFunc
 }
 ```
 
-A lightweight web host is the most critical part of the web technology setup. Since the web host never comes into contact with sensitive data from APIs, you significantly simplify frontend developer setups. Web developers operate like mobile developers, and get sensitive data by calling API internet URLs. When APIs return challenge responses with HTTP status codes of 401 or 403, frontend developers can handle them with full usability control.
+A lightweight web host provides greater usability control than websites which might abruptly redirect the frontend. Web developers operate like mobile developers, and get sensitive data by calling API internet URLs. When APIs return challenge responses with HTTP status codes of 401 or 403, frontend developers can handle them with full usability control.
 
 ### Executing Code: Live Reloading
 
