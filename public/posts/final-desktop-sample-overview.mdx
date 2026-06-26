@@ -1,6 +1,10 @@
 # Final Desktop App - Overview
 
-Previously I explained some <a href='desktop-app-coding-key-points.mdx'>Code Details</a> for this blog's initial desktop app. Next I add some missing features to complete session management, harden security, and improve usability. The desktop app connects to <a href='cloud-hosting.mdx'>HTTPS endpoints hosted in AWS</a>, so that you only need to run the desktop app's code to get a fully integrated solution.
+Previously I explained some <a href='desktop-app-coding-key-points.mdx'>Code Details</a> for this blog's initial desktop app. Next I add some missing features to complete session management, harden security, and improve usability.
+
+### Code Sample Goal
+
+The main goal of the final desktop app is to improve usability. After OAuth logins the app returns to the foreground, and the app also implements OpenID Connect logout. The app also prevent users needing to re-authenticate every time they restart the app.
 
 ### New Features
 
@@ -24,13 +28,13 @@ git clone https://github.com/gary-archer/oauth.desktopsample.final
 
 ### Run the Code Sample
 
-After cloning the sample code, run the following command to build and run the app.
+Run the following bash script to start the desktop app:
 
 ```bash
 ./start.sh
 ```
 
-This command starts a child window that builds code for the main side of the app, then builds code for the renderer side of the app in watch mode, then runs a live reload server that notifies the frontend after renderer code changes.
+The script starts a child window that builds code for the main side of the app, then builds code for the renderer side of the app in watch mode, then runs a live reload server that notifies the frontend after renderer code changes.
 
 ![child windows](../images/440/child-window.jpg)
 
@@ -95,13 +99,13 @@ The updated desktop app uses a [custom protocol](https://www.electronjs.org/docs
 
 ![custom protcol](../images/440/custom-protocol.jpg)
 
-The protocol scheme is also used as an OAuth private URI scheme, with which the desktop app receives OAuth repsonses and other deep links from the desktop operating system.
+The protocol scheme is also used as an OAuth private URI scheme, with which the desktop app receives OAuth responses and other deep links from the desktop operating system.
 
 ### External Web Redirect URIs
 
 When a deep link runs after a redirect, the browser may refuse to invoke it for security reasons unless there is a user gesture. This is especially true if the redirects are entirely automatic, as for logouts or single-sign-on events. 
 
-One solution is to avoid logout redirects and use the OpenID Connect *prompt=login* parameter when you sign in. Instead, I set the app's redirect URIs to external web pages, at the following URLs. These pages also improve a little on the default blank browser page that the user sees after login.
+I set the app's redirect URIs to external web pages, at the following URLs. These pages also improve a little on the default blank browser page that the user sees after login.
 
 - [https://www.authsamples.com/apps/finaldesktopapp/postlogin.html](https://www.authsamples.com/apps/finaldesktopapp/postlogin.html)
 - [https://www.authsamples.com/apps/finaldesktopapp/postlogout.html](https://www.authsamples.com/apps/finaldesktopapp/postlogout.html)

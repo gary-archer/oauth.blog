@@ -2,10 +2,6 @@
 
 Previously I provided a brief <a href='desktop-apps-overview.mdx'>Desktop Code Sample Overview</a>. Next I explain how to run a more detailed desktop code sample on your local computer, which manages OAuth behaviours in a more complete way.
 
-### Prerequisite: Install Node.js
-
-If required, go to the [Node.js Website](https://nodejs.org/en/download/), then download and run the installer for your operating system.
-
 ### Step 1: Download Code from GitHub
 
 Clone the code sample's GitHub repository with the following command:
@@ -16,65 +12,7 @@ git clone https://github.com/gary-archer/oauth.desktopsample1
 
 ![repo](../images/420/repo.jpg?v=20260626)
 
-### Step 2: View the Code in an IDE
-
-The desktop app re-uses some view-related code from this blog's <a href='improved-spa-code-sample-overview.mdx'>Updated SPA</a>:
-
-```typescript
-export class CompaniesView {
-
-    private readonly apiClient: ApiClient;
-
-    public constructor(apiClient: ApiClient) {
-        this.apiClient = apiClient;
-    }
-
-    public async load(): Promise<void> {
-
-        try {
-
-            const data = await this.apiClient.getCompanyList();
-            this.renderData(data);
-
-        } catch (e) {
-
-            DomUtils.text('#main', '');
-            throw e;
-        }
-    }
-
-    ...
-}
-```
-
-### Step 3: Build and Run the Code
-
-Run the following bash script to build the desktop app's TypeScript code and then run the executable:
-
-```bash
-./start.sh
-```
-
-The desktop app loads its home page and prepares to call the API. When it does not yet have an access token it presents a *Sign In* button:
-
-![initial view](../images/420/initial-view.jpg?v=20240922)
-
-When you click the button, the app first indicates that a login is in progress:
-
-![logging in](../images/420/logging-in.jpg?v=20240922)
-
-The app then creates an authorization request URL and opens the default system browser at that URL. You can use this blog's test user account to sign in:
-
-- User: *guestuser@example.com*
-- Password: *GuestPassword1*
-
-Once user authentication completes, the system browser invokes the desktop app with the authorization response URL. It then renders a post-login page.
-
-![browser logged in](../images/420/browser-loggedin.jpg?v=20240922)
-
-The desktop app uses the authorization code in the authorization response to get OAuth tokens. The app stores tokens in memory in the main side of the app and then gets data from a <a href='serverless-api-overview.mdx'>cloud hosted OAuth-secured API</a> and renders results.
-
-### Step 4: View OAuth Configuration
+### Step 2: OAuth Configuration
 
 The desktop app has a JSON configuration file which includes its OAuth settings. By default the app connects to AWS endpoints, so that you only need to run the frontend locally:
 
@@ -113,7 +51,7 @@ Note that the JSON configuration also includes details related to running a *Loo
 | Loopback Port Range | Port numbers used in OAuth redirect URIs. |
 | Post Login Page | Where to send the browser after a login. |
 
-### Step 5: OAuth Client Registration
+### Step 3: OAuth Client Registration
 
 The desktop app has an OAuth client registration in AWS Cognito, with the following settings:
 
@@ -121,13 +59,38 @@ The desktop app has an OAuth client registration in AWS Cognito, with the follow
 
 At the time of writing, AWS Cognito does not properly support loopback redirect URI behaviours from RFC 8252. It requires a base URL of *http://localhost* instead of *http://127.0.0.1*, rejects paths like */callback*, and I also had to register a set of absolute redirect URIs.
 
-### Step 6: Login Completion Page
+### Step 4: Build and Run the Code
 
-I uploaded the login completion page to an AWS S3 Bucket and enabled an HTTPS URL using the AWS CloudFront distribution for this blog's final SPA:
+Run the following bash script to start the desktop app:
 
-![s3 page](../images/420/s3-page.jpg?v=20240922)
+```bash
+./start.sh
+```
 
-### Step 7: Authorization Request
+The script starts a child window that builds code for the main side of the app, then builds code for the renderer side of the app in watch mode, then runs a live reload server that notifies the frontend after renderer code changes.
+
+![child windows](../images/420/child-window.jpg)
+
+The desktop app loads its home page and prepares to call the API. When it does not yet have an access token it presents a *Sign In* button:
+
+![initial view](../images/420/initial-view.jpg?v=20240922)
+
+When you click the button, the app first indicates that a login is in progress:
+
+![logging in](../images/420/logging-in.jpg?v=20240922)
+
+### Step 5: Run a Desktop Login
+
+The app then spins up an HTTP server to listen for a login response, then creates an authorization request URL and opens the default system browser at that URL. You can use this blog's test user account to sign in:
+
+- User: *guestuser@example.com*
+- Password: *GuestPassword1*
+
+Once user authentication completes, the system browser returns an authorization response URL to the HTTP server, which the desktop app receives. The desktop app processes the authorization code from the response, to get a set of OAuth tokens, which it stores in memory and uses to call the <a href='serverless-api-overview.mdx'>cloud hosted OAuth-secured API</a>. The desktop app then redirects to a post-login completion page.
+
+![browser logged in](../images/420/browser-loggedin.jpg?v=20240922)
+
+### Step 6: Authorization Request
 
 The desktop app uses the *Authorization Code Flow (PKCE)*, as is standard for native apps, and it uses the same fields in authorization redirects as other clients that use the authorization code flow.
 
@@ -135,11 +98,17 @@ The desktop app uses the *Authorization Code Flow (PKCE)*, as is standard for na
 
 Before issing the redirect, the desktop app runs an HTTP server within its own process. The desktop app uses a low privilege loopback network that does not allow remote connections and prevents the operating system from presenting prompts to the user to allow incoming HTTP connections. It also uses a low privilege port (above 1024), to ensure that users do not require administrator privileges.
 
-### Step 8: Authorization Code Grant
+### Step 7: Authorization Code Grant
 
 When the desktop app receives a login response it sends an authorization code grant message to swap the authorization code for OAuth tokens. The desktop app uses PKCE, which proves that the caller that starts the login is the same party ending it.
 
 ![authorization code grant](../images/420/authorization-code-grant.jpg?v=20240922)
+
+### Step 8: Login Completion Page
+
+The login completion page is a simple HTML page. A real desktop app could use a more visual page or redirect to an organizational website. I uploaded the login completion page to an AWS S3 Bucket and enabled an HTTPS URL using the AWS CloudFront distribution for this blog's final SPA:
+
+![s3 page](../images/420/s3-page.jpg?v=20240922)
 
 ### Step 9: Test Login Re-Entrancy
 
@@ -159,7 +128,7 @@ You can rehearse refresh token expiry if you click *Expire Refresh Token* follow
 
 ![expired refresh token](../images/420/expired-refresh-token.jpg?v=20240922)
 
-### Step 12: Logout
+### Step 11: Logout
 
 The initial desktop app implements only a basic logout, that discards its tokens and returns it to the *Login Required* view. All authorization requests use the OpenID Connect *prompt=login* parameter to force a new login. In a real organization this would enable you to login as a different test user.
 
