@@ -4,12 +4,15 @@ Previously I summarised the behaviour of the <a href='final-desktop-sample-overv
 
 ### Code Layout
 
-The app has a similar code layout to the initial desktop code sample. The *src* code represents the Electron main process and the Electron renderer process, and includes some shared code. The *build* and *tools* folder manage Rollup builds and live reloading.
+The app has a similar code layout to the initial desktop code sample. The *src* code represents the Electron main process and the Electron renderer process, and includes some shared code.
 
 <div className='smallimage'>
     <img src='../images/450/code-layout.jpg?v=20260607' alt='code layout' />
 </div>
 
+### Web Technology Setup
+
+The Electron renderer process continues to use this blog's <a href='web-technology-setup.mdx'>Web Technology Setup</a>. That post explains how the frontend's entry point is an *index.html* file that references bundles. The development setup uses the rollup bundler to build modern ECMAScript bundles. The web development setup also combines a restrictive content security policy with live reloading.
 
 ### React Update
 
@@ -17,7 +20,7 @@ I updated the Electron app to use React. This mostly involved just copying in th
 
 ```jsx
 return (
-    <>
+    <ContainerView>
         <TitleView {...getTitleProps()} />
         <HeaderButtonsView {...getHeaderButtonProps()} />
         {error && <ErrorSummaryView {...getErrorProps()} />}
@@ -30,7 +33,7 @@ return (
                 <Route path='*'              element={<CompaniesView {...getCompaniesProps()} />} />
             </Routes>
         </>
-    </>
+    </ContainerView>
 );
 ```
 
@@ -50,63 +53,6 @@ root.render (
         </ErrorBoundary>
     </StrictMode>
 );
-```
-
-### Rollup Builds
-
-The final desktop app uses Rollup and build techniques summarized in the <a href='reactjs-codingkeypoints.mdx'>Final SPA - Code Details</a>. The build produces bundles for both the *main* and *renderer* sides of the desktop app. The essential parts of the configuration for the *main* build are shown below, and the *renderer* build has a similar configuration.
-
-```typescript
-const isDevelopment = process.env.BUILD === 'debug';
-const outputFolder = 'dist';
-
-const options: RollupOptions = {
-
-    input: './src/main.ts',
-    output: {
-        dir: outputFolder,
-        format: 'esm',
-        entryFileNames: 'main.bundle.js',
-    },
-
-    external: [
-        'electron',
-        'electron-store',
-        ...builtinModules,
-        ...builtinModules.map((m) => `node:${m}`),
-    ],
-
-    plugins: [
-
-        nodeResolve({
-            preferBuiltins: true,
-        }),
-
-        commonjs(),
-        json(),
-        esbuild({
-            tsconfig: './tsconfig-main.json',
-            target: 'es2022',
-        }),
-
-        replace({
-            'IS_DEBUG': JSON.stringify(isDevelopment),
-            preventAssignment: true,
-        }),
-
-        copy({
-            targets: [
-                { src: 'desktop.config.json', dest: outputFolder },
-                { src: 'src/preload.js', dest: outputFolder },
-                { src: 'package.json', dest: outputFolder },
-            ],
-        }),
-
-        ...(isDevelopment ? [] : [ terser() ]),
-    ],
-};
-
-export default defineConfig(options);
 ```
 
 ### Serving Web Static Content
@@ -144,17 +90,17 @@ private onServeWebFiles(request: Request): Promise<Response> {
 
     const authorizedFiles = new Set([
         'index.html',
-        'app.css',
-        'vendor.bundle.js',
-        'vendor.bundle.js.map',
-        'react.bundle.js',
-        'react.bundle.js.map',
         'app.bundle.js',
-        'app.bundle.js.map',
+        'react.bundle.js',
+        'vendor.bundle.js',
+        'app.css',
     ]);
 
     if (IS_DEBUG) {
         authorizedFiles.add('livereload.bundle.js');
+        authorizedFiles.add('app.bundle.js.map');
+        authorizedFiles.add('react.bundle.js.map');
+        authorizedFiles.add('vendor.bundle.js.map');
     }
 
     if (!authorizedFiles.has(fileName)) {
@@ -166,83 +112,6 @@ private onServeWebFiles(request: Request): Promise<Response> {
     return net.fetch(filePathUrl);
 }
 ```
-
-### Live Reload
-
-For the final SPA, the live reload behaviour was integrated into the web static content host. For the final desktop app, the main process serves static content. When the renderer rollup build completes, it calls the */reload* endpoint of a small live reload server, which then sends a web socket notification to the renderer process, so that it can reload itself.
-
-```typescript
-import express, {Request, Response} from 'express';
-import http from 'http';
-import {WebSocketServer, WebSocket} from 'ws';
-
-const port = 35729;
-const app = express();
-
-const server = http.createServer(app);
-const wss = new WebSocketServer({
-    server,
-    path: '/reload'
-});
-
-app.get('/reload', (request: Request, response: Response) => {
-
-    console.log('Web socket server broadcasting reload event ...');
-    for (const client of wss.clients) {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send('reload');
-        }
-    }
-    response.sendStatus(204);
-});
-
-server.listen(port, () => {
-    console.log(`Live reload server is listening on HTTP port ${port} ...`);
-});
-```
-
-### Web Response Headers
-
-The main process sets response headers when it serves static files to the Chromium browser. The main security responsibility is to set a strong content security policy, to prevent JavaScript being able to interact with malicious hosts.
-
-```typescript
-session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-
-    let connectSrcHosts = "'self'";
-    if (IS_DEBUG) {
-        connectSrcHosts += ' ws://localhost:35729';
-    }
-
-    let policy = '';
-    policy += "default-src 'none';";
-    policy += " script-src 'self';";
-    policy += " style-src 'self';";
-    policy += ` connect-src ${connectSrcHosts};`;
-    policy += " child-src 'self';";
-    policy += " img-src 'self';";
-    policy += " object-src 'none';";
-    policy += " frame-ancestors 'none';";
-    policy += " base-uri 'self';";
-    policy += " form-action 'self'";
-
-    const responseHeaders: Record<string, string | string[]> = {
-        ...details.responseHeaders,
-        'content-security-policy': policy,
-    };
-
-    if (IS_DEBUG) {
-        responseHeaders['cache-control'] = 'no-cache, must-revalidate';
-    } else {
-        responseHeaders['cache-control'] = 'public, max-age=31536000, immutable';
-    }
-
-    callback({
-        responseHeaders,
-    });
-});
-```    
-
-In development mode, the response headers must implement a couple of behaviours in order for live reload to work. The CSP must allow connections between the browser and the live reload server, and response headers must prevent caching of previously built browser files.
 
 ### Private URI Scheme Registration
 
@@ -387,11 +256,11 @@ This can lead to the following scenarios:
 - One or both views may need to refresh an access token.
 - One or both views may need to trigger a login redirect.
 
-The desktop code sample handles these conditions with the same React code as this blog's final SPA code sample. See the <a href='reactjs-codingkeypoints.mdx'>Final SPA - Code Details</a> blog post to understand the API client logic.
+The desktop code sample handles these conditions with the same code as this blog's final SPA code sample. See the <a href='reactjs-codingkeypoints.mdx'>Final SPA - Code Details</a> blog post to understand the API client logic.
 
 ### AppAuth Libraries
 
-This blog completes this blog's desktop integration using the recommendations from RFC 8252. Doing so does not mandate use of the AppAuth libraries though. For example, if you run into a blocking issue, you could implement the code flow messages manually in the app's *OAuthServiceImpl* class.
+This blog completes this blog's desktop integration using the recommendations from RFC 8252. Doing so does not mandate use of the AppAuth libraries though. For example, if you run into a library blocking issue, you could implement the code flow messages manually in the app's *OAuthServiceImpl* class.
 
 ### Where Are We?
 
