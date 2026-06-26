@@ -1,6 +1,10 @@
 # Desktop Code Sample Overview
 
-Previously I summarised this blog's <a href='native-architecture-goals.mdx'>Native Architecture Goals</a>. I cover secure mobile apps in later posts. First though, I provide a couple of OpenID Connect secured desktop code samples. They connect to <a href='cloud-hosting.mdx'>HTTPS endpoints hosted in AWS</a>, so that you only need to run the desktop app's code to get a fully integrated solution.
+Previously I summarised this blog's <a href='native-architecture-goals.mdx'>Native Architecture Goals</a>. I cover secure mobile apps in later posts. First though, I provide a couple of OAuth and OpenID Connect secured desktop code samples. They connect to <a href='cloud-hosting.mdx'>HTTPS endpoints hosted in AWS</a>, so that you only need to run the desktop app's code to get a fully integrated solution.
+
+### Code Sample Goal
+
+The initial desktop objective is to get an OAuth application lifecycle working for an Electron desktop app. The code sample includes a developer setup and some special handling to authenticate users on a separate browser window. The app then calls APIs with access tokens and handles expiry events.
 
 ### Features
 
@@ -9,7 +13,7 @@ The behaviour provided in the initial sample is summarised below:
 | Feature | Description |
 | ------- | ----------- |
 | Cross Platform | The desktop app uses a technology stack that enables it to run on Windows, macOS and Linux. |
-| Security Library Integration | A security library implements OpenID Connect logins and token handling. |
+| Security Library Integration | A security library helps to implement the OAuth application lifecycle and APIs calls with access tokens. |
 | System Browser Logins | The desktop app invokes the system browser to authenticate the user, then listens for the login response. |
 | Reliability | The desktop app handles some re-entrancy scenarios when the app interacts with the system browser. |
 
@@ -19,7 +23,7 @@ The desktop app has the same theme and views as this blog's earlier SPAs:
 
 ![desktop app](../images/410/desktop-app.jpg?v=20240922)
 
-I use [Electron](https://www.electronjs.org/), which enables you to develop desktop views with web technologies. I re-used the views from this blog's <a href='improved-spa-code-sample-overview.mdx'>Second SPA</a>:
+I use [Electron](https://www.electronjs.org/) as a JavaScript based technology stack, where you develop desktop frontends with web technologies. I re-used the vanilla TypeScript views from this blog's <a href='improved-spa-code-sample-overview.mdx'>Updated SPA</a>:
 
 ![electronjs](../images/410/electronjs.jpg)
 
@@ -47,7 +51,7 @@ According to RFC 8252, it should be possible to register a redirect URI that beg
 
 ### Run the Minimal AppAuth-JS Code Sample
 
-Before running this blog's code sample you can run a minimal app that uses the [AppAuth-JS Library](https://github.com/openid/AppAuth-JS) to implement the OpenID Connect authorization code flow. First run the following commands:
+Before running this blog's code sample you can run a minimal app that uses the [AppAuth-JS Library](https://github.com/openid/AppAuth-JS) to implement the OpenID Connect authorization code flow. First, run the following commands:
 
 ```bash
 git clone https://github.com/googlesamples/appauth-js-electron-sample

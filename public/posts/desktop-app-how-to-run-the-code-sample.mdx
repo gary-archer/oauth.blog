@@ -14,11 +14,11 @@ Clone the code sample's GitHub repository with the following command:
 git clone https://github.com/gary-archer/oauth.desktopsample1
 ```
 
-![repo](../images/420/repo.jpg?v=20240925)
+![repo](../images/420/repo.jpg?v=20260626)
 
 ### Step 2: View the Code in an IDE
 
-The desktop app re-uses some code from this blog's <a href='improved-spa-code-sample-overview.mdx'>second SPA</a> and has exactly the same views:
+The desktop app re-uses some view-related code from this blog's <a href='improved-spa-code-sample-overview.mdx'>Updated SPA</a>:
 
 ```typescript
 export class CompaniesView {
@@ -68,11 +68,11 @@ The app then creates an authorization request URL and opens the default system b
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
 
-If you did an earlier SPA login in the same browser and used the save password feature, you can use password autofill for the desktop app. After user login, the system browser renders a post-login page, rather than showing a blank page. Alternatively, you could redirect the browser to an external site if you prefer.
+Once user authentication completes, the system browser invokes the desktop app with the authorization response URL. It then renders a post-login page.
 
 ![browser logged in](../images/420/browser-loggedin.jpg?v=20240922)
 
-When login completes, the app gets OAuth tokens, stores them in memory in the main side of the app and returns itself to the foreground. It then gets data from a <a href='serverless-api-overview.mdx'>cloud hosted OAuth-secured API</a> and renders results.
+The desktop app uses the authorization code in the authorization response to get OAuth tokens. The app stores tokens in memory in the main side of the app and then gets data from a <a href='serverless-api-overview.mdx'>cloud hosted OAuth-secured API</a> and renders results.
 
 ### Step 4: View OAuth Configuration
 
@@ -119,7 +119,7 @@ The desktop app has an OAuth client registration in AWS Cognito, with the follow
 
 ![oauth client](../images/420/oauth-client.jpg)
 
-At the time of writing, AWS Cognito does not properly support loopback redirect URI behaviours from RFC 8252. It requires a base URL of *http://localhost* instead of *http://127.0.0.1*, rejects path like */callback* and I also had to register all possible redirect URI values.
+At the time of writing, AWS Cognito does not properly support loopback redirect URI behaviours from RFC 8252. It requires a base URL of *http://localhost* instead of *http://127.0.0.1*, rejects paths like */callback*, and I also had to register a set of absolute redirect URIs.
 
 ### Step 6: Login Completion Page
 
@@ -165,7 +165,7 @@ The initial desktop app implements only a basic logout, that discards its tokens
 
 ### Where Are We?
 
-I used this blog's second SPA for the views of an OAuth-secured desktop app, which runs on all of the main operating systems. I further extend the desktop app shortly, in the final desktop code sample.
+I used this blog's updated SPA for the views of an OAuth-secured desktop app, which runs on all of the main operating systems. The final desktop code sample will add further features to the desktop app's implementation.
 
 ### Next
 

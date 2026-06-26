@@ -4,7 +4,7 @@ Previously I summarised some test behaviour in <a href='desktop-app-how-to-run-t
 
 ### Code Layout
 
-Electron apps have two processes, [Main and Renderer](https://www.electronjs.org/docs/latest/tutorial/process-model) where the renderer process is an SPA frontend and the main process is a backend that uses Node.js. The folder structure of the desktop app reflects this, with *main*, *renderer* and *shared* folders. The views within the renderer process use plain JavaScript and are the same as those from this blog's <a href='improved-spa-code-sample-overview.mdx'>Second SPA</a>.
+Electron apps have two processes, [Main and Renderer](https://www.electronjs.org/docs/latest/tutorial/process-model) where the renderer process is an SPA frontend and the main process is a backend that uses Node.js. The folder structure of the desktop app reflects this, with *main*, *renderer* and *shared* folders. The views within the renderer process use plain TypeScript and are the same as those from this blog's <a href='improved-spa-code-sample-overview.mdx'>Updated SPA</a>.
 
 ![code layout](../images/430/code-layout.jpg?v=20240922)
 
@@ -52,85 +52,9 @@ class Main {
 
 ### Electron Renderer Entry Point
 
-The renderer process runs an SPA in the Chromium browser host, with the following *index.html* page:
+The desktop app hosts an instance of the Chromium browser that runs the renderer process as an SPA. To build the Electron app I produce ECMAScript bundles for both the main and renderer sides of the application. The main side of the Electron app serves static content from the file system to the renderer process.
 
-```html
-<!DOCTYPE html>
-<html lang='en'>
-    <head>
-        <meta charset='utf-8'>
-        <title>OAuth Demo App</title>
-
-        <link rel='stylesheet' href='bootstrap.min.css'>
-        <link rel='stylesheet' href='app.css'>
-    </head>
-    <body>
-        <div id='root' class='container'></div>
-
-        <script type='module' src='vendor.bundle.js'></script>
-        <script type='module' src='app.bundle.js'></script>
-    </body>
-</html>
-```
-
-### Electron Builds
-
-To build the Electron app I use webpack to produce ECMAScript bundles for both the main and renderer sides of the application. Two webpack builds run, using the techniques from the earlier <a href='web-technology-setup.mdx'>Web Technology Setup</a> blog post. The main build produces a *main.bundle.js* file and the renderer build produces *app.bundle.js* and *vendor.bundle.js* files.
-
-<div className='smallimage'>
-    <img src='../images/430/bundles.jpg?v=20240922' alt='bundles' />
-</div>
-
-The main and renderer processes use independent webpack builds and independent *tsconfig.json* files. Therefore, the main bundle does not contain any view-specific code and the renderer bundles do not contain any of the desktop app's backend code. The main process uses the following webpack configuration:
-
-```typescript
-import path from 'path';
-import webpack from 'webpack';
-
-const dirname = process.cwd();
-const config: webpack.Configuration = {
-
-    mode: 'development',
-    target: ['electron-main'],
-    experiments: {
-        outputModule: true,
-    },
-    devtool: 'source-map',
-    context: path.resolve(dirname, './src'),
-    entry: {
-        app: ['./main.ts']
-    },
-    module: {
-        rules: [
-            {
-                test: /\.ts$/,
-                use: [{
-                    loader: 'ts-loader',
-                    options: {
-                        onlyCompileBundledFiles: true,
-                        configFile: '../tsconfig-main.json',
-                    },
-                }],
-                exclude: /node_modules/,
-            }
-        ]
-    },
-    resolve: {
-        extensions: ['.ts', '.js']
-    },
-    output: {
-        path: path.resolve(dirname, './dist'),
-        filename: 'main.bundle.js',
-        chunkFormat: 'module',
-    }
-};
-
-export default config;
-```
-
-For Electron apps it would be unnatural to use the webpack development server, since the main process serves static content. Instead, I run the app during development from the built files in the *dist* folder. I therefore develop with all of the same web resources and asset loading behaviours as production users.
-
-I build the renderer app in watch mode, so that whenever HTML, CSS or JavaScript code changes, the content in the *dist* folder updates. I can then use the *View / Reload* Electron menu option to reload the renderer app. In the next desktop code sample, I demonstrate how to go beyond this and implement live reload behaviour.
+The renderer process uses this blog's <a href='web-technology-setup.mdx'>Web Technology Setup</a>. That post explains how the frontend's entry point is an *index.html* file that references bundles. The development setup uses the rollup bundler to build modern ECMAScript bundles. The web development setup also combines a restrictive content security policy with live reloading.
 
 ### Inter Process Communication
 
@@ -388,7 +312,7 @@ private async getDataFromApi(callback: () => Promise<any>): Promise<any> {
 }
 ```
 
-When there is no token yet or token refresh fails with an *invalid_grant* error, views receive a *login_required* error and terminate API requests in a controlled manner. This error code is treated specially and results in a redirect to the *Login Required View*, which saves a return location to use once login completes:
+When there is no token yet or token refresh fails with an *invalid_grant* error, views receive a *login_required* error and terminate API requests in a controlled manner. This error code is treated specially and results in a redirect to the *Login Required View*, which saves the previous location, to return to later:
 
 ```typescript
 export class LoginNavigation {
@@ -454,7 +378,7 @@ The *LoginRequestHandler* class manages sending the authorization request and re
 
 ### The Authorization Code Grant
 
-When the app receives a successful authorization response it sends an authorization code grant request using the *TokenRequest* object. On success, the *TokenResponse* contains a set of OAuth tokens:
+When the app receives a successful authorization response, it sends an authorization code grant request using the *TokenRequest* object. On success, the *TokenResponse* contains a set of OAuth tokens:
 
 ```typescript
 private async endLogin(result: LoginRedirectResult): Promise<void> {
@@ -491,11 +415,11 @@ private async endLogin(result: LoginRedirectResult): Promise<void> {
 }
 ```
 
-The initial desktop app simply stores its tokens in-memory. Every time the app restarts the user must re-authenticate. I show how to improve this user experience in the final desktop code sample.
+The initial desktop app stores its tokens in memory. Every time the app restarts the user must re-authenticate. I show how to improve this user experience in the final desktop code sample.
 
 ### Handling Re-Entrancy
 
-For a reliable solution we need to handle multiple login attempts:
+For a reliable solution, you must handle multiple login attempts and the following events:
 
 - A user starts a sign in, generating a state and code verifier parameters.
 - The user accidentally closes the browser tab.
@@ -610,7 +534,7 @@ The project has a *launch.json* file that enables you to use Visual Studio code 
 
 ### Where Are We?
 
-I explained some Electron mechanics and the integration of the AppAuth-JS library, to secure the cross-platform desktop app. In the next code sample I add some missing features to complete the implementation.
+I explained some Electron mechanics and the integration of the AppAuth-JS library, to secure the cross-platform desktop app. Next, I add some missing features, in this blog's final desktop code sample.
 
 ### Next
 
