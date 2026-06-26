@@ -143,11 +143,7 @@ build:
 
 ### Packaging Upload Resources
 
-The GitHub repository's *deploy.sh* script initiates deployment. After doing a release build it runs an *sls package* command that creates zip files in the repository's *.serverless* folder, in advance of deploying assets to AWS. 
-
-![deployment package](../images/630/deployment-package.jpg?v=20251230)
-
-For each lambda I use the *serverless.yml* packaging settings to upload specific files, where the main file is the lambda's JavaScript bundle.
+For each lambda I use the *serverless.yml* packaging settings to configure a separate upload package for each lambda, to point to each lambda's built JavaScript bundle.
 
 ```yaml
 functions:
@@ -201,7 +197,9 @@ package:
   - '!/**'
 ```
 
-The size of each upload zip file is around 200KB and each lambda bundle is around 6400KB. The Serverless framework also adds [CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html) artifacts that automate the creation of AWS resources.
+The GitHub repository's *deploy.sh* script runs the build and deployment process. After a release build, the script runs an *sls package* command that creates zip files in the repository's *.serverless* folder, in advance of deploying assets to AWS. The Serverless framework also adds [CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html) artifacts that automate the creation of AWS resources.
+
+![deployment package](../images/630/deployment-package.jpg?v=20260626)
 
 ### Registering an API Subdomain
 
