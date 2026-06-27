@@ -113,7 +113,7 @@ private onServeWebFiles(request: Request): Promise<Response> {
 }
 ```
 
-### Private URI Scheme Registration
+### Private Use URI Scheme Registration
 
 The main process is also the entry point for deep link notifications, which use the custom protocol scheme. The app registers the scheme at application startup, which writes entries to user specific areas of the operating system:
 
@@ -133,7 +133,7 @@ private async registerPrivateUriScheme(): Promise<void> {
 }
 ```
 
-To receive private URI scheme notifications deterministically, the desktop app restricts itself to a single running instance:
+To receive private use URI scheme notifications deterministically, the desktop app restricts itself to a single running instance:
 
 ```typescript
 public execute(): void {
