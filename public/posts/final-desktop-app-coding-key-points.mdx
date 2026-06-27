@@ -57,7 +57,7 @@ root.render (
 
 ### Serving Web Static Content
 
-The main process's entry point class now serves web files to the renderer process with URLs that use the application's custom protocol scheme. The code to enable that is shown below. I only serve expected web files to minimize potential XSS threats against the file system. During development, the main process serves an additional bundle to support live reload. 
+The main process's entry point class now serves web files to the renderer process with URLs that use the application's custom protocol scheme. The code to enable that is shown below. I only serve expected web files to minimize potential XSS threats against the file system. During development, the main process serves an additional bundles to support live reload and debugging. 
 
 ```typescript
 public execute(): void {
