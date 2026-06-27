@@ -39,7 +39,7 @@ You can update the app to the following OAuth client settings:
 | Scope | openid email profile |
 | Discovery URI | [https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/openid-configuration](https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/openid-configuration) |
 
-To do so, navigate to the file at *app/res/raw/auth_config.json* and paste in the values:
+To update the app, navigate to the file at *app/res/raw/auth_config.json* and paste in the values:
 
 ```json
 {
@@ -56,7 +56,7 @@ To do so, navigate to the file at *app/res/raw/auth_config.json* and paste in th
 }
 ```
 
-Note that login redirects use a *Private URI Scheme*, with the scheme value from the app's *build.gradle* file::
+Note that login redirects use a *Private Use URI Scheme*, with the scheme value from the app's *build.gradle* file::
 
 ![oauth settings](../images/460/oauth-settings.jpg?v=20250215)
 
