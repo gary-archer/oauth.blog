@@ -145,8 +145,8 @@ Since the app uses [mode=developer](https://developer.apple.com/documentation/bu
 
 I usually always do mobile development with claimed HTTPS scheme redirect URIs. To continue to use an HTTP proxy to view OAuth and API messages sent by the iOS app I use the following steps. iOS re-registers universal links every time you run it from Xcode:
 
-- First install the app without running an HTTP proxy on the host MacBook so that deep linking registration succeeds.
-- Start the HTTP proxy on the host MacBook and configure an iOS simulator to use it.
+- First install the app on a simulator without running an HTTP proxy on the host MacBook so that deep linking registration succeeds.
+- Start the HTTP proxy on the host MacBook and configure the simulator to use it.
 - Then capture messages from the app on the host MacBook.
 
 ### Where Are We?
