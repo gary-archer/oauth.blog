@@ -126,7 +126,7 @@ You can use development mode to run the iOS code sample with working claimed HTT
 ```bash
 export APPLE_TEAM_ID='MYTEAMID'
 export BUNDLE_ID='com.myorganization.finalmobileapp'
-./DevelopmentWebServer/run.sh
+./security/developmentAssets/run.sh
 ```
 
 You can study the script to see how it creates an SSL certificate and key, registers the root certificate authority as trusted on the simulator, then runs an HTTPS web server, to serve a deep linking assets file that uses your Apple Team ID and Bundle ID. Next, update the */etc/hosts* file on your MacBook, to alias the deep linking domain to localhost:
