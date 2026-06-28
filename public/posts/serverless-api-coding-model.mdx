@@ -12,7 +12,7 @@ The earlier <a href='api-architecture-node.mdx'>Node.js API</a> used the Express
 
 ### Run the Code
 
-When you run *npm start* to run the API for development, a helper module runs two child processes. The first child process runs rollup in watch mode. The second child process runs Serverless Offline, which provides HTTPS entry points for the API, translates incoming requests to the lambda format and then calls lambda handlers, to invoke the bundled code.
+When you run *npm start* to run the API for development, a helper module runs two child processes. The first child process runs the rollup bundler in watch mode. The second child process runs Serverless Offline, which provides HTTPS entry points for the API, translates incoming requests to the lambda format and then calls lambda handlers, to invoke the bundled code.
 
 ```typescript
 const server = spawn(
@@ -64,7 +64,7 @@ process.on('SIGTERM', shutdown);
 
 ### Lambda Entry Points
 
-Serverless Offline calls lambda handlers which have an equivalent role to REST controller endpoints. During a request, the lambda resolves a service object that implements business logic. Cross cutting concerns execute before and after the lambda base handler.
+During the first API request, AWS or Serverless Offline creates a *LambdaInstance*, which is used to process that request and multiple subsequent requests. Lambda handlers which have an equivalent role to REST controller endpoints. During a request, the lambda resolves a service object that implements business logic. Cross cutting concerns execute before and after the lambda base handler.
 
 ```typescript
 const baseHandler = async (event: APIGatewayProxyExtendedEvent): Promise<APIGatewayProxyResult> => {
@@ -83,7 +83,7 @@ AWS creates one or more lambda instances for each lambda function. A lambda inst
 
 ### Applying Cross Cutting Concerns
 
-During creation of a lambda instance I register objects with the Inversify container and also create middleware objects:
+During creation of a lambda instance I create an [InversifyJS](https://github.com/inversify/InversifyJS) container and register objects with it, including middleware that handles cross cutting concerns:
 
 ```typescript
 export class LambdaInstance {
@@ -181,7 +181,7 @@ The API uses the following middleware classes, which are equivalent to those in 
 
 ### Dependency Injection
 
-With Serverless lambdas I continue to use [InversifyJS](https://github.com/inversify/InversifyJS) with constructor injection, to benefit code clarity, extensibility and testing:
+InversifyJS enables constructor injection, to benefit code clarity, extensibility and testing:
 
 ```typescript
 @injectable()
@@ -225,11 +225,11 @@ export class ChildContainerMiddleware implements
 
 ### JWT Access Token Validation
 
-An earlier post explained this blog's approach to <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a>, where a JWT library caches token signing public keys. The Serverless API's in-memory caching is less efficient than for cloud native APIs, since there is a separate lambda instance for each API operation, and each lambda instance calls the authorization server's JWKS URI endpoint.
+The Serverless lambdas continue to use this blog's approach to <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a>. The Serverless API requires a valid access token on every request, as part of a zero trust architecture.
 
 ### Claims Based Authorization
 
-After processing JWT access tokens, the API uses claims according to this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. The API looks up additional authorization values when it first receives a particular access token and stores these extra claims in another in-memory cache that also cannot be shared between lambda instances. The cache key is the SHA256 hash of the access token. The earlier <a href='updated-api-coding-key-points.mdx'>Updated API Code Sample</a> post explains the mechanics.
+After processing JWT access tokens, the API uses claims according to this blog's <a href='api-authorization-design.mdx'>API Authorization Behaviour</a>. The API looks up additional authorization values when it first receives a particular access token and stores these extra claims in an in-memory cache. The cache key is the SHA256 hash of the access token. The earlier <a href='updated-api-coding-key-points.mdx'>Updated API Code Sample</a> post explains the mechanics.
 
 ### API Integration Tests
 

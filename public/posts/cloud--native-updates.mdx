@@ -2,8 +2,8 @@
 
 Previously I explained this blog's <a href='serverless-api-coding-model.mdx'>Serverless API Code Details</a> to complete the initial cloud deployment. Yet the API side of the architecture has some problems:
 
-- It is locked in to AWS technology and its deployment options.
-- The managed authorization server, API gateway and logging systems lack some essential features.
+- It is locked in to AWS technology and its Software as a Service (SaaS) hosting capabilities.
+- The managed authorization server, API gateway and logging systems are not best of breed components.
 - The API technology works differently on development computers and in the cloud.
 
 ### Cloud Native Deployments
@@ -19,7 +19,7 @@ These days you can often run Kubernetes clusters without needing to perform the 
 
 ### OAuth in Kubernetes
 
-Cloud native enables you to take closer control over OAuth, in areas like identity data, token issuance, token translations, user authentication and security monitoring. You should be able to to improve your security capabilities and avoid technical limitations and blocking issues, to take full advantage of the architecture.
+Cloud native enables you to take closer control over OAuth, in areas like user account attributes, token issuance, token translations, user authentication and security monitoring. You should be able to to improve your security capabilities and avoid technical limitations and blocking issues, to take full advantage of the architecture.
 
 You can learn much more about combining OAuth and cloud native in the O'Reilly book that I wrote with my colleagues from Curity. The content provides a much deeper dive into OAuth and API first security. The code examples demonstrate various cloud native integrations and deployments that you can run on a development computer and then deploy to the cloud in the same way:
 
@@ -30,8 +30,8 @@ You can implement many deeper requirements on the API side of the architecture, 
 
 - Platform features like workload identities, to enable secure connections with short-lived credentials.
 - An authorization server that supports many up-to-date security behaviours for APIs and clients.
-- An API gateway that supports plugins to enable token translations.
-- A logging system with rich visualization and querying features for monitoring security events.
+- An API gateway that supports plugins to enable token translation patterns.
+- A logging system that provides rich visualization, querying and monitoring of security events.
 
 ### Migrating APIs and Clients to Kubernetes
 

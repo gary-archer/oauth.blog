@@ -4,7 +4,7 @@ Previously I explained some <a href='desktop-app-coding-key-points.mdx'>Code Det
 
 ### Code Sample Goal
 
-The main goal of the final desktop app is to improve usability. After OAuth logins the app returns to the foreground, and the app also implements OpenID Connect logout. The app also prevent users needing to re-authenticate every time they restart the app.
+The goal of the final desktop app is to implement this blog's <a href='native-architecture-goals.mdx'>Native Architecture Goals</a> for an Electron desktop app, to blend security with user experience and reliability. The app uses TypeScript for productive cross platform development, and OAuth to maximize login user experience choices. The app can make concurrent API requests with least privilege access tokens, and handle expiry events resiliently.
 
 ### New Features
 

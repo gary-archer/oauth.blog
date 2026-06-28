@@ -2,6 +2,10 @@
 
 Previously I explained this blog's <a href='error-handling-and-supportability.mdx'>Error Handling and Supportability</a> design. Next I summarise the main behaviours of this blog's final Node.js API. See also the <a href='api-journey-server-side.mdx'>API Journey - Server Side</a> blog post for the requirements being met.
 
+### Code Sample Goal
+
+The goal of the Node.js API is to implement this blog's <a href='api-platform-design.mdx'>API Architecture Goals</a> and use cloud native deployment. Readers of this blog can then easily run a <a href='quick-start.mdx'>Frontend Code Sample</a> on their local computer, to understand the OAuth application lifecycle. That lifecycle includes tricky aspects like handling token expiry events when sending concurrent API requests.
+
 ### Final API Code Sample Overview
 
 This blog's API has a couple of simple endpoints that return mock data for a money-based theme of investments. The API aims to be visual and serves this blog's apps, such as the <a href='how-to-run-the-react-js-spa.mdx'>Final SPA</a> below. Running both together ensures that the API is client-focused and enables you to focus on API logs that the client generates.

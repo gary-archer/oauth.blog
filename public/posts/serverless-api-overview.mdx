@@ -2,15 +2,19 @@
 
 Previously I explained this blog's <a href='cdn-static-content-delivery.mdx'>Web Content Delivery</a> to many AWS regions. Next I provide an overview of a Node.js API with low cost cloud hosting, that I implement using the [Serverless Framework](https://github.com/serverless/serverless). I also show how to take control over OAuth security in a zero trust manner and test the API productively with user level access tokens.
 
+### Code Sample Goal
+
+The goal of the Serverless API is to implement this blog's <a href='api-platform-design.mdx'>API Architecture Goals</a> and also use low cost cloud hosting. Readers of this blog can then easily run a <a href='quick-start.mdx'>Frontend Code Sample</a> on their local computer, to understand the OAuth application lifecycle. That lifecycle includes tricky aspects like handling token expiry events when sending concurrent API requests.
+
 ### Serverless API Overview
 
-The Serverless API behaves equivalently to the earlier <a href='api-architecture-node.mdx'>Node.js Express API</a>. The API has a couple of simple endpoints that return mock data for a money-based theme of investments. The API aims to be visual and serves this blog's apps, such as the <a href='how-to-run-the-react-js-spa.mdx'>Final SPA</a> below. Running both together ensures that the API is client-focused and enables you to focus on API logs that the client generates.
+The Serverless API behaves equivalently to the earlier <a href='api-architecture-node.mdx'>Node.js Express API</a>. The API has a couple of simple endpoints that return mock data for a money-based theme of investments. The API aims to be visual and serves this blog's apps, such as the <a href='how-to-run-the-react-js-spa.mdx'>Final SPA</a> below. If required, you can run both the API and a client, to ensure that the API is client-focused and to view API logs that the client generates.
 
 ![spa and api](../images/620/spa-and-api.jpg?v=20240915)
 
 ### API URLs
 
-During development the API runs as a standalone component. You can use either mocha tests or a load test as the API client. These tests get user-level access tokens to call the API and verify some OAuth security use cases. The API accepts mock access tokens when you point it to a mock authorization server:
+During development the API runs as a standalone component. You can use either mocha tests or a load test as the API client. To call the API, tests must get user-level access tokens. The API accepts mock access tokens when you point it to a mock authorization server:
 
 | Component | Base URL |
 | --------- | -------- |
@@ -19,7 +23,7 @@ During development the API runs as a standalone component. You can use either mo
 
 ### Prerequisite 1: Domain Setup
 
-First update your computer's hosts file to create domains for local development. Include the web domain and local backend-for-frontend domain if you run the SPA and API together:
+First, update your computer's hosts file to include the API and authorization server domains for local development. If you run the API and SPA together, also include the web domain and local backend-for-frontend domain:
 
 ```markdown
 127.0.0.1 api.authsamples-dev.com login.authsamples-dev.com www.authsamples-dev.com bfflocal.authsamples-dev.com
@@ -35,7 +39,7 @@ Download [Node.js](https://nodejs.org/en/download) for your operating system, wh
 
 ### Prerequisite 4: Install Docker
 
-To run API tests, or the full SPA and API solution, you use Docker utility components, so install a local engine such as [Docker Desktop](https:/www/.docker.com/products/docker-desktop).
+To run API tests, or the full SPA and API solution, you need Docker and Docker Compose, so install a local engine like [Docker Desktop](https:/www/.docker.com/products/docker-desktop).
 
 ### Step 1: Get the Code
 
@@ -90,7 +94,7 @@ By default, the Serverless Framework requires you to use the *sls invoke* comman
 
 ### Step 3: Understand OAuth Security
 
-In AWS it is common to use a [Lambda Authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-jwt-authorizer.html) to implement security only at the internet entry point. Secure values such as claims are then simply forwarded to lambdas in plain HTTP headers. This is not the most secure design. APIs also lose track of the incoming access token, so the security does not scale correctly, since a lambda cannot call an upstream API with the correct access token. To resolve these issues the serverless API code sample implements OAuth security within the lambda function's code.
+In AWS it is common to use a [Lambda Authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-jwt-authorizer.html) to implement security only at the internet entry point. Secure values such as claims are then simply forwarded to lambdas in plain HTTP headers. This is not the most secure design. APIs also lose track of the incoming access token, so the security does not scale correctly, since a lambda cannot call an upstream API with a correct access token. To resolve these issues, the serverless API code sample implements OAuth security within the lambda function's code.
 
 ### Step 4: Run the API
 
@@ -158,7 +162,7 @@ To do so, follow the instructions to run the client against a local API, for exa
 
 ### Main Feature 1: Extensible Authorization
 
-The API implements its security according to these two blog posts, using a JOSE library and some custom claims handling:
+The API implements its security according to the following two blog posts, using a JOSE library and some custom claims handling:
 
 - <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a>
 - <a href='api-authorization-design.mdx'>API Authorization Design</a>
@@ -207,7 +211,7 @@ The other main objective of the API code sample is JSON logging of API requests,
 }
 ```
 
-You could follow the <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</a> to run a Docker-based deployment of the Elastic Stack that aggregates the API's logs to Elasticsearch. You can then run <a href='api-technical-support-analysis.mdx'>Technical Support Queries</a> against the API's logs. This would be useful in a production system, to make sense of large volumes of API requests.
+You could follow the <a href='log-aggregation-setup.mdx'>Log Aggregation Setup</a> to run a Docker-based deployment of the Elastic Stack that aggregates the API's logs to Elasticsearch. You can then run <a href='api-technical-support-analysis.mdx'>Technical Support Queries</a> against the API's logs. Doing so would be useful in a production system, to make sense of large volumes of API requests.
 
 ### Where Are We?
 

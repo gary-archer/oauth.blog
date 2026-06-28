@@ -4,7 +4,7 @@ Previously I explained the <a href='spa-back-end-for-front-end.mdx'>Backend for 
 
 ### Code Sample Goal
 
-The main goal of the SPA is security hardening to remove all OAuth tokens from the browser, and instead to use SameSite cookies to transport access tokens to APIs. Along the way this solves the token renewal usability problems of <a href='improved-spa-code-sample-overview.mdx'>Earlier SPAs</a>. Once implemented, the SPA is ready for production deployments to a high performance content delivery network.
+The goal of the Final SPA code sample is to implement this blog's <a href='web-architecture-goals.mdx'>Web Architecture Goals</a>, to blend security with user experience and reliability. The app uses TypeScript for productive development and combines strong browser security with OAuth, to maximize login user experience choices. The app can make concurrent API requests with least privilege access tokens, and handle expiry events resiliently.
 
 ### Key Features
 
