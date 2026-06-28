@@ -27,7 +27,7 @@ The build script for the final SPA produces a *dist* folder containing minimized
 
 <img src='../images/610/release-bundles.jpg?v=20260625' alt='release bundles' />
 
-The build steps also produces a final *index.html* file that references minimized assets. The randomized file names trigger new downloads after an upgrade. I also apply [subresource integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) attributes, to bind each resource to the HTML file. This may not solve any real security problems for my web deployment, but is a personal preference, to assert the correctness of assets shipped together.
+The build steps also produce a final *index.html* file that references minimized assets. The randomized file names trigger new downloads after an upgrade. I also apply [subresource integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) attributes, to bind each resource to the HTML file. This may not solve any real security problems for my web deployment, but is a personal preference, to assert the correctness of assets shipped together.
 
 ```html
 <!DOCTYPE html>
