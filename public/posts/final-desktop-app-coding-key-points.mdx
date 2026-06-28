@@ -57,7 +57,7 @@ root.render (
 
 ### Serving Web Static Content
 
-The main process's entry point class now serves web files to the renderer process with URLs that use the application's custom protocol scheme. The code to enable that is shown below. I only serve expected web files to minimize potential XSS threats against the file system. During development, the main process serves an additional bundle to support live reload. 
+The main process's entry point class now serves web files to the renderer process with URLs that use the application's custom protocol scheme. The code to enable that is shown below. I only serve expected web files to minimize potential XSS threats against the file system. During development, the main process serves an additional bundles to support live reload and debugging. 
 
 ```typescript
 public execute(): void {
@@ -113,7 +113,7 @@ private onServeWebFiles(request: Request): Promise<Response> {
 }
 ```
 
-### Private URI Scheme Registration
+### Private Use URI Scheme Registration
 
 The main process is also the entry point for deep link notifications, which use the custom protocol scheme. The app registers the scheme at application startup, which writes entries to user specific areas of the operating system:
 
@@ -133,7 +133,7 @@ private async registerPrivateUriScheme(): Promise<void> {
 }
 ```
 
-To receive private URI scheme notifications deterministically, the desktop app restricts itself to a single running instance:
+To receive private use URI scheme notifications deterministically, the desktop app restricts itself to a single running instance:
 
 ```typescript
 public execute(): void {
@@ -211,7 +211,7 @@ public handleDeepLink(deepLinkUrl: string): boolean {
 }
 ```
 
-The overall behaviour is similar to that of the initial desktop code sample, which resumes its flow after a response received in its loopback web server. If the user happens to click the *Sign In* button more than once, the application continues to correctly handle re-entrancy and prevent any leaked resources.
+The overall behaviour is similar to that of the initial desktop code sample. If the user happens to click the *Sign In* button more than once, the application continues to correctly handle re-entrancy and prevent any leaked resources.
 
 ### Secure Token Storage
 
@@ -268,5 +268,5 @@ I updated the desktop app with new features that improve usability, to complete 
 
 ### Next
 
-- Next I explain an Android OAuth Setup and run the <a href='android-setup.mdx'>Android AppAuth Code Sample</a>.
+- I explain an Android OAuth Setup and run the <a href='android-setup.mdx'>Android AppAuth Code Sample</a>.
 - For a list of all blog posts see the <a href='index.mdx'>Index Page</a>.

@@ -4,7 +4,7 @@ Previously I showed ways to <a href='basicandroidapp-execution.mdx'>Run the Andr
 
 ### AWS CloudFront Domains
 
-The Android app uses 2 online domains which I creates as part of this blog's <a href='cloud-domain-setup.mdx'>Cloud Domain Setup</a>:
+The Android app uses 2 online domains which I created as part of this blog's <a href='cloud-domain-setup.mdx'>Cloud Domain Setup</a>:
 
 | Domain | Usage |
 | ------ | ----- |
@@ -171,8 +171,8 @@ Finally, remove the *LogoutRedirectUriReceiverActivity* entry from the *AndroidM
 
 I usually always do mobile development with claimed HTTPS scheme redirect URIs. To continue to use an HTTP proxy to view OAuth and API messages sent by the Android app I use the following steps. Android only registers App Links during app installation or upgrades, and not during redeployment from Android Studio:
 
-- First install the app without running an HTTP proxy on the host computer so that deep linking registration succeeds.
-- Start the HTTP proxy on the host computer and configure an Android emulator to use it.
+- First install the app on an emulator without running an HTTP proxy on the host computer so that deep linking registration succeeds.
+- Start the HTTP proxy on the host computer and configure the emulator to use it.
 - Then redeploy the app from Android Studio and capture messages from the app on the host computer.
 
 ### Android App Code Signing

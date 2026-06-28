@@ -525,7 +525,7 @@ private func saveTokenData() {
 
 ### Application Restarts without Login
 
-When the app starts, it loads OpenID Connect metadata and also any tokens from Android storage. This prevents the user needing to re-authenticate on every application restart. If tokens expire by the time the app restarts, the code reliably copes with that condition.
+When the app starts, it loads OpenID Connect metadata and also any tokens from iOS storage. This prevents the user needing to re-authenticate on every application restart. If tokens expire by the time the app restarts, the code reliably copes with that condition.
 
 ### AppAuth Library - Refreshing Access Tokens
 

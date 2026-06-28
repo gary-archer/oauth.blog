@@ -35,7 +35,7 @@ The web base URL supports hosting multiple micro-frontends for the same business
 - *https://www.authsamples.com/spa2*
 - *https://www.authsamples.com/spa3*
 
-I also use a *https://bff.authsamples.com* domain as a backend for frontend base URL for this blog's final SPA. This uses an additional custom domain in the AWS API Gateway.
+I also use a *https://bff.authsamples.com* domain as a backend for frontend base URL for this blog's final SPA.
 
 ### AWS Account Setup
 
@@ -79,7 +79,7 @@ When you use Kubernetes hosting you can create a static IP address, called an [E
 
 ![subdomains](../images/580/cloudnative-subdomains.jpg)
 
-In Kubernetes you typically terminate TLS at the API gateway before routing to cloud native APIs or a cloud native authorization server. You cannot use managed certificates and it is common to use components like [cert-manager and Lets Encrypt](https://cert-manager.io/docs/tutorials/acme/nginx-ingress/) to issue and automatically renew API gateway certificates. The API gateway's controller detects changes and applies the new certificate to gateway routes that use it.
+In Kubernetes you typically terminate TLS at the API gateway before routing to cloud native APIs or a cloud native authorization server. It is common to use components like [cert-manager and Lets Encrypt](https://cert-manager.io/docs/tutorials/acme/nginx-ingress/) to issue and automatically renew API gateway certificates. The API gateway's controller detects changes and applies the new certificate to gateway routes that use it.
 
 ### Where Are We?
 

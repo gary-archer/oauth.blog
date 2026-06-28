@@ -1,6 +1,6 @@
 # Managed Authorization Server Setup
 
-Previously I explained this blog's <a href='cloud-domain-setup.mdx'>Cloud Domain Setup</a>. Next I explain some advanced configuration details when using AWS Cognito as a managed authorization server.
+Previously I explained this blog's <a href='cloud-domain-setup.mdx'>Cloud Domain Setup</a>. Next I explain some advanced configuration details when using AWS Cognito as an authorization server, which uses *managed* hosting, with a *Software as a Service (SaaS)* deployment model.
 
 ### Create the Authorization Server
 
@@ -75,11 +75,11 @@ export const handler = function(event) {
 };
 ```
 
-Claims issued to access tokens depend on the client's scope, to enable different clients to receive distinct claims. Custom claims can help to lock down access tokens and reduce their privileges. I would also like to set the access token audience claim to an API identity, as I explain in the <a href='api-authorization-design.mdx'>API Authorization Behaviour</a> post, but that is not possible at the time of writing.
+Claims issued to access tokens depend on the client's scope, to enable different clients to receive distinct claims. Custom claims reduce the business privileges of access tokens. I would also like to set the access token audience claim to an API identity, as I explain in the <a href='api-authorization-design.mdx'>API Authorization Behaviour</a> post, but that is not possible at the time of writing.
 
 ### Where Are We?
 
-I explained the infrastructure configuration of a low maintenance cloud authorization server and activated token customisation. This provides the setup I use throughout the blog for standards based OAuth development.
+I explained the infrastructure configuration of a cloud authorization server and activated token customisation. This provides the setup I use throughout the blog for standards based OAuth development.
 
 ### Next
 

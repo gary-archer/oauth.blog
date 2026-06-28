@@ -37,12 +37,12 @@ The desktop app looks almost the same on Windows, macOS and Linux:
 
 ### Native Authorization Responses
 
-A web client runs in a browser and has an addressable URL on which to receive login responses. Native apps need a different mechanism, and the [RFC 8252](https://datatracker.ietf.org/doc/rfc8252) standard explains the three options that you can use. Only the first two options work for a desktop app, and I use the loopback option for this blog's initial desktop app. The final desktop app instead uses a private URI scheme. Later, this blog's mobile apps use claimed HTTPS schemes.
+A web client runs in a browser and has an addressable URL on which to receive login responses. Native apps need a different mechanism, and the [RFC 8252](https://datatracker.ietf.org/doc/rfc8252) standard explains the three options that you can use. Only the first two options work for a desktop app, and I use the loopback option for this blog's initial desktop app. The final desktop app instead uses a private use URI scheme. Later, this blog's mobile apps use claimed HTTPS schemes.
 
 | Option | Example Redirect URI | Usable By |
 | ------ | -------------------- | --------- |
 | Loopback Interface | *http://127.0.0.1:8000/callback* | Desktop apps |
-| Private URI Scheme | *x-authsamples-myapp:/callback* | Mobile or desktop apps |
+| Private Use URI Scheme | *x-authsamples-myapp:/callback* | Mobile or desktop apps |
 | Claimed HTTPS Scheme | *https://mobile.authsamples.com/appname/callback* | Mobile apps |
 
 ### Loopback Interface Authorization Responses
@@ -72,7 +72,7 @@ You can update the app to the following OAuth client settings. Note that AWS Cog
 | redirectUri | *http://localhost:8000* |
 | scope | openid email profile |
 
-To do so, edit the details in the *flow.ts* module. Also, in the *app.ts* module, use *https://login.authsamples.com/oauth2/userInfo* as the userInfo URL and then replace the *updateUI* function with the following code:
+To update the app, edit the details in the *flow.ts* module. Also, in the *app.ts* module, use *https://login.authsamples.com/oauth2/userInfo* as the userInfo URL and then replace the *updateUI* function with the following code:
 
 ```typescript
 private updateUi() {

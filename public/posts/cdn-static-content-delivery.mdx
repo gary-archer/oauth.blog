@@ -27,7 +27,7 @@ The build script for the final SPA produces a *dist* folder containing minimized
 
 <img src='../images/610/release-bundles.jpg?v=20260625' alt='release bundles' />
 
-The build steps also produces a final *index.html* file that references minimized assets. The randomized file names trigger new downloads after an upgrade. I also apply [subresource integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) attributes, to bind each resource to the HTML file. This may not solve any real security problems for my web deployment, but is a personal preference, to assert the correctness of assets shipped together.
+The build steps also produce a final *index.html* file that references minimized assets. The randomized file names trigger new downloads after an upgrade. I also apply [subresource integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) attributes, to bind each resource to the HTML file. This may not solve any real security problems for my web deployment, but is a personal preference, to assert the correctness of assets shipped together.
 
 ```html
 <!DOCTYPE html>
@@ -88,7 +88,7 @@ I then activated *Static Website Hosting* and chose *index.html* as the default 
 
 ![s3 website hosting](../images/610/s3-website-hosting.jpg?v=20241224)
 
-When the *deploy.sh* script is run, it simply invokes *aws s3 cp* to copy the *dist* folder containing HTML assets up to AWS:
+When the *deploy.sh* script is run, it simply invokes *aws s3 cp* to copy the *.package* folder containing HTML assets up to AWS:
 
 ```markdown
 Deploying files to S3 ...
@@ -100,7 +100,7 @@ upload: .package/spa/vendor.b318e9c9.bundle.js to s3://www.authsamples.com/spa/v
 upload: .package/spa/app.b318e9c9.css to s3://www.authsamples.com/spa/app.b318e9c9.css
 ```
 
-Once the upload completes a number of files exist in the S3 bucket, where the SPA files are located in an *spa* folder. Other micro frontends could be added in parallel folders, so that the deployment allows for future growth.
+Once the upload completes a number of files exist in the S3 bucket, where the SPA files are located in an *spa* subfolder. Other micro frontends could be added in other subfolders, so that the deployment allows for future growth.
 
 ![spa subfolder](../images/610/spa-subfolder.jpg?v=20260529)
 
@@ -278,7 +278,7 @@ The code that runs within the CDN only manages web concerns and never deals with
 
 ### SPA Upgrades
 
-When you upload changes to HTML assets they do not automatically deploy to all of the global edge locations. To prevent users from receiving old content, force edge locations to pull a new index.html from the S3 origin. The *deploy.sh* script does so by executing a CloudFront invalidation, which produces output similar to the following.
+When you upload changes to HTML assets they do not automatically deploy to all of the global edge locations. To prevent users from receiving old content, force edge locations to pull a new *index.html* from the S3 origin. The *deploy.sh* script does so by executing a CloudFront invalidation, which produces output similar to the following.
 
 ```json
 {
@@ -302,7 +302,7 @@ When you upload changes to HTML assets they do not automatically deploy to all o
 
 After an upgrade, the next page request from browsers gets the new *index.html*, which references new *.css* and *.js* files that the browser does not yet have. Therefore, all new assets download resiliently.
 
-After a number of upgrades, the S3 origin has multiple sets of bundle files, with distinct randomized names. The *deploy.sh* script therefore does some cleanup, to remove bundles older than 7 days.
+After a number of upgrades, the S3 origin has multiple sets of bundle files, with distinct randomized file names. The *deploy.sh* script therefore does some cleanup, to remove bundles older than 7 days.
 
 ```bash
 CUTOFF=$(date -d '7 days ago' +%F)

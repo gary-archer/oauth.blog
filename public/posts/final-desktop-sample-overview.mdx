@@ -13,7 +13,7 @@ The completed desktop code sample demonstrates these main features:
 | Feature | Description |
 | ------- | ----------- |
 | Technology Modernization | I upgraded from plain TypeScript views to a React app that uses JSX syntax and path-based navigation. |
-| Deep Linking | The app receieves login responses using private URI scheme based redirect URIs, to enable desktop deep links. |
+| Deep Linking | The app receieves login responses using private use URI scheme based redirect URIs, to enable desktop deep links. |
 | Secure Token Storage | I save OAuth tokens across app restarts using operating system encryption private to the app and user. |
 
 ### Code Download
@@ -67,7 +67,7 @@ The app also implements OpenID Connect RP initiated logout, which presents a sim
 
 ### OAuth Configuration Changes
 
-The final desktop app's configuration no longer uses HTTP ports, and now uses login and logout completion pages as redirect URIs:
+The final desktop app's configuration no longer requires HTTP ports, and now uses login and logout completion pages as redirect URIs:
 
 ```json
 {
@@ -99,13 +99,13 @@ The updated desktop app uses a [custom protocol](https://www.electronjs.org/docs
 
 ![custom protcol](../images/440/custom-protocol.jpg)
 
-The protocol scheme is also used as an OAuth private URI scheme, with which the desktop app receives OAuth responses and other deep links from the desktop operating system.
+The protocol scheme is also used as an OAuth private use URI scheme, with which the desktop app receives OAuth responses and other deep links from the desktop operating system.
 
 ### External Web Redirect URIs
 
 When a deep link runs after a redirect, the browser may refuse to invoke it for security reasons unless there is a user gesture. This is especially true if the redirects are entirely automatic, as for logouts or single-sign-on events. 
 
-I set the app's redirect URIs to external web pages, at the following URLs. These pages also improve a little on the default blank browser page that the user sees after login.
+I set the app's redirect URIs to external web pages, at the following URLs.
 
 - [https://www.authsamples.com/apps/finaldesktopapp/postlogin.html](https://www.authsamples.com/apps/finaldesktopapp/postlogin.html)
 - [https://www.authsamples.com/apps/finaldesktopapp/postlogout.html](https://www.authsamples.com/apps/finaldesktopapp/postlogout.html)
@@ -114,13 +114,13 @@ I deployed the HTML pages to an AWS S3 Bucket and then used this blog's final SP
 
 ![s3 pages](../images/440/s3-pages.jpg?v=20240925)
 
-If you use your browser's *View Source* option you can see that the pages simply forward the login response to the app via its private URI scheme URL:
+If you use your browser's *View Source* option you can see that the pages simply forward the login response to the app's private use URI scheme callback endpoint:
 
 ![response forwarding](../images/440/response-forwarding.jpg?v=20240925)
 
 One downside of this approach is that, if the user doesn't click the *Return to the App* button for a couple of minutes, the authorization code could time out, resulting in a user error. The user can always retry and recover though.
 
-### Private URI Scheme Browser Prompts
+### Private Use URI Scheme Browser Prompts
 
 Before the desktop app can receive the login response, the browser presents a prompt to ask the user to confirm the deep link. To understand its final appearance in the different browsers you can build and run a packaged version of the app:
 
@@ -132,7 +132,7 @@ The [Electron Packager](https://github.com/electron/packager) then builds a bina
 
 ![built binary](../images/440/built-binary.jpg?v=20240925)
 
-The following screenshots show the appearance of the user prompt in the four main desktop browsers. The user can select the *Always Allow* option to avoid continual prompts on every login:
+The following screenshots show the appearance of the user prompt in the four main desktop browsers. The user can select the *Always Allow* option to avoid a prompt on every login:
 
 **Google Chrome**
 
@@ -150,7 +150,7 @@ The following screenshots show the appearance of the user prompt in the four mai
 
 ![safari prompt](../images/440/safari-prompt.jpg?v=20240925)
 
-### Private URI Scheme Registration
+### Private Use URI Scheme Registration
 
 The desktop app registers its scheme as a per-user setting that does not require administrator privileges. On Windows this updates registry settings under *HKEY_CURRENT_USER*:
 
@@ -173,7 +173,7 @@ MimeType=x-scheme-handler/x-authsamples-desktopapp
 
 ### Secure Token Storage
 
-The desktop app stores OAuth tokens in a text file. I use [Electron safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage) to create an operating system encryption key that only the app and user can access. On macOS the encryption key is saved to the Keychain. On Windows and Linux the key is less visible. Windows uses the *DPAPI* subsystem, and my Ubuntu Linux system uses the *GNOME libsecret* subsystem. Further details on the underlying security are discussed in [this online thread](https://github.com/microsoft/vscode-discussions/discussions/748).
+The desktop app stores OAuth tokens in a text file. I use [Electron safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage) to create an operating system encryption key that no other app or user can access. On macOS the encryption key is saved to the Keychain. On Windows and Linux the key is less visible. Windows uses the *DPAPI* subsystem, and my Ubuntu Linux system uses the *GNOME libsecret* subsystem. Further details on the underlying security are discussed in [this online thread](https://github.com/microsoft/vscode-discussions/discussions/748).
 
 ![encryption key](../images/440/encryption-key.jpg)
 
@@ -192,7 +192,7 @@ The login and logout response messages received by the app are a type of deep li
 - *x-authsamples-desktopapp:/callback?code=…&state=…*
 - *x-authsamples-desktopapp:/logoutcallback*
 
-In some use cases, you can use deep linking to bookmark screens. For example, you might send the user an email with a URL link. Note however that email clients may consider the private URI scheme's prefix suspect, and block this type of deep link:
+In some use cases, you can use deep linking to bookmark screens. For example, you might send the user an email with a URL link. Note however that email clients may consider the private use URI scheme's prefix suspect, and block this type of deep link:
 
 - *x-authsamples-desktopapp:/companies/2*
 
@@ -258,7 +258,7 @@ When you now run the desktop app it calls the local API, and you can also focus 
 
 ### Where Are We?
 
-I have updated the desktop code sample with some final features and explored desktop logins using private use URI schemes. Login usability remains unnatural, due to use of the disconnected browser.
+I updated the desktop code sample with some final features and explored desktop logins using private use URI schemes. Login usability remains unnatural, due to use of the disconnected browser.
 
 ### Next
 
