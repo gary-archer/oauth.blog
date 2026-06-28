@@ -278,7 +278,7 @@ The code that runs within the CDN only manages web concerns and never deals with
 
 ### SPA Upgrades
 
-When you upload changes to HTML assets they do not automatically deploy to all of the global edge locations. To prevent users from receiving old content, force edge locations to pull a new index.html from the S3 origin. The *deploy.sh* script does so by executing a CloudFront invalidation, which produces output similar to the following.
+When you upload changes to HTML assets they do not automatically deploy to all of the global edge locations. To prevent users from receiving old content, force edge locations to pull a new *index.html* from the S3 origin. The *deploy.sh* script does so by executing a CloudFront invalidation, which produces output similar to the following.
 
 ```json
 {
@@ -302,7 +302,7 @@ When you upload changes to HTML assets they do not automatically deploy to all o
 
 After an upgrade, the next page request from browsers gets the new *index.html*, which references new *.css* and *.js* files that the browser does not yet have. Therefore, all new assets download resiliently.
 
-After a number of upgrades, the S3 origin has multiple sets of bundle files, with distinct randomized names. The *deploy.sh* script therefore does some cleanup, to remove bundles older than 7 days.
+After a number of upgrades, the S3 origin has multiple sets of bundle files, with distinct randomized file names. The *deploy.sh* script therefore does some cleanup, to remove bundles older than 7 days.
 
 ```bash
 CUTOFF=$(date -d '7 days ago' +%F)
