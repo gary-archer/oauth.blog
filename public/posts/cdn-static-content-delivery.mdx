@@ -88,7 +88,7 @@ I then activated *Static Website Hosting* and chose *index.html* as the default 
 
 ![s3 website hosting](../images/610/s3-website-hosting.jpg?v=20241224)
 
-When the *deploy.sh* script is run, it simply invokes *aws s3 cp* to copy the *dist* folder containing HTML assets up to AWS:
+When the *deploy.sh* script is run, it simply invokes *aws s3 cp* to copy the *.package* folder containing HTML assets up to AWS:
 
 ```markdown
 Deploying files to S3 ...
@@ -100,7 +100,7 @@ upload: .package/spa/vendor.b318e9c9.bundle.js to s3://www.authsamples.com/spa/v
 upload: .package/spa/app.b318e9c9.css to s3://www.authsamples.com/spa/app.b318e9c9.css
 ```
 
-Once the upload completes a number of files exist in the S3 bucket, where the SPA files are located in an *spa* folder. Other micro frontends could be added in parallel folders, so that the deployment allows for future growth.
+Once the upload completes a number of files exist in the S3 bucket, where the SPA files are located in an *spa* subfolder. Other micro frontends could be added in other subfolders, so that the deployment allows for future growth.
 
 ![spa subfolder](../images/610/spa-subfolder.jpg?v=20260529)
 
