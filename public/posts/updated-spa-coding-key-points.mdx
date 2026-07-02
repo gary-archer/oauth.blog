@@ -81,7 +81,7 @@ private async performAccessTokenRenewalViaIframeRedirect(): Promise<void> {
 
 The *IFrameApp* object gets instantiated when the authorization server sends a redirect response back to the SPA, with a URL of the following form, containing the authorization code:
 
-- *https://www.authsamples-dev.com/spa?code=xxx&state=yyy*
+- *https://www.authsamples-dev.com/spa/callback?code=xxx&state=yyy*
 
 The job of the iframe app is to call the *signinSilentCallback* method of the oidc-client-ts library:
 
@@ -205,7 +205,7 @@ For best reliability, you could also store a refresh token in local storage and 
         "provider":               "cognito",
         "authority":              "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
         "clientId":               "hje94a2jj3lgkobkh57ikenhh",
-        "redirectUri":            "https://www.authsamples-dev.com/spa/",
+        "redirectUri":            "https://www.authsamples-dev.com/spa/callback",
         "postLogoutRedirectUri":  "https://www.authsamples-dev.com/spa/loggedout",
         "scope":                  "openid profile https://api.authsamples.com/investments",
         "customLogoutEndpoint":   "https://login.authsamples.com/logout"

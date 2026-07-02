@@ -71,9 +71,7 @@ The authorization server returns an authorization response to the SPA, containin
 
 ![Authorization Response](../images/40/authorization-response.jpg?v=20251230)
 
-The SPA receives the authorization response on its redirect URI, which can be a particular path, such as */callback*, or you can use the SPA's base URL. If you use the base URL, some web technology stacks issue an extra redirect if the redirect URI does not include a */* suffix.
-
-If the SPA has a stored state in session storage it asks the security library to process the authorization response. The library makes recommended OAuth checks like verifying that the response state parameter matches the request state parameter.
+The SPA receives the authorization response on its redirect URI, which can be a particular path, and the convention is to use a */callback* path. If the SPA has a stored state in session storage it asks the security library to process the authorization response. The library makes recommended OAuth checks like verifying that the response state parameter matches the request state parameter.
 
 ### Step 7. SPA Swaps the Authorization Code for Tokens
 
@@ -111,7 +109,7 @@ Authorization requests sometimes result in authorization response errors. You ca
     "oauth": {
         "authority":        "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
         "clientId":         "hje94a2jj3lgkobkh57ikenhh",
-        "redirectUri":      "https://www.authsamples-dev.com/spa/",
+        "redirectUri":      "https://www.authsamples-dev.com/spa/callback",
         "scope":            "openid profile xxx"
     }
 }

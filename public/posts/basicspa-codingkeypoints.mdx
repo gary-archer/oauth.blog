@@ -90,7 +90,7 @@ The SPA configuration contains the following values, to enable the SPA to connec
     "oauth": {
         "authority":        "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
         "clientId":         "hje94a2jj3lgkobkh57ikenhh",
-        "redirectUri":      "https://www.authsamples-dev.com/spa/",
+        "redirectUri":      "https://www.authsamples-dev.com/spa/callback",
         "scope":            "openid profile"
     }
 }
@@ -208,10 +208,10 @@ The initial SPA only sends a single API request at a time. This blog's final UI 
 
 When the login completes, the authorization server returns a response to the SPA's redirect URI. This causes the SPA's *index.html* to reload. The SPA must handle the login response as part of its application startup. If the SPA starts normally or as part of a page reload, *handleLoginResponse* is a no-op, but if it is an authorization response the current URL will have one of the following forms:
 
-- *https://www.authsamples-dev.com/spa?code=xxx&state=yyy*
-- *https://www.authsamples-dev.com/spa?error=invalid_request&state=yyy*
+- *https://www.authsamples-dev.com/spa/callback?code=xxx&state=yyy*
+- *https://www.authsamples-dev.com/spa/callback?error=invalid_request&state=yyy*
 
-An SPA can either use an explicit callback path like *https://localhost/spa/callback*, or it can inspect its query parameters, as in the code sample. Either way, the SPA detects an authorization response and asks the oidc-client-ts library to process it. The response handling code then performs the following actions:
+An SPA uses a redirect URI of *https://localhost/spa/callback*. Even though the initial SPA uses hash-based routing, the callback path should use a path, since many authorization servers do not allow redirect URIs that contain hash fragments. The SPA first detects an authorization response and then asks the oidc-client-ts library to process it. The response handling code then performs the following actions:
 
 - Restores the location and state that was saved before the redirect.
 - Removes the authorization response's query parameters from the browser history.
@@ -219,29 +219,31 @@ An SPA can either use an explicit callback path like *https://localhost/spa/call
 ```typescript
 public async handleLoginResponse(): Promise<void> {
 
-    if (location.search) {
+    const pathname = location.pathname.toLowerCase();
+    if (!pathname.endsWith('callback') || !location.search) {
+        return;
+    }
+    
+    const args = new URLSearchParams(location.search);
+    const state = args.get('state');
+    if (state) {
 
-        const args = new URLSearchParams(location.search);
-        const state = args.get('state');
-        if (state) {
+        const storedState = await this.userManager.settings.stateStore?.get(state);
+        if (storedState) {
 
-            const storedState = await this.userManager.settings.stateStore?.get(state);
-            if (storedState) {
+            let redirectLocation = '#';
+            try {
 
-                let redirectLocation = '#';
-                try {
+                const user = await this.userManager.signinRedirectCallback();
+                redirectLocation = user.state.hash;
 
-                    const user = await this.userManager.signinRedirectCallback();
-                    redirectLocation = user.state.hash;
+            } catch (e: any) {
 
-                } catch (e: any) {
+                throw ErrorHandler.getFromLoginOperation(e, ErrorCodes.loginResponseFailed);
 
-                    throw ErrorHandler.getFromLoginOperation(e, ErrorCodes.loginResponseFailed);
+            } finally {
 
-                } finally {
-
-                    history.replaceState({}, document.title, redirectLocation);
-                }
+                history.replaceState({}, document.title, redirectLocation);
             }
         }
     }
@@ -252,7 +254,7 @@ The above code enables *deep linking*, where a user can bookmark a location like
 
 Note also that the SPA only processes authorization responses when it has a stored state. This simple measure helps to prevent unwelcome error displays if events such as the following occur:
 
-- Users returning to the app after hitting the back button after login.
+- Users who click the back button after login and then return to the app.
 - Users who bookmark the authorization server's login page.
 - Technical users who paste malicious authorization responses into the application.
 
