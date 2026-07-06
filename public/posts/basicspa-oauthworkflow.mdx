@@ -24,9 +24,17 @@ The sample first downloads configuration settings from the server, to avoid hard
 
 ### Step 2. SPA Initiates an Authorization Redirect
 
-The SPA client needs to get an access token with which to call its APIs, and needs to initiate user authentication to get one. The SPA uses the *oidc-client-ts* library to create an authorization request URL containing OAuth and OpenID Connect parameters. Parameters include some randomly generated values, like the *state* parameter. The SPA sets its location to this URL, to cause a front channel browser redirect to Cognito's authorization endpoint.
+The SPA client needs to get an access token with which to call its APIs. The SPA therefore uses the *oidc-client-ts* library to trigger an authorization request that returns an access token. The security library first makes a cross origin HTTP request to get OpenID Connect metadata at the below URL. In some authorization servers you may need to explicitly enable CORS for the SPA's web origin:
 
-![Authorization Request](../images/40/authorization-request.jpg?v=20251230)
+- [https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/openid-configuration](https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/openid-configuration)
+
+The metadata response includes details about the authorization server capabilities and its OpenID Connect endpoints:
+
+![Metadata Download](../images/40/metadata-download.jpg?v=20260706)
+
+The *oidc-client-ts* library then creates an authorization request URL containing OAuth and OpenID Connect parameters. Parameters include some randomly generated values, like the *state* parameter. The SPA sets its location to this URL, to cause a front channel browser redirect to Cognito's authorization endpoint.
+
+![Authorization Request](../images/40/authorization-request.jpg?v=20260706)
 
 Authorization servers contain an OAuth client registration containing configuration settings, and only allow the request if the SPA uses the correct *Client ID* and *Redirect URI*. The client uses the following scope parameters to request permissions to issue to the access token once user authentication completes:
 
@@ -35,17 +43,7 @@ Authorization servers contain an OAuth client registration containing configurat
 | openid | OpenID Connect is used in addition to OAuth 2.0. |
 | profile | Needed later to get the user's name details from the OpenID Connect userinfo endpoint. |
 
-### Step 3. SPA Gets OpenID Connect Metadata
-
-The first thing the security library does is make a cross origin HTTP request to get OpenID Connect metadata at the below URL. In some authorization servers you may need to explicitly enable CORS for the SPA's web origin:
-
-- [https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/openid-configuration](https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9/.well-known/openid-configuration)
-
-The metadata response includes details about the authorization server capabilities and its OpenID Connect endpoints:
-
-![Metadata Download](../images/40/metadata-download.jpg?v=20240727)
-
-### Step 4. User Authenticates at the Authorization Server
+### Step 3. User Authenticates at the Authorization Server
 
 When the authorization server receives the request, it validates the request parameters and presents login forms. The user could authenticate in many possible ways to provide proof of their identity. In this blog I provide pre-created test users and use simple passwords to allow any reader of this blog to sign in:
 
@@ -53,7 +51,7 @@ When the authorization server receives the request, it validates the request par
 
 In some use cases, you can configure the authorization server to request user consent after user authentication completes. The user then grants third-party clients particular API permissions that clients request using the *scope* parameter. In this blog's examples, there are no third-party clients so I do not activate user consent. I represent APIs and clients built by the same organization, which owns the data.
 
-### Step 5. An Authenticated User Session Begins
+### Step 4. An Authenticated User Session Begins
 
 Once a login completes successfully, the authorization server issues a SSO (single sign-on) cookie to the browser. This is a third-party cookie since the authorization server runs in an unrelated domain from the SPA. In subsequent authorization requests the authorization server knows the user is already signed in when it receives this cookie, and can avoid login prompts.
 
@@ -65,19 +63,19 @@ There are a couple of issues with the way cookies are set:
 
 - Identity systems issue cookies that are usually always third-party from the viewpoint of the client's domain. To work in the best ways for applications, they should use the *SameSite=none* cookie property. This instructs browsers to send the cookie when the app redirects to the authorization server. I say more about this in the <a href='user-sessions-and-token-renewal.mdx'>Iframe-Based Token Renewal</a> blog post.
 
-### Step 6. SPA Receives an Authorization Response
+### Step 5. SPA Receives an Authorization Response
 
 The authorization server returns an authorization response to the SPA, containing an *authorization code*. The SPA must reload to handle this login response and get tokens.
 
-![Authorization Response](../images/40/authorization-response.jpg?v=20251230)
+![Authorization Response](../images/40/authorization-response.jpg?v=20260706)
 
 The SPA receives the authorization response on its redirect URI, which can be a particular path, and the convention is to use a */callback* path. If the SPA has a stored state in session storage it asks the security library to process the authorization response. The library makes recommended OAuth checks like verifying that the response state parameter matches the request state parameter.
 
-### Step 7. SPA Swaps the Authorization Code for Tokens
+### Step 6. SPA Swaps the Authorization Code for Tokens
 
 As part of its response processing, the library makes a direct HTTPS back channel request to the authorization server's token endpoint. This is an *Authorization Code Grant* message, which swaps the code for tokens:
 
-![Authorization Code Grant](../images/40/authorization-code-grant.jpg?v=20240727)
+![Authorization Code Grant](../images/40/authorization-code-grant.jpg?v=20260706)
 
 When possible, your OAuth clients should provide a credential before they receive tokens, but an SPA has nowhere secure to store such a credential. The SPA is therefore considered a *public client* and gets tokens in a less secure way than *confidential clients*.
 
@@ -87,7 +85,7 @@ The result of an OAuth grant request is a token response. I configure the author
 
 An OAuth flow for SPAs should avoid returning refresh tokens to the browser, since it is a long-lived credential and the browser has nowhere secure to store refresh tokens. Yet, at the time of writing, AWS Cognito does not allow the refresh token to be disabled.
 
-### Step 8. Proof Key for Code Exchange is Used
+### Step 7. Proof Key for Code Exchange is Used
 
 PKCE is an extension to the original *authorization code flow* and involves the following additional steps, which security libraries implement. It protects against some types of interception and injection attacks against authorization codes. 
 
@@ -97,7 +95,7 @@ PKCE is an extension to the original *authorization code flow* and involves the 
 - Client posts the code verifier in the authorization code grant request.
 - Authorization server verifies that hash of the verifier matches the challenge received earlier, before issuing tokens.
 
-### Step 9: SPA Handles Login Errors
+### Step 8: SPA Handles Login Errors
 
 Authorization requests sometimes result in authorization response errors. You can simulate one if you add an invalid scope like *xxx* to the SPA's configuration:
 
@@ -117,7 +115,7 @@ Authorization requests sometimes result in authorization response errors. You ca
 
 If you run a new login redirect with the invalid configuration, you receive an error authorization response that contains  *error* and *error_description* fields:
 
-![Authorization Response Error](../images/40/authorization-response-error.jpg?v=20240727)
+![Authorization Response Error](../images/40/authorization-response-error.jpg?v=20260706)
 
 The security library reads error details and makes them available to the SPA. Since the SPA cannot recover, it presents an error display to the user, to help with problem resolution. In development mode, the SPA renders a stack trace to indicate the error's source location.
 
@@ -125,7 +123,7 @@ The security library reads error details and makes them available to the SPA. Si
 
 The authorization server only returns errors in an authorization response when the client provides a recognised *Client ID* and *Redirect URI*. If this is not the case the authorization server renders an error page instead.
 
-### Step 10. View Access Token Claims
+### Step 9. View Access Token Claims
 
 After a successful user login, the SPA calls APIs with an access token. You can view access token claims if you paste the access token into an [Online JWT Viewer](https://jwt.io/). This information is only meant to be available to APIs. Some authorization servers issue access tokens to clients in an opaque format, to avoid exposing API claims.
 
@@ -159,7 +157,7 @@ The access token that APIs receive is a JSON Web Token (JWT) that is digitally s
 
 The authorization server should also issue an *audience (aud)* claim, which can be an array, to represent one or more related APIs. In larger API deployments, the *scope* and *aud* claims provide mechanisms to restrict the APIs that accept the access token. The access token can also contain custom claims that the API uses for its business authorization. I say much more about scopes and claims later in subsequent posts.
 
-### Step 11. View ID Token Claims
+### Step 10. View ID Token Claims
 
 Because the SPA included the *openid* scope, OpenID Connect is used and the SPA receives an ID token, which informs it how and when authentication occurred. The audience claim of this token is the client ID of the SPA:
 
@@ -183,7 +181,7 @@ Because the SPA included the *openid* scope, OpenID Connect is used and the SPA 
 }
 ```
 
-### Step 12. SPA Downloads User Info
+### Step 11. SPA Downloads User Info
 
 Next, the *oidc-client-ts* library sends the access token to the authorization server's userinfo endpoint, to get additional details for the user. I always code apps to receive personal data from this endpoint, rather than from the ID token. The frontend uses this API response to display the user's name details, to help prevent unintentional disclosure of Personally Identifiable Information (PII).
 
@@ -191,7 +189,7 @@ Next, the *oidc-client-ts* library sends the access token to the authorization s
 
 You should be able to control the fields in the userinfo response depending on the scopes in the access token. Later in this blog I issue the *manager_id* and *role* claims to access tokens when the client uses the *investments* scope. Clients without the *investments* scope, like the initial SPA, should not have access to these claims when they get userinfo.
 
-### Step 13. SPA Calls API with Access Token
+### Step 12. SPA Calls API with Access Token
 
 Next the SPA calls the API and, because this is a cross domain call, the browser first triggers a pre-flight HTTP OPTIONS request:
 
@@ -205,7 +203,7 @@ The API request then supplies the access token as a bearer credential in the HTT
 
 ![API request](../images/40/api-request.jpg?v=20240727)
 
-### Step 14. API Validates Access Token
+### Step 13. API Validates Access Token
 
 When the API receives the token it is the API's job to validate it, which typically involves checking the following:
 
@@ -224,7 +222,7 @@ The response contains public keys in the *JSON Web Key* format, and the security
 
 The API security library (or a utility that assists it) caches JSON Web Keys in-memory to avoid unnecessary lookups on subsequent API requests whose access tokens use the same key identifier.
 
-### Step 15. API Returns Error Status Codes
+### Step 14. API Returns Error Status Codes
 
 If the API's token validation fails, the API must return one of these error results:
 
@@ -294,7 +292,7 @@ Meanwhile, the API performs some basic but readable error logging. Its logged er
 }
 ```
 
-### Step 16. API uses Claims for Authorization
+### Step 15. API uses Claims for Authorization
 
 Once token validation is complete, the API can trust claims from the JWT and use them to authorize access to its business data. Typically, the most important claims are those representing the user's identity, like the *subject claim* from the access token. The API then applies its business rules to restrict resource access using techniques like those listed below: 
 
@@ -302,7 +300,7 @@ Once token validation is complete, the API can trust claims from the JWT and use
 - Filtering response fields to those the user is entitled to access.
 - Denying access if an unauthorized individual item is requested.
 
-### Step 17. API Returns 401 when the Token Expires
+### Step 16. API Returns 401 when the Token Expires
 
 The SPA continues to use the access token until it expires 15 minutes after login, or the user closes their browser. You can simulate access token expiry by clicking *Expire Token* followed by *Reload Data*:
 
@@ -312,7 +310,7 @@ Of course, I cannot really change time to expire a token, so this test operation
 
 ![Access token expiry response](../images/40/access-token-expiry-response.jpg?v=20240727)
 
-### Step 18. SPA Handles Access Token Expiry
+### Step 17. SPA Handles Access Token Expiry
 
 The SPA code expects 401 responses and should recover with no impact on usability. In the first code sample there is no token refresh so the user is redirected to sign in again, which is not a good user experience. Due to the SSO session cookie issued earlier, a single sign-on event occurs and new tokens are issued to the SPA automatically. The SPA can then continue to call the API with its new access token.
 
