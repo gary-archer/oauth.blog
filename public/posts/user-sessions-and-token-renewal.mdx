@@ -10,11 +10,11 @@ The traditional SPA token renewal solution relied on returning only a short live
 
 In this flow, a security library dynamically creates a hidden iframe and sets its *src* to an authorization request URL. This request uses an extra query parameter of *prompt=none* to prevent any user prompts, since the frame is invisible. The request should also send the SSO cookie.
 
-![prompt none code flow](../images/150/prompt-none-code-flow.jpg?v=20251230)
+![prompt none code flow](../images/150/prompt-none-code-flow.jpg?v=20260706)
 
 If the authorization server receives a valid SSO cookie it can return a new authorization code in the browser response. The SPA then sends the code to the token endpoint in an authorization code grant request and gets a new set of tokens. Eventually the session cookie expires and iframe renewal returns a *login_required* response. The SPA interprets this response as *end of session* and logs the user out:
 
-![login required](../images/150/login-required.jpg?v=20251230)
+![login required](../images/150/login-required.jpg?v=20260706)
 
 When you use iframe-based token renewal, the request can take a second or two to complete, which can impact overall API response times. If you instead use refresh tokens to renew access tokens, the time taken is much quicker, such as 100 milliseconds.
 
