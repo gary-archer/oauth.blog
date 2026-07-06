@@ -16,11 +16,11 @@ The SPA implements OAuth and OpenID Connect lifecycle events using Entra ID. The
 
 If you trace <a href='basicspa-oauthworkflow.mdx'>OAuth HTTP Messages</a> for the SPA, you see that the SPA continues to use the standard authorization code flow with PKCE to initiate user logins:
 
-![authorization request](../images/200/authorization-request.jpg?v=20240822)
+![authorization request](../images/200/authorization-request.jpg?v=20260706)
 
 The login response contains an authorization code:
 
-![authorization response](../images/200/authorization-response.jpg?v=20240822)
+![authorization response](../images/200/authorization-response.jpg?v=20260706)
 
 Login completes when the SPA swaps the code for tokens:
 
@@ -172,7 +172,7 @@ The SPA uses almost identical code to the previous code sample, which used AWS C
 
 Entra ID correctly supports the traditional iframe-based silent token renewal solution for SPAs. It does so by issuing SSO cookies with the *SameSite=none* property. In the SPA you can click *Expire Access Token* followed by *Reload Data* to force the API to return a 401 response. The SPA then runs an iframe redirect to refresh access tokens. Doing so avoids redirecting the whole window and impacting the user, after which the SPA receives a new access token.
 
-![iframe token renewal](../images/200/iframe-token-renewal.jpg?v=20240822)
+![iframe token renewal](../images/200/iframe-token-renewal.jpg?v=20260706)
 
 This flow is no longer reliable in all browsers though. Some browsers, like Safari with default settings, refuse to send third-party SSO cookies from an iframe.
 
