@@ -264,7 +264,7 @@ export class ClaimsPrincipal {
 
 ### Authorizing Requests
 
-After the access token validator creates the claims principal it is injected into business logic classes:
+I then inject the claims principal into business logic classes:
 
 ```typescript
 export class CompanyService {
@@ -279,7 +279,7 @@ export class CompanyService {
 }
 ```
 
-If an attempt is made to access unauthorized data, the SPA can throw a forbidden error:
+The API could easily use received claims to reject unauthorized requests and throw a forbidden error:
 
 ```typescript
 private unauthorizedError(companyId: number): ClientError {

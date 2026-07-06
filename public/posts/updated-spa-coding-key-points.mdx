@@ -56,7 +56,7 @@ if (window.top === window.self) {
 }
 ```
 
-When the main window calls *signinSilent*, the oidc-client-ts library creates an iframe and runs an authorization code flow with PKCE, using the OpenID Connect *prompt=none* parameter:
+When the main window calls *signinSilent*, the *oidc-client-ts* library creates an iframe and runs an authorization code flow with PKCE, using the OpenID Connect *prompt=none* parameter:
 
 ```typescript
 private async performAccessTokenRenewalViaIframeRedirect(): Promise<void> {
@@ -83,7 +83,7 @@ The *IFrameApp* object gets instantiated when the authorization server sends a r
 
 - *https://www.authsamples-dev.com/spa/callback?code=xxx&state=yyy*
 
-The job of the iframe app is to call the *signinSilentCallback* method of the oidc-client-ts library:
+The job of the iframe app is to call the *signinSilentCallback* method of the *oidc-client-ts* library:
 
 ```typescript
 export class IFrameApp {
@@ -116,7 +116,7 @@ export class IFrameApp {
 }
 ```
 
-The oidc-client-ts library then uses the [PostMessage API](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) to send the authorization response URL from the iframe to the main window. In the SPA's code, you could add a listener to intercept the posted message and view its data:
+The *oidc-client-ts* library then uses the [PostMessage API](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) to send the authorization response URL from the iframe to the main window. In the SPA's code, you could add a listener to intercept the posted message and view its data:
 
 ```typescript
 window.addEventListener('message', (evt) => {
@@ -124,7 +124,7 @@ window.addEventListener('message', (evt) => {
 });
 ```
 
-When the main window exchanges the code for token it uses the PKCE *code_verifier* that was saved to session storage before the iframe redirect. You can view the oidc-client-ts library's logging output, including validation of received tokens. To do so, append *#log=debug* to the SPA URL, and also ensure that the browser console tools use the *Preserve Log* and *All Levels* options:
+When the main window exchanges the code for token it uses the PKCE *code_verifier* that was saved to session storage before the iframe redirect. You can view the *oidc-client-ts* library's logging output, including validation of received tokens. To do so, append *#log=debug* to the SPA URL, and also ensure that the browser console tools use the *Preserve Log* and *All Levels* options:
 
 ![oidc browser logs](../images/180/oidc-browser-logs.jpg?v=20240813)
 
@@ -204,7 +204,7 @@ For best reliability, you could also store a refresh token in local storage and 
     "oauth": {
         "provider":               "cognito",
         "authority":              "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_CuhLeqiE9",
-        "clientId":               "hje94a2jj3lgkobkh57ikenhh",
+        "clientId":               "1m4c53b8uup5qkqvdn4l0e0fb5",
         "redirectUri":            "https://www.authsamples-dev.com/spa/callback",
         "postLogoutRedirectUri":  "https://www.authsamples-dev.com/spa/logoutcallback",
         "scope":                  "openid profile https://api.authsamples.com/investments",
@@ -254,7 +254,7 @@ private renderData(oauthUserInfo: OAuthUserInfo, apiUserInfo: ApiUserInfo) {
 
 ### SPA Basic Logout
 
-To implement logout I remove tokens from the app and then perform an OpenID Connect RP-initiated logout to remove the SSO cookie. The oidc-client-ts library does this in a one-liner. Yet AWS Cognito, like some other authorization servers, has vendor-specific logout behaviour. The SPA therefore has to implement a workaround, which is an annoyance.
+To implement logout I remove tokens from the app and then perform an OpenID Connect RP-initiated logout to remove the SSO cookie. The *oidc-client-ts* library does this in a one-liner. Yet AWS Cognito, like some other authorization servers, has vendor-specific logout behaviour. The SPA therefore has to implement a workaround, which is an annoyance.
 
 ```typescript
 public async startLogout(): Promise<void> {

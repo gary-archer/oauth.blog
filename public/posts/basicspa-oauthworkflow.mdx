@@ -185,7 +185,7 @@ Because the SPA included the *openid* scope, OpenID Connect is used and the SPA 
 
 ### Step 12. SPA Downloads User Info
 
-Next the oidc-client-ts library sends the access token to the authorization server's userinfo endpoint, to get additional details for the user. I always code apps to receive personal data from this endpoint, rather than from the ID token. The frontend uses this API response to display the user's name details, to help prevent unintentional disclosure of Personally Identifiable Information (PII).
+Next, the *oidc-client-ts* library sends the access token to the authorization server's userinfo endpoint, to get additional details for the user. I always code apps to receive personal data from this endpoint, rather than from the ID token. The frontend uses this API response to display the user's name details, to help prevent unintentional disclosure of Personally Identifiable Information (PII).
 
 ![User info](../images/40/userinfo.jpg?v=20240727)
 

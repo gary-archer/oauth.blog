@@ -61,7 +61,7 @@ public async execute(): Promise<void> {
 
 ### Application Startup
 
-The startup logic downloads the SPA's configuration from the server, then creates an *OAuthClient* object that wraps usage of the oidc-client-ts library and an *ApiClient* object to encapsulate the logic for API requests:
+The startup logic downloads the SPA's configuration from the server, then creates an *OAuthClient* object that wraps usage of the *oidc-client-ts* library and an *ApiClient* object to encapsulate the logic for API requests:
 
 ```typescript
 private async initialiseApp(): Promise<void> {
@@ -96,7 +96,7 @@ The SPA configuration contains the following values, to enable the SPA to connec
 }
 ```
 
-The *OAuthClient* instance creates a *UserManager* object from the oidc-client-ts library, which does the main OAuth work. I use session storage of tokens for the first code sample, so that tokens survive page reloads but get removed once the user finishes using the SPA:
+The *OAuthClient* instance creates a *UserManager* object from the *oidc-client-ts* library, which does the main OAuth work. I use session storage of tokens for the first code sample, so that tokens survive page reloads but get removed once the user finishes using the SPA:
 
 ```typescript
 export class OAuthClient {
@@ -211,7 +211,7 @@ When the login completes, the authorization server returns a response to the SPA
 - *https://www.authsamples-dev.com/spa/callback?code=xxx&state=yyy*
 - *https://www.authsamples-dev.com/spa/callback?error=invalid_request&state=yyy*
 
-An SPA uses a redirect URI of *https://localhost/spa/callback*. Even though the initial SPA uses hash-based routing, the callback path should use a path, since many authorization servers do not allow redirect URIs that contain hash fragments. The SPA first detects an authorization response and then asks the oidc-client-ts library to process it. The response handling code then performs the following actions:
+The SPA uses a redirect URI of *https://localhost/spa/callback*. Even though the initial SPA uses hash-based routing, the callback path should use a path, since many authorization servers do not allow redirect URIs with hash fragments. The SPA first detects an authorization response and then asks the *oidc-client-ts* library to process it. The response handling code then performs the following actions:
 
 - Restores the location and state that was saved before the redirect.
 - Removes the authorization response's query parameters from the browser history.
@@ -220,30 +220,29 @@ An SPA uses a redirect URI of *https://localhost/spa/callback*. Even though the 
 public async handleLoginResponse(): Promise<void> {
 
     const pathname = location.pathname.toLowerCase();
-    if (!pathname.endsWith('callback') || !location.search) {
-        return;
-    }
+    if (pathname.endsWith('callback')) {
     
-    const args = new URLSearchParams(location.search);
-    const state = args.get('state');
-    if (state) {
+        const args = new URLSearchParams(location.search);
+        const state = args.get('state');
+        if (state) {
 
-        const storedState = await this.userManager.settings.stateStore?.get(state);
-        if (storedState) {
+            const storedState = await this.userManager.settings.stateStore?.get(state);
+            if (storedState) {
 
-            let redirectLocation = '#';
-            try {
+                let redirectLocation = '#';
+                try {
 
-                const user = await this.userManager.signinRedirectCallback();
-                redirectLocation = user.state.hash;
+                    const user = await this.userManager.signinRedirectCallback();
+                    redirectLocation = user.state.hash;
 
-            } catch (e: any) {
+                } catch (e: any) {
 
-                throw ErrorHandler.getFromLoginOperation(e, ErrorCodes.loginResponseFailed);
+                    throw ErrorHandler.getFromLoginOperation(e, ErrorCodes.loginResponseFailed);
 
-            } finally {
+                } finally {
 
-                history.replaceState({}, document.title, redirectLocation);
+                    history.replaceState({}, document.title, redirectLocation);
+                }
             }
         }
     }
@@ -254,13 +253,13 @@ The above code enables *deep linking*, where a user can bookmark a location like
 
 Note also that the SPA only processes authorization responses when it has a stored state. This simple measure helps to prevent unwelcome error displays if events such as the following occur:
 
-- Users who click the back button after login and then return to the app.
-- Users who bookmark the authorization server's login page.
-- Technical users who paste malicious authorization responses into the application.
+- A user navigates back after login and then navigates forward to return to the app.
+- A user bookmarks the authorization server's login page.
+- A user pastes malicious authorization responses into the application.
 
 ### Rendering User Info
 
-After login, the SPA renders the logged in user's name, and this information is stored in the *UserManager* class of the oidc-client-ts library, The *OAuthClient* retrieves the user profile using the following code:
+After login, the SPA renders the logged in user's name, and this information is stored in the *UserManager* class of the *oidc-client-ts* library, The *OAuthClient* retrieves the user profile using the following code:
 
 ```typescript
 public async getUserInfo(): Promise<UserInfo | null> {
@@ -458,7 +457,7 @@ OAuth introduces additional endpoints, messages and configuration settings into 
 
 ### Where Are We?
 
-I summarised the initial SPA's code, where the oidc-client-ts security library is doing the difficult security work. I extend the SPA's code in the second code sample, to complete its session management.
+I summarised the initial SPA's code, where the *oidc-client-ts* security library is doing the difficult security work. I extend the SPA's code in the second code sample, to complete its session management.
 
 ### Next
 
