@@ -94,7 +94,7 @@ elasticsearch-init-job:
       condition: service_started
 ```
 
-The following JSON shows format of the index template for request logs. The template ensures that Elasticsearch receives log data with the original types. This ensures that queries on log data sort or filter on numbers and dates correctly:
+The following JSON shows format of the index template for request logs. The template ensures that Elasticsearch receives log data with the original types. This ensures that queries on log data can sort or filter on numbers and dates correctly:
 
 ```json
 {
