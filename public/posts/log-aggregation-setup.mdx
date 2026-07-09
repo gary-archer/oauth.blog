@@ -326,18 +326,18 @@ The deployment creates two Elasticsearch roles for non-administrator users, to s
 
 ### Step 9: Generate Logs via an API and Client
 
-To generate local API logs you need to run an API, and a client that calls the API to cause logs to be written. Components should be run in this type of folder layout, at the same level as the log aggregation repository:
+To generate local API logs you need to run an API, and a client that calls the API so that logs are written. Run components with the following folder layout, at an equivalent level to the log aggregation repository:
 
 ```bash
 ~/dev/oauth.logaggregation.elasticsearch
 ~/dev/oauth.apisample.nodejs
 ```
 
-I sometimes use log aggregation when developing this blog's secured components, when I want to look more closely at API logs. For example, I can run <a href='api-architecture-node.mdx'>Final Node.js API</a> locally and use its tests to trigger API requests that generate log entries.
+I sometimes use log aggregation when developing this blog's secured components, when I want to look more closely at API logs. For example, I can run the <a href='api-architecture-node.mdx'>Final Node.js API</a> locally and use its tests to trigger API requests that generate log entries.
 
 ### Step 10: Deploy the Elastic Stack
 
-Run the following command to start the Docker deployment. It may take a few minutes for large Elastic Stack docker containers to download, the first time the deployment is run:
+Run the following command to start the Docker deployment. It may take a few minutes for large Elastic Stack docker containers to download, the first time you run the deployment:
 
 ```bash
 ./deploy.sh
