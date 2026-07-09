@@ -411,10 +411,9 @@ An implementation needs to populate a *LogEntry* object stored in-memory during 
 
 The log entry is a natural request scoped object, and you may need to use it in multiple classes. This log's final APIs use dependency injection to inject the request-scoped log entry into objects that need it. I also ensure that this works correctly when API code resumes on a different thread after async await requests complete.
 
-### Non REST Operations
+### Non HTTP Operations
 
-In other backend operations I follow the same approach. For example, a Billing API*
-could process an *OrderCreated* that a message broker issues within a backend environment. The Billing API might create an invoice, and log to the same schema, with similar coding techniques. I would write the following type of request log entry, as a logical REST operation rather that a physical one:
+For other backend units of work I would follow a similar approach. For example, a Billing API could process an *OrderCreated* that a message broker issues. The Billing API might create an invoice, and log to the same schema, with similar coding techniques. I would write the following type of request log entry, as a logical REST operation rather that a physical one:
 
 ```json
 {
