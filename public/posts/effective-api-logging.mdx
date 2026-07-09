@@ -413,7 +413,8 @@ The log entry is a natural request scoped object, and you may need to use it in 
 
 ### Non REST Operations
 
-In other backend operations I follow the same approach. For example, if a *Billing API* subscribes to a backend event named *OrderCreated* and creates an invoice, that unit of work could log to the same schema, with similar coding techniques. I would write the following type of request log entry, as a logical REST operation rather that a physical one:
+In other backend operations I follow the same approach. For example, a Billing API*
+could process an *OrderCreated* that a message broker issues within a backend environment. The Billing API might create an invoice, and log to the same schema, with similar coding techniques. I would write the following type of request log entry, as a logical REST operation rather that a physical one:
 
 ```json
 {
@@ -436,10 +437,6 @@ In other backend operations I follow the same approach. For example, if a *Billi
 ```
 
 Although in this case there is no physical HTTP request, assigning failures a status code is a widely understood way to convey a high level result to people. Separating the client and service parts of an error also remains a good practice, in case you need to notify a recipient of failures without disclosing the full exception details.
-
-### Tracing Standardization
-
-I could update this blog's API logging to output performance details as [OpenTelemetry Traces](https://opentelemetry.io/). The *Correlation ID* in the log schema would then change to an OpenTelemetry *Trace ID*. I would record performance breakdowns as *spans* in the standardized trace format. Logs and traces are closely related, so you should be able to query both in the same observability system. Logging solutions like the Elastic Stack might enable this, but the ability to ask your desired questions of log data will always be the area of highest value.
 
 ### Where Are We?
 
