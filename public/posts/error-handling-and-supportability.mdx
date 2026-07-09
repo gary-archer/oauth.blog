@@ -202,7 +202,9 @@ export abstract class ClientError extends Error {
 
 ### Aim to Fail on First Error
 
-Unless there is a good reason, I avoid returning API composite errors and use a *Fail on First Error* approach. A single error item is usually easier for clients to code against, and also easier for API code to implement reliably. This approach can also work well in cases where a form submits multiple values, since client side validation should deal with failures such as missing or malformed input, to avoid the need for APIs to return multiple server side validation failures.
+Unless there is a good reason, I avoid returning API composite errors and use a *Fail on First Error* approach. A single error item is usually easier for clients to code against, and also easier for API code to implement reliably. 
+
+An API fail on firsr wrror approach can also work well in cases where a client sends a form with multiple values, since client side validation should deal with failures such as missing or malformed input, to avoid the need for APIs to return multiple server side validation failures.
 
 ### API Validation Frameworks
 
