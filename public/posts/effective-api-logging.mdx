@@ -413,7 +413,7 @@ The log entry is a natural request scoped object, and you may need to use it in 
 
 ### Non HTTP Operations
 
-For other backend units of work I would follow a similar approach. For example, a Billing API could process an *OrderCreated* that a message broker issues. The Billing API might create an invoice, and log to the same schema, with similar coding techniques. I would write the following type of request log entry, as a logical REST operation rather that a physical one:
+For other backend units of work I would follow a similar approach. For example, a Billing API could process an *OrderCreated* event that a message broker issues. The Billing API might create an invoice, and log to the same schema, with similar coding techniques. I would write the following type of request log entry, as a logical REST operation rather that a physical one:
 
 ```json
 {
@@ -435,7 +435,7 @@ For other backend units of work I would follow a similar approach. For example, 
 }
 ```
 
-Although in this case there is no physical HTTP request, assigning failures a status code is a widely understood way to convey a high level result to people. Separating the client and service parts of an error also remains a good practice, in case you need to notify a recipient of failures without disclosing the full exception details.
+Although in this case there is no physical HTTP request, you are likely to have the same types of logging requirements. For example, assigning failures a status code is a widely understood way to convey a high level result. Separating the client and service parts of an error also remains a good practice, in case you need to notify a recipient of failures without disclosing the full exception details.
 
 ### Where Are We?
 
