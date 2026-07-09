@@ -86,7 +86,7 @@ This is a *Lucene* query whose response is zero or more documents. A DevOps user
 }
 ```
 
-I denormalise certain error fields to the top level, to enable instances or error code to be used in SQL queries:
+I denormalise certain error fields to the top level, to enable SQL queries to use error IDs or error codes.
 
 ```markdown
 POST _sql?format=txt
