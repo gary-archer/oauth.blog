@@ -348,7 +348,7 @@ When a new person joins a development team, they can run a client to quickly lea
 
 ### 3.3. Concurrency Testing
 
-Sometimes APIs are coded with concurrency bugs. Multi-threaded bugs in production are very serious and may be impossible to diagnose, even with good logging. The only option may be a system rollback. To reduce the likelihood of such issues, implement concurrency tests as part of your API developer testing. This blog's final APIs include a <a href='api-automated-tests.mdx'>basic load test</a> that fires many API requests in concurrent batches and intentionally send some requests with invalid input, to rehearse API errors:
+Sometimes APIs are coded with concurrency bugs. Multi-threaded bugs in production are very serious and may be impossible to diagnose, even with good logging. The only option may be a system rollback. To reduce the likelihood of such issues, implement concurrency tests as part of your API developer testing. This blog's final APIs include a <a href='api-automated-tests.mdx'>basic load test</a> that fires many API requests in concurrent batches and intentionally sends some requests with invalid input, to rehearse API errors:
 
 ![load test](../images/400/load-test.jpg)
 
