@@ -390,7 +390,7 @@ OAuth secured APIs can issue security challenges to frontend applications. These
 - APIs keep access tokens short-lived by returning HTTP 401 responses with an *invalid_token* error code. 
 - APIs keep access tokens least-privilege by returning HTTP 403 responses with an *insufficient_scope* error code.
 
-To enable the reliable use of short-lived, least-privilege access tokens, frontend applications should initiate all API requests for sensitive data, using fetch requests. For web applications, this means the web host never initiates calls to APIs.
+To enable security control with short-lived, least-privilege access tokens, frontend applications should initiate all API requests for sensitive data, using fetch requests. For web applications, This means the web host never initiates calls to APIs.
 
 ### Deep Linking
 
