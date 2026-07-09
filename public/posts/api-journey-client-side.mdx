@@ -419,7 +419,7 @@ The *API Session ID* shown in frontends is the OAuth *delegation_id* from the ID
 
 ### Client Responsibilities are Separated
 
-To provide the behaviours that I articulate, this blog's API require some plumbing code. A folder structure classifies each class as *view* related or *plumbing* related. In real clients you might externalise some of the plumbing to one or more shared libraries. The goal in a real organization would be to use clean, scalable code for the valuable views and view models.
+To provide the behaviours that I articulate, this blog's clients require some plumbing code. A folder structure classifies each class as *view* related or *plumbing* related. In real clients you might externalise some of the plumbing to one or more shared libraries. The goal in a real organization would be to use clean, scalable code for the valuable views and view models.
 
 <div className='smallimage'>
     <img src='../images/270/code-layout.jpg' alt='code layout' />
@@ -427,7 +427,7 @@ To provide the behaviours that I articulate, this blog's API require some plumbi
 
 ### Developers Run a Productive Setup
 
-This blog's client development setup enables you to run client code while pointing to remote API URLs. This includes deploying a remote backend for frontend to enable productive SPA development. You run end-to-end setups with URLs that use SSL and domain names. This best enables deployment related thinking during development.
+This blog's client development setup enables you to run client code while pointing to remote API URLs. This includes deploying a remote backend for frontend to enable productive SPA development. You run end-to-end setups with HTTPS URLs and domain names. This best enables deployment related thinking during development.
 
 ![spa and api](../images/270/spa-and-api.jpg?v=20240915)
 
