@@ -181,7 +181,7 @@ Kibana runs at the following HTTPS URL that the Docker Compose cluster exposes:
 
 ### Step 6: Understand Filebeat Deployment
 
-Filebeat uses the following deployment settings, where an API log folder is shared from the host computer to a volume in the Filebeat docker container. By default the deployment uses the folder for this blog's final Node.js API.
+Filebeat uses the following deployment settings, where an API *logs* folder is shared from the host computer to a volume in the Filebeat docker container. By default the deployment uses the folder for this blog's final Node.js API.
 
 ```yaml
 filebeat:
@@ -190,7 +190,7 @@ filebeat:
   hostname: filebeat-internal
   volumes:
     - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
-    - ../../../oauth.apisample.nodejs/logs:/var/log/api
+    - ../oauth.apisample.nodejs/logs:/var/log/api
   environment:
     ELASTICSEARCH_URL: 'http://elasticsearch-internal:9200'
     ELASTICSEARCH_USERNAME: 'elastic'
