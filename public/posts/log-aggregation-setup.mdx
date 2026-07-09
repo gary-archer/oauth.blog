@@ -161,7 +161,7 @@ The following JSON shows format of the index template for request logs. The temp
 
 ### Step 5: Understand Kibana Deployment
 
-The Kibana system connects to Elasticsearch as the [kibana_system](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.8.html#builtin-users-changes) user, and the initialization job sets the user's password. Meanwhile, you log in to the Kibana web UI using administrator credentials of *elastic / Password1*:
+The Kibana workload connects to Elasticsearch as the [kibana_system](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.8.html#builtin-users-changes) user, and the initialization job sets the user's password. Meanwhile, you can administer Kibana with credentials of *elastic / Password1*:
 
 ```yaml
 kibana:
