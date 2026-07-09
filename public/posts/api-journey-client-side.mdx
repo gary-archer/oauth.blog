@@ -390,7 +390,7 @@ OAuth secured APIs can issue security challenges to frontend applications. These
 - APIs keep access tokens short-lived by returning HTTP 401 responses with an *invalid_token* error code. 
 - APIs keep access tokens least-privilege by returning HTTP 403 responses with an *insufficient_scope* error code.
 
-To enable the reliable use of short-lived, least-privilege access tokens, the app itself should use fetch requests to initiate all API requests for sensitive data. For web applications, that should be code that runs in the browser. This blog's <a href='web-technology-setup.mdx'>Web Technology Setup</a> meets that requirement by ensuring that the web host never comes into contact with sensitive data from APIs.
+To enable the reliable use of short-lived, least-privilege access tokens, the app itself should use fetch requests to initiate all API requests for sensitive data. For web applications, this means the web host never calls APIs.
 
 ### Deep Linking
 
@@ -403,7 +403,7 @@ All of this blog's UIs support deep linking, to enable users to bookmark locatio
 | Android | *https://mobile.authsamples.com/finalmobileapp/deeplink/companies/2* |
 | iOS | *https://mobile.authsamples.com/finalmobileapp/deeplink/companies/2* |
 
-These commands initiate views which in turn initiate API requests. APIs return 401 responses if an access token expires or if the user needs to re-authenticate. In such cases this blog's frontends always run the requested view once any OAuth work is complete, so that bookmarking works correctly for users.
+Invoking these URLs runs views which in turn initiates API requests. APIs return 401 responses if an access token expires or if the user needs to re-authenticate. In such cases this blog's frontends always run the requested view once any OAuth work is complete, so that bookmarking works correctly for users.
 
 ### Clients and APIs are Supportable
 
