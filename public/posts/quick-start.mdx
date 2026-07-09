@@ -8,7 +8,7 @@ This page briefly summarises the blog's final code samples, which use only ficti
 
 ### Secured Single Page Application
 
-The React SPA implements OpenID Connect using the *Token Handler Pattern*. It uses SameSite cookies to transport short-lived access tokens to APIs, while also enabling pure SPA development and deployment.
+The React SPA implements OAuth and OpenID Connect using the *Token Handler Pattern*. It uses SameSite cookies to transport short-lived access tokens to APIs, while also enabling pure SPA development and deployment.
 
 ![SPA view](../images/3/spa-view.jpg?v=20240713)
 
@@ -22,7 +22,7 @@ Alternatively, you can follow the <a href='how-to-run-the-react-js-spa.mdx'>Fina
 
 ### Secured Desktop App
 
-The cross platform Electron React app runs on Windows, macOS and Linux. The [AppAuth-JS Library](https://github.com/openid/AppAuth-JS) implements Open ID Connect and logins use the system browser:
+The cross platform Electron React app runs on Windows, macOS and Linux. The [AppAuth-JS Library](https://github.com/openid/AppAuth-JS) implements OAuth and Open ID Connect, with logins that use the system browser:
 
 ![Desktop view](../images/3/desktop-view.jpg?v=20240925)
 
@@ -32,7 +32,7 @@ The app receives login responses on a redirect URI that uses a private-use URI s
 
 ### Secured Android App
 
-The Android App is a Single Activity App that uses Kotlin and Jetpack Compose. The [Android AppAuth Library](https://github.com/openid/AppAuth-Android) implements OpenID Connect and the app receives login responses on HTTPS redirect URIs, registered as Android app links.
+The Android App is a Single Activity App that uses Kotlin and Jetpack Compose. The [Android AppAuth Library](https://github.com/openid/AppAuth-Android) implements OAurh and OpenID Connect, where the app receives login responses on HTTPS redirect URIs, registered as Android app links.
 
 <div className='smallimage'>
     <img src='../images/3/android-view.jpg?v=20240912' alt='Android view' />
@@ -46,7 +46,7 @@ Logins run on a *Chrome Custom Tab*, with modern security and good usability. To
 
 ### Secured iOS App
 
-The [iOS AppAuth Library](https://github.com/openid/AppAuth-iOS) implements OpenID Connect and the app receives login responses on HTTPS redirect URIs, registered as iOS universal links.
+The [iOS AppAuth Library](https://github.com/openid/AppAuth-iOS) implements OAuty and OpenID Connect, where the app receives login responses on HTTPS redirect URIs, registered as iOS universal links.
 
 <div className='smallimage'>
     <img src='../images/3/ios-view.jpg?v=20240713' alt='iOS view' />
