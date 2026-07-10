@@ -145,7 +145,7 @@ public class SecurityConfiguration {
 }
 ```
 
-I disable Spring's website behaviours that are not relevant to APIs. Instead, this blog's <a href='final-spa-overview.mdx'>Final SPA</a> the following backend components manage web-specific security, so that API code is always identical for web and mobile clients.
+I disable Spring's website behaviours that are not relevant to APIs. Instead, this blog's <a href='final-spa-overview.mdx'>Final SPA</a> uses the following backend components to manage web-specific security, so that API code is always identical for web and mobile clients.
 
 | Component | Description |
 | --------- | ----------- |
@@ -153,7 +153,7 @@ I disable Spring's website behaviours that are not relevant to APIs. Instead, th
 | Backend for Frontend | Manages OAuth-related concerns like getting tokens and the issuing of application level cookies. |
 | API Gateway | Deals with web security concerns during API requests, including cookies, CORS and CSRF logic. |
 
-The Spring authentication filter implementation runs an OAuth filter to validate the access token and get claims. The filter also makes the *ClaimsPrincipal* object resolvable by business logic and controls OAuth error responses returned to clients.
+The Spring authentication filter implementation runs OAuth logic to validate the access token and get claims. The filter also makes the *ClaimsPrincipal* object resolvable by business logic and controls OAuth error responses returned to clients.
 
 ```java
 @Override
