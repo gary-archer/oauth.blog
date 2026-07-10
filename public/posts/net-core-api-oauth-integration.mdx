@@ -318,7 +318,7 @@ public sealed class OAuthFilter
 }
 ```
 
-This technique adds complexity that you may not need. Yet it enables API developers to easily evolve their own authorization values. The code shows one possible way to ensure a stable access token and avoid needing to frequently deploy APIs and the authorization server together. It keeps the claims principal useful to the API's logic, and reduces the need for access token versioning.
+This technique adds complexity that you may not need. However, it shows a way for API developers to evolve their own authorization values. Doing so can avoid deeper complexities, like frequently needing to change the access token payload, deal with access token versioning, and coordinate deployments of APIs and the authorization server.
 
 ### OAuth Error Responses
 
