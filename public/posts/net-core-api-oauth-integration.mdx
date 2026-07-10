@@ -98,7 +98,7 @@ The meaning of each field is summarised in the following table:
 | issuer | The expected authorization server that the API trusts to issue its access tokens. |
 | audience | The audience in JWT access tokens indicates the API(s) that should process the JWT. |
 | scope | The API business area(s) for which the access token has permissions. |
-| jwksEndpoint | The trusted authorization server endpoint from which *jose-jwt* will use token signing public keys. |
+| jwksEndpoint | The trusted authorization server endpoint from which *jose-jwt* will download token signing public keys. |
 | claimsCacheTimeToLiveMinutes | The time to live for a cache that contains extra claims, not issued to access tokens. |
 
 ### API Authorization
