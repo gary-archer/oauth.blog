@@ -45,7 +45,7 @@ This blog's Java API customises default behaviour to meet the following requirem
 | ----------- | ----------- |
 | Standards Based | I use the same standards-based design patterns for OAuth security across Node.js, .NET and Java APIs. |
 | Best Security | The [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library enables the most up to date and specialised security algorithms when dealing with JWTs. |
-| Extensible Claims | APIs are in full control of the claims principal and are not forced to only use the authorization server's claims. |
+| Extensible Claims | APIs are in full control of the claims principal and can add additional authorization values to it. |
 | Supportable | The API outputs request logs and audit logs with good queryability and includes identity related details. |
 
 In Java the OAuth code uses the same main phases as other APIs in this blog:
@@ -55,7 +55,7 @@ In Java the OAuth code uses the same main phases as other APIs in this blog:
 | <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a> | Downloading a JSON Web Key Set and verifying received JWT access tokens. |
 | <a href='api-authorization-design.mdx'>API Authorization</a> | Creating a ClaimsPrincipal that includes useful claims, then applying them during authorization. |
 
-This blog's Java API contains plumbing code that I write in the same way the same across three different technology stacks. For your own solution you may be able to meet similar requirements in simpler ways.
+This blog's Java API contains plumbing code that I write in the same way across three different technology stacks. For your own solution you may be able to meet similar requirements in simpler ways.
 
 ### OAuth API Configuration
 
