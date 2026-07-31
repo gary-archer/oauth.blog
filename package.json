@@ -13,9 +13,9 @@
     "build": "next build && rm dist/posts/*.mdx"
   },
   "dependencies": {
-    "next": "^16.2.9",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "next": "^16.2.12",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@mdx-js/loader": "^3.1.1",
@@ -31,7 +31,8 @@
   },
   "overrides": {
     "next": {
-      "postcss": "8.5.15"
+      "postcss": "8.5.25",
+      "sharp": "0.35.3"
     }
   }
 }
