@@ -432,8 +432,8 @@ When users first run an SPA they trigger a download of all *initial* bundles tha
 ```typescript
 const module1 = await import('component1');
 const module2 = await import('component2');
-const component1 = new module.SharedComponent1();
-const component2 = new module.SharedComponent1();
+const component1 = new module1.Component1();
+const component2 = new module2.Component2();
 ```
 
 Rollup produces new *non-initial* bundles when you use dynamic imports, where *initial* bundles contain references to *non-initial* bundles. By default, a new bundle gets produced for each module, or you can update the rollup *manualChunks* function to explicitly control the bundle to which dynamic modules get written to. The first user action that uses a component in the bundle triggers its download.

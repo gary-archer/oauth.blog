@@ -45,7 +45,7 @@ To run API tests, or the full SPA and API solution, you use Docker utility compo
 
 ### Prerequisite 5: Optionally Install a Java IDE
 
-I use the free community edition of [Intellj Idea](https://www.jetbrains.com/idea/download) for Java based development. The project structure must be uploaded to use the downloaded JDK. Also install the [Lombok plugin](https://plugins.jetbrains.com/plugin/6317-lombok) and optionally the [Checkstyle plugin](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea).
+I use the free edition of [Intellj Idea](https://www.jetbrains.com/idea/download) for Java based development. The project structure must be uploaded to use the downloaded JDK. Also install the [Lombok plugin](https://plugins.jetbrains.com/plugin/6317-lombok) and optionally the [Checkstyle plugin](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea).
 
 ![java-ide](../images/350/java-ide.jpg?v=20250919)
 
@@ -223,11 +223,7 @@ The other main objective of the API code sample is JSON logging of API requests.
   "sessionId": "a601559a-0c90-c899-8099-8a9f63a30be8",
   "isAuthenticated": true,
   "isAuthorized": true,
-  "scope": [
-    "openid",
-    "profile",
-    "investments"
-  ],
+  "scope": "openid profile investments",
   "claims": {
     "managerId": "10345",
     "role": "user"
@@ -249,7 +245,7 @@ The API is cloud-native and includes some Docker and Kubernetes deployment resou
 
 ### Where Are We?
 
-I summarised the key productivity behaviours of this blog's final APIs. This starts with modern code setup and a clean separation of concerns that sets up business logic for future growth. Next, APIs have a unified security model that works the same for any type of API client. Finally, APIs have an early focus on reliability and measurability.
+I summarised the key productivity behaviours of this blog's final APIs. This starts with a modern code setup and a clean separation of concerns, that sets up business logic for future growth. Next, APIs have a unified security model that works the same for any type of API client. Finally, APIs have an early focus on reliability and measurability.
 
 ### Next
 

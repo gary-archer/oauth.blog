@@ -18,8 +18,6 @@ Of course these raw logs are not easy to read, and the next step is to import th
 
 I use an installation of [Elastic Stack](https://www.elastic.co/products/elastic-stack) components, which provides a mature platform with some productivity features.
 
-![elastic stack](../images/390/elasticstack.jpg)
-
 I run the following components to a basic level on a development computer, to enable SQL-like API queries against log data.
 
 | Component | Role |
@@ -96,7 +94,7 @@ elasticsearch-init-job:
       condition: service_started
 ```
 
-The following JSON shows format of the index template for request logs. The template ensures that Elasticsearch receives log data with the original types. This ensures that queries on log data sort or filter on numbers and dates correctly:
+The following JSON shows format of the index template for request logs. The template ensures that Elasticsearch receives log data with the original types. This ensures that queries on log data can sort or filter on numbers and dates correctly:
 
 ```json
 {
@@ -163,7 +161,7 @@ The following JSON shows format of the index template for request logs. The temp
 
 ### Step 5: Understand Kibana Deployment
 
-The Kibana system connects to Elasticsearch as the [kibana_system](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.8.html#builtin-users-changes) user, and the initialization job sets the user's password. Meanwhile, you log in to the Kibana web UI using administrator credentials of *elastic / Password1*:
+The Kibana workload connects to Elasticsearch as the [kibana_system](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.8.html#builtin-users-changes) user, and the initialization job sets the user's password. Meanwhile, you can administer Kibana with credentials of *elastic / Password1*:
 
 ```yaml
 kibana:
@@ -183,7 +181,7 @@ Kibana runs at the following HTTPS URL that the Docker Compose cluster exposes:
 
 ### Step 6: Understand Filebeat Deployment
 
-Filebeat uses the following deployment settings, where an API log folder is shared from the host computer to a volume in the Filebeat docker container. By default the deployment uses the folder for this blog's final Node.js API.
+Filebeat uses the following deployment settings, where an API *logs* folder is shared from the host computer to a volume in the Filebeat docker container. By default the deployment uses the folder for this blog's final Node.js API.
 
 ```yaml
 filebeat:
@@ -192,7 +190,7 @@ filebeat:
   hostname: filebeat-internal
   volumes:
     - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
-    - ../../../oauth.apisample.nodejs/logs:/var/log/api
+    - ../oauth.apisample.nodejs/logs:/var/log/api
   environment:
     ELASTICSEARCH_URL: 'http://elasticsearch-internal:9200'
     ELASTICSEARCH_USERNAME: 'elastic'
@@ -252,7 +250,9 @@ The Filebeat output configuration ensures that there is a separate index per day
 
 ### Step 7: Understand Kubernetes Filebeat Differences
 
-If I deploy APIs to Kubernetes there are a couple of Filebeat configuration differences, since both request and audit logs get output to *stdout* instead of local files. Kubernetes saves *stdout* to the */var/log/containers* folder of Kubernetes nodes. I base a solution on the [Filebeat Kubernetes Reference Configuration](https://raw.githubusercontent.com/elastic/beats/9.1/deploy/kubernetes/filebeat-kubernetes.yaml) and use a Filebeat configuration that captures both request logs and audit logs as a single filestream. I first parse container log entries from Kubernetes nodes and then use the JSON parser to load the message part of each log entry.
+If I deploy APIs to Kubernetes there are a couple of Filebeat configuration differences, since both request and audit logs get output to *stdout* instead of local files. Kubernetes saves *stdout* to the */var/log/containers* folder of Kubernetes nodes. 
+
+I base a solution on the [Filebeat Kubernetes Reference Configuration](https://raw.githubusercontent.com/elastic/beats/9.1/deploy/kubernetes/filebeat-kubernetes.yaml) and use a Filebeat configuration that captures both request logs and audit logs as a single filestream. I first parse container log entries from Kubernetes nodes and then use the JSON parser to load the message part of each log entry.
 
 ```yaml
 filebeat.inputs:
@@ -326,18 +326,18 @@ The deployment creates two Elasticsearch roles for non-administrator users, to s
 
 ### Step 9: Generate Logs via an API and Client
 
-To generate local API logs you need to run an API, and a client that calls the API to cause logs to be written. Components should be run in this type of folder layout, at the same level as the log aggregation repository:
+To generate local API logs you need to run an API, and a client that calls the API so that logs are written. Run components with the following folder layout, at an equivalent level to the log aggregation repository:
 
 ```bash
 ~/dev/oauth.logaggregation.elasticsearch
 ~/dev/oauth.apisample.nodejs
 ```
 
-I sometimes use log aggregation when developing this blog's secured components, when I want to look more closely at API logs. For example, I can run <a href='api-architecture-node.mdx'>Final Node.js API</a> locally and use its tests to trigger API requests that generate log entries.
+I sometimes use log aggregation when developing this blog's secured components, when I want to look more closely at API logs. For example, I can run the <a href='api-architecture-node.mdx'>Final Node.js API</a> locally and use its tests to trigger API requests that generate log entries.
 
 ### Step 10: Deploy the Elastic Stack
 
-Run the following command to start the Docker deployment. It may take a few minutes for large Elastic Stack docker containers to download, the first time the deployment is run:
+Run the following command to start the Docker deployment. It may take a few minutes for large Elastic Stack docker containers to download, the first time you run the deployment:
 
 ```bash
 ./deploy.sh
@@ -482,7 +482,7 @@ docker logs -f $FILEBEAT_CONTAINER_ID
 
 ### Where Are We?
 
-I explained how to use Filebeat and Elastic Stack to aggregate logs and how to run a working end-to-end log aggregation solution on a local computer. This setup provides source data to query logs and in the next post I demonstrate some example queries.
+I explained how to use Filebeat and Elastic Stack to aggregate logs and how to run a working end-to-end log aggregation solution on a local computer. In the next post I demonstrate some useful queries against API logs.
 
 ### Next
 

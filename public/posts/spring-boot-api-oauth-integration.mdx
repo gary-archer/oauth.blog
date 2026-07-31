@@ -45,7 +45,7 @@ This blog's Java API customises default behaviour to meet the following requirem
 | ----------- | ----------- |
 | Standards Based | I use the same standards-based design patterns for OAuth security across Node.js, .NET and Java APIs. |
 | Best Security | The [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library enables the most up to date and specialised security algorithms when dealing with JWTs. |
-| Extensible Claims | APIs are in full control of the claims principal and are not forced to only use the authorization server's claims. |
+| Extensible Claims | APIs are in full control of the claims principal and can add extra authorization values to it. |
 | Supportable | The API outputs request logs and audit logs with good queryability and includes identity related details. |
 
 In Java the OAuth code uses the same main phases as other APIs in this blog:
@@ -55,7 +55,7 @@ In Java the OAuth code uses the same main phases as other APIs in this blog:
 | <a href='jwt-access-token-validation.mdx'>JWT Access Token Validation</a> | Downloading a JSON Web Key Set and verifying received JWT access tokens. |
 | <a href='api-authorization-design.mdx'>API Authorization</a> | Creating a ClaimsPrincipal that includes useful claims, then applying them during authorization. |
 
-This blog's Java API contains plumbing code that I write in the same way the same across three different technology stacks. For your own solution you may be able to meet similar requirements in simpler ways.
+This blog's Java API contains plumbing code that I write in the same way across three different technology stacks. For your own solution you may be able to meet similar requirements in simpler ways.
 
 ### OAuth API Configuration
 
@@ -82,7 +82,7 @@ The meaning of each field is summarised in the following table:
 | issuer | The expected authorization server that the API trusts to issue its access tokens. |
 | audience | The audience in JWT access tokens indicates the API(s) that should process the JWT. |
 | scope | The API business area(s) for which the access token has permissions. |
-| jwksEndpoint | The trusted authorization server endpoint from which *jose4j* will use token signing public keys. |
+| jwksEndpoint | The trusted authorization server endpoint from which *jose4j* will download token signing public keys. |
 | claimsCacheTimeToLiveMinutes | The time to live for a cache that contains extra claims, not issued to access tokens. |
 
 ### API Authorization
@@ -145,7 +145,7 @@ public class SecurityConfiguration {
 }
 ```
 
-I disable Spring's website behaviours that are not relevant to APIs. Instead, this blog's <a href='final-spa-overview.mdx'>Final SPA</a> the following backend components manage web-specific security, so that API code is always identical for web and mobile clients.
+I disable Spring's website behaviours that are not relevant to APIs. Instead, this blog's <a href='final-spa-overview.mdx'>Final SPA</a> uses the following backend components to manage web-specific security, so that API code is always identical for web and mobile clients.
 
 | Component | Description |
 | --------- | ----------- |
@@ -153,7 +153,7 @@ I disable Spring's website behaviours that are not relevant to APIs. Instead, th
 | Backend for Frontend | Manages OAuth-related concerns like getting tokens and the issuing of application level cookies. |
 | API Gateway | Deals with web security concerns during API requests, including cookies, CORS and CSRF logic. |
 
-The Spring authentication filter implementation runs an OAuth filter to validate the access token and get claims. The filter also makes the *ClaimsPrincipal* object resolvable by business logic and controls OAuth error responses returned to clients.
+The Spring authentication filter implementation runs OAuth logic to validate the access token and get claims. The filter also makes the *ClaimsPrincipal* object resolvable by business logic and controls OAuth error responses returned to clients.
 
 ```java
 @Override
@@ -321,7 +321,7 @@ public ClaimsPrincipal execute(final HttpServletRequest request) {
 }
 ```
 
-This technique adds complexity that you may not need. Yet it enables API developers to easily evolve their own authorization values. The code shows one possible way to ensure a stable access token and avoid needing to frequently deploy APIs and the authorization server together. It keeps the claims principal useful to the API's logic, and reduces the need for access token versioning.
+This technique adds complexity that you may not need. However, it shows a way for API developers to evolve their own authorization values. Doing so can avoid deeper complexities, like frequently needing to change the access token payload, deal with access token versioning, and coordinate deployments of APIs and the authorization server.
 
 ### OAuth Error Responses
 
