@@ -308,7 +308,6 @@ This blog uses the [rollup](https://rollupjs.org/) bundler, since it produces th
     "open": "^11.0.0",
     "postcss": "^8.5.15",
     "rollup": "^4.60.4",
-    "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-esbuild": "^6.2.1",
     "rollup-plugin-postcss": "^4.0.2"
   }
@@ -364,13 +363,11 @@ This blog's SPA build also runs a series of plugins, to perform a number of task
             target: 'es2020',
         }),
 
-        copy({
-            targets: [
-                { src: 'favicon.ico', dest: outputFolder },
-                { src: 'index.html', dest: outputFolder },
-                { src: 'spa.config.json', dest: outputFolder },
-            ],
-        }),
+        copyFiles(outputFolder, [
+            'favicon.ico',
+            'index.html',
+            'spa.config.json',
+        ]),
 
         ...(isDevelopment ? [
             notifyBrowser(),

@@ -91,7 +91,6 @@ private onServeWebFiles(request: Request): Promise<Response> {
     const authorizedFiles = new Set([
         'index.html',
         'app.bundle.js',
-        'react.bundle.js',
         'vendor.bundle.js',
         'app.css',
     ]);
@@ -99,7 +98,6 @@ private onServeWebFiles(request: Request): Promise<Response> {
     if (IS_DEBUG) {
         authorizedFiles.add('livereload.bundle.js');
         authorizedFiles.add('app.bundle.js.map');
-        authorizedFiles.add('react.bundle.js.map');
         authorizedFiles.add('vendor.bundle.js.map');
     }
 
