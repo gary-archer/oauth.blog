@@ -92,7 +92,7 @@ When web hosting is suboptimal, web content must travel thousands of miles to re
 
 The time to first render in an OAuth-secured SPA is also not always understood. The final SPA's first page is a login required page that downloads initial web assets and renders quickly. All subsequent web downloads are served directly from the browser cache, until the next SPA upgrade or the user clears their browsing history.
 
-![first render](../images/220/first-render.jpg)
+![first render](../images/220/first-render.jpg?v=20260823)
 
 The SPA uses CORS when it calls APIs, which is standard in any pure SPA architecture, but adds a small performance overhead. When a user first accesses an API endpoint, the browser sends preflight OPTIONS requests and then caches the CORS response for 24 hours.
 
