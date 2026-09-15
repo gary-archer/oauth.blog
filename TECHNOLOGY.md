@@ -13,4 +13,4 @@ I use the following plugins so that standard GitHub behaviours work in NEXT.js:
 | ------ | ----- |
 | remark-gfm-no-autolink | Render GitHub tables as HTML tables |
 | remark-prism | Syntax highlighting for code snippets |
-| rehype-slug | Add ids to h3 subheadings aso that they render as links |
+| rehype-slug | Add ids to h3 subheadings so that they render as links |
