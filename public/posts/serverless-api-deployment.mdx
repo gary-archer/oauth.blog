@@ -24,24 +24,21 @@ The API has a number of commands in its *package.json* file, where scripts use S
 }
 ```
 
-The *deploy.sh* script first runs *sls package* to build a ZIP file, then runs *sls deploy* to push resources to the cloud. The deployment creates lambda functions, configures API gateway endpoints and limits CloudWatch log retention. The *serverless.yml* file references a custom domain mapping that I precreated before the first deployment. There is a single AWS deployment stage of *deployed*, though I also use a *dev* stage when I run lambdas locally:
+The *deploy.sh* script first runs *sls package* to build a ZIP file, then runs *sls deploy* to push resources to the cloud. The deployment creates lambda functions, configures API gateway endpoints and limits CloudWatch log retention. The *serverless.yml* file starts with some base parameters.
 
 ```yaml
-service: serverlessapi
+stages:
+  deployed:
+    params:
+      domainName: 'api.authsamples.com'
+      certificateArn: 'arn:aws:acm:eu-west-2:090109105180:certificate/953873fe-43f7-4e6f-90fe-3227ce194d6e'
 
+# AWS base details
 provider:
   name: aws
   runtime: nodejs24.x
   region: eu-west-2
-  apiGateway:
-    shouldStartNameWithService: true
-
-custom:
-  customDomain:
-    domainName: 'api.authsamples.com'
-    certificateName: 'authsamples.com'
-    basePath: investments
-    endpointType: regional
+  stage: deployed
 ```
 
 ### API Configuration
@@ -197,29 +194,69 @@ package:
   - '!/**'
 ```
 
+The *serverless.yml* file includes resources to create an AWS API gateway reference to an API subdomain and map it to a *deployed* stage. The lambdas also get assigned Cloudwatch log groups.
+
+```yaml
+resources:
+  Resources:
+
+    ApiDomain:
+      Type: AWS::ApiGateway::DomainName
+      Properties:
+        DomainName: ${param:domainName}
+        EndpointConfiguration:
+          Types:
+            - REGIONAL
+        RegionalCertificateArn: ${param:certificateArn}
+        SecurityPolicy: SecurityPolicy_TLS13_1_3_2025_09
+        EndpointAccessMode: STRICT
+
+    ApiDomainMapping:
+      Type: AWS::ApiGateway::BasePathMapping
+      Properties:
+        DomainName: !Ref ApiDomain
+        BasePath: investments
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        Stage: deployed
+
+    GetUserInfoLogGroup:
+      Type: 'AWS::Logs::LogGroup'
+      Properties:
+        RetentionInDays: '5'
+    GetCompanyListLogGroup:
+      Type: 'AWS::Logs::LogGroup'
+      Properties:
+        RetentionInDays: '5'
+    GetCompanyTransactionsLogGroup:
+      Type: 'AWS::Logs::LogGroup'
+      Properties:
+        RetentionInDays: '5'
+```
+
 The GitHub repository's *deploy.sh* script runs the build and deployment process. After a release build, the script runs an *sls package* command that creates zip files in the repository's *.serverless* folder, in advance of deploying assets to AWS. The Serverless framework also adds [CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html) artifacts that automate the creation of AWS resources.
 
 ![deployment package](../images/630/deployment-package.jpg?v=20260626)
 
-### Registering an API Subdomain
+### API Deployment
 
-In AWS you need some prerequisite setup before a deployment will work. I created the main hosting domain of *authsamples.com* and its external HTTPS certificate in the earlier <a href='cloud-domain-setup.mdx'>Cloud Domain Setup</a>. I preconfigured the API subdomain in the AWS API Gateway and linked it to a deployment stage under *API Mappings*:
+The *deploy.sh* script runs the *sls deploy* command, which uses packaged resources to upload the packaged API files, and runs CloudFormation to create AWS resources:
+
+![deployment](../images/630/deployment.jpg?v=20250126)
+
+Once the deployment completes, the AWS API gateway provides an internet HTTPS endpoints base URL that references an API subdomain of *api.authsamples.com* and an external HTTPS certificate, created in the earlier <a href='cloud-domain-setup.mdx'>Cloud Domain Setup</a>. 
 
 ![api subdomain](../images/630/api-subdomain.jpg?v=20250126)
 
-In *Route 53 / Hosted Zones* I then created an *A Record* to map the generated domain name to the API's custom subdomain:
+In *Route 53 / Hosted Zones* I map the generated domain name to the API subdomain:
 
 <div className='smallimage'>
     <img src='../images/630/arecord.jpg?v=20250126' alt='API arecord' />
 </div>
 
-### API Deployment
+### Lambda APIs
 
-The *deploy.sh* script continues by running the *sls deploy* command to upload the zip files and CloudFormation resources to AWS:
-
-![deployment](../images/630/deployment.jpg?v=20250126)
-
-The serverless deployment registers HTTPS internet endpoints for the API's lambda functions in the AWS API Gateway:
+Within the API base URL, the AWS API gateway creates routes to AWS lambda functions:
 
 ![endpoints](../images/630/endpoints.jpg?v=20250126)
 
@@ -253,7 +290,7 @@ You must activate [API Gateway CloudWatch Logs](https://aws.amazon.com/premiumsu
 
 ### Where Are We?
 
-I ported this blog's earlier Node.js API to run with low cost and zero maintenance in AWS, which works well enough for my code samples. Note however that I have to accept certain limitations, like the use of the AWS API gateway and Cloudwatch. Instead, I prefer to make my own choices avoud which supporting components my APIs should use.
+I ported this blog's earlier Node.js API to run with low cost and zero maintenance in AWS, which works well enough for my code samples. Note however that I have to accept certain limitations, like the use of the AWS API gateway and Cloudwatch. Instead, I prefer to make my own choices on the supporting components my APIs should use.
 
 ### Next
 
