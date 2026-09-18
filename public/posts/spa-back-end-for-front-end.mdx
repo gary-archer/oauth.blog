@@ -112,14 +112,14 @@ Developers must then also add the *bfflocal* subdomain to the hosts file. You ca
 
 More generally there can be reliability and productivity benefits when you invest in setups that enable development and testing together. You can decide to run some components locally from code, with other components running in deployed environments or in Docker.
 
-### Token Handler Implementation
+### This Blog's Token Handlers
 
-I do not explain the token handler pattern in this blog, but you can study the following resources to understand how utility API components issue SameSite cookies and use CORS to restrict their usage to the SPA's precise web origin.
+For this blog, I use two types of token handler, whose code you can study:
 
-- [OAuth Agent](https://github.com/curityio/cloud-native-oauth-security-examples/tree/main/chapter-13-browser-based-apps/backend-for-frontend/oauth-agent)
-- [OAuth Proxy](https://github.com/curityio/cloud-native-oauth-security-examples/tree/main/resources/apigateway/curity-oauth-proxy)
+- When the SPA connects to low cost AWS lambda APIs, it uses a [Serverless Token Handler](https://github.com/gary-archer/oauth.tokenhandler.serverless) that also runs as a lambda function.
+- Then the SPA connects to cloud native APIs, it uses a [Cloud Native Token Handler](https://github.com/gary-archer/oauth.tokenhandler.cloudnative) that integrates with a cloud native API gateway.
 
-The token handler pattern also gives SPAs additional deployment choices. You can easily split a large SPA into micro frontends, that run at different paths, and share the same API-issued cookies. Alternatively, you can run multiple SPAs with token handlers, on distinct domains, to isolate cookies between SPAs.
+A token handler externalizes cookies and CORS responsibilities from both web and API components. It also gives SPAs additional deployment choices. You can easily split a large SPA into micro frontends, that run at different paths, and share the same API-issued cookies. Alternatively, you can run multiple SPAs with token handlers, on distinct domains, to isolate cookies between SPAs.
 
 ### Where Are We?
 
