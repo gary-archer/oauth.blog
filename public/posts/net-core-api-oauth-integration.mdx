@@ -145,12 +145,12 @@ protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
 {
     try
     {
-        var oauthFilter = (OAuthFilter)this.Context.RequestServices.GetService(typeof(OAuthFilter));
-        var claimsPrincipal = await oauthFilter.ExecuteAsync(this.Request);
+        var oauthFilter = this.Context.RequestServices.GetService(typeof(OAuthFilter)) as OAuthFilter;
+        var claimsPrincipal = await oauthFilter!.ExecuteAsync(this.Request);
 
-        var oauthConfiguration = (OAuthConfiguration)this.Context.RequestServices.GetService(typeof(OAuthConfiguration));
+        var oauthConfiguration = this.Context.RequestServices.GetService(typeof(OAuthConfiguration)) as OAuthConfiguration;
         var receivedScopes = ClaimsReader.GetStringClaim(claimsPrincipal.Jwt, ClaimNames.Scope).Split(" ").ToList();
-        if (!receivedScopes.Contains(oauthConfiguration.Scope))
+        if (!receivedScopes.Contains(oauthConfiguration!.Scope))
         {
             throw ErrorFactory.CreateClientError(
                 HttpStatusCode.Forbidden,
@@ -189,7 +189,7 @@ public async Task<JwtClaims> ValidateTokenAsync(string accessToken)
 {
     using (this.logEntry.CreatePerformanceBreakdown("tokenValidator"))
     {
-        JwtClaims claims = null;
+        JwtClaims? claims = null;
         string claimsJson = string.Empty;
         try
         {
@@ -217,8 +217,6 @@ public async Task<JwtClaims> ValidateTokenAsync(string accessToken)
             throw ErrorUtils.FromTokenValidationError(ex);
         }
 
-        var claims = new JwtClaims(claimsJson);
-        this.ValidateProtocolClaims(claims);
         return claims;
     }
 }

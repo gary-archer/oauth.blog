@@ -112,7 +112,7 @@ Next, run tests with the following command:
 
 This spins up a JWKS URI with an HTTPS endpoint that the Wiremock utility provides. A number of tests then make OAuth-secured API requests. These tests focus on the API's main security behaviours:
 
-![test results](../images/320/test-results.jpg?v=20240915)
+![test results](../images/320/test-results.jpg?v=20260918)
 
 ### Step 5: Run a Basic Load Test
 
@@ -124,7 +124,7 @@ While the API runs with a test configuration you can also run a basic load test 
 
 The test fires batches of 5 concurrent requests at a time and also intentionally rehearses certain types of error. The expected result is 3 errors from a total of 100 requests:
 
-![load test](../images/320/load-test.jpg?v=20240915)
+![load test](../images/320/load-test.jpg?v=20260918)
 
 The <a href='api-automated-tests.mdx'>API Automated Tests</a> post explains how tests get user level tokens without running a full authorization code flow.
 

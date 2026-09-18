@@ -149,14 +149,12 @@ public async Task Invoke(HttpContext context, ILogEntry logEntryParam)
 {
     var logEntry = (LogEntry)logEntryParam;
     logEntry.Start(context.Request);
-
     await this.next(context);
-
     logEntry.End(context.Request, context.Response);
-    
-    var loggerFactory = (ILoggerFactory)context.RequestServices.GetService(typeof(ILoggerFactory));
-    loggerFactory.GetRequestLogger()?.Info(logEntry.GetRequestLog());
-    loggerFactory.GetAuditLogger()?.Info(logEntry.GetAuditLog());
+
+    var loggerFactory = context.RequestServices.GetService(typeof(LoggerFactory)) as ILoggerFactory;
+    loggerFactory!.GetRequestLogger()?.Info(logEntry.GetRequestLog());
+    loggerFactory!.GetAuditLogger()?.Info(logEntry.GetAuditLog());
 }
 ```
 
@@ -192,20 +190,20 @@ The API implements this blog's <a href='error-handling-and-supportability.mdx'>E
 ```csharp
 public ClientError HandleException(Exception exception, HttpContext context)
 {
-    var logEntry = (LogEntry)context.RequestServices.GetService(typeof(ILogEntry));
-    var configuration = (LoggingConfiguration)context.RequestServices.GetService(typeof(LoggingConfiguration));
+    var logEntry = context.RequestServices.GetService(typeof(ILogEntry)) as LogEntry;
+    var configuration = context.RequestServices.GetService(typeof(LoggingConfiguration)) as LoggingConfiguration;
 
     var error = ErrorUtils.FromException(exception);
     if (error is ServerError)
     {
         var serverError = (ServerError)error;
-        logEntry.SetServerError(serverError);
-        return serverError.ToClientError(configuration.ApiName);
+        logEntry!.SetServerError(serverError);
+        return serverError.ToClientError(configuration!.ApiName);
     }
     else
     {
-        var clientError = (ClientError)error;
-        logEntry.SetClientError(clientError);
+        ClientError clientError = (ClientError)error;
+        logEntry!.SetClientError(clientError);
         return clientError;
     }
 }
