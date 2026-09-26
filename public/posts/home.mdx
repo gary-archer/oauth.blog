@@ -19,9 +19,15 @@ To enable future-proof security, this blog uses OAuth 2.0 to secure APIs and cli
 
 However, I have often seen people struggle to implement OAuth and realise its benefits, since it is a distributed architecture with many moving parts. An organization needs to introduce an intricate new component called the *Authorization Server* that outsources the deeper security from applications. You also need to make design choices that require insight, at both an architecture level and a code level.
 
+### The Access Token
+
+The most central and important behavior of the OAuth authorization framework is the access token, which provides a least privilege and short lived API message credential. Access tokens should use scopes and claims in ways that scale elegantly to many APIs and clients.
+
+This blog dives deep into the essentials of working with access tokens. It also demonstrates how the access token can serve as a catalyst to modernize development setups, deployments and reliability, so that the architecture serves people in the best ways.
+
 ### Blog Content
 
-This blog follows a developer journey that starts with important goals and requirements. Some of these are not security-related, like the desire to use modern technology. I explain techniques that I use, to enable secure, reliable integrations with a productive developer setup. I also explain some generic approaches to provide future-proof systems:
+Content follows a developer access token journey that starts with important goals and requirements. Some of these are not security-related, like the desire to use modern technology. I explain techniques that I use, to enable secure, reliable integrations with a productive developer setup. I also explain some generic approaches to provide future-proof systems:
 
 - Coding with portability to keep future options open.
 - Designing for manageability to avoid pain points.
@@ -34,7 +40,7 @@ This blog is code-centric where code separates technical concerns. I provide a n
 
 ![repos](../images/1/repos.jpg?v=20241231)
 
-This blog's frontend code samples use a security-first and business-like setup on a development computer. I use OAuth to secure APIs and clients with standards-based, portable code. During integration I rehearse error, expiry and concurrency conditions, to ensure reliability.
+This blog's code samples use a security-first and business-like development setup. I use OAuth to secure APIs and clients with access tokens, using standards-based, portable code. During integration I rehearse error, expiry and concurrency conditions, to ensure reliability. 
 
 Any reader can run the code samples as working solutions and borrow ideas from the code. By default, I configure the example APIs and clients to use my personal cloud-hosted authorization server, or you can repoint them to your own.
 
