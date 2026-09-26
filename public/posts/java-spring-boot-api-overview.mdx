@@ -124,7 +124,7 @@ To run JUnit tests, the API must be pointed to a mock authorization server, so m
 Next, run tests with the following command:
 
 ```bash
-./gradlew test
+./integration_tests.sh
 ```
 
 This spins up a JWKS URI with an HTTPS endpoint that the Wiremock utility provides. A number of tests then make OAuth-secured API requests. These tests focus on the API's main security behaviours:
@@ -136,7 +136,7 @@ This spins up a JWKS URI with an HTTPS endpoint that the Wiremock utility provid
 While the API runs with a test configuration you can also run a basic load test that sends parallel API requests. This helps to ensure that the API code has no concurrency bugs:
 
 ```bash
-./gradlew loadtest
+./load_test.sh
 ```
 
 The test fires batches of 5 concurrent requests at a time and also intentionally rehearses certain types of error. The expected result is 3 errors from a total of 100 requests:
@@ -176,7 +176,7 @@ public class CompanyService {
     private final CompanyRepository repository;
     private final ClaimsPrincipalHolder claimsHolder;
 
-    public CompanyService(final CompanyRepository repository, final ClaimsPrincipalHolder claimsHolder) {
+    public CompanyService(CompanyRepository repository, ClaimsPrincipalHolder claimsHolder) {
         this.repository = repository;
         this.claimsHolder = claimsHolder;
     }

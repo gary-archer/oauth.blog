@@ -12,7 +12,7 @@ By default Spring Security uses a framework based approach to OAuth security. Ad
 public class SecurityConfiguration {
     
 	@Bean
-	public SecurityFilterChain filterChain(final HttpSecurity http) throws Exception {
+	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
             .securityMatcher(new AntPathRequestMatcher("/**"))
@@ -114,12 +114,12 @@ public class SecurityConfiguration {
 
     private final ConfigurableApplicationContext context;
 
-    public SecurityConfiguration(final ConfigurableApplicationContext context) {
+    public SecurityConfiguration(ConfigurableApplicationContext context) {
         this.context = context;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(final HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         var container = this.context.getBeanFactory();
         var authenticationFilter = new CustomAuthenticationFilter(container);
@@ -158,9 +158,9 @@ The Spring authentication filter implementation runs OAuth logic to validate the
 ```java
 @Override
 protected void doFilterInternal(
-        final HttpServletRequest request,
-        final HttpServletResponse response,
-        final FilterChain filterChain) throws ServletException, IOException {
+        HttpServletRequest request,
+        HttpServletResponse response,
+        FilterChain filterChain) throws ServletException, IOException {
 
     try {
         var logEntry = this.container.getBean(LogEntryImpl.class);
@@ -205,7 +205,7 @@ I use a number of small classes to implement the desired behaviour. The main wor
 The *AccessTokenValidator* object wraps calls to the *jose4j* library. It returns a claims object and also adds access token details to logs:
 
 ```java
-public JwtClaims execute(final String accessToken) {
+public JwtClaims execute(String accessToken) {
 
     try {
         var builder = new JwtConsumerBuilder()
@@ -265,7 +265,7 @@ public class ClaimsPrincipal implements AuthenticatedPrincipal {
     @Getter
     private final ExtraClaims extraClaims;
 
-    public ClaimsPrincipal(final JwtClaims jwtClaims, final ExtraClaims extraClaims) {
+    public ClaimsPrincipal(JwtClaims jwtClaims, ExtraClaims extraClaims) {
         this.jwtClaims = jwtClaims;
         this.extraClaims = extraClaims;
     }
@@ -275,7 +275,7 @@ public class ClaimsPrincipal implements AuthenticatedPrincipal {
 When the filter runs successfully, it updates a holder object stored against the Java *Request* object with the claims principal. Dependency resolution of the claims principal therefore works even if a request uses child threads. The API code injects claims into business focused classes that need to implement authorization, so that there is full control over both data and logic:
 
 ```java
-private boolean isUserAuthorizedForCompany(final Company company) {
+private boolean isUserAuthorizedForCompany(Company company) {
 
     var claims = this.claimsHolder.getClaims();
     var role = ClaimsReader.getStringClaim(claims.getJwt(), CustomClaimNames.Role).toUpperCase();
@@ -299,7 +299,7 @@ private boolean isUserAuthorizedForCompany(final Company company) {
 An *OAuthFilter* class encapsulates the overall OAuth work and deals with injecting claims into the claims principal when needed. In Spring it is also possible to add extra claims in a custom [JwtAuthenticationConverter](https://www.baeldung.com/spring-security-map-authorities-jwt#using_custom_jwtauthenticationconverter).
 
 ```java
-public ClaimsPrincipal execute(final HttpServletRequest request) {
+public ClaimsPrincipal execute(HttpServletRequest request) {
 
     String accessToken = BearerToken.read(request);
     if (accessToken == null) {

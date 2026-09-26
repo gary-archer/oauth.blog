@@ -264,7 +264,7 @@ public async Task<IEnumerable<Claim>> GetUserInfoAsync(string accessToken)
 In later posts I provide an <a href='java-spring-boot-api-overview.mdx'>OAuth Secured Java API</a>. You can activate the proxy with standard system properties at startup, based on the API's configuration settings. For HTTP URLs the properties use an *http* prefix, and for HTTPS URLs they use an *https* prefix:
 
 ```java
-private void configureHttpDebugging(final ApiConfiguration configuration) {
+private void configureHttpDebugging(ApiConfiguration configuration) {
 
     if (configuration.isUseProxy()) {
         try {
