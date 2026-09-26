@@ -117,7 +117,7 @@ More generally there can be reliability and productivity benefits when you inves
 For this blog, I use two types of token handler, whose code you can study:
 
 - When the SPA connects to low cost AWS lambda APIs, it uses a [Serverless Token Handler](https://github.com/gary-archer/oauth.tokenhandler.serverless) that also runs as a lambda function.
-- Then the SPA connects to cloud native APIs, it uses a [Cloud Native Token Handler](https://github.com/gary-archer/oauth.tokenhandler.cloudnative) that integrates with a cloud native API gateway.
+- When the SPA connects to cloud native APIs, it uses a [Cloud Native Token Handler](https://github.com/gary-archer/oauth.tokenhandler.cloudnative) that integrates with a cloud native API gateway.
 
 A token handler externalizes cookies and CORS responsibilities from both web and API components. It also gives SPAs additional deployment choices. You can easily split a large SPA into micro frontends, that run at different paths, and share the same API-issued cookies. Alternatively, you can run multiple SPAs with token handlers, on distinct domains, to isolate cookies between SPAs.
 

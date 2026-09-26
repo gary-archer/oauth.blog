@@ -265,7 +265,7 @@ public async login(currentLocation: string): Promise<void> {
 }
 ```
 
-The page load handler processes the authorization response and sends it to the OAuth agent. The result is to issue encrypted session cookies, which contain the underlying OAuth tokens, to the browser.
+The page load handler processes the authorization response URL and sends it to the OAuth agent. The result is to issue encrypted short-lived cookies, which contain the underlying OAuth tokens, to the browser.
 
 ```typescript
 public async handlePageLoad(): Promise<string | null> {
