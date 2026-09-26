@@ -37,13 +37,13 @@ In such cases, starting with your requirements can work better than following a 
 | Logging is Always On | Incidents are always in the past and changing the log level after the event is too late. |
 | Logging is the Same Everywhere | Logging works the same on a development computer as in production. |
 
-Start by capturin multiple types of structured log records and then consider how different people roles will use them:
+Start by capturing multiple types of structured log records and then consider how different people roles will use them:
 
 - Various teams may look at logs for technical support purposes.
 - Security teams may want to look at API audit logs.
 - Product owners may want to look at business activity logs.
 
-The most important API logs are usually those used for fast problem resolution. The primary goal of reliability logging is a system that is easy for the following people to use. It must be able to deal with busy production systems, with hundreds of concurrent users, or a million API calls per day.
+The most essential API logs for developers are usually those used for fast problem resolution. The primary goal of reliability logging is a system that is easy for the following people to use. It must be able to deal with busy production systems, with hundreds of concurrent users, or a million API calls per day.
 
 | Role | Usage |
 | ---- | ----- |
@@ -65,7 +65,7 @@ To build your preferred logging, you can still use a logging framework, but you 
 | Audit Log | Logs that contain a JSON object per API request for security monitoring purposes. |
 | Debug Logs | Logs that contain free text, which might be useful in single user development setups. |
 
-In more complex APIs, the logger per class data at an INFO level may also be useful in production. If so, you can also aggregate those logs, then join it to other log types using a *Correlation ID*.
+In more complex APIs, you may have additional log types, and the logger per class data at an INFO level may also be useful in production. If so, you can also aggregate those logs, then join it to other log types using a *Correlation ID*.
 
 ### Log Entries
 
@@ -388,7 +388,7 @@ Each performance section also has a *details* field, which can store additional 
 
 ### Access Token Logging Context
 
-Access tokens provide user and client context that can be useful to add to API logs:
+Access tokens provide user and client context that can be highly useful in API logs:
 
 - The *sub* claim should be a stable anonymous identifier for the current user.
 - The *client_id* should preferably be a readable value for the client application.

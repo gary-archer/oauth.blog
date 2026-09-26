@@ -15,9 +15,9 @@ The API has a number of commands in its *package.json* file, where scripts use S
     "lint": "eslint .",
     "start": "rm -rf dist && tsx tools/start.ts",
     "build": "rm -rf dist && NODE_OPTIONS='--import tsx' npx rollup --config build/rollup.config.ts",
-    "testsetup": "./test/scripts/testsetup.sh",
-    "test": "./test/scripts/test.sh",
-    "loadtest": "./test/scripts/loadtest.sh",
+    "testsetup": "./testsetup.sh",
+    "test": "./integration_tests.sh",
+    "loadtest": "./load_test.sh",
     "deploy": "./deploy.sh",
     "remove": "sls remove --stage deployed"
   }
@@ -33,7 +33,6 @@ stages:
       domainName: 'api.authsamples.com'
       certificateArn: 'arn:aws:acm:eu-west-2:090109105180:certificate/953873fe-43f7-4e6f-90fe-3227ce194d6e'
 
-# AWS base details
 provider:
   name: aws
   runtime: nodejs24.x

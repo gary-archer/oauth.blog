@@ -254,34 +254,35 @@ it ('Call API returns 401 for invalid issuer', async () => {
 
 ### API Logs
 
-Serverless offers only limited control over log output, such as use of a *SLS_DEBUG=** environment variable which I rarely use, since it adds a lot of noise. To ensure that I look at my own preferred output I instead write readable request logs and audit logs to local files during development. In AWS, the logger instead outputs bare JSON to support log aggregation.
+The Serverless lambdas continue to use this blog's <a href='effective-api-logging.mdx'>API Logging Design</a>. Logging middleware creates a log entry object at the start of an API request and outputs the log entry data at the end of a request. During the lifetime of an API request, the log entry can be injected into any object that needs to contribute data to logs.
 
-```typescript
-export class Logger {
-
-    private readonly type: string;
-    private readonly prettyPrint: boolean;
-
-    public constructor(type: string, prettyPrint: boolean) {
-        this.type = type;
-        this.prettyPrint = prettyPrint;
-    }
-
-    public write(data: any): void {
-
-        if (this.prettyPrint) {
-
-            fs.appendFileSync(`./api-${this.type}.log`, JSON.stringify(data, null, 2));
-
-        } else {
-
-            process.stdout.write(JSON.stringify(data) + '\n');
-        }
-    }
+```json
+{
+  "type": "request",
+  "id": "7af62b06-8c04-41b0-c428-de332436d52a",
+  "utcTime": "2022-07-24T10:27:33.468Z",
+  "apiName": "FinalApi",
+  "operationName": "getCompanyTransactions",
+  "hostName": "UBUNTU",
+  "method": "GET",
+  "path": "/investments/companies/2/transactions",
+  "resourceId": "2",
+  "clientId": "FinalSPA",
+  "statusCode": 401,
+  "errorCode": "invalid_token",
+  "millisecondsTaken": 2,
+  "correlationId": "15b030a2-c67d-01ae-7c3f-237b9a70dbba",
+  "sessionId": "77136323-ec8c-dce2-147a-bc52f34cb7cd",
+  "errorData": {
+    "statusCode": 401,
+    "clientError": {
+      "code": "invalid_token",
+      "message": "Missing, invalid or expired access token"
+    },
+    "context": "JWT verification failed : signature verification failed"
+  }
 }
 ```
-
-To test local log aggregation during development I disable pretty printing of JSON logs. If I need to add additional log output I add extra details to the log file.
 
 ### Lambda Code Debugging
 
