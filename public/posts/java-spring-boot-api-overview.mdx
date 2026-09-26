@@ -115,7 +115,7 @@ https://api.authsamples-dev.com:446/investments/companies
 
 ### Step 4: Run Integration Tests
 
-To run JUnit tests, the API must be pointed to a mock authorization server, so must run with a test configuration. Stop the API if it is running, then re-run it via this command:
+To run JUnit tests, the API must be pointed to a mock authorization server, so must run with a test configuration. Stop the API if it is running, then re-run it via the following command:
 
 ```bash
 ./testsetup.sh
@@ -127,7 +127,7 @@ Next, run tests with the following command:
 ./integration_tests.sh
 ```
 
-This spins up a JWKS URI with an HTTPS endpoint that the Wiremock utility provides. A number of tests then make OAuth-secured API requests. These tests focus on the API's main security behaviours:
+The test startup first hosts an HTTPS JWKS URI. A number of tests then make OAuth-secured API requests. These tests focus on the API's main security behaviours:
 
 ![test results](../images/350/test-results.jpg?v=20240915)
 

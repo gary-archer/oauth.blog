@@ -52,10 +52,6 @@ Where possible, such as for API tests, the API receives access tokens that use t
 
 The final API integration tests consist of a number of code and script resources, to manage setup and execution. Each test acts as an API client and makes HTTPS requests with a JWT access token:
 
-<div className='smallimage'>
-    <img src='../images/380/test-layout.jpg' alt='test layout' />
-</div>
-
 The following screenshot shows the test output. API developers could publish categorized security test results to stakeholders to help ensure that all important security conditions are covered by tests and frequently verified.
 
 ![test results](../images/380/test-results.jpg?v=20241228)
@@ -82,31 +78,33 @@ This blog's final APIs use the JOSE libraries from the below table for the JWT h
 | .NET | [jose-jwt](https://github.com/dvsekhvalnov/jose-jwt) |
 | Java | [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) |
 
-First the authorization server must create a keypair, containing the private key it will use to sign tokens for the duration of the test session, as well as the public key that is formed into a JSON Web Keyset. I use the open source [Wiremock](https://www.wiremock.io/) tool to provide HTTPS endpoints for the mock authorization server.
+First the authorization server must create a keypair, containing the private key it will use to sign tokens for the duration of the test session, and the public key that the API will use, to validate JWT access token signatures. I use a simple HTTPS server to serve the public key in a JSON Web Keyset, which the API's JWT security library calls.
 
 ```typescript
 export class MockAuthorizationServer {
 
-    private readonly baseUrl: string;
-    private readonly httpProxy: HttpProxy;
+    private application: Application;
+    private httpsServer: https.Server | null;
     private readonly algorithm: string;
-    private jwk: GenerateKeyPairResult | null;
+    private keypair!: GenerateKeyPairResult;
     private keyId: string;
+    private keysJson: string;
 
-    public constructor(useProxy = false) {
+    public constructor() {
 
-        this.baseUrl = 'https://login.authsamples-dev.com:447/__admin/mappings';
-        this.httpProxy = new HttpProxy(useProxy, 'http://127.0.0.1:8888');
+        this.application = express();
+        this.httpsServer = null;
         this.algorithm = 'ES256';
-        this.jwk = null;
-        this.keyId = Guid.create().toString();
+        this.keyId = randomUUID();
+        this.keysJson = '';
+        this.getJwks = this.getJwks.bind(this);
     }
 
-    public async start(): Promise {
+    public async start(): Promise<void> {
 
-        this.jwk = await generateKeyPair(this.algorithm);
+        this.keypair = await generateKeyPair(this.algorithm);
 
-        const jwk = await exportJWK(this.jwk.publicKey!);
+        const jwk = await exportJWK(this.keypair.publicKey);
         jwk.kid = this.keyId;
         jwk.alg = this.algorithm;
         const keys = {
@@ -114,26 +112,21 @@ export class MockAuthorizationServer {
                 jwk,
             ],
         };
-        const keysJson = JSON.stringify(keys);
+        this.keysJson = JSON.stringify(keys);
 
-        const stubbedResponse = {
-            id: this.keyId,
-            priority: 1,
-            request: {
-                method: 'GET',
-                url: '/.well-known/jwks.json'
-            },
-            response: {
-                status: 200,
-                body: keysJson,
-            },
+        const pfxFile = await readFile('./certs/authsamples-dev.ssl.p12');
+        const serverOptions = {
+            pfx: pfxFile,
+            passphrase: 'Password1',
         };
 
-        await this.register(stubbedResponse);
+        this.application.get('/.well-known/jwks.json', this.getJwks);
+        this.httpsServer = https.createServer(serverOptions, this.application);
+        this.httpsServer.listen(447);
     }
 
-    public async stop(): Promise {
-        await this.unregister(this.keyId);
+    public stop(): void {
+        this.httpsServer?.close();
     }
 }
 ```
@@ -181,13 +174,13 @@ public async issueAccessToken(options: MockTokenOptions): Promise<string> {
 
 ### Basic Load Test
 
-It is also useful to ensure early that there are no concurrency problems in APIs, when multiple requests are in flight at once for the same operations. This ensures that behaviours such as dependency injection of request scoped objects are reliable when there are multiple parallel API calls.
+I also like to ensure that there are no concurrency problems in APIs, when multiple requests are in flight at once for the same operations. This ensures that behaviours such as dependency injection of request scoped objects are reliable when there are multiple parallel API calls.
 
 Therefore this blog's final APIs include a basic API load test. The load test fires 100 requests to the API by default, though this number can be adjusted as required. The test requests rehearse various types of failure condition, and certain error responses are expected:
 
 ![load test](../images/380/load-test.jpg)
 
-The load test is just a console application, which uses async await code to fire batches of 5 concurrent HTTP requests at a time to the API. This stays within operating system limits for in-flight requests to the same host, while ensuring that the API continually processes multiple requests:
+The load test uses async await code to fire batches of 5 concurrent HTTP requests at a time to the API. This stays within operating system limits for in-flight requests to the same host, while ensuring that the API continually processes multiple requests:
 
 ```typescript
 private async executeApiRequests(requests: (() => Promise<ApiResponse>)[]): Promise<void> {
@@ -209,19 +202,19 @@ private async executeApiRequests(requests: (() => Promise<ApiResponse>)[]): Prom
 
 ### Analysing Load Test Results
 
-Each API request in the load test also sends input fields that are logged, to provide good troubleshooting options:
+Each API request in the load test logs fields that can be used to analyze the load test, troubleshoot or investigate slow performance:
 
 | Field | Description |
 | ----- | ----------- |
 | Session ID | An identifier to partition all requests in the load test together, so that any log analysis can ignore other log entries. |
 | Correlation ID | An identifier for a single request, to enable slow or failed requests to be quickly looked up. |
-| Client ID | The name of the load test client, as a mechanism to find all load test sessions. |
+| Client ID | The ID of the load test client, as a mechanism to compare results from multiple load tests. |
 
 If a load test results in suboptimal results, the load tester could interrogate logs to understand why, using <a href='api-technical-support-analysis.mdx'>technical support analysis queries</a>.
 
 ### Where Are We?
 
-I enabled productive testing of this blog's final APIs, as a standalone component, using mock OAuth infrastructure. The testing also verifies that the API's error handling and logging behaviours work as expected when there are concurrent API requests.
+I enabled productive security testing for this blog's final APIs, using mock OAuth infrastructure. The testing also verifies that the API's error handling and logging behaviours work as expected when there are many API requests.
 
 ### Next
 
