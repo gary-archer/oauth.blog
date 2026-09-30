@@ -69,7 +69,7 @@ During the first API request, AWS or Serverless Offline creates a *LambdaInstanc
 ```typescript
 const baseHandler = async (event: APIGatewayProxyExtendedEvent): Promise<APIGatewayProxyResult> => {
 
-    const service = event.container.get<CompanyService>(SAMPLETYPES.CompanyService);
+    const service = event.container.get(CompanyService);
     const companies = await service.getCompanyList();
     return ResponseWriter.successResponse(200, companies);
 };
@@ -191,8 +191,8 @@ export class CompanyService {
     private readonly claims: ClaimsPrincipal;
 
     public constructor(
-        @inject(SAMPLETYPES.CompanyRepository) repository: CompanyRepository,
-        @inject(BASETYPES.ClaimsPrincipal) claims: ClaimsPrincipal) {
+        @inject(CompanyRepository) repository: CompanyRepository,
+        @inject(ClaimsPrincipal) claims: ClaimsPrincipal) {
 
         this.repository = repository;
         this.claims = claims;

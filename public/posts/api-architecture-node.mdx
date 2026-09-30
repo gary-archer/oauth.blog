@@ -149,8 +149,8 @@ export class CompanyService {
     private readonly claims: ClaimsPrincipal;
 
     public constructor(
-        @inject(SAMPLETYPES.CompanyRepository) repository: CompanyRepository,
-        @inject(BASETYPES.ClaimsPrincipal) claims: ClaimsPrincipal) {
+        @inject(CompanyRepository) repository: CompanyRepository,
+        @inject(ClaimsPrincipal) claims: ClaimsPrincipal) {
 
         this.repository = repository;
         this.claims = claims;

@@ -31,19 +31,19 @@ APIs often follow a dependency injection based model and register object instanc
 ```typescript
 public registerApplicationDependencies(): void {
 
-    this.parentContainer.bind<UserInfoController>(SAMPLETYPES.UserInfoController)
-        .to(UserInfoController).inRequestScope();
-    this.parentContainer.bind<CompanyController>(SAMPLETYPES.CompanyController)
-        .to(CompanyController).inRequestScope();
+    this.parentContainer.bind(UserInfoController)
+        .toSelf().inRequestScope();
+    this.parentContainer.bind(CompanyController)
+        .toSelf().inRequestScope();
 
-    this.parentContainer.bind<CompanyService>(SAMPLETYPES.CompanyService)
-        .to(CompanyService).inTransientScope();
-    this.parentContainer.bind<CompanyRepository>(SAMPLETYPES.CompanyRepository)
-        .to(CompanyRepository).inTransientScope();
-    this.parentContainer.bind<UserRepository>(SAMPLETYPES.UserRepository)
-        .to(UserRepository).inTransientScope();
-    this.parentContainer.bind<JsonFileReader>(SAMPLETYPES.JsonFileReader)
-        .to(JsonFileReader).inTransientScope();
+    this.parentContainer.bind(CompanyService)
+        .toSelf().inTransientScope();
+    this.parentContainer.bind(CompanyRepository)
+        .toSelf().inTransientScope();
+    this.parentContainer.bind(UserRepository)
+        .toSelf().inTransientScope();
+    this.parentContainer.bind(JsonFileReader)
+        .toSelf().inTransientScope();
 }
 ```
 
@@ -72,7 +72,7 @@ export class CompanyController {
 
     private readonly service: CompanyService;
 
-    public constructor(@inject(SAMPLETYPES.CompanyService) service: CompanyService) {
+    public constructor(@inject(CompanyService) service: CompanyService) {
         super();
         this.service = service;
     }
@@ -165,8 +165,8 @@ export class CompanyService {
     private readonly claims: ClaimsPrincipal;
 
     public constructor(
-        @inject(SAMPLETYPES.CompanyRepository) repository: CompanyRepository,
-        @inject(BASETYPES.ClaimsPrincipal) claims: ClaimsPrincipal) {
+        @inject(CompanyRepository) repository: CompanyRepository,
+        @inject(ClaimsPrincipal) claims: ClaimsPrincipal) {
 
         this.repository = repository;
         this.claims = claims;

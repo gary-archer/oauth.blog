@@ -51,7 +51,7 @@ export class CompanyController {
 
     private readonly service: CompanyService;
 
-    public constructor(@inject(SAMPLETYPES.CompanyService) service: CompanyService) {
+    public constructor(@inject(CompanyService) service: CompanyService) {
         super();
         this.service = service;
     }
@@ -67,8 +67,6 @@ export class CompanyController {
 }
 ```
 
-Dependency injection works differently in Node.js to languages such as C# and Java, since the final JavaScript loses type information. Inversify therefore accompanies each injected type with a unique [JavaScript symbol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol).
-
 ### Dependency Composition
 
 The startup logic implements dependency injection composition to enable objects to receive instances of other objects:
@@ -82,13 +80,15 @@ new CompositionRoot(this.parentContainer)
     .register();
 ```
 
-Inversify uses the following type of syntax to register dependencies. Some objects are singletons, others are bound to the current request and others are transient, meaning the container creates a new instance whenever it resolves the type:
+Inversify uses the following type of syntax to register dependencies. Some objects are singletons, others are bound to the current request and others are transient, meaning the container creates a new instance whenever it resolves the type. 
+
+Dependency injection works differently in Node.js to languages such as C# and Java, since interfaces get erased after compilation. Inversify therefore accompanies each injected interface with a unique [JavaScript symbol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol).
 
 ```typescript
 parentContainer.bind<OAuthConfiguration>(BASETYPES.OAuthConfiguration)
     .toConstantValue(this.oauthConfiguration!);
-parentContainer.bind<CompanyService>(SAMPLETYPES.CompanyService)
-    .to(CompanyService).inTransientScope();
+parentContainer.bind(CompanyService)
+    .toSelf().inTransientScope();
 ```
 
 For APIs with small dependency graphs, I reduce the likelihood of parallel requests impacting each other, by giving each request its own independent object instances.
@@ -152,19 +152,19 @@ private getApplicationRoutesMetadata(apiBasePath: string): RouteMetadata[] {
         {
             method: 'get',
             path: `${apiBasePath}/userinfo`,
-            controller: SAMPLETYPES.UserInfoController,
+            controller: UserInfoController,
             action: (c: UserInfoController) => c.getUserInfo,
         },
         {
             method: 'get',
             path: `${apiBasePath}/companies`,
-            controller: SAMPLETYPES.CompanyController,
+            controller: CompanyController,
             action: (c: CompanyController) => c.getCompanyList,
         },
         {
             method: 'get',
             path: `${apiBasePath}/companies/:id/transactions`,
-            controller: SAMPLETYPES.CompanyController,
+            controller: CompanyController,
             action: (c: CompanyController) => c.getCompanyTransactions,
         },
     ];
@@ -234,7 +234,7 @@ export class CompanyRepository {
     private readonly logEntry: LogEntry;
 
     public constructor(
-        @inject(SAMPLETYPES.JsonFileReader) jsonReader: JsonFileReader,
+        @inject(JsonFileReader) jsonReader: JsonFileReader,
         @inject(BASETYPES.LogEntry) logEntry: LogEntry) {
 
         this.jsonReader = jsonReader;
@@ -265,10 +265,10 @@ export class AuthenticationMiddleware {
     public async execute(request: Request, response: Response, next: NextFunction): Promise<void> {
 
         const container = response.locals.container as Container;
-        const filter =  container.get<OAuthFilter>(BASETYPES.OAuthFilter);
+        const filter =  container.get(OAuthFilter);
 
         const claimsPrincipal = await filter.execute(request, response);
-        container.bind<ClaimsPrincipal>(BASETYPES.ClaimsPrincipal).toConstantValue(claimsPrincipal);
+        container.bind(ClaimsPrincipal).toConstantValue(claimsPrincipal);
 
         const scopes = ClaimsReader.getStringClaim(claimsPrincipal.getJwt(), 'scope').split(' ');
         if (scopes.indexOf(this.configuration.scope) === -1) {
