@@ -16,9 +16,7 @@ Of course these raw logs are not easy to read, and the next step is to import th
 
 ### Logging Technology Stack
 
-I use an installation of [Elastic Stack](https://www.elastic.co/products/elastic-stack) components, which provides a mature platform with some productivity features.
-
-I run the following components to a basic level on a development computer, to enable SQL-like API queries against log data.
+I use an installation of [Elastic Stack](https://www.elastic.co/products/elastic-stack) components, which provides a mature platform with some productivity features. I run the following components to a basic level on a development computer, to enable SQL-like API queries against log data.
 
 | Component | Role |
 | --------- | ---- |
@@ -64,7 +62,7 @@ The repo includes a Docker Compose deployment, that includes the main Elasticsea
 
 ```yaml
 elasticsearch:
-  image: docker.elastic.co/elasticsearch/elasticsearch:9.1.2
+  image: docker.elastic.co/elasticsearch/elasticsearch:9.5.5
   hostname: elasticsearch-internal
   environment:
     discovery.type: 'single-node'
@@ -98,10 +96,15 @@ The following JSON shows format of the index template for request logs. The temp
 
 ```json
 {
-  "index_patterns": ["api-*"],
+  "index_patterns": ["api-request"],
+  "data_stream": {},
   "template": {
     "aliases": {
       "apilogs": {}
+    },
+    "settings": {
+      "index.lifecycle.name": "api-request-retention",
+      "index.default_pipeline": "api"
     },
     "mappings": 
     {
@@ -111,7 +114,7 @@ The following JSON shows format of the index template for request logs. The temp
         {
           "type": "keyword"
         },
-        "utcTime": 
+        "@timestamp": 
         {
           "type": "date"
         },
@@ -159,13 +162,15 @@ The following JSON shows format of the index template for request logs. The temp
 }
 ```
 
+The index template references a data stream and a retention policy, which provide mechanisms to ensure that old log entries gets removed after a time to live, rather than growing indefinitely.
+
 ### Step 5: Understand Kibana Deployment
 
 The Kibana workload connects to Elasticsearch as the [kibana_system](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.8.html#builtin-users-changes) user, and the initialization job sets the user's password. Meanwhile, you can administer Kibana with credentials of *elastic / Password1*:
 
 ```yaml
 kibana:
-  image: docker.elastic.co/kibana/kibana:9.1.2
+  image: docker.elastic.co/kibana/kibana:9.5.5
   hostname: kibana-internal
   environment:
     ELASTICSEARCH_HOSTS: 'http://elasticsearch-internal:9200'
@@ -185,7 +190,7 @@ Filebeat uses the following deployment settings, where an API *logs* folder is s
 
 ```yaml
 filebeat:
-  image: docker.elastic.co/beats/filebeat:9.1.2
+  image: docker.elastic.co/beats/filebeat:9.5.5
   command: filebeat -e --strict.perms=false -c /etc/filebeat/filebeat.yml
   hostname: filebeat-internal
   volumes:
@@ -197,7 +202,7 @@ filebeat:
     ELASTICSEARCH_PASSWORD: 'Password1'
 ```
 
-The main Filebeat configuration is in a *filebeat.yml* file, whose inputs can express multiple locations for log files. Filebeat reads lines of bare JSON in batches and sends them to the Elasticsearch API. 
+The main Filebeat configuration is in a *filebeat.yml* file, whose inputs can express multiple locations for log files. Filebeat reads lines of bare JSON in batches and sends them to the Elasticsearch API for ingestion. 
 
 ```yaml
 filebeat.inputs:
@@ -228,94 +233,26 @@ output.elasticsearch:
   hosts: ["${ELASTICSEARCH_URL}"]
   username: "${ELASTICSEARCH_USERNAME}"
   password: "${ELASTICSEARCH_PASSWORD}"
-  index: "api-%{[fields.logtype]}-%{+yyyy.MM.dd}"
-  pipelines:
-  - pipeline: api
+  index: "api-%{[fields.logtype]}"
+  pipeline: api
 
 setup:
   ilm:
     enabled: false
   template:
-    name: api
-    pattern: api-*
     enabled: false
 
 processors:
+- fingerprint:
+    fields: ["id"]
+    target_field: "@metadata._id"
 - drop_fields:
     fields: ['agent', 'ecs', 'host', 'input', 'version']
-
 ```
 
-The Filebeat output configuration ensures that there is a separate index per day for both request logs and audit logs. This makes it easy to remove old indices containing log data after a desired time to live.
+If you deploy APIs to Kubernetes, see also some extra configuration settings from the [Filebeat Kubernetes Reference Configuration](https://raw.githubusercontent.com/elastic/beats/9.5/deploy/kubernetes/filebeat-kubernetes.yaml), to process files from redirected *stdout*, written to Kubernetes nodes under the */var/log/containers* folder.
 
-### Step 7: Understand Kubernetes Filebeat Differences
-
-If I deploy APIs to Kubernetes there are a couple of Filebeat configuration differences, since both request and audit logs get output to *stdout* instead of local files. Kubernetes saves *stdout* to the */var/log/containers* folder of Kubernetes nodes. 
-
-I base a solution on the [Filebeat Kubernetes Reference Configuration](https://raw.githubusercontent.com/elastic/beats/9.1/deploy/kubernetes/filebeat-kubernetes.yaml) and use a Filebeat configuration that captures both request logs and audit logs as a single filestream. I first parse container log entries from Kubernetes nodes and then use the JSON parser to load the message part of each log entry.
-
-```yaml
-filebeat.inputs:
-  - type: filestream
-    enabled: true
-    id: apilogs
-    paths:
-      - /var/log/containers/finalapi-*finalapi*.log
-    parsers:
-      - container: ~
-      - ndjson:
-          keys_under_root: true
-          add_error_key: false
-    prospector:
-      scanner:
-        symlinks: true
-
-  output.elasticsearch:
-    hosts: ["${ELASTICSEARCH_URL}"]
-    username: "${ELASTICSEARCH_USERNAME}"
-    password: "${ELASTICSEARCH_PASSWORD}"
-    index: "api-%{+yyyy.MM.dd}"
-    pipelines:
-    - pipeline: api
-```
-
-Then, during ingestion, I dynamically calculate the final index name for each log entry using its *type* field.
-
-```json
-{
-  "description": "Ingest Pipeline for API Logs",
-  "processors": [
-    {
-      "drop": {
-        "if" : "ctx.type != 'request' && ctx.type != 'audit'"
-      },
-      "script": {
-        "lang": "painless",
-        "description": "Use client side IDs and select the index from data",
-        "source": "
-ctx._id = ctx.id;
-if (ctx.type == 'request') {
-  ctx._index = ctx._index.replace('api-', 'api-request-');
-}
-if (ctx.type == 'audit') {
-  ctx._index = ctx._index.replace('api-', 'api-audit-');
-}
-"
-      },
-      "date" : {
-        "field" : "utcTime",
-        "formats" : ["ISO8601"]
-      },
-      "remove": {
-        "field": ["log", "stream", "type"],
-        "ignore_missing": true
-      }
-    }
-  ]
-}
-```
-
-### Step 8: Understand Elasticsearch User Management
+### Step 7: Understand Elasticsearch User Management
 
 The deployment creates two Elasticsearch roles for non-administrator users, to show how to grant users access to particular indices.
 
@@ -324,7 +261,7 @@ The deployment creates two Elasticsearch roles for non-administrator users, to s
 | support | support@example.com | A member of a technical support team who can query request logs. |
 | security | security@example.com | A member of a security team who can query audit logs. |
 
-### Step 9: Generate Logs via an API and Client
+### Step 8: Generate Logs via an API and Client
 
 To generate local API logs you need to run an API, and a client that calls the API so that logs are written. Run components with the following folder layout, at an equivalent level to the log aggregation repository:
 
@@ -335,7 +272,7 @@ To generate local API logs you need to run an API, and a client that calls the A
 
 I sometimes use log aggregation when developing this blog's secured components, when I want to look more closely at API logs. For example, I can run the <a href='api-architecture-node.mdx'>Final Node.js API</a> locally and use its tests to trigger API requests that generate log entries.
 
-### Step 10: Deploy the Elastic Stack
+### Step 9: Deploy the Elastic Stack
 
 Run the following command to start the Docker deployment. It may take a few minutes for large Elastic Stack docker containers to download, the first time you run the deployment:
 
@@ -363,101 +300,132 @@ Later, when you are finished with testing, free up all Docker resources with the
 ./teardown.sh
 ```
 
-### Step 11. Use Log Query Tools
+### Step 10. Use Log Query Tools
 
 Next, sign in to Kibana with one of the test usernames, or the administrator user *elastic*, along with a password credential of *Password1*. Kibana provides various tools for working with logs, though I consider the following URL to be the most important:
 
 - *https://logs.authsamples-dev.com/app/dev_tools#/console*
 
-The Kibana *Dev Tools* enable you to make rich queries against log documents based on the data they contain. Users run queries using the alias value expressed in each index template.
-
-The <a href='api-technical-support-analysis.mdx'>Technical Support Analysis</a> post describes a number of consumer focused API queries that you can issue, to improve productivity when you ship API logs that contain useful data.
+The Kibana *Dev Tools* enable you to make rich queries against log documents based on the data they contain. Users run queries using the alias value expressed in each index template. The <a href='api-technical-support-analysis.mdx'>Technical Support Analysis</a> post describes a number of consumer focused API queries that you can issue, to improve productivity when you ship API logs that contain useful data.
 
 ![log queries](../images/390/log-queries.jpg?v=20240818)
 
-### Step 12: Understand Log Documents
+### Step 11: Understand Log Documents
 
-Each log entry is received as a JSON document within an index of the form *api-request-2022-07-24* or *api-audit-2022-07-24*. You can filter data using queries that reference top level fields. Meanwhile, JSON objects in logs, such as those used to represent errors, maintain their structure:
+Each log entry is received as a JSON document within a generated index name. You can filter data using queries that reference top level fields. Meanwhile, JSON objects in logs, such as those used to represent errors, maintain their structure:
 
 ```json
 {
-  "hostName": "UBUNTU",
-  "apiName": "FinalApi",
-  "utcTime": "2022-07-24T14:13:20.647Z",
-  "millisecondsTaken": 7,
-  "errorCode": "exception_simulation",
-  "errorData": {
-    "serviceError": {
-      "stack": [
-        "com.authsamples.api.plumbing.errors.ErrorFactory.createServerError(ErrorFactory.java:20)",
-        "com.authsamples.api.plumbing.interceptors.CustomHeaderInterceptor.preHandle(CustomHeaderInterceptor.java:35)",
-        "org.springframework.web.servlet.HandlerExecutionChain.applyPreHandle(HandlerExecutionChain.java:148)",
-        "org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1062)"],
-      "errorCode": "exception_simulation"
+  "_index": ".ds-api-request-2026.10.18-000001",
+  "_id": "d8f1a0d66f512d6f8ef3cda9d20aae584286e135469c301395202662dff97823",
+  "_score": 1,
+  "_source": {
+    "hostName": "UBUNTU",
+    "apiName": "FinalApi",
+    "clientId": "TestClient",
+    "method": "GET",
+    "millisecondsTaken": 7,
+    "errorCode": "exception_simulation",
+    "operationName": "getCompanyList",
+    "sessionId": "ca9b845b-b998-43d3-acac-0797b7a00524",
+    "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+    "errorData": {
+      "serviceError": {
+        "stack": [
+          "Error: An unexpected exception occurred in the API",
+          "at ErrorFactory.createServerError (/home/gary/dev/oauth.apisample.nodejs/src/plumbing/errors/errorFactory.ts:16:16)",
+          "at CustomHeaderMiddleware.execute (/home/gary/dev/oauth.apisample.nodejs/src/plumbing/middleware/customHeaderMiddleware.ts:27:36)",
+          "at Layer.handleRequest (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/lib/layer.js:152:17)",
+          "at trimPrefix (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:342:13)",
+          "at /home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:297:9",
+          "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:600:14)",
+          "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:610:14)",
+          "at processParams (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:664:3)",
+          "at next (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:291:5)",
+          "at AuthenticationMiddleware.execute (/home/gary/dev/oauth.apisample.nodejs/src/plumbing/middleware/authenticationMiddleware.ts:48:9)"
+        ],
+        "details": ""
+      },
+      "clientError": {
+        "area": "FinalApi",
+        "code": "exception_simulation",
+        "utcTime": "2026-10-18T11:54:44.432Z",
+        "id": 97905,
+        "message": "An unexpected exception occurred in the API"
+      },
+      "statusCode": 500
     },
-    "clientError": {
-      "area": "FinalApi",
-      "code": "exception_simulation",
-      "utcTime": "2022-07-16T08:06:00.268106Z",
-      "id": 32802,
-      "message": "An exception was simulated in the API"
-    },
+    "path": "/investments/companies",
+    "@timestamp": "2026-10-18T11:54:44.428Z",
+    "correlationId": "8131d6fe-e449-4a86-86f3-b96a70161891",
+    "id": "a32985c4-b57b-48a1-babf-183ad50a7684",
+    "errorId": 97905,
     "statusCode": 500
-  },
-  "path": "/investments/companies",
-  "correlationId": "fc081b42-2be0-454e-bdf6-f5df444b7b50",
-  "id": "14ca7188-a4cb-4df5-9bb7-5f829d97b338",
-  "errorId": 32802,
-  "clientId": "LoadTest",
-  "method": "GET",
-  "operationName": "getCompanyList",
-  "sessionId": "9553ffcb-f295-41e5-8b6e-5f9e068c7e2f",
-  "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
-  "@timestamp": "2022-07-16T08:06:00.262Z",
-  "statusCode": 500
+  }
 }
 ```
 
-### Step 13: Understand Log Ingestion
+### Step 12: Understand Log Ingestion
 
 By default, Filebeat adds some fields to each log entry on the outbound side of processing, and Elasticsearch adds fields during inbound processing. The init container customises the [ingestion pipeline](https://www.elastic.co/guide/en/elasticsearch/reference/current/ingest.html) to remove extra fields, to ensure that logs contain clean data. 
 
 ```json
 {
-    "description": "Ingestion Pipeline for API Logs",
-    "processors": [
-      {
-        "drop": {
-          "if" : "ctx.type == null"
-        },
-        "script": {
-          "lang": "painless",
-          "description": "Use a client side unique id to prevent duplicates",
-          "source": "ctx.id = ctx.id"
-        },
-        "date" : {
-          "field" : "utcTime",
-          "formats" : ["ISO8601"]
-        },
-        "remove": {
-          "field": ["log", "stream"],
-          "ignore_missing": true
-        }
+  "description": "Ingest Pipeline for API Logs",
+  "processors": [
+    {
+      "drop": {
+        "if" : "ctx.type != 'request' && ctx.type != 'audit'"
       }
-    ]
-  }
-  ```
+    },
+    {
+      "date" : {
+        "field" : "utcTime",
+        "target_field": "@timestamp",
+        "formats" : ["ISO8601"]
+      }
+    },
+    {
+      "remove": {
+        "field": ["log", "stream", "type", "utcTime", "fields"],
+        "ignore_missing": true
+      }
+    }
+  ]
+}
+```
 
 The processors I use for the ingestion pipeline are summarised below:
 
 | Processor | Behaviour |
 | --------- | --------- |
-| drop | Ignores any log events from foreign log files that do not have a *type* field. |
-| script | Prevents Elasticsearch from generating a unique *_id* field and instead set it to the *id* field from API logs. This ensures that if Filebeat gets redeployed and logs reprocessed, there are no duplicate log entries. |
-| data | Assigns the *utcTime* from original API logs to the mandatory *@timestamp* field, rather than setting this value to the time logs were received. |
+| drop | Ignores any foreign log events that do not have a *type* field. |
+| data | Assigns the *utcTime* from API logs to the *@timestamp* field, rather than setting this value to the time logs were received. |
 | remove | Removes any extra fields that Elasticsearch generates during inbound processing. |
 
-### Step 14: Troubleshoot Filebeat
+In Kubernetes, I also add *reroute* processors that dynamically processes the *type* field of incoming log entries, and calculates the data stream to save data to.
+
+```json
+{
+  "description": "Ingest Pipeline for API Logs",
+  "processors": [
+    {
+      "reroute": {
+        "if": "ctx.type == 'request'",
+        "destination": "api-request"
+      }
+    },
+    {
+      "reroute": {
+        "if": "ctx.type == 'audit'",
+        "destination": "api-audit"
+      }
+    }
+  ]
+}
+```
+
+### Step 13: Troubleshoot Filebeat
 
 Finally, it can be useful to understand how to diagnose logs that do not ship correctly. To do so, first make a remote connection to the Filebeat container with the following commands:
 
