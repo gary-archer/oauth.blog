@@ -202,28 +202,15 @@ filebeat:
     ELASTICSEARCH_PASSWORD: 'Password1'
 ```
 
-The main Filebeat configuration is in a *filebeat.yml* file, whose inputs can express multiple locations for log files. Filebeat reads lines of bare JSON in batches and sends them to the Elasticsearch API for ingestion. 
+The main Filebeat configuration is in a *filebeat.yml* file, whose inputs can express one or more log file locations. Filebeat reads lines of bare JSON in batches and sends them to the Elasticsearch API for ingestion. 
 
 ```yaml
 filebeat.inputs:
 - type: filestream
   enabled: true
-  id: apirequest
+  id: apilogs
   paths:
-  - /var/log/api/request-*.log
-  fields:
-    logtype: 'request'
-  parsers:
-  - ndjson:
-      keys_under_root: true
-      add_error_key: false
-- type: filestream
-  enabled: true
-  id: apiaudit
-  paths:
-  - /var/log/api/audit-*.log
-  fields:
-    logtype: 'audit'
+  - /var/log/api/*.log
   parsers:
   - ndjson:
       keys_under_root: true
@@ -233,7 +220,7 @@ output.elasticsearch:
   hosts: ["${ELASTICSEARCH_URL}"]
   username: "${ELASTICSEARCH_USERNAME}"
   password: "${ELASTICSEARCH_PASSWORD}"
-  index: "api-%{[fields.logtype]}"
+  index: api-request
   pipeline: api
 
 setup:
@@ -320,6 +307,7 @@ Each log entry is received as a JSON document within a generated index name. You
   "_id": "d8f1a0d66f512d6f8ef3cda9d20aae584286e135469c301395202662dff97823",
   "_score": 1,
   "_source": {
+    "utcTime": "2026-10-18T11:54:44.428Z",
     "hostName": "UBUNTU",
     "apiName": "FinalApi",
     "clientId": "TestClient",
@@ -328,6 +316,7 @@ Each log entry is received as a JSON document within a generated index name. You
     "errorCode": "exception_simulation",
     "operationName": "getCompanyList",
     "sessionId": "ca9b845b-b998-43d3-acac-0797b7a00524",
+    "type": "request",
     "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
     "errorData": {
       "serviceError": {
@@ -357,6 +346,7 @@ Each log entry is received as a JSON document within a generated index name. You
     },
     "path": "/investments/companies",
     "@timestamp": "2026-10-18T11:54:44.428Z",
+    "utcTime": "2026-10-18T11:54:44.428Z",
     "correlationId": "8131d6fe-e449-4a86-86f3-b96a70161891",
     "id": "a32985c4-b57b-48a1-babf-183ad50a7684",
     "errorId": 97905,
@@ -387,8 +377,14 @@ By default, Filebeat adds some fields to each log entry on the outbound side of 
     },
     {
       "remove": {
-        "field": ["log", "stream", "type", "utcTime", "fields"],
+        "field": ["fields", "log", "stream"],
         "ignore_missing": true
+      }
+    },
+    {
+      "reroute": {
+        "if": "ctx.type == 'audit'",
+        "destination": "api-audit"
       }
     }
   ]
@@ -402,28 +398,7 @@ The processors I use for the ingestion pipeline are summarised below:
 | drop | Ignores any foreign log events that do not have a *type* field. |
 | data | Assigns the *utcTime* from API logs to the *@timestamp* field, rather than setting this value to the time logs were received. |
 | remove | Removes any extra fields that Elasticsearch generates during inbound processing. |
-
-In Kubernetes, I also add *reroute* processors that dynamically processes the *type* field of incoming log entries, and calculates the data stream to save data to.
-
-```json
-{
-  "description": "Ingest Pipeline for API Logs",
-  "processors": [
-    {
-      "reroute": {
-        "if": "ctx.type == 'request'",
-        "destination": "api-request"
-      }
-    },
-    {
-      "reroute": {
-        "if": "ctx.type == 'audit'",
-        "destination": "api-audit"
-      }
-    }
-  ]
-}
-```
+| reroute | Uses document data to route particular documents to particular data streams. |
 
 ### Step 13: Troubleshoot Filebeat
 
