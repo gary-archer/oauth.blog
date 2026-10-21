@@ -156,9 +156,14 @@ The desktop app registers its scheme as a per-user setting that does not require
 
 ![windows registration](../images/440/windows-registration.jpg)
 
-On macOS you can use the [SwiftDefaultApps](https://github.com/Lord-Kamina/SwiftDefaultApps) tool to view the scheme and its associated app, which is also a per-user setting:
+On macOS, you can use the [SwiftDefaultApps](https://github.com/Lord-Kamina/SwiftDefaultApps) tool to view the scheme and its associated app, which is also a per-user setting. The scheme is registered to the path of the packaged application:
 
-![macos registration](../images/440/macos-registration.jpg)
+![macos registration](../images/440/macos-registration.jpg?v=20261021)
+
+On macOS, when you run the app without packaging, the operating system may associate the scheme to the path of another Electron app. It can lead to a display like the following, where macOS attempts to invoke this blog's first desktop sample as the scheme handler. To work around this type of issue I delete the *node_modules* folder of the other Electron app.
+
+![macos electron scheme](../images/440/macos-electron-scheme.jpg)
+
 
 In my Linux distribution, the *Gnome Desktop System* controls custom schemes. The code sample deployment includes a *linux* subfolder that includes a *.desktop* file that registers the app:
 
@@ -192,7 +197,7 @@ The login and logout response messages received by the app are a type of deep li
 - *x-authsamples-desktopapp:/callback?code=…&state=…*
 - *x-authsamples-desktopapp:/logoutcallback*
 
-In some use cases, you can use deep linking to bookmark screens. For example, you might send the user an email with a URL link. Note however that email clients may consider the private use URI scheme's prefix suspect, and block this type of deep link:
+In some use cases, you can use deep linking to particular desktop screens. For example, you might send the user an email with a URL link. Note however that email clients may consider the private use URI scheme's prefix suspect, and block this type of deep link:
 
 - *x-authsamples-desktopapp:/companies/2*
 
@@ -212,9 +217,7 @@ If the app has a valid access token, it moves directly to the deep linking desti
 
 ![deep link unauthorized](../images/440/deeplink-unauthorized.jpg?v=20240925)
 
-Finally, note that on macOS, startup deep links only work if you run a packaged version of the app, so that the scheme registration points to the packaged executable:
-
-![macos packaged](../images/440/macos-packaged.jpg)
+Finally, note that on macOS, startup deep links only work if you run a packaged version of the app, so that the scheme registration points to the packaged executable.
 
 ### Local API Setup
 
