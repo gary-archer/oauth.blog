@@ -30,7 +30,7 @@ esac
 #
 if [ ! -d 'node_modules' ]; then
   
-  npm install
+  npm ci
   if [ $? -ne 0 ]; then
     exit 1
   fi

@@ -53,7 +53,7 @@ You need to think about the potential for security vulnerabilities when you incl
 
 ### Downloading Dependencies:  Node Modules
 
-When you run *npm install*, your dependencies get downloaded to a *node_modules* folder from which you import classes and functions. The following screenshot shows some type definitions for the *oidc-client-ts* library.
+When you run *npm ci*, your dependencies get downloaded to a *node_modules* folder from which you import classes and functions. The following screenshot shows some type definitions for the *oidc-client-ts* library.
 
 ![node modules](../images/90/node-modules.jpg)
 
@@ -214,7 +214,7 @@ import './app.css';
 My code samples also use *npm* tasks that call bash scripts, which handle some finer details, including any environmental differences between Linux, macOS and Windows. The following example script runs build tasks and serves the SPA's built code using a static web content server.
 
 ```bash
-npm install
+npm ci
 if [ $? -ne 0 ]; then
   echo 'Problem encountered installing SPA dependencies'
   read -n 1

@@ -14,6 +14,6 @@ You can also run the blog as a [Next.js Application](TECHNOLOGY.md).\
 To do so, run the following commands and then browse to `http://localhost:3000`:
 
 ```bash
-npm install
+npm ci
 npm start
 ```

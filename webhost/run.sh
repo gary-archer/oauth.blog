@@ -5,7 +5,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 #
 # Install dependencies if required
 #
-npm install
+npm ci
 if [ $? -ne 0 ]; then
   read -n 1
   exit 1
