@@ -108,14 +108,16 @@ This technique is a basic but portable way to manage application state in fronte
 
 ### Separation of View Logic from General Logic
 
-I use the React framework's hook-based syntax to develop the SPA's views. Views get API data from their view model, to externalize API concerns from views.
+I use the React framework's hook-based syntax to develop the SPA's views. Views bind to API data that their view model contains, to externalize API concerns from views.
 
 ```typescript
 export function CompaniesView(props: CompaniesViewProps): JSX.Element {
 
     const model = props.viewModel;
-    const [companies, setCompanies] = useState(model.getCompanies());
-    const [error, setError] = useState(model.getError());
+    const {companies, error} = useSyncExternalStore(
+        model.subscribe.bind(model),
+        model.getSnapshot.bind(model),
+    );
 
     useEffect(() => {
         startup();
@@ -142,8 +144,6 @@ The code to call APIs originates in the view, which forwards the request to its 
 ```typescript
 async function loadData(options?: ViewLoadOptions): Promise<void> {
     await model.callApi(options);
-    setCompanies(model.getCompanies());
-    setError(model.getError());
 }
 ```
 
