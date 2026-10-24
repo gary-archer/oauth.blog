@@ -190,7 +190,7 @@ public async callApi(options?: ViewLoadOptions): Promise<void> {
         causeError: options?.causeError || false,
     };
 
-    this.viewModelCoordinator.onMainViewModelLoading();
+    this.apiRequestCoordinator.onApiRequestStart(fetchOptions.cacheKey);
     this.snapshot = {companies: this.snapshot.companies, error: null};
 
     try {
@@ -206,7 +206,7 @@ public async callApi(options?: ViewLoadOptions): Promise<void> {
 
     } finally {
 
-        this.viewModelCoordinator.onMainViewModelLoaded(fetchOptions.cacheKey);
+        this.apiRequestCoordinator.onApiRequestEnd();
         this.notifyView();
     }
 }
@@ -268,7 +268,7 @@ export class FetchCache {
 
 ### Detecting Login Required
 
-When frontends first make API requests, they do not have an API message credential so cannot call APIs. The fetch client throws a *login_required* error which the fetch cache stores. Multiple views could throw this error at the same time so a *ViewModelCoordinator* object waits for all views to try to load, then inspects the fetch cache. When required, it publishes an event that the main view subscribes to. The main view's handler then presents a login required view to the user.
+When frontends first make API requests, they do not have an API message credential so cannot call APIs. The fetch client throws a *login_required* error which the fetch cache stores. Multiple views could throw this error at the same time so an *ApiRequestCoordinator* object waits for all views to try to load, then inspects the fetch cache. When required, it publishes an event that the main view subscribes to. The main view's handler then presents a login required view to the user.
 
 ```javascript
 private handleAllViewsLoaded(): void {

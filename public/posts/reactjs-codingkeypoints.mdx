@@ -96,7 +96,7 @@ public getCompaniesViewModel(): CompaniesViewModel {
         this.companiesViewModel = new CompaniesViewModel(
             this.fetchClient!,
             this.eventBus,
-            this.viewModelCoordinator!,
+            this.apiRequestCoordinator!,
         );
     }
 
@@ -147,7 +147,7 @@ async function loadData(options?: ViewLoadOptions): Promise<void> {
 }
 ```
 
-The view model logic is business-focused and uses a *fetch* client to deal with lower level aspects. The *ViewModelCoordinator* object assists view models, and triggers a new login redirect when the API session expires:
+The view model logic is business-focused and uses a *fetch* client to deal with lower level aspects. The *ApiRequestCoordinator* object assists view models, and triggers a new login redirect when the API session expires:
 
 ```typescript
 public async callApi(options?: ViewLoadOptions): Promise<void> {
@@ -158,24 +158,24 @@ public async callApi(options?: ViewLoadOptions): Promise<void> {
         causeError: options?.causeError || false,
     };
 
-    this.viewModelCoordinator.onMainViewModelLoading();
-    this.updateError(null);
+    this.apiRequestCoordinator.onApiRequestStart(fetchOptions.cacheKey);
+    this.snapshot = {companies: this.snapshot.companies, error: null};
 
     try {
 
         const result = await this.fetchClient.getCompanyList(fetchOptions);
         if (result) {
-            this.updateCompanies(result);
+            this.snapshot = {companies: result, error: null};
         }
 
     } catch (e: any) {
 
-        this.updateError(ErrorFactory.fromException(e));
-        this.updateCompanies([]);
+        this.snapshot = {companies: [], error: ErrorFactory.fromException(e)};
 
     } finally {
 
-        this.viewModelCoordinator.onMainViewModelLoaded(fetchOptions.cacheKey);
+        this.apiRequestCoordinator.onApiRequestEnd();
+        this.notifyView();
     }
 }
 ```
@@ -209,7 +209,7 @@ Clients that use tokens can determine whether the user is authenticated by the p
 
 ### Login Detection
 
-The fetch client throws an error with a *login_required* error code when it is asked to call APIs but *isLoggedIn* is not set to true. For the final SPA this error could occur concurrently, so the SPA handles the condition using a *ViewModelCoordinator* object. After all view models have tried to load, if there is one or more errors with a *login_required* error code, an event is published. This main application view subscribes to this event and then presents the login required view to the user.
+The fetch client throws an error with a *login_required* error code when it is asked to call APIs but *isLoggedIn* is not set to true. For the final SPA this error could occur concurrently, so the SPA handles the condition using an *ApiRequestCoordinator* object. After all view models have tried to load, if there is one or more errors with a *login_required* error code, an event is published. This main application view subscribes to this event and then presents the login required view to the user.
 
 ```typescript
 private handleAllViewsLoaded(): void {

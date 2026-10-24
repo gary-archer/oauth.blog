@@ -126,7 +126,7 @@ init(eventBus: EventBus) {
     self.configuration = try! ConfigurationLoader.load()
     self.oauthClient = OAuthClientImpl(configuration: self.configuration.oauth)
     self.fetchClient = try! FetchClient(configuration: self.configuration, fetchCache: self.fetchCache, oauthClient: self.oauthClient)
-    self.viewModelCoordinator = ViewModelCoordinator(eventBus: eventBus, fetchCache: self.fetchCache)
+    self.apiRequestCoordinator = ApiRequestCoordinator(eventBus: eventBus, fetchCache: self.fetchCache)
 
     self.isLoaded = false
     self.isDeviceSecured = DeviceSecurity.isDeviceSecured()
@@ -211,7 +211,7 @@ Data binding enables changes to state with readable code. Each non-trivial view 
 class CompaniesViewModel: ObservableObject {
 
     private let fetchClient: FetchClient
-    private let viewModelCoordinator: ViewModelCoordinator
+    private let apiRequestCoordinator: ApiRequestCoordinator
 
     @Published var companies = [Company]()
     @Published var error: UIError?
@@ -230,7 +230,7 @@ func callApi(options: ViewLoadOptions? = nil) {
         forceReload: options?.forceReload ?? false,
         causeError: options?.causeError ?? false)
 
-    self.viewModelCoordinator.onMainViewModelLoading()
+    self.apiRequestCoordinator.onApiRequestStart(cacheKeys: fetchOptions.cacheKey)
     self.error = nil
 
     Task {
@@ -243,7 +243,7 @@ func callApi(options: ViewLoadOptions? = nil) {
                 if companies != nil {
                     self.companies = companies!
                 }
-                self.viewModelCoordinator.onMainViewModelLoaded(cacheKey: fetchOptions.cacheKey)
+                self.apiRequestCoordinator.onApiRequestEnd()
             }
 
         } catch {
@@ -252,7 +252,7 @@ func callApi(options: ViewLoadOptions? = nil) {
 
                 self.companies = [Company]()
                 self.error = ErrorFactory.fromException(error: error)
-                self.viewModelCoordinator.onMainViewModelLoaded(cacheKey: fetchOptions.cacheKey)
+                self.apiRequestCoordinator.onApiRequestEnd()
             }
         }
     }

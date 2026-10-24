@@ -87,7 +87,7 @@ init {
 
     this.oauthClient = OAuthClientImpl(this.configuration.oauth, this.app.applicationContext)
     this.fetchClient = FetchClient(this.configuration, this.fetchCache, this.oauthClient)
-    this.viewModelCoordinator = ViewModelCoordinator(this.eventBus, this.fetchCache)
+    this.apiRequestCoordinator = ApiRequestCoordinator(this.eventBus, this.fetchCache)
 
     this.isLoaded = false
     this.isTopMost = true
@@ -184,7 +184,7 @@ Data binding enables changes to state with readable code. Each non-trivial view 
 class CompaniesViewModel(
     private val fetchClient: FetchClient,
     val eventBus: EventBus,
-    private val viewModelCoordinator: ViewModelCoordinator
+    private val apiRequestCoordinator: ApiRequestCoordinator
 ) : ViewModel() {
 
     var companiesList: MutableState<List<Company>> = mutableStateOf(ArrayList())
@@ -199,15 +199,15 @@ class CompaniesViewModel(
 The most interesting view models are those that get data from APIs. As is standard in frontends, the API request runs from an I/O worker thread and the response rendering updates run on the main thread. Use of [Kotlin Coroutines](https://developer.android.com/kotlin/coroutines) results in readable async await code where suspending functions do the work.
 
 ```kotlin
-fun callApi(options: ViewLoadOptions?, onComplete: () -> Unit) {
+fun callApi(options: ViewLoadOptions?) {
 
     val fetchOptions = FetchOptions(
         FetchCacheKeys.COMPANIES,
         options?.forceReload ?: false,
-        options?.causeError ?: false
+        options?.causeError ?: false,
     )
 
-    this.viewModelCoordinator.onMainViewModelLoading()
+    this.apiRequestCoordinator.onApiRequestStart(fetchOptions.cacheKey)
     this.updateError(null)
 
     val that = this@CompaniesViewModel
@@ -216,12 +216,10 @@ fun callApi(options: ViewLoadOptions?, onComplete: () -> Unit) {
         try {
 
             val companies = fetchClient.getCompanyList(fetchOptions)
-
             withContext(Dispatchers.Main) {
 
                 if (companies != null) {
                     that.updateData(companies.toList())
-                    that.viewModelCoordinator.onMainViewModelLoaded(fetchOptions.cacheKey)
                 }
             }
 
@@ -230,13 +228,12 @@ fun callApi(options: ViewLoadOptions?, onComplete: () -> Unit) {
             withContext(Dispatchers.Main) {
                 that.updateData(ArrayList())
                 that.updateError(uiError)
-                that.viewModelCoordinator.onMainViewModelLoaded(fetchOptions.cacheKey)
             }
 
         } finally {
 
             withContext(Dispatchers.Main) {
-                onComplete()
+                that.apiRequestCoordinator.onApiRequestEnd()
             }
         }
     }
@@ -318,7 +315,7 @@ The app has two main view areas that trigger concurrent API requests. The main A
     <img src='../images/530/concurrent-views.jpg?v=20240912' alt='concurrent views' />
 </div>
 
-A *ViewModelCoordinator* object detects when API requests to load views complete. If a view receives a permanent 401 response from the API a single *LoginRequired* event is published. The main activity subscribes to the event and prompts the user to reauthenticate.
+An *ApiRequestCoordinator* object detects when API requests to load views complete. If a view receives a permanent 401 response from the API a single *LoginRequired* event is published. The main activity subscribes to the event and prompts the user to reauthenticate.
 
 ```kotlin
 private fun handleAllViewsLoaded() {
