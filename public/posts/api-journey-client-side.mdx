@@ -99,12 +99,12 @@ The following example shows a View Model object for React:
 ```typescript
 export class MyViewModel {
 
-    private readonly fetchClient: FetchClient;
+    private readonly apiClient: ApiClient;
     private listener: (() => void) | null;
     private snapshot: MyViewState;
 
-    public constructor(fetchClient: FetchClient) {
-        this.fetchClient = fetchClient;
+    public constructor(apiClient: ApiClient) {
+        this.apiClient = apiClient;
         this.listener = null;
         this.snapshot = {data: null, error: null};
     }
@@ -115,7 +115,7 @@ The following example shows a View Model object for Kotlin on Android:
 
 ```kotlin
 class MyViewModel(
-    private val fetchClient: FetchClient
+    private val apiClient: ApiClient
 ) : ViewModel() {
 
      var myState: MutableState<MyApiData?> = mutableStateOf(null)
@@ -130,10 +130,10 @@ class MyViewModel: ObservableObject {
 
     @Published var myState: MyApiData?
     var myProperty: String
-    private let fetchClient: FetchClient
+    private let apiClient: ApiClient
 
-    init(fetchClient: FetchClient) {
-        self.fetchClient = fetchClient
+    init(apiClient: ApiClient) {
+        self.apiClient = apiClient
     }
 }
 ```
@@ -192,12 +192,11 @@ public async callApi(options?: ViewLoadOptions): Promise<void> {
         causeError: options?.causeError || false,
     };
 
-    this.apiRequestCoordinator.onApiRequestStart(fetchOptions.cacheKey);
     this.snapshot = {companies: this.snapshot.companies, error: null};
 
     try {
 
-        const result = await this.fetchClient.getCompanyList(fetchOptions);
+        const result = await this.apiClient.getCompanyList(fetchOptions);
         if (result) {
             this.snapshot = {companies: result, error: null};
         }
@@ -208,7 +207,6 @@ public async callApi(options?: ViewLoadOptions): Promise<void> {
 
     } finally {
 
-        this.apiRequestCoordinator.onApiRequestEnd();
         this.notifyView();
     }
 }
@@ -273,7 +271,7 @@ export class FetchCache {
 When frontends first make API requests, they do not have an API message credential so cannot call APIs. The fetch client throws a *login_required* error which the fetch cache stores. Multiple views could throw this error at the same time so an *ApiRequestCoordinator* object waits for all views to try to load, then inspects the fetch cache. When required, it publishes an event that the main view subscribes to. The main view's handler then presents a login required view to the user.
 
 ```javascript
-private handleAllViewsLoaded(): void {
+private handleAllRequestsComplete(): void {
 
     if (this.loadedCount === this.loadingCount) {
 

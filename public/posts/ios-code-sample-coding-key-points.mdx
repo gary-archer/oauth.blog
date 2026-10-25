@@ -7,7 +7,7 @@ Previously I explained the <a href='ios-code-sample-infrastructure.mdx'>iOS Infr
 One of this blog's coding goals is to use the same frontend classes across multiple platforms. The iOS app uses the same logical separation of responsibilities into classes as the earlier <a href='reactjs-codingkeypoints.mdx'>React SPA</a>:
 
 <div className='smallimage'>
-    <img src='../images/570/code-layout.jpg?v=20260627' alt='code layout' />
+    <img src='../images/570/code-layout.jpg?v=20261025' alt='code layout' />
 </div>
 
 ### Unobtrusive OAuth Integration
@@ -120,14 +120,15 @@ iOS can recreate views many times whereas the *AppViewModel* is only created onc
 ```swift
 init(eventBus: EventBus) {
 
-    self.fetchCache = FetchCache()
     self.eventBus = eventBus
 
     self.configuration = try! ConfigurationLoader.load()
     self.oauthClient = OAuthClientImpl(configuration: self.configuration.oauth)
-    self.fetchClient = try! FetchClient(configuration: self.configuration, fetchCache: self.fetchCache, oauthClient: self.oauthClient)
-    self.apiRequestCoordinator = ApiRequestCoordinator(eventBus: eventBus, fetchCache: self.fetchCache)
-    self.viewModelStore = ViewModelStore(fetchClient: self.fetchClient, apiRequestCoordinator: self.apiRequestCoordinator, eventBus: self.eventBus)
+    self.apiClient = try! ApiClient(
+            configuration: self.configuration,
+            oauthClient: self.oauthClient,
+            eventBus: self.eventBus)
+    self.viewModelStore = ViewModelStore(apiClient: self.apiClient, eventBus: self.eventBus)
 
     self.isLoaded = false
     self.isDeviceSecured = DeviceSecurity.isDeviceSecured()
@@ -211,8 +212,7 @@ Data binding enables changes to state with readable code. Each non-trivial view 
 ```swift
 class CompaniesViewModel: ObservableObject {
 
-    private let fetchClient: FetchClient
-    private let apiRequestCoordinator: ApiRequestCoordinator
+    private let apiClient: ApiClient
 
     @Published var companies = [Company]()
     @Published var error: UIError?
@@ -231,20 +231,18 @@ func callApi(options: ViewLoadOptions? = nil) {
         forceReload: options?.forceReload ?? false,
         causeError: options?.causeError ?? false)
 
-    self.apiRequestCoordinator.onApiRequestStart(cacheKeys: fetchOptions.cacheKey)
     self.error = nil
 
     Task {
 
         do {
 
-            let companies = try await self.fetchClient.getCompanies(options: fetchOptions)
+            let companies = try await self.apiClient.getCompanies(options: fetchOptions)
             await MainActor.run {
 
                 if companies != nil {
                     self.companies = companies!
                 }
-                self.apiRequestCoordinator.onApiRequestEnd()
             }
 
         } catch {
@@ -253,7 +251,6 @@ func callApi(options: ViewLoadOptions? = nil) {
 
                 self.companies = [Company]()
                 self.error = ErrorFactory.fromException(error: error)
-                self.apiRequestCoordinator.onApiRequestEnd()
             }
         }
     }
@@ -262,7 +259,7 @@ func callApi(options: ViewLoadOptions? = nil) {
 
 ### API Call Details
 
-The *FetchClient* object acts as a service agent and uses iOS [Async URL Sessions](https://tanaschita.com/20221017-using-urlsession-with-async-await). Each API call uses a shared method to send OAuth access tokens and manage retries. I use the same OAuth client side behaviour as in all of this blog's other frontend code samples, to refresh the access token and retry the request once if the API returns a 401 status code. The API client code is shown here:
+The *ApiClient* object acts as a service agent and uses iOS [Async URL Sessions](https://tanaschita.com/20221017-using-urlsession-with-async-await). Each API call uses a shared method to send OAuth access tokens and manage retries. I use the same OAuth client side behaviour as in all of this blog's other frontend code samples, to refresh the access token and retry the request once if the API returns a 401 status code. The API client code is shown here:
 
 ```swift
 private func getDataFromApiWithTokenRefresh(url: URL, options: FetchOptions) async throws -> Data? {
@@ -343,20 +340,19 @@ The app has two main view areas that trigger concurrent API requests. The main A
     <img src='../images/570/concurrent-views.jpg?v=20240914' alt='concurrent views' />
 </div>
 
-A *ViewModelCoordinator* object detects when API requests to load views complete. If a view receives a permanent 401 response from the API a single *LoginRequired* event is published. The main activity subscribes to the event and prompts the user to reauthenticate.
+An *ApiRequestCoordinator* object detects when API requests to load views complete. If a view receives a permanent 401 response from the API a single *LoginRequired* event is published. The main activity subscribes to the event and prompts the user to reauthenticate.
 
 ```swift
-private func handleAllViewsLoaded() {
+private func handleAllRequestsComplete() {
 
     if self.loadedCount == self.loadingCount {
 
         self.loadedCount = 0
         self.loadingCount = 0
 
-
         let errors = self.getLoadErrors()
         let loginRequired = errors.first { error in
-                error.errorCode == ErrorCodes.loginRequired
+            error.errorCode == ErrorCodes.loginRequired
         }
         if loginRequired != nil {
             self.eventBus.sendLoginRequiredEvent()

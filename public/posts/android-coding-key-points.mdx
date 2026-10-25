@@ -86,9 +86,8 @@ init {
     this.eventBus = EventBus.getDefault()
 
     this.oauthClient = OAuthClientImpl(this.configuration.oauth, this.app.applicationContext)
-    this.fetchClient = FetchClient(this.configuration, this.fetchCache, this.oauthClient)
-    this.apiRequestCoordinator = ApiRequestCoordinator(this.eventBus, this.fetchCache)
-    this.viewModelStore = ViewModelStore(this.fetchClient, this.apiRequestCoordinator, this.eventBus)
+    this.apiClient = ApiClient(this.configuration, this.oauthClient, this.eventBus)
+    this.viewModelStore = ViewModelStore(this.apiClient, this.eventBus)
 
     this.isLoaded = false
     this.isTopMost = true
@@ -133,7 +132,7 @@ private fun createViews() {
                     )
                 }
 
-                SessionView(that.model.eventBus, that.model.fetchClient.sessionId)
+                SessionView(that.model.eventBus, that.model.apiClient.sessionId)
 
                 val navHostController = rememberNavController()
                 that.navigationHelper =
@@ -183,9 +182,8 @@ Data binding enables changes to state with readable code. Each non-trivial view 
 
 ```kotlin
 class CompaniesViewModel(
-    private val fetchClient: FetchClient,
-    val eventBus: EventBus,
-    private val apiRequestCoordinator: ApiRequestCoordinator
+    private val apiClient: ApiClient,
+    val eventBus: EventBus
 ) : ViewModel() {
 
     var companiesList: MutableState<List<Company>> = mutableStateOf(ArrayList())
@@ -208,7 +206,6 @@ fun callApi(options: ViewLoadOptions?) {
         options?.causeError ?: false,
     )
 
-    this.apiRequestCoordinator.onApiRequestStart(fetchOptions.cacheKey)
     this.updateError(null)
 
     val that = this@CompaniesViewModel
@@ -216,7 +213,7 @@ fun callApi(options: ViewLoadOptions?) {
 
         try {
 
-            val companies = fetchClient.getCompanyList(fetchOptions)
+            val companies = apiClient.getCompanyList(fetchOptions)
             withContext(Dispatchers.Main) {
 
                 if (companies != null) {
@@ -230,12 +227,6 @@ fun callApi(options: ViewLoadOptions?) {
                 that.updateData(ArrayList())
                 that.updateError(uiError)
             }
-
-        } finally {
-
-            withContext(Dispatchers.Main) {
-                that.apiRequestCoordinator.onApiRequestEnd()
-            }
         }
     }
 }
@@ -243,7 +234,7 @@ fun callApi(options: ViewLoadOptions?) {
 
 ### API Call Details
 
-The *FetchClient* object acts as a service agent and uses the [okhttp library](https://github.com/square/okhttp). Each API call uses a shared method to send OAuth access tokens and manage retries. I use the same OAuth client side behaviour as in all of this blog's other frontend code samples, to refresh the access token and retry the request once if the API returns a 401 status code. The API client code is shown here:
+The *ApiClient* object acts as a service agent and uses the [okhttp library](https://github.com/square/okhttp). Each API call uses a shared method to send OAuth access tokens and manage retries. I use the same OAuth client side behaviour as in all of this blog's other frontend code samples, to refresh the access token and retry the request once if the API returns a 401 status code. The API client code is shown here:
 
 ```kotlin
 private suspend fun <T> getDataFromApiWithTokenRefresh(
@@ -319,7 +310,7 @@ The app has two main view areas that trigger concurrent API requests. The main A
 An *ApiRequestCoordinator* object detects when API requests to load views complete. If a view receives a permanent 401 response from the API a single *LoginRequired* event is published. The main activity subscribes to the event and prompts the user to reauthenticate.
 
 ```kotlin
-private fun handleAllViewsLoaded() {
+private fun handleAllRequestsComplete() {
 
     if (this.loadedCount == this.loadingCount) {
 
