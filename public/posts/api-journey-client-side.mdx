@@ -140,6 +140,8 @@ class MyViewModel: ObservableObject {
 
 When creating a view, you pass the view model as an input property. The view does not know about the internal properties of the view model, like a fetch client that calls APIs.
 
+When I start the app, I create a root *AppViewModel* that uses a *ViewModelStore* to manage creation and storage of child view models. This simple mechanism prevents loss of model data during navigation.
+
 ### Views, Models and Data Loading
 
 For a React app, I use code similar to the following to load views and call APIs. The view asks its view model to fetch data from APIs, which takes place asynchronously to avoid blocking the UI thread. The view then binds to the model's data, or renders an error when API requests fail unexpectedly:

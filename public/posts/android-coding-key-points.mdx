@@ -88,6 +88,7 @@ init {
     this.oauthClient = OAuthClientImpl(this.configuration.oauth, this.app.applicationContext)
     this.fetchClient = FetchClient(this.configuration, this.fetchCache, this.oauthClient)
     this.apiRequestCoordinator = ApiRequestCoordinator(this.eventBus, this.fetchCache)
+    this.viewModelStore = ViewModelStore(this.fetchClient, this.apiRequestCoordinator, this.eventBus)
 
     this.isLoaded = false
     this.isTopMost = true
@@ -107,7 +108,7 @@ private fun createViews() {
         ApplicationTheme {
             Column {
 
-                TitleView(that.model.getUserInfoViewModel())
+                TitleView(that.model.viewModelStore.getUserInfoViewModel())
 
                 HeaderButtonsView(
                     that.model.eventBus,
@@ -150,7 +151,7 @@ private fun createViews() {
                     }
 
                     composable(MainView.Companies) {
-                        CompaniesView(that.model.getCompaniesViewModel(), navigationHelper)
+                        CompaniesView(that.model.viewModelStore.getCompaniesViewModel(), navigationHelper)
                     }
 
                     composable(
@@ -161,7 +162,7 @@ private fun createViews() {
                         val id = it.arguments?.getString("id") ?: ""
                         TransactionsView(
                             id,
-                            that.model.getTransactionsViewModel(),
+                            that.model.viewModelStore.getTransactionsViewModel(),
                             navigationHelper
                         )
                     }

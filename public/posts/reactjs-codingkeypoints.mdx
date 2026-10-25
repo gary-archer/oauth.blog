@@ -86,25 +86,7 @@ export interface CompaniesViewProps {
 }
 ```
 
-Views get recreated frequently, whereas I manage state returned from APIs within view model classes that get created only once. I manage view model state by storing child view model references within the root *AppViewModel*:
-
-```typescript
-public getCompaniesViewModel(): CompaniesViewModel {
-
-    if (!this.companiesViewModel) {
-
-        this.companiesViewModel = new CompaniesViewModel(
-            this.fetchClient!,
-            this.eventBus,
-            this.apiRequestCoordinator!,
-        );
-    }
-
-    return this.companiesViewModel;
-}
-```
-
-This technique is a basic but portable way to manage application state in frontend applications. Later in this blog I use the same pattern for Swift and Kotlin mobile apps.
+Views get recreated frequently, whereas I manage state returned from APIs within view model classes that get created only once. I manage view model state by storing child view model references within a *ViewModelStore* owned by the root *AppViewModel*.
 
 ### Separation of View Logic from General Logic
 

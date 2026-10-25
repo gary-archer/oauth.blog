@@ -82,7 +82,7 @@ var body: some View {
 
     return VStack {
 
-        TitleView(userInfoViewModel: self.model.getUserInfoViewModel())
+        TitleView(userInfoViewModel: self.model.viewModelStore.getUserInfoViewModel())
 
         HeaderButtonsView(
             onHome: self.onHome,
@@ -103,8 +103,8 @@ var body: some View {
 
         MainView(
             viewRouter: self.viewRouter,
-            companiesViewModel: self.model.getCompaniesViewModel(),
-            transactionsViewModel: self.model.getTransactionsViewModel(),
+            companiesViewModel: self.model..viewModelStore.getCompaniesViewModel(),
+            transactionsViewModel: self.model.viewModelStore.getTransactionsViewModel(),
             isDeviceSecured: self.model.isDeviceSecured)
 
         Spacer()
@@ -127,6 +127,7 @@ init(eventBus: EventBus) {
     self.oauthClient = OAuthClientImpl(configuration: self.configuration.oauth)
     self.fetchClient = try! FetchClient(configuration: self.configuration, fetchCache: self.fetchCache, oauthClient: self.oauthClient)
     self.apiRequestCoordinator = ApiRequestCoordinator(eventBus: eventBus, fetchCache: self.fetchCache)
+    self.viewModelStore = ViewModelStore(fetchClient: self.fetchClient, apiRequestCoordinator: self.apiRequestCoordinator, eventBus: self.eventBus)
 
     self.isLoaded = false
     self.isDeviceSecured = DeviceSecurity.isDeviceSecured()
