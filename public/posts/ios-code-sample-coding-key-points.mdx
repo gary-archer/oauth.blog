@@ -350,8 +350,7 @@ private func handleAllRequestsComplete() {
         self.loadedCount = 0
         self.loadingCount = 0
 
-        let errors = self.getLoadErrors()
-        let loginRequired = errors.first { error in
+        let loginRequired = this.errors.first { error in
             error.errorCode == ErrorCodes.loginRequired
         }
         if loginRequired != nil {
