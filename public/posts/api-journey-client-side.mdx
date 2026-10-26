@@ -138,7 +138,7 @@ class MyViewModel: ObservableObject {
 }
 ```
 
-When creating a view, you pass the view model as an input property. The view does not know about the internal properties of the view model, like a fetch client that calls APIs.
+When creating a view, you pass the view model as an input property. The view does not know about the internal properties of the view model, like the lower level client that calls APIs.
 
 When I start the app, I create a root *AppViewModel* that uses a *ViewModelStore* to manage creation and storage of child view models. This simple mechanism prevents loss of model data during navigation.
 
@@ -181,12 +181,12 @@ export function CompaniesView(props: CompaniesViewProps): JSX.Element {
 }
 ```
 
-The view model calls a lower-level fetch client to do the work of calling the API, then updates data bound to the view, then notifies the view to trigger a rendering update:
+The view model calls a lower-level client to do the work of calling the API, then updates data bound to the view, then notifies the view to trigger a rendering update:
 
 ```typescript
 public async callApi(options?: ViewLoadOptions): Promise<void> {
 
-    const fetchOptions = {
+    const getOptions = {
         cacheKey: FetchCacheKeys.Companies,
         forceReload: options?.forceReload || false,
         causeError: options?.causeError || false,
@@ -196,7 +196,7 @@ public async callApi(options?: ViewLoadOptions): Promise<void> {
 
     try {
 
-        const result = await this.apiClient.getCompanyList(fetchOptions);
+        const result = await this.apiClient.getCompanyList(getOptions);
         if (result) {
             this.snapshot = {companies: result, error: null};
         }
@@ -217,7 +217,7 @@ public async callApi(options?: ViewLoadOptions): Promise<void> {
 The lower level API client deals with translating HTTP requests and responses to objects. It also uses an algorithm of the following form to manage access tokens, token refresh and session expiry:
 
 ```typescript
-private async getDataFromApiWithTokenRefresh(url: string, options: FetchOptions): Promise<any> {
+private async callApiWithTokenRefresh(method: string, url: string, dataToSend: any, causeError: boolean): Promise<any> {
 
     if (!this.oauthClient.isLoggedIn()) {
         throw ErrorFactory.fromLoginRequired();
@@ -225,7 +225,7 @@ private async getDataFromApiWithTokenRefresh(url: string, options: FetchOptions)
 
     try {
 
-        return await this.callApiWithCredential('GET', url, options);
+        return await this.callApiWithCredential(method, url, dataToSend, causeError);
 
     } catch (e1: any) {
 
@@ -238,7 +238,7 @@ private async getDataFromApiWithTokenRefresh(url: string, options: FetchOptions)
 
         try {
 
-            return await this.callApiWithCredential('GET', url, options);
+            return await this.callApiWithCredential(method, url, dataToSend, causeError);
 
         }  catch (e2: any) {
 
@@ -268,7 +268,7 @@ export class FetchCache {
 
 ### Detecting Login Required
 
-When frontends first make API requests, they do not have an API message credential so cannot call APIs. The fetch client throws a *login_required* error which the fetch cache stores. Multiple views could throw this error at the same time so an *ApiRequestCoordinator* object waits for all views to try to load, then inspects the fetch cache. When required, it publishes an event that the main view subscribes to. The main view's handler then presents a login required view to the user.
+When frontends first make API requests, they do not have an API message credential so cannot call APIs. The API client throws a *login_required* error which the fetch cache stores. Multiple views could throw this error at the same time so an *ApiRequestCoordinator* object waits for all views to try to load, then inspects the fetch cache. When required, it publishes an event that the main view subscribes to. The main view's handler then presents a login required view to the user.
 
 ```javascript
 private handleAllRequestsComplete(): void {
@@ -278,8 +278,7 @@ private handleAllRequestsComplete(): void {
         this.loadingCount = 0;
         this.loadedCount = 0;
 
-        const errors = this.getLoadErrors();
-        const loginRequired = errors.find((e) => e.getErrorCode() === ErrorCodes.loginRequired);
+        const loginRequired = this.errors.find((e) => e.getErrorCode() === ErrorCodes.loginRequired);
         if (loginRequired) {
             this.resetState();
             this.eventBus.emit(EventNames.LoginRequired, new LoginRequiredEvent());

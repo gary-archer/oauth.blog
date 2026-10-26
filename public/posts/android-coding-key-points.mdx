@@ -200,7 +200,7 @@ The most interesting view models are those that get data from APIs. As is standa
 ```kotlin
 fun callApi(options: ViewLoadOptions?) {
 
-    val fetchOptions = FetchOptions(
+    val getOptions = GetOptions(
         FetchCacheKeys.COMPANIES,
         options?.forceReload ?: false,
         options?.causeError ?: false,
@@ -213,7 +213,7 @@ fun callApi(options: ViewLoadOptions?) {
 
         try {
 
-            val companies = apiClient.getCompanyList(fetchOptions)
+            val companies = apiClient.getCompanyList(getOptions)
             withContext(Dispatchers.Main) {
 
                 if (companies != null) {
@@ -237,10 +237,12 @@ fun callApi(options: ViewLoadOptions?) {
 The *ApiClient* object acts as a service agent and uses the [okhttp library](https://github.com/square/okhttp). Each API call uses a shared method to send OAuth access tokens and manage retries. I use the same OAuth client side behaviour as in all of this blog's other frontend code samples, to refresh the access token and retry the request once if the API returns a 401 status code. The API client code is shown here:
 
 ```kotlin
-private suspend fun <T> getDataFromApiWithTokenRefresh(
+private suspend fun <T> callApiWithTokenRefresh(
+    method: String,
     url: String,
+    dataToSend: Any?,
+    causeError: Bool,
     responseType: Class<T>,
-    options: FetchOptions
 ): T? {
 
     var accessToken = this.oauthClient.getAccessToken()
@@ -250,7 +252,7 @@ private suspend fun <T> getDataFromApiWithTokenRefresh(
 
     try {
 
-        return this.callApiWithToken("GET", url, null, accessToken, responseType, options)
+        return this.callApiWithToken(method, url, dataToSend, accessToken, causeError, responseType)
 
     } catch (e1: Throwable) {
 
@@ -263,7 +265,7 @@ private suspend fun <T> getDataFromApiWithTokenRefresh(
 
         try {
 
-            return this.callApiWithToken("GET", url, null, accessToken, responseType, options)
+            return this.callApiWithToken(method, url, dataToSend, accessToken, causeError, responseType)
 
         } catch (e2: Throwable) {
 
@@ -317,8 +319,7 @@ private fun handleAllRequestsComplete() {
         this.loadedCount = 0
         this.loadingCount = 0
 
-        val errors = this.getLoadErrors()
-        val loginRequired = errors.find { e -> e.errorCode == ErrorCodes.loginRequired }
+        val loginRequired = this.errors.find { e -> e.errorCode == ErrorCodes.loginRequired }
         if (loginRequired != null) {
             this.eventBus.post(LoginRequiredEvent())
             return

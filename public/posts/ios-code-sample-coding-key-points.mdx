@@ -226,7 +226,7 @@ The most interesting view models are those that get data from APIs. As is standa
 ```swift
 func callApi(options: ViewLoadOptions? = nil) {
 
-    let fetchOptions = FetchOptions(
+    let getOptions = GetOptions(
         cacheKey: FetchCacheKeys.Companies,
         forceReload: options?.forceReload ?? false,
         causeError: options?.causeError ?? false)
@@ -237,7 +237,7 @@ func callApi(options: ViewLoadOptions? = nil) {
 
         do {
 
-            let companies = try await self.apiClient.getCompanies(options: fetchOptions)
+            let companies = try await self.apiClient.getCompanies(options: getOptions)
             await MainActor.run {
 
                 if companies != nil {
@@ -262,7 +262,7 @@ func callApi(options: ViewLoadOptions? = nil) {
 The *ApiClient* object acts as a service agent and uses iOS [Async URL Sessions](https://tanaschita.com/20221017-using-urlsession-with-async-await). Each API call uses a shared method to send OAuth access tokens and manage retries. I use the same OAuth client side behaviour as in all of this blog's other frontend code samples, to refresh the access token and retry the request once if the API returns a 401 status code. The API client code is shown here:
 
 ```swift
-private func getDataFromApiWithTokenRefresh(url: URL, options: FetchOptions) async throws -> Data? {
+private func callApiWithTokenRefresh(method: String, url: URL, dataToSend: Data?, causeError: Bool) async throws -> Data? {
 
     var accessToken = self.oauthClient.getAccessToken()
     if accessToken == nil {
@@ -271,11 +271,11 @@ private func getDataFromApiWithTokenRefresh(url: URL, options: FetchOptions) asy
 
     do {
         return try await self.callApiWithToken(
-            method: "GET",
+            method: method,
             url: url,
-            jsonData: nil,
+            dataToSend: dataToSend,
             accessToken: accessToken!,
-            options: options)
+            causeError: causeError)
 
     } catch {
 
@@ -289,11 +289,11 @@ private func getDataFromApiWithTokenRefresh(url: URL, options: FetchOptions) asy
         do {
 
             return try await self.callApiWithToken(
-                method: "GET",
+                method: method,
                 url: url,
-                jsonData: nil,
+                dataToSend: dataToSend,
                 accessToken: accessToken!,
-                options: options)
+                causeError: causeError)
 
         } catch {
 
