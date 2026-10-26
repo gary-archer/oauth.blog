@@ -317,8 +317,7 @@ private fun handleAllRequestsComplete() {
         this.loadedCount = 0
         this.loadingCount = 0
 
-        val errors = this.getLoadErrors()
-        val loginRequired = errors.find { e -> e.errorCode == ErrorCodes.loginRequired }
+        val loginRequired = this.errors.find { e -> e.errorCode == ErrorCodes.loginRequired }
         if (loginRequired != null) {
             this.eventBus.post(LoginRequiredEvent())
             return

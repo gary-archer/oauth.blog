@@ -278,8 +278,7 @@ private handleAllRequestsComplete(): void {
         this.loadingCount = 0;
         this.loadedCount = 0;
 
-        const errors = this.getLoadErrors();
-        const loginRequired = errors.find((e) => e.getErrorCode() === ErrorCodes.loginRequired);
+        const loginRequired = this.errors.find((e) => e.getErrorCode() === ErrorCodes.loginRequired);
         if (loginRequired) {
             this.resetState();
             this.eventBus.emit(EventNames.LoginRequired, new LoginRequiredEvent());
