@@ -209,10 +209,7 @@ fun callApi(options: GetOptions) {
 
             val companies = apiClient.getCompanyList(options)
             withContext(Dispatchers.Main) {
-
-                if (companies != null) {
-                    that.updateData(companies.toList())
-                }
+                that.updateData(companies.toList())
             }
 
         } catch (uiError: UIError) {

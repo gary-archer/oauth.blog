@@ -234,10 +234,7 @@ func callApi(options: GetOptions) {
 
             let companies = try await self.apiClient.getCompanies(options: options)
             await MainActor.run {
-
-                if companies != nil {
-                    self.companies = companies!
-                }
+                self.companies = companies!
             }
 
         } catch {
