@@ -198,13 +198,7 @@ class CompaniesViewModel(
 The most interesting view models are those that get data from APIs. As is standard in frontends, the API request runs from an I/O worker thread and the response rendering updates run on the main thread. Use of [Kotlin Coroutines](https://developer.android.com/kotlin/coroutines) results in readable async await code where suspending functions do the work.
 
 ```kotlin
-fun callApi(options: ViewLoadOptions?) {
-
-    val getOptions = GetOptions(
-        FetchCacheKeys.COMPANIES,
-        options?.forceReload ?: false,
-        options?.causeError ?: false,
-    )
+fun callApi(options: GetOptions) {
 
     this.updateError(null)
 
@@ -213,7 +207,7 @@ fun callApi(options: ViewLoadOptions?) {
 
         try {
 
-            val companies = apiClient.getCompanyList(getOptions)
+            val companies = apiClient.getCompanyList(options)
             withContext(Dispatchers.Main) {
 
                 if (companies != null) {

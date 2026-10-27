@@ -224,12 +224,7 @@ class CompaniesViewModel: ObservableObject {
 The most interesting view models are those that get data from APIs. As is standard in frontends, the API request runs from an I/O worker thread and the response rendering updates run on the main thread. Use of up to date Swift syntax results in readable async await code where promise based functions to do the work.
 
 ```swift
-func callApi(options: ViewLoadOptions? = nil) {
-
-    let getOptions = GetOptions(
-        cacheKey: FetchCacheKeys.Companies,
-        forceReload: options?.forceReload ?? false,
-        causeError: options?.causeError ?? false)
+func callApi(options: GetOptions) {
 
     self.error = nil
 
@@ -237,7 +232,7 @@ func callApi(options: ViewLoadOptions? = nil) {
 
         do {
 
-            let companies = try await self.apiClient.getCompanies(options: getOptions)
+            let companies = try await self.apiClient.getCompanies(options: options)
             await MainActor.run {
 
                 if companies != nil {

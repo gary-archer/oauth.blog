@@ -161,15 +161,20 @@ export function CompaniesView(props: CompaniesViewProps): JSX.Element {
     }, []);
 
     async function startup(): Promise<void> {
+
         model.eventBus.on(EventNames.ReloadData, onReload);
-        await loadData();
+        const options = {
+            forceReload: false,
+            causeError: false,
+        };
+        await loadData(options);
     }
 
     function cleanup(): void {
         model.eventBus.detach(EventNames.ReloadData, onReload);
     }
 
-    async function loadData(options?: ViewLoadOptions): Promise<void> {
+    async function loadData(options: GetOptions): Promise<void> {
         await model.callApi(options);
     }
 
@@ -184,19 +189,13 @@ export function CompaniesView(props: CompaniesViewProps): JSX.Element {
 The view model calls a lower-level client to do the work of calling the API, then updates data bound to the view, then notifies the view to trigger a rendering update:
 
 ```typescript
-public async callApi(options?: ViewLoadOptions): Promise<void> {
-
-    const getOptions = {
-        cacheKey: FetchCacheKeys.Companies,
-        forceReload: options?.forceReload || false,
-        causeError: options?.causeError || false,
-    };
+public async callApi(options: GetOptions): Promise<void> {
 
     this.snapshot = {companies: this.snapshot.companies, error: null};
 
     try {
 
-        const result = await this.apiClient.getCompanyList(getOptions);
+        const result = await this.apiClient.getCompanyList(options);
         if (result) {
             this.snapshot = {companies: result, error: null};
         }
@@ -268,7 +267,7 @@ export class FetchCache {
 
 ### Detecting Login Required
 
-When frontends first make API requests, they do not have an API message credential so cannot call APIs. The API client throws a *login_required* error which the fetch cache stores. Multiple views could throw this error at the same time so an *ApiRequestCoordinator* object waits for all views to try to load, then inspects the fetch cache. When required, it publishes an event that the main view subscribes to. The main view's handler then presents a login required view to the user.
+When frontends first make API requests, they do not have an API message credential so cannot call APIs. The API client throws a *login_required* error, which could occur for multiple views at the same time. Therefore, an *ApiRequestCoordinator* object waits for all views to try to load, then inspects any error responses. When required, it publishes an event that the main view subscribes to. The main view's handler then presents a login required view to the user.
 
 ```javascript
 private handleAllRequestsComplete(): void {

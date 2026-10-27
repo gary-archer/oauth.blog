@@ -116,15 +116,20 @@ For views that call APIs, data loading typically begins when the [useEffect hook
 
 ```typescript
 async function startup(): Promise<void> {
+
     model.eventBus.on(EventNames.ReloadData, onReload);
-    await loadData();
+    const options = {
+        forceReload: false,
+        causeError: false,
+    };
+    await loadData(options);
 }
 ```
 
 The code to call APIs originates in the view, which forwards the request to its view model. After each API request, the view rebinds any data or error values to the React state, to trigger a rendering update in the view:
 
 ```typescript
-async function loadData(options?: ViewLoadOptions): Promise<void> {
+async function loadData(options: GetOptions): Promise<void> {
     await model.callApi(options);
 }
 ```
@@ -132,19 +137,13 @@ async function loadData(options?: ViewLoadOptions): Promise<void> {
 The view model logic is business-focused and uses an *ApiClient* to deal with lower level aspects.
 
 ```typescript
-public async callApi(options?: ViewLoadOptions): Promise<void> {
-
-    const getOptions = {
-        cacheKey: FetchCacheKeys.Companies,
-        forceReload: options?.forceReload || false,
-        causeError: options?.causeError || false,
-    };
+public async callApi(options: GetOptions): Promise<void> {
 
     this.snapshot = {companies: this.snapshot.companies, error: null};
 
     try {
 
-        const result = await this.apiClient.getCompanyList(getOptions);
+        const result = await this.apiClient.getCompanyList(options);
         if (result) {
             this.snapshot = {companies: result, error: null};
         }
