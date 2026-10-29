@@ -31,7 +31,7 @@ I deploy the API code sample to AWS as <a href='serverless-api-overview.mdx'>Ser
 The final SPA runs at a */spa* path. Additional paths, for other micro-frontends, could run within the same web domain, to keep the code base manageable as it grows. From a security viewpoint, any additional apps added to the web domain should be for the same business area. All apps then share each other's API cookies and also each other's cross site scripting threats.
 
 <div className='smallimage'>
-    <img src='../images/220/code-layout.jpg?v=20260620' alt='code layout' />
+    <img src='../images/220/code-layout.jpg?v=20260629' alt='code layout' />
 </div>
 
 The SPA uses cookies issued by utility APIs but its code and web host manage only web concerns, with all cookie aspects externalized from SPA development. The resources in the *deployment* folder represent web static content hosting variations. The next post explains how to run the SPA and its development web host locally.
