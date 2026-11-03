@@ -36,11 +36,11 @@ Node.js uses the *npm* tool to specify libraries in your application's *package.
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/mustache": "^4.2.5",
-    "eslint": "^10.5.0",,
+    "eslint": "^10.14.0",,
     "tailwindcss": "^4.3.0"
-    "tsx": "^4.22.4",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.61.0"
+    "typescript-eslint": "^8.72.1"
   },
   "workspaces": [
     "build",
@@ -132,7 +132,7 @@ The SPA's *tsconfig.json* uses *lib: DOM*, to bring in browser type definitions,
 {
   "compilerOptions": {
     "strict": true,
-    "target": "ES2017",
+    "target": "ES2020",
     "lib": ["ES2025", "DOM"],
     "module":"ES2020",
     "moduleResolution": "Bundler",
@@ -303,11 +303,11 @@ This blog uses the [rollup](https://rollupjs.org/) bundler, since it produces th
     "@rollup/plugin-replace": "^6.0.3",
     "@rollup/plugin-terser": "^1.0.0",
     "@tailwindcss/postcss": "^4.3.0",
-    "@types/node": "^24.10.3",
-    "cssnano": "^8.0.1",
+    "@types/node": "^26.6.6",
+    "cssnano": "^9.9.0",
     "open": "^11.0.0",
-    "postcss": "^8.5.15",
-    "rollup": "^4.60.4",
+    "postcss": "^8.5.32",
+    "rollup": "^4.67.4",
     "rollup-plugin-esbuild": "^6.2.1",
     "rollup-plugin-postcss": "^4.0.2"
   }
@@ -382,7 +382,7 @@ Web bundlers are a little daunting when you are new to modern web technology. Th
 
 ### Building Code: Running the Bundler
 
-To run the bundler for development I use the following commands. ESBuild then compiles code using the settings from the SPA's *tsconfig.json* file. The *target=ES2017* setting supports mainstream desktop and mobile browsers, and *module=ES2020* setting enables the use of bundle splitting as a mechanism to improve the download efficiency of web assets.
+To run the bundler for development I use the following commands. ESBuild then compiles code using the settings from the SPA's *tsconfig.json* file. The *target=ES2020* setting supports mainstream desktop and mobile browsers, and *module=ES2020* setting enables the use of bundle splitting as a mechanism to improve the download efficiency of web assets.
 
 ```bash
 rm -rf dist && NODE_OPTIONS='--import tsx' rollup --config build/rollup.config.ts --watch
