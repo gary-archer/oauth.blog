@@ -188,6 +188,8 @@ Development SSL connections can also be used from any of the following operating
 - Android
 - iOS
 
+SSL trust configuration is a one-off administrator operation, and you then run apps without admin permissions for all future development.
+
 ### HTTP Proxy Root Certificates
 
 HTTP proxy tools use a man-in-the-middle technique to replace the root of the target URL's SSL certificate. This enables you to view traffic as HTTP, after which the proxy re-encrypts traffic with its own certificate, then routes the request to its target. The following screenshot shows MITM proxy replacing the root of the development certificates issued earlier.
