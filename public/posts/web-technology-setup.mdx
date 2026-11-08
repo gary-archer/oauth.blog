@@ -138,7 +138,8 @@ The SPA's *tsconfig.json* uses *lib: DOM*, to bring in browser type definitions,
     "moduleResolution": "Bundler",
     "outDir": "dist",
     "sourceMap": true,
-    "rootDir": "src"
+    "rootDir": "src",
+    "noEmit": true
   },
   "include": [
     "src"
@@ -273,7 +274,7 @@ export default defineConfig([
 This provides warnings, mostly about little things, that helps to keep code maintainable and consistent.
 
 ```markdown
-/home/gary/dev/oauth.websample1/spa/src/plumbing/oauth/oauthClient.ts
+/home/gary/dev/oauth.websample1/spa/src/oauth/oauthClient.ts
    42:1  error  More than 1 blank line not allowed              no-multiple-empty-lines
 
 /home/gary/dev/oauth.websample1/spa/src/views/titleView.ts
@@ -289,7 +290,7 @@ For the SPA, a build phase is essential, for the following reasons:
 | Browser Support | Produce JavaScript code that browsers can execute. |
 | Web Performance | Reduce code to small bundles, so that the SPA performs well. |
 
-In an SPA you use a web bundler to produce JavaScript bundles that the *index.html* file references. Those bundles must be built before the *index.html* file downloads and the SPA runs.
+For SPAs, the web bundler produces JavaScript bundles that the *index.html* file references. Bundles must be built before the SPA runs in the browser. Since the bundler builds code rather than the TypeScript compiler, I use *noEmit=true* in the SPA's *tsconfig.json* file. 
 
 ### Building Code: Bundler Configuration
 
@@ -341,7 +342,7 @@ const options: RollupOptions = {
 export default defineConfig(options);
 ```
 
-This blog's SPA build also runs a series of plugins, to perform a number of tasks. These tasks process the *node_modules* folder, include only used code from dependencies, then build that code to ECMAScript output for the browser. The tasks also set an *IS_DEBUG* variable for development builds and use the [ESBuild](https://esbuild.github.io/) tool to compile the SPA's TypeScript code.
+This blog's SPA build also runs a series of plugins, to perform a number of tasks. These tasks process the *node_modules* folder, include only used code from dependencies, then build that code to ECMAScript output for the browser. The tasks also set an *IS_DEBUG* variable for development builds and use the [esbuild](https://esbuild.github.io/) tool to compile the SPA's TypeScript code.
 
 ```typescript
 {
@@ -382,7 +383,7 @@ Web bundlers are a little daunting when you are new to modern web technology. Th
 
 ### Building Code: Running the Bundler
 
-To run the bundler for development I use the following commands. ESBuild then compiles code using the settings from the SPA's *tsconfig.json* file. The *target=ES2020* setting supports mainstream desktop and mobile browsers, and *module=ES2020* setting enables the use of bundle splitting as a mechanism to improve the download efficiency of web assets.
+To run the bundler for development I use the following commands. The esbuild tool compiles code using the settings from the SPA's *tsconfig.json* file. The *target=ES2020* setting supports mainstream desktop and mobile browsers, and *module=ES2020* setting enables the use of bundle splitting as a mechanism to improve the download efficiency of web assets.
 
 ```bash
 rm -rf dist && NODE_OPTIONS='--import tsx' rollup --config build/rollup.config.ts --watch
@@ -477,7 +478,7 @@ The built *app.css* file uses CSS rules that the browser interprets. Frameworks 
 
 ### Building Code: API Compilation
 
-For TypeScript APIs, I avoid producing JavaScript files during development, since it complicates searches on the code base. Instead, the [tsx](https://github.com/privatenumber/tsx) tool can build TypeScript files to JavaScript in memory and then execute the JavaScript.
+For TypeScript APIs, I avoid producing JavaScript files during development, since it complicates searches on the code base. Instead, the [tsx](https://github.com/privatenumber/tsx) tool can build TypeScript files to JavaScript in memory and then execute the JavaScript. Under the hood, the *tsx* tool also uses the *esbuild* compiler.
 
 ```bash
 tsx watch src/host/startup/app.ts
