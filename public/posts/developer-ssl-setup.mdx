@@ -19,35 +19,30 @@ When using OAuth, I like to use internet-like URLs for local development. I run 
 | Web Static Content Host | https://www.authsamples-dev.com |
 | API | https://www.authsamples-dev.com:446 |
 
-My rationale for low privilege ports is to run with production-grade security during development, which OAuth helps to enable. Once internet URLs are secured on a development computer, the same URLs are secured identically in deployed systems.
+My rationale for low privilege ports is to run with production-grade security during development. Once you secure mock internet URLs on a development computer, real internet URLs use identical security.
 
-In some local setups, my SPAs call API components via a local API gateway. I use port 444 for the API gateway, to be as close as possible to the deployed port of 443. On Windows, the Server Message Block (SMB) service uses port 445, so I avoid that for the API port.
+In some local setups, my SPAs call API components via a local API gateway. I use port 444 for a local API gateway, to be as close as possible to the deployed port of 443. On Windows, the Server Message Block (SMB) service uses port 445, so I avoid that for API ports.
 
-### Local SSL Addressability
+### Local SSL Admin Operations
 
-To enable the use of custom domain names, I perform a one-off admin operation, to edit the *hosts* file, and configure DNS names for development:
+To enable the use of local SSL with custom domain names, edit the *hosts* file, and configure DNS names for development:
 
 ```markdown
 127.0.0.1 www.authsamples-dev.com api.authsamples-dev.com
 ```
 
-To enable the use of low-privilege ports, I perform another one-off admin operation, to grant the SPA or API technology stack permissions to use high-privilege ports:
+To enable the use of low-privilege ports, grant the SPA or API technology stack permissions to use high-privilege ports:
 
 ```bash
 sudo setcap 'cap_net_bind_service=+ep' $(which node)
 ```
-
-For all future development, I can then run on ports 443 and 446 for all future development, without the need for admin permissions.
-
-
-### Development Certificate Issuance
 
 To enable HTTPS URLs, I use the *OpenSSL* tool to create SSL certificates and keys for the *authsamples-dev.com* domain and its subdomains. To do so, I use the following steps:
 
 - Create a root certificate authority for development.
 - Create SSL server certificates issued by the root CA, with real-world domain names.
 
-Using a root CA simplifies trust administration, since you only need to deploy the root certificate. You also learn about public key infrastructures (PKI). Later, when you deploy your apps to production, certificate trust works in the same way.
+You then need to <a href="developer-ssl-setup.mdx#configure-operating-system-trust">Trust the Root CA</a>. After these one-off admin operations, you can run on ports 443 and 446 for all future development, with normal user rights.
 
 ### Creating SSL Certificates and Keys
 
@@ -187,8 +182,6 @@ Development SSL connections can also be used from any of the following operating
 - Linux
 - Android
 - iOS
-
-SSL trust configuration is a one-off administrator operation, and you then run apps without admin permissions for all future development.
 
 ### HTTP Proxy Root Certificates
 
