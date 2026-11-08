@@ -2,30 +2,56 @@
 
 Previously I explained how to use an <a href='http-debugging-setup.mdx'>HTTP Proxy</a> to trace OAuth-related requests. Next, I explain how to enable HTTPS connections for development. I use *SSL* as the everyday term, to represent [transport level security (TLS) v1.3](https://en.wikipedia.org/wiki/Transport_Layer_Security#TLS_1.3).
 
-### Productive OAuth Development
-
-When using OAuth, security components may require you to run an SSL setup on your local computer. Even when this is not the case, I prefer to do so since it is a more real-world setup and closer to production environments.
-
-### SSL for Cloud Environments
+### SSL for Internet URLs
 
 Later in this blog I create a <a href="cloud-domain-setup.mdx">Cloud Domain Setup</a> for a deployed domain of *authsamples.com*, which runs in AWS. I then use [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) to create AWS wildcard certificates for these subdomains, that are trusted by clients that call the SSL endpoints.
 
 ![managed certificates](../images/110/managed-certificates.jpg?v=20241231)
 
-In real deployed environments, internet SSL certificates for APIs are typically managed by an API gateway, and internet SSL certificates for SPAs are typically managed by a content delivery network.
+In real deployments, an API gateway provides internet SSL certificates, to enable HTTPS addressability on port 443. APIs run behind the API gateway on a low privilege port, above 1024. Meanwhile, a content delivery network provides SSL certificates for SPAs.
+
+### Real World OAuth Development URLs
+
+When using OAuth, I like to use internet-like URLs for local development. I run the SPA in the browser using port 443. I would prefer to also use port 443 for the API, but that is not easily supported, so I use port 446 instead.
+
+| Component | URL |
+| --------- | --- |
+| Web Static Content Host | https://www.authsamples-dev.com |
+| API | https://www.authsamples-dev.com:446 |
+
+My rationale for low privilege ports is to run with production-grade security during development, which OAuth helps to enable. Once internet URLs are secured on a development computer, the same URLs are secured identically in deployed systems.
+
+In some local setups, my SPAs call API components via a local API gateway. I use port 444 for the API gateway, to be as close as possible to the deployed port of 443. On Windows, the Server Message Block (SMB) service uses port 445, so I avoid that for the API port.
+
+### Local SSL Addressability
+
+To enable the use of custom domain names, I perform a one-off admin operation, to edit the *hosts* file, and configure DNS names for development:
+
+```markdown
+127.0.0.1 www.authsamples-dev.com api.authsamples-dev.com
+```
+
+To enable the use of low-privilege ports, I perform another one-off admin operation, to grant the SPA or API technology stack permissions to use high-privilege ports:
+
+```bash
+sudo setcap 'cap_net_bind_service=+ep' $(which node)
+```
+
+For all future development, I can then run on ports 443 and 446 for all future development, without the need for admin permissions.
+
 
 ### Development Certificate Issuance
 
-On a development computer, I create a SSL certificates and keys for the *authsamples-dev.com* domain and its subdomains. To do so, I use the following steps:
+To enable HTTPS URLs, I use the *OpenSSL* tool to create SSL certificates and keys for the *authsamples-dev.com* domain and its subdomains. To do so, I use the following steps:
 
 - Create a root certificate authority for development.
 - Create SSL server certificates issued by the root CA, with real-world domain names.
 
-Doing so simplifies trust administration, since you only need to deploy root CAs. You also learn about public key infrastructures (PKI). Later, when you deploy your apps to production, certificate trust works in the same way.
+Using a root CA simplifies trust administration, since you only need to deploy the root certificate. You also learn about public key infrastructures (PKI). Later, when you deploy your apps to production, certificate trust works in the same way.
 
 ### Creating SSL Certificates and Keys
 
-I use the OpenSSL command line tool to create certificates for development. I first create an asymmetric private key and long-lived public certificate for a root authority:
+I first create an asymmetric private key and long-lived public certificate for a root authority:
 
 ```bash
 DOMAIN='example'
@@ -41,7 +67,7 @@ openssl req \
     -days 3650
 ```
 
-You can create domains for development by just editing your */etc/hosts* file. To ensure that these are trusted domains when you use them in SSL connections, create an *extensions.cnf* file that references them as subject alternative names:
+To ensure that subdomain are trusted when you use them in SSL connections, create an *extensions.cnf* file that references them as subject alternative names:
 
 ```markdown
 [ server_ext ]
@@ -102,9 +128,9 @@ You can use an [Online Certificate Decoder](https://certlogik.com/decoder/) and 
 
 ![certificate properties](../images/110/wildcard-development-cert.jpg?v=20240728)
 
-### This Blog's SSL Code Samples
+### Loading SSL Certificates
 
-This blog's code samples include bash scripts that you can run to create OpenSSL certificates for local development. When SPAs or APIs start, they load the password-protected P12 file, then listen on a port. I use port 443 for SPAs and port 446 for APIs.
+This blog's code samples include bash scripts that you can run to create OpenSSL certificates for local development. When SPAs or APIs start, they load the password-protected P12 file, then listen on HTTPS.
 
 ```typescript
 public async startListening(): Promise<void> {
@@ -132,7 +158,7 @@ public async startListening(): Promise<void> {
 }
 ```
 
-Is is therefore straightforward to run SPAs and APIs using SSL. Tools may enable you to verify the details of the client to server connection. For example, the Google Chrome browser enables you to view SSL strength from *More Tools / Developer Tools / Security*, where you can verify that the connection uses TLS 1.3.
+Browser tools may enable you to verify the details of the client to server connection. For example, the Google Chrome browser enables you to view SSL strength from *More Tools / Developer Tools / Security*, where you can verify that the connection uses TLS 1.3.
 
 ![local ssl](../images/110/local-ssl.jpg?v=20240728)
 
@@ -172,7 +198,7 @@ Some corporate networks use their own SSL proxy / firewall filter that works in 
 
 ### Trust Bundles
 
-To configure root certificate trust, I start by creating a local trust bundle file at *~/trusted-ca-certs.crt*. This contains root CAs that I need to frequently trust. When running this blog's code samples, the root authority to trust when tracing HTTPS requests depends whether an HTTP proxy is being used.
+To manage trusted local SSL certificate authorities, I create a local bundle file at *~/trusted-ca-certs.crt*. When running this blog's code samples, the root authority to trust when tracing HTTPS requests depends whether an HTTP proxy is being used.
 
 | Scenario | Required Trust Configuration |
 | -------- | ---------------------------- |
@@ -314,7 +340,7 @@ Mobile SSL trust has its own complexities, which are covered in the following po
 
 ### Where Are We?
 
-I explained how to upgrade development setups to use real-world HTTPS URLs for backend components. When doing so you should also learn how to configure trust so that you can view OAuth-related requests.
+I explained how to upgrade development setups to use real-world internet HTTPS URLs for backend components. URL security then works identically for development and production, which helps to get security right early and prevent surprises later.
 
 ### Next
 
