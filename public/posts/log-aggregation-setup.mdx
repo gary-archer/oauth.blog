@@ -28,32 +28,26 @@ Note that this blog's API logging solution is not locked in to Elastic Stack. If
 
 ### Step 1: Download Elastic Resources
 
-You can download helper resources with the following command:
+Clone the GitHub repository and browse the README, to make sure your local computer has the required tools.
 
 ```bash
 git clone https://github.com/gary-archer/oauth.logaggregation.elasticsearch
 ```
 
-### Step 2: Configure DNS and SSL
+### Step 2: Implement Administrator Setup
 
-First add the following logging domain name to your computer's hosts file:
+This blog's deployments use <a href="developer-ssl-setup.mdx#real-world-oauth-development-urls">Real World OAuth Development URLs</a> on a local computer, which requires some administrator setup. To enable DNS lookup of subdomains, add the following DNS entry to your hosts file:
 
 ```markdown
 127.0.0.1 logs.authsamples-dev.com
 ```
 
-My deployment of Kibana uses an HTTPS URL so you must create development certificates. Ensure that OpenSSL 3+ is installed and then run the following commands:
+In the root folder, run the following commands to create <a href="developer-ssl-setup.mdx#creating-ssl-certificates-and-keys">OpenSSL Development Certificates</a> in your preferred secrets folder. You may need to <a href="developer-ssl-setup.mdx#configure-operating-system-trust">Configure HTTPS Trust</a>, to prevent security warnings about untrusted certificates.
 
 ```bash
 export SECRETS_FOLDER="$HOME/secrets"
 mkdir "$SECRETS_FOLDER"
 ./certs/create.sh
-```
-
-Then follow instructions to configure <a href='developer-ssl-setup.mdx'>Browser SSL Trust</a> for the following root certificate, so that you can run the Kibana UI and avoid SSL trust errors:
- for a development computer
-```markdown
-./certs/authsamples-dev.ca.crt
 ```
 
 ### Step 3: Understand Elasticsearch Deployment

@@ -6,7 +6,7 @@ Previously I explained the <a href='final-nodeapi-coding-key-points.mdx'>Final N
 
 The goal of the .NET API is to implement this blog's <a href='api-platform-design.mdx'>API Architecture Goals</a> and use cloud native deployment. Readers of this blog can then easily run a <a href='quick-start.mdx'>Frontend Code Sample</a> on their local computer, to understand the OAuth application lifecycle. That lifecycle includes tricky aspects like handling token expiry events when sending concurrent API requests.
 
-### Final API Code Sample Overview
+### API Behaviour
 
 This blog's API has a couple of simple endpoints that return mock data for a money-based theme of investments. The API aims to be visual and serves this blog's apps, such as the <a href='how-to-run-the-react-js-spa.mdx'>Final SPA</a> below. Running both together ensures that the API is client-focused and enables you to focus on API logs that the client generates.
 
@@ -21,39 +21,9 @@ During development the API runs as a standalone component. You can use either xU
 | API | *https://api.authsamples-dev.com:446* |
 | Mock Authorization Server | *https://login.authsamples-dev.com:447* |
 
-### Prerequisite 1: Domain Setup
-
-First update your computer's hosts file to create domains for local development. Include the web domain and local backend-for-frontend domain if you run the SPA and API together:
-
-```markdown
-127.0.0.1 api.authsamples-dev.com login.authsamples-dev.com www.authsamples-dev.com bfflocal.authsamples-dev.com
-```
-
-### Prerequisite 2: Install OpenSSL
-
-Install OpenSSL 3+ so that you can create development certificates and run the API over HTTPS.
-
-### Prerequisite 3: Install .NET
-
-Download and install the latest cross platform [.NET SDK](https://dotnet.microsoft.com/download):
-
-![dotnet](../images/320/dotnet.jpg)
-
-### Prerequisite 4: Install Docker
-
-To run API tests, or the full SPA and API solution, you use Docker utility components, so install a local engine such as [Docker Desktop](https:/www/.docker.com/products/docker-desktop).
-
-### Prerequisite 5: Optionally Install a .NET IDE
-
-I use [Visual Studio Code](https://code.visualstudio.com/download) for C# development.
-
-### Prerequisite 6: Optionally Install Node.js
-
-If you want to run the SPA as well as the API, install [Node.js](https://nodejs.org/en/download) to build the SPA's JavaScript bundles.
-
 ### Step 1: Get the Code
 
-Close the GitHub repository with the following command:
+Clone the GitHub repository and browse the README, to make sure your local computer has the required tools.
 
 ```bash
 git clone https://github.com/gary-archer/oauth.apisample.net
@@ -61,9 +31,15 @@ git clone https://github.com/gary-archer/oauth.apisample.net
 
 ![repo](../images/320/repo.jpg?v=20251217)
 
-### Step 2: Create SSL Certificates
+### Step 2: Implement Administrator Setup
 
-Next, run the following commands, to create some OpenSSL development certificates:
+This blog's code samples use <a href="developer-ssl-setup.mdx#real-world-oauth-development-urls">Real World OAuth Development URLs</a> on a local computer, which requires some administrator setup. To enable DNS lookup of subdomains, add the following DNS entry to your hosts file:
+
+```markdown
+127.0.0.1 api.authsamples-dev.com login.authsamples-dev.com
+```
+
+In the root folder, run the following commands to create <a href="developer-ssl-setup.mdx#creating-ssl-certificates-and-keys">OpenSSL Development Certificates</a> in your preferred secrets folder. You may need to <a href="developer-ssl-setup.mdx#configure-operating-system-trust">Configure HTTPS Trust</a>, to prevent security warnings about untrusted certificates.
 
 ```bash
 export SECRETS_FOLDER="$HOME/secrets"
@@ -71,15 +47,15 @@ mkdir "$SECRETS_FOLDER"
 ./certs/create.sh
 ```
 
-To prevent SSL trust problems from tests or the browser you may need to <a href='developer-ssl-setup.mdx'>Configure .NET and Browser Trust</a> for the root certificate at the following location. 
+The API can run on port 443, like deployed systems. By default, though, it uses port 446, so that local web applications can use port 443. To use such ports, you may also need to grant permissions to the .NET runtime, with a command such as the following:
 
-```markdown
-certs/authsamples-dev.ca.crt
+```bash
+sudo setcap 'cap_net_bind_service=+ep' $(which dotnet)
 ```
 
 ### Step 3: Build and Run the API
 
-Next, run the API:
+Next, run the API, which does not require administrator privileges:
 
 ```bash
 ./start.sh

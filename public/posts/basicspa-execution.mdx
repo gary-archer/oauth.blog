@@ -2,10 +2,6 @@
 
 Previously I summarised the behaviour of the initial <a href='basicspa-overview.mdx'>SPA and API Code Sample</a>. Next I show how to run it on a development computer, then explain the setup related aspects, which include OAuth configuration settings.
 
-### Prerequisites
-
-This blog's code samples run in any Linux based terminal, and are tested on Ubuntu, Windows and macOS. On Windows I use a [Git Bash](https://gitforwindows.org/) shell. Also ensure that an up to date version of [Node.js](https://nodejs.org/en/download/) is installed for your operating system.
-
 ### Step 1: View Code in an IDE
 
 I use [Visual Studio Code](https://code.visualstudio.com/) as a mainstream editor for developing web frontends and APIs using JavaScript-based code. Both the SPA and API use a *config.json* file with their configuration settings:
@@ -83,9 +79,9 @@ This blog uses the following main Cognito test account for SPA logins. This is n
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
 
-### Step 5: HTTPS Domain Setup
+### Step 5: Implement Administrator Setup
 
-This blog's code samples use <a href="developer-ssl-setup.mdx#real-world-oauth-development-urls">Real World OAuth Development URLs</a> on a local computer. 
+This blog's code samples use <a href="developer-ssl-setup.mdx#real-world-oauth-development-urls">Real World OAuth Development URLs</a> on a local computer, which requires some administrator setup.
 
 | Component | Base URL |
 | --------- | -------- |
@@ -100,17 +96,29 @@ To enable DNS lookup of subdomains, add DNS entries to your hosts file:
 
 If you use HTTP URLs, without SSL certificates, both AWS Cognito and the cryptography in the *oidc-client-ts* library require the SPA to use a *localhost* domain name. These days, you are also likely to get more browser security warnings when using HTTP URLs. To avoid such issues and operate like a real user, I therefore always use HTTPS URLs for browser development.
 
-### Step 6: Run the SPA and API
-
-In the root folder, run the following commands to spin up the system. The first time you run one of this blog's code samples, the deployment creates <a href="developer-ssl-setup.mdx#creating-ssl-certificates-and-keys">OpenSSL Development Certificates</a> in your preferred secrets folder. You then need to <a href="developer-ssl-setup.mdx#configure-operating-system-trust">Configure HTTPS Trust</a>, which may require admin permissions, to prevent security warnings about untrusted certificates.
+In the root folder, run the following commands to create <a href="developer-ssl-setup.mdx#creating-ssl-certificates-and-keys">OpenSSL Development Certificates</a> in your preferred secrets folder. You then need to <a href="developer-ssl-setup.mdx#configure-operating-system-trust">Configure HTTPS Trust</a>, to prevent security warnings about untrusted certificates.
 
 ```bash
 export SECRETS_FOLDER="$HOME/secrets"
 mkdir "$SECRETS_FOLDER"
+./certs/create.sh
+```
+
+The SPA runs on port 443, like deployed systems. To use such ports, you may also need to grant permissions to Node.js, with a command such as the following:
+
+```bash
+sudo setcap 'cap_net_bind_service=+ep' $(which node)
+```
+
+### Step 6: Run the SPA and API
+
+Next, run the start script, which does not require administrator privileges:
+
+```bash
 ./start.sh
 ```
 
-The start script then triggers child scripts that run in other terminal windows, which requires slightly different commands depending on the host computer's platform:
+The script triggers child scripts that run in other terminal windows, which requires slightly different commands depending on the host computer's platform:
 
 ```bash
 if [ "$PLATFORM" == 'MACOS' ]; then

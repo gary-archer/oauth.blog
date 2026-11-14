@@ -6,7 +6,7 @@ Previously I explained this blog's <a href='cdn-static-content-delivery.mdx'>Web
 
 The goal of the Serverless API is to implement this blog's <a href='api-platform-design.mdx'>API Architecture Goals</a> and also use low cost cloud hosting. Readers of this blog can then easily run a <a href='quick-start.mdx'>Frontend Code Sample</a> on their local computer, to understand the OAuth application lifecycle. That lifecycle includes tricky aspects like handling token expiry events when sending concurrent API requests.
 
-### Serverless API Overview
+### API Behaviour
 
 The Serverless API behaves equivalently to the earlier <a href='api-architecture-node.mdx'>Node.js Express API</a>. The API has a couple of simple endpoints that return mock data for a money-based theme of investments. The API aims to be visual and serves this blog's apps, such as the <a href='how-to-run-the-react-js-spa.mdx'>Final SPA</a> below. If required, you can run both the API and a client, to ensure that the API is client-focused and to view API logs that the client generates.
 
@@ -21,29 +21,9 @@ During development the API runs as a standalone component. You can use either mo
 | API | *https://api.authsamples-dev.com:446* |
 | Mock Authorization Server | *https://login.authsamples-dev.com:447* |
 
-### Prerequisite 1: Domain Setup
-
-First, update your computer's hosts file to include the API and authorization server domains for local development. If you run the API and SPA together, also include the web domain and local backend-for-frontend domain:
-
-```markdown
-127.0.0.1 api.authsamples-dev.com login.authsamples-dev.com www.authsamples-dev.com bfflocal.authsamples-dev.com
-```
-
-### Prerequisite 2: Install OpenSSL
-
-Install OpenSSL 3+ so that you can create development certificates and run the API over HTTPS.
-
-### Prerequisite 3: Install Node.js
-
-Download [Node.js](https://nodejs.org/en/download) for your operating system, which runs the API and also builds the SPA's JavaScript bundles.
-
-### Prerequisite 4: Install Docker
-
-To run API tests, or the full SPA and API solution, you need Docker and Docker Compose, so install a local engine like [Docker Desktop](https:/www/.docker.com/products/docker-desktop).
-
 ### Step 1: Get the Code
 
-Close the GitHub repository with the following command:
+Clone the GitHub repository and browse the README, to make sure your local computer has the required tools.
 
 ```bash
 git clone https://github.com/gary-archer/oauth.apisample.serverless
@@ -90,15 +70,33 @@ functions:
                 id: true
 ```
 
-By default, the Serverless Framework requires you to use the *sls invoke* command to run lambdas on a development computer. Input and output payloads must use a lambda specific format. When the API runs in the cloud, real clients instead send standard HTTP requests.
+By default, the Serverless Framework requires you to use the *sls invoke* command to run lambdas on a development computer. Input and output payloads must use a lambda specific format. During development, I use [Serverless Offline](https://github.com/dherault/serverless-offline) to enable clients to call local HTTPS endpoints in the same way as they call deployed HTTPS endpoints.
 
-### Step 3: Understand OAuth Security
+### Step 3: Implement Administrator Setup
 
-In AWS it is common to use a [Lambda Authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-jwt-authorizer.html) to implement security only at the internet entry point. Secure values such as claims are then simply forwarded to lambdas in plain HTTP headers. This is not the most secure design. APIs also lose track of the incoming access token, so the security does not scale correctly, since a lambda cannot call an upstream API with a correct access token. To resolve these issues, the serverless API code sample implements OAuth security within the lambda function's code.
+This blog's code samples use <a href="developer-ssl-setup.mdx#real-world-oauth-development-urls">Real World OAuth Development URLs</a> on a local computer, which requires some administrator setup. To enable DNS lookup of subdomains, add the following DNS entry to your hosts file:
+
+```markdown
+127.0.0.1 api.authsamples-dev.com login.authsamples-dev.com
+```
+
+In the root folder, run the following commands to create <a href="developer-ssl-setup.mdx#creating-ssl-certificates-and-keys">OpenSSL Development Certificates</a> in your preferred secrets folder. You may need to <a href="developer-ssl-setup.mdx#configure-operating-system-trust">Configure HTTPS Trust</a>, to prevent security warnings about untrusted certificates.
+
+```bash
+export SECRETS_FOLDER="$HOME/secrets"
+mkdir "$SECRETS_FOLDER"
+./certs/create.sh
+```
+
+The API can run on port 443, like deployed systems. By default, though, it uses port 446, so that local web applications can use port 443. To use such ports, you may also need to grant permissions to Node.js, with a command such as the following:
+
+```bash
+sudo setcap 'cap_net_bind_service=+ep' $(which node)
+```
 
 ### Step 4: Run the API
 
-Rather than working with *sls invoke* I follow the same approach as for this blog's cloud native APIs. I use [Serverless Offline](https://github.com/dherault/serverless-offline) to expose local HTTPS endpoints. You can run the API locally with the following command:
+You can run the API locally with the following command, which does not require administrator privileges:
 
 ```bash
 ./start.sh
@@ -108,11 +106,15 @@ Serverless Offline then exposes the API's HTTPS endpoints on port 446:
 
 ![running api](../images/620/running-api.jpg?v=20240915)
 
-You can then use local URLs such as the following to call the API:
+You can then use local URLs such as the following to call the API, which requires a user level access token:
 
 ```markdown
 https://api.authsamples-dev.com:446/investments/companies
 ```
+
+In AWS it is common to use a [Lambda Authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-jwt-authorizer.html) to implement security only at the internet entry point. Secure values such as claims are then simply forwarded to lambdas in plain HTTP headers. This is not the most secure design. APIs also lose track of the incoming access token, so the security does not scale correctly, since a lambda cannot call an upstream API with a correct access token. 
+
+To resolve these issues, the serverless API code sample implements OAuth security within the lambda function's code. To call the API locally, I use integration tests that send user-level access tokens.
 
 ### Step 5: Run Integration Tests
 
@@ -146,7 +148,7 @@ The test fires batches of 5 concurrent requests at a time and also intentionally
 
 The <a href='api-automated-tests.mdx'>API Automated Tests</a> post explains how tests get user level tokens without running a full authorization code flow.
 
-### Step 6: Run a Frontend Client
+### Step 7: Run a Frontend Client
 
 You can run any of this blog's final frontend clients against the API:
 
