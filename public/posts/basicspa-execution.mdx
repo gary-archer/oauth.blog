@@ -79,38 +79,7 @@ This blog uses the following main Cognito test account for SPA logins. This is n
 - User: *guestuser@example.com*
 - Password: *GuestPassword1*
 
-### Step 5: Implement Administrator Setup
-
-This blog's code samples use <a href="developer-ssl-setup.mdx#real-world-oauth-development-urls">Real World OAuth Development URLs</a> on a local computer, which requires some administrator setup.
-
-| Component | Base URL |
-| --------- | -------- |
-| SPA | https://www.authsamples-dev/spa |
-| API | https://api.authsamples-dev.com/api |
-
-To enable DNS lookup of subdomains, add DNS entries to your hosts file:
-
-```markdown
-127.0.0.1 www.authsamples-dev.com api.authsamples-dev.com
-```
-
-If you use HTTP URLs, without SSL certificates, both AWS Cognito and the cryptography in the *oidc-client-ts* library require the SPA to use a *localhost* domain name. These days, you are also likely to get more browser security warnings when using HTTP URLs. To avoid such issues and operate like a real user, I therefore always use HTTPS URLs for browser development.
-
-In the root folder, run the following commands to create <a href="developer-ssl-setup.mdx#creating-ssl-certificates-and-keys">OpenSSL Development Certificates</a> in your preferred secrets folder. You then need to <a href="developer-ssl-setup.mdx#configure-operating-system-trust">Configure HTTPS Trust</a>, to prevent security warnings about untrusted certificates.
-
-```bash
-export SECRETS_FOLDER="$HOME/secrets"
-mkdir "$SECRETS_FOLDER"
-./certs/create.sh
-```
-
-The SPA runs on port 443, like deployed systems. To use such ports, you may also need to grant permissions to Node.js, with a command such as the following:
-
-```bash
-sudo setcap 'cap_net_bind_service=+ep' $(which node)
-```
-
-### Step 6: Run the SPA and API
+### Step 5: Run the SPA and API
 
 Next, run the start script, which does not require administrator privileges:
 
@@ -147,7 +116,7 @@ The second child terminal runs the API. On a development workstation you have to
 
 ![Running API](../images/30/running-api.jpg?v=20251229)
 
-### Step 7: Sign In to the SPA
+### Step 6: Sign In to the SPA
 
 The *start.sh* script then invokes a browser at *https://www.authsamples-dev.com/spa*. The subpath gives the web domain space to grow, so that you could deploy multiple SPAs as micro frontends at different paths. Initially, the SPA attempts to load its home view and call the API to get data. However, the SPA does not have an access token yet so it redirects the user to a login required view:
 
@@ -155,7 +124,7 @@ The *start.sh* script then invokes a browser at *https://www.authsamples-dev.com
 
 The SPA never issues abrupt login redirects and instead guides the user, who can initiate the login. This provides good usability and also prevents the potential for redirect loops if you ever use incorrect OAuth configuration settings for the SPA or API.
 
-### Step 8: Call APIs
+### Step 7: Call APIs
 
 Once user authentication completes, the SPA renders hard coded fictional data returned from the API. This data is secured using OAuth access tokens. 
 
@@ -167,7 +136,7 @@ The first API call is to *https://api.authsamples-dev.com:446/api/companies*, an
 
 To enable the SPA to successfully call APIs, this blog's early APIs implement [Cross Origin Request Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), to grant the SPA's precise domain the cross-origin permissions to call the API.
 
-### Step 9: Run Navigation Actions
+### Step 8: Run Navigation Actions
 
 You can click one of the *View Transactions* links to navigate to the SPA's second view. Alternatively, you can type the following format of URL into the browser's address bar:
 
@@ -181,7 +150,7 @@ Users can bookmark SPA locations. You can simulate this in a new browser tab or 
 
 ![Multi tab navigation](../images/30/multi-tab-navigation.jpg?v=20251229)
 
-### Step 10: Run a User Session
+### Step 9: Run a User Session
 
 The SPA's session management is incomplete in the initial code sample. Every time the user opens a new browser tab or the access token expires, the user has to sign in again. To simulate access token expiry for a browser tab, click *Expire Token* followed by *Reload Data*.
 
@@ -189,13 +158,13 @@ The initial SPA stores access tokens in session storage, so that page reloads do
 
 This usability problem is easily fixed by storing OAuth tokens in local storage, but that is considered less secure. The initial code sample therefore visualizes the types of usability and security concerns that are common when you implement OAuth SPA security.
 
-### Step 11: View Browser Traffic
+### Step 10: View Browser Traffic
 
 Developers need to understand OAuth messages, which are sent using an HTTP language, with input and output parameter names defined in OAuth specifications. An  authorization request begins the login process, and includes a number of query string parameters:
 
 ![HTTP debugging](../images/30/http-debugging.jpg?v=20260706)
 
-### Step 12: View Security Library Logs
+### Step 11: View Security Library Logs
 
 The SPA can report *oidc-client-ts* logs, to provide visualisation of its behaviours. Activate logs by adding a *#log=debug* query parameter to the browser's URL, then viewing the browser console. The following screenshot uses Google Chrome development tools. Note that I select the *Verbose* level to show debug messages and *Preserve Log* to maintain messages before and after login redirects.
 

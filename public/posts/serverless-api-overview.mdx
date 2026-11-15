@@ -23,7 +23,7 @@ During development the API runs as a standalone component. You can use either mo
 
 ### Step 1: Get the Code
 
-Clone the GitHub repository and browse the README, to make sure your local computer has the required tools.
+Clone the GitHub repository and browse the README. Make sure your local computer has the prerequisites tools and perform any required administrator setup.
 
 ```bash
 git clone https://github.com/gary-archer/oauth.apisample.serverless
@@ -72,29 +72,7 @@ functions:
 
 By default, the Serverless Framework requires you to use the *sls invoke* command to run lambdas on a development computer. Input and output payloads must use a lambda specific format. During development, I use [Serverless Offline](https://github.com/dherault/serverless-offline) to enable clients to call local HTTPS endpoints in the same way as they call deployed HTTPS endpoints.
 
-### Step 3: Implement Administrator Setup
-
-This blog's code samples use <a href="developer-ssl-setup.mdx#real-world-oauth-development-urls">Real World OAuth Development URLs</a> on a local computer, which requires some administrator setup. To enable DNS lookup of subdomains, add the following DNS entry to your hosts file:
-
-```markdown
-127.0.0.1 api.authsamples-dev.com login.authsamples-dev.com
-```
-
-In the root folder, run the following commands to create <a href="developer-ssl-setup.mdx#creating-ssl-certificates-and-keys">OpenSSL Development Certificates</a> in your preferred secrets folder. You may need to <a href="developer-ssl-setup.mdx#configure-operating-system-trust">Configure HTTPS Trust</a>, to prevent security warnings about untrusted certificates.
-
-```bash
-export SECRETS_FOLDER="$HOME/secrets"
-mkdir "$SECRETS_FOLDER"
-./certs/create.sh
-```
-
-The API can run on port 443, like deployed systems. By default, though, it uses port 446, so that local web applications can use port 443. To use such ports, you may also need to grant permissions to Node.js, with a command such as the following:
-
-```bash
-sudo setcap 'cap_net_bind_service=+ep' $(which node)
-```
-
-### Step 4: Run the API
+### Step 3: Run the API
 
 You can run the API locally with the following command, which does not require administrator privileges:
 
@@ -116,7 +94,7 @@ In AWS it is common to use a [Lambda Authorizer](https://docs.aws.amazon.com/api
 
 To resolve these issues, the serverless API code sample implements OAuth security within the lambda function's code. To call the API locally, I use integration tests that send user-level access tokens.
 
-### Step 5: Run Integration Tests
+### Step 4: Run Integration Tests
 
 To run mocha tests, you must run the API with a configuration that points to a mock authorization server. Stop the API if it is running, then re-run it via this command:
 
@@ -134,7 +112,7 @@ The test startup first hosts an HTTPS JWKS URI. A number of tests then make OAut
 
 ![test results](../images/620/tests.jpg)
 
-### Step 6: Run a Basic Load Test
+### Step 5: Run a Basic Load Test
 
 While the API runs with a test configuration you can also run a basic load test that sends parallel API requests. This helps to ensure that the API code has no concurrency bugs:
 
@@ -148,7 +126,7 @@ The test fires batches of 5 concurrent requests at a time and also intentionally
 
 The <a href='api-automated-tests.mdx'>API Automated Tests</a> post explains how tests get user level tokens without running a full authorization code flow.
 
-### Step 7: Run a Frontend Client
+### Step 6: Run a Frontend Client
 
 You can run any of this blog's final frontend clients against the API:
 

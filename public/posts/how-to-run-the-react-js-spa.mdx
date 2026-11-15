@@ -4,7 +4,7 @@ Previously I provided a <a href='final-spa-overview.mdx'>Final SPA Overview</a> 
 
 ### Step 1: Download the GitHub Code
 
-Clone the GitHub repository and browse the README, to make sure your local computer has the required tools.
+Clone the GitHub repository and browse the README. Make sure your local computer has the prerequisites tools and perform any required administrator setup.
 
 ```bash
 git clone https://github.com/gary-archer/oauth.websample.final
@@ -12,29 +12,7 @@ git clone https://github.com/gary-archer/oauth.websample.final
 
 ![repo](../images/230/repo.jpg?v=20260527)
 
-### Step 2: Implement Administrator Setup
-
-This blog's code samples use <a href="developer-ssl-setup.mdx#real-world-oauth-development-urls">Real World OAuth Development URLs</a> on a local computer, which requires some administrator setup. To enable DNS lookup of the SPA subdomains, add the following DNS entry to your hosts file:
-
-```markdown
-127.0.0.1 www.authsamples-dev.com
-```
-
-In the root folder, run the following commands to create <a href="developer-ssl-setup.mdx#creating-ssl-certificates-and-keys">OpenSSL Development Certificates</a> in your preferred secrets folder. You then need to <a href="developer-ssl-setup.mdx#configure-operating-system-trust">Configure HTTPS Trust</a>, to prevent security warnings about untrusted certificates.
-
-```bash
-export SECRETS_FOLDER="$HOME/secrets"
-mkdir "$SECRETS_FOLDER"
-./certs/create.sh
-```
-
-The SPA runs on port 443, like deployed systems. To use such ports, you may also need to grant permissions to Node.js, with a command such as the following:
-
-```bash
-sudo setcap 'cap_net_bind_service=+ep' $(which node)
-```
-
-### Step 3: Build and Run the SPA
+### Step 2: Build and Run the SPA
 
 Open a terminal and run the following command from the root folder, to build and run the SPA's code for development. Running the SPA does not require administrator privileges.
 
@@ -46,7 +24,7 @@ The SPA terminal window builds JavaScript bundles and serves them using a develo
 
 ![spa build](../images/230/spa-build.jpg?v=20260527)
 
-### Step 4: Sign In to the SPA
+### Step 3: Sign In to the SPA
 
 You will then be prompted to sign in, and can do so with the following test credential:
 
@@ -57,13 +35,13 @@ After login, the SPA sends an HttpOnly encrypted cookie containing an AWS Cognit
 
 ![spa data](../images/230/spa-data.jpg?v=20240713)
 
-### Step 5: View Secure Cookies
+### Step 4: View Secure Cookies
 
 When the SPA makes API requests it sends a short-lived access token encrypted into an *HttpOnly SameSite=strict Secure* cookie. Since Cognito uses RS256 JWTs, the cookie size is around 1.5KB, which is comfortably below browser 4KB cookie size limits. You can use browser tools to view secure cookies, which are for the backend for frontend subdomain and not the web origin. The SPA does not require any cookies to download static content, and does not use cookies when the user performs web navigations:
 
 ![cookie properties](../images/230/cookie-properties.jpg?v=20240817)
 
-### Step 6: View Updated SPA Configuration
+### Step 5: View Updated SPA Configuration
 
 In earlier samples, the SPA performed its own JavaScript code flow. This work is now done by remote token handler components, and the SPA configuration is therefore simplified, primarily to a backend for frontend base URL:
 
@@ -74,7 +52,7 @@ In earlier samples, the SPA performed its own JavaScript code flow. This work is
 }
 ```
 
-### Step 7: Run a Release Build
+### Step 6: Run a Release Build
 
 You can run some scripts to test a release deployment. The *build.sh* script produces JavaScript release bundles ready for deployment to a CDN. The *deploy.sh* script runs a Docker container that uses Express to serve minimized static content. The *teardown.sh* script stops the Docker container.
 

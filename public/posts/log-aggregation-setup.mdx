@@ -28,29 +28,13 @@ Note that this blog's API logging solution is not locked in to Elastic Stack. If
 
 ### Step 1: Download Elastic Resources
 
-Clone the GitHub repository and browse the README, to make sure your local computer has the required tools.
+Clone the GitHub repository and browse the README. Make sure your local computer has the prerequisites tools and perform any required administrator setup.
 
 ```bash
 git clone https://github.com/gary-archer/oauth.logaggregation.elasticsearch
 ```
 
-### Step 2: Implement Administrator Setup
-
-This blog's deployments use <a href="developer-ssl-setup.mdx#real-world-oauth-development-urls">Real World OAuth Development URLs</a> on a local computer, which requires some administrator setup. To enable DNS lookup of subdomains, add the following DNS entry to your hosts file:
-
-```markdown
-127.0.0.1 logs.authsamples-dev.com
-```
-
-In the root folder, run the following commands to create <a href="developer-ssl-setup.mdx#creating-ssl-certificates-and-keys">OpenSSL Development Certificates</a> in your preferred secrets folder. You may need to <a href="developer-ssl-setup.mdx#configure-operating-system-trust">Configure HTTPS Trust</a>, to prevent security warnings about untrusted certificates.
-
-```bash
-export SECRETS_FOLDER="$HOME/secrets"
-mkdir "$SECRETS_FOLDER"
-./certs/create.sh
-```
-
-### Step 3: Understand Elasticsearch Deployment
+### Step 2: Understand Elasticsearch Deployment
 
 The repo includes a Docker Compose deployment, that includes the main Elasticsearch system. The installation uses [xpack security](https://www.elastic.co/guide/en/elasticsearch/reference/current/security-settings.html) to a basic level, with usernames and passwords:
 
@@ -67,7 +51,7 @@ elasticsearch:
     ELASTIC_PASSWORD: 'Password1'
 ```
 
-### Step 4: Understand Data Initialization
+### Step 3: Understand Data Initialization
 
 A job container also runs, whose main role is to create index templates for request logs and audit logs, and an ingest pipeline used when Elasticsearch receives logs.
   
@@ -158,7 +142,7 @@ The following JSON shows format of the index template for request logs. The temp
 
 The index template references a data stream and a retention policy, which provide mechanisms to ensure that old log entries gets removed after a time to live, rather than growing indefinitely.
 
-### Step 5: Understand Kibana Deployment
+### Step 4: Understand Kibana Deployment
 
 The Kibana workload connects to Elasticsearch as the [kibana_system](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.8.html#builtin-users-changes) user, and the initialization job sets the user's password. Meanwhile, you can administer Kibana with credentials of *elastic / Password1*:
 
@@ -178,7 +162,7 @@ Kibana runs at the following HTTPS URL that the Docker Compose cluster exposes:
 
 - *https://logs.authsamples-dev.com*
 
-### Step 6: Understand Filebeat Deployment
+### Step 5: Understand Filebeat Deployment
 
 Filebeat uses the following deployment settings, where an API *logs* folder is shared from the host computer to a volume in the Filebeat docker container. By default the deployment uses the folder for this blog's final Node.js API.
 
@@ -233,7 +217,7 @@ processors:
 
 If you deploy APIs to Kubernetes, see also some extra configuration settings from the [Filebeat Kubernetes Reference Configuration](https://raw.githubusercontent.com/elastic/beats/9.5/deploy/kubernetes/filebeat-kubernetes.yaml), to process files from redirected *stdout*, written to Kubernetes nodes under the */var/log/containers* folder.
 
-### Step 7: Understand Elasticsearch User Management
+### Step 6: Understand Elasticsearch User Management
 
 The deployment creates two Elasticsearch roles for non-administrator users, to show how to grant users access to particular indices.
 
@@ -242,7 +226,7 @@ The deployment creates two Elasticsearch roles for non-administrator users, to s
 | support | support@example.com | A member of a technical support team who can query request logs. |
 | security | security@example.com | A member of a security team who can query audit logs. |
 
-### Step 8: Generate Logs via an API and Client
+### Step 7: Generate Logs via an API and Client
 
 To generate local API logs you need to run an API, and a client that calls the API so that logs are written. Run components with the following folder layout, at an equivalent level to the log aggregation repository:
 
@@ -253,7 +237,7 @@ To generate local API logs you need to run an API, and a client that calls the A
 
 I sometimes use log aggregation when developing this blog's secured components, when I want to look more closely at API logs. For example, I can run the <a href='api-architecture-node.mdx'>Final Node.js API</a> locally and use its tests to trigger API requests that generate log entries.
 
-### Step 9: Deploy the Elastic Stack
+### Step 8: Deploy the Elastic Stack
 
 Run the following command to start the Docker deployment. It may take a few minutes for large Elastic Stack docker containers to download, the first time you run the deployment:
 
@@ -281,7 +265,7 @@ Later, when you are finished with testing, free up all Docker resources with the
 ./teardown.sh
 ```
 
-### Step 10. Use Log Query Tools
+### Step 9. Use Log Query Tools
 
 Next, sign in to Kibana with one of the test usernames, or the administrator user *elastic*, along with a password credential of *Password1*. Kibana provides various tools for working with logs, though I consider the following URL to be the most important:
 
@@ -291,7 +275,7 @@ The Kibana *Dev Tools* enable you to make rich queries against log documents bas
 
 ![log queries](../images/390/log-queries.jpg?v=20240818)
 
-### Step 11: Understand Log Documents
+### Step 10: Understand Log Documents
 
 Each log entry is received as a JSON document within a generated index name. You can filter data using queries that reference top level fields. Meanwhile, JSON objects in logs, such as those used to represent errors, maintain their structure:
 
@@ -349,7 +333,7 @@ Each log entry is received as a JSON document within a generated index name. You
 }
 ```
 
-### Step 12: Understand Log Ingestion
+### Step 11: Understand Log Ingestion
 
 By default, Filebeat adds some fields to each log entry on the outbound side of processing, and Elasticsearch adds fields during inbound processing. The init container customises the [ingestion pipeline](https://www.elastic.co/guide/en/elasticsearch/reference/current/ingest.html) to remove extra fields, to ensure that logs contain clean data. 
 
@@ -394,7 +378,7 @@ The processors I use for the ingestion pipeline are summarised below:
 | remove | Removes any extra fields that Elasticsearch generates during inbound processing. |
 | reroute | Uses document data to route particular documents to particular data streams. |
 
-### Step 13: Troubleshoot Filebeat
+### Step 12: Troubleshoot Filebeat
 
 Finally, it can be useful to understand how to diagnose logs that do not ship correctly. To do so, first make a remote connection to the Filebeat container with the following commands:
 

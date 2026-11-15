@@ -18,7 +18,7 @@ To integrate with Entra ID, I should only need to update the SPA and API configu
 
 ### Code Download
 
-Clone the GitHub repository and browse the README, to make sure your local computer has the required tools.
+Clone the GitHub repository and browse the README. Make sure your local computer has the prerequisites tools and perform any required administrator setup.
 
 ```bash
 git clone https://github.com/gary-archer/oauth.websample.entraid
@@ -214,38 +214,7 @@ For the API's *api.config.json* file, update the *Tenant ID*, *Audience* and *Cl
 }
 ```
 
-### Step 11: Implement Administrator Setup
-
-This blog's code samples use <a href="developer-ssl-setup.mdx#real-world-oauth-development-urls">Real World OAuth Development URLs</a> on a local computer, which requires some administrator setup.
-
-| Component | Base URL |
-| --------- | -------- |
-| SPA | https://www.authsamples-dev/spa |
-| API | https://api.authsamples-dev.com/api |
-
-To enable DNS lookup of subdomains, add DNS entries to your hosts file:
-
-```markdown
-127.0.0.1 www.authsamples-dev.com api.authsamples-dev.com
-```
-
-If you use HTTP URLs, without SSL certificates, the cryptography in the *oidc-client-ts* library requires the SPA to use a *localhost* domain name. These days, you are also likely to get more browser security warnings when using HTTP URLs. To avoid such issues and operate like a real user, I therefore always use HTTPS URLs for browser development.
-
-In the root folder, run the following commands to create <a href="developer-ssl-setup.mdx#creating-ssl-certificates-and-keys">OpenSSL Development Certificates</a> in your preferred secrets folder. You then need to <a href="developer-ssl-setup.mdx#configure-operating-system-trust">Configure HTTPS Trust</a>, to prevent security warnings about untrusted certificates.
-
-```bash
-export SECRETS_FOLDER="$HOME/secrets"
-mkdir "$SECRETS_FOLDER"
-./certs/create.sh
-```
-
-The SPA runs on port 443, like deployed systems, so you may also need to grant permissions to Node.js to listen on ports below 1024:
-
-```bash
-sudo setcap 'cap_net_bind_service=+ep' $(which node)
-```
-
-### Step 12. Build and Run the SPA and API
+### Step 11. Build and Run the SPA and API
 
 Next, run the following script, which does not require administrator privileges, to run the SPA on port 443. The default browser then runs at *https://www.authsamples-dev.com/spa/*. The SPA redirects to Entra ID and you can sign in with one of the test user accounts.
 

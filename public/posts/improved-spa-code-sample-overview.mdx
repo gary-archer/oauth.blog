@@ -20,7 +20,7 @@ The updated SPA and API code sample has the following additional behaviours, to 
 
 ### Step 1. Code Download
 
-Clone the GitHub repository and browse the README, to make sure your local computer has the required tools.
+Clone the GitHub repository and browse the README. Make sure your local computer has the prerequisites tools and perform any required administrator setup.
 
 ```bash
 git clone https://github.com/gary-archer/oauth.websample2
@@ -89,38 +89,7 @@ The API configuration is also updated, to require the *investments* scope:
 }
 ```
 
-### Step 5: Implement Administrator Setup
-
-This blog's code samples use <a href="developer-ssl-setup.mdx#real-world-oauth-development-urls">Real World OAuth Development URLs</a> on a local computer, which requires some administrator setup.
-
-| Component | Base URL |
-| --------- | -------- |
-| SPA | https://www.authsamples-dev/spa |
-| API | https://api.authsamples-dev.com/api |
-
-To enable DNS lookup of subdomains, add DNS entries to your hosts file:
-
-```markdown
-127.0.0.1 www.authsamples-dev.com api.authsamples-dev.com
-```
-
-If you use HTTP URLs, without SSL certificates, both AWS Cognito and the cryptography in the *oidc-client-ts* library require the SPA to use a *localhost* domain name. These days, you are also likely to get more browser security warnings when using HTTP URLs. To avoid such issues and operate like a real user, I therefore always use HTTPS URLs for browser development.
-
-In the root folder, run the following commands to create <a href="developer-ssl-setup.mdx#creating-ssl-certificates-and-keys">OpenSSL Development Certificates</a> in your preferred secrets folder. You then need to <a href="developer-ssl-setup.mdx#configure-operating-system-trust">Configure HTTPS Trust</a>, to prevent security warnings about untrusted certificates.
-
-```bash
-export SECRETS_FOLDER="$HOME/secrets"
-mkdir "$SECRETS_FOLDER"
-./certs/create.sh
-```
-
-The SPA runs on port 443, like deployed systems. To use such ports, you may also need to grant permissions to Node.js, with a command such as the following:
-
-```bash
-sudo setcap 'cap_net_bind_service=+ep' $(which node)
-```
-
-### Step 6. Run the SPA and API
+### Step 5. Run the SPA and API
 
 Next, run the start script, which does not require administrator privileges. The SPA then runs at *https://www.authsamples-dev.com/spa* and the API runs at *https://api.authsamples-dev.com:446/api*.
 
@@ -136,7 +105,7 @@ The API terminal window listens for requests from the SPA on port 446:
 
 ![api build](../images/170/api-build.jpg?v=20251230)
 
-### Step 7. Test Logins with Multiple User Accounts
+### Step 6. Test Logins with Multiple User Accounts
 
 Continue to use the following AWS Cognito test account to sign in to the SPA:
 
@@ -148,13 +117,13 @@ You can also use a second test account with higher privileges, which gets access
 - User = *guestadmin`@`example.com*
 - Password = *GuestPassword1*
 
-### Step 8. View Updated Access Tokens
+### Step 7. View Updated Access Tokens
 
 After login, the SPA receives an updated access token, which contains an *investments* scope and custom claims for *manager_id* and *role*. The <a href='managed-authorization-server-setup.mdx'>Cloud Authorization Server Setup</a> post explains how the authorization server resolves these claim values.
 
 ![token scopes and claims](../images/170/token-scopes-and-claims.jpg)
 
-### Step 9. API uses Claims Based Authorization
+### Step 8. API uses Claims Based Authorization
 
 The API's OAuth processing reads the token claims and also looks up extra values that it needs to implement its authorization. I provide further details on my design choices in the <a href='api-authorization-design.mdx'>API Authorization Behaviour</a> blog post. The API then serves JSON data for multiple regions:
 
@@ -189,7 +158,7 @@ In the transactions view, if the user tries to access company 3 data by editing 
 
 The SPA handles this *Not Found For User* API error code specially and redirects to the home page, to avoid displaying a user error.
 
-### Step 10. SPA Downloads User Info
+### Step 9. SPA Downloads User Info
 
 As for the first code sample, the SPA continues to get name details for display from the OpenID Connect userinfo endpoint, which returns the following core JSON user attributes:
 
@@ -219,7 +188,7 @@ The secondary user data is then rendered in a basic tooltip:
 
 ![secondary user data](../images/170/secondary-user-data.jpg?v=20240813)
 
-### Step 11. Test Token Renewal
+### Step 10. Test Token Renewal
 
 The SPA attempts to refresh in-memory access tokens silently when they expire. You can simulate this if you click *Expire Token* then *Reload Data*:
 
@@ -232,7 +201,7 @@ Since the SPA stores tokens in-memory, the same renewal occurs if you refresh th
 - The SPA receives a new access token without any user impact.
 - The SPA retries the API call with the new access token.
 
-### Step 12. View Token Renewal OAuth Requests
+### Step 11. View Token Renewal OAuth Requests
 
 The updated code sample implements the traditional SPA token renewal flow, where the SPA attempts to send the SSO cookie to get a new access token, using the *prompt=none* query parameter:
 
@@ -240,7 +209,7 @@ The updated code sample implements the traditional SPA token renewal flow, where
 
 Although the SPA's code implements the renewal flow correctly, every iframe token renewal fails, since AWS Cognito cookies do not support this flow. The user experiences an OpenID Connect redirect whenever the access token expires or the user refreshes the page. With third-party cookie deprecation, that is the expected future behaviour, and I say more about it in the <a href='user-sessions-and-token-renewal.mdx'>Iframe Access Token Renewal</a> post.
 
-### Step 13. Logout
+### Step 12. Logout
 
 The SPA also implements logout functionality. The SPA removes its own tokens, then redirects to the authorization server, sending the SSO cookie. The authorization server expires the SSO cookie to end the user's session, then redirects the browser back to its *Post Logout Redirect URI*, which renders the following view:
 
