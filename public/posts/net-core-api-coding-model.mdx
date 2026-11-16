@@ -4,14 +4,10 @@ The previous post described this blog's <a href='net-core-api-oauth-integration.
 
 ### Code Structure
 
-The example C# API consists of three main areas:
-
-- REST Host
-- API Business Logic
-- Common Code (plumbing)
+The code for the API consists of business logic and supporting infrastructure code. In a real API you would want to write the infrastructure code only once and then scale the valuable business logic.
 
 <div className='smallimage'>
-    <img src='../images/340/code-layout.jpg' alt='code layout' />
+    <img src='../images/340/code-layout.jpg?v=20261116' alt='code layout' />
 </div>
 
 ### Application Startup Logic
@@ -117,13 +113,7 @@ public async Task<T> ReadDataAsync<T>(string filePath)
 
 ### Logging Implementation
 
-API logging requires plumbing code to meet the end goal of enabling <a href='api-technical-support-analysis.mdx'>useful technical support queries by people</a>:
-
-<div className='smallimage'>
-    <img src='../images/340/logging-classes.jpg' alt='logging classes' />
-</div>
-
-The *LogEntry* is a natural request scoped object so I use the following factory method to create it, and make it injectable, when another object first accesses it during the lifetime of an API request:
+The API uses a number of classes from the *logging* folder, whose end goal is to enable <a href='api-technical-support-analysis.mdx'>useful technical support queries by people</a>. The *LogEntry* is a natural request scoped object so I use the following factory method to create it, and make it injectable, when another object first accesses it during the lifetime of an API request:
 
 ```csharp
 private void RegisterBaseDependencies()

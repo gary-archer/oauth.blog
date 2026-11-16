@@ -4,25 +4,15 @@ The previous post described this blog's <a href='spring-boot-api-oauth-integrati
 
 ### Code Structure
 
-The example Java API consists of three main areas:
-
-- REST Host
-- API Business Logic
-- Common Code (plumbing)
+The code for the API consists of business logic and supporting infrastructure code. In a real API you would want to write the infrastructure code only once and then scale the valuable business logic.
 
 <div className='smallimage'>
-    <img src='../images/370/code-layout.jpg' alt='code layout' />
+    <img src='../images/370/code-layout.jpg?v=20261116' alt='code layout' />
 </div>
 
 ### Application Startup Logic
 
-The API entry point is defined in the *SampleApiApplication* class:
-
-<div className='smallimage'>
-    <img src='../images/370/startup-logic.jpg' alt='startup logic' />
-</div>
-
-I use Spring Boot extensibility points via the following classes, which are instantiated when the API starts:
+The API entry point is defined in the *FinalApiApplication* class. I use Spring Boot extensibility points via the following classes from the *host* folder, which are instantiated when the API starts:
 
 | Class | Description |
 | ----- | ----------- |
@@ -192,13 +182,7 @@ To solve this problem I created a [Spring Boot Custom Scope](https://www.baeldun
 
 ### Logging Implementation
 
-I implement API logging with some plumbing code and the end goal is to enable <a href='api-technical-support-analysis.mdx'>useful technical support queries by people</a>.
-
-<div className='smallimage'>
-    <img src='../images/370/logging-classes.jpg' alt='logging classes' />
-</div>
-
-The *LogEntry* is a natural request scoped object so I use the following factory method to create it and make it injectable when another object first accesses the *LogEntry* during the lifetime of an API request:
+I implement API logging with classes in the *logging* folder, whose end goal is to enable <a href='api-technical-support-analysis.mdx'>useful technical support queries by people</a>. The *LogEntry* is a natural request scoped object so I use the following factory method to create it and make it injectable when another object first accesses the *LogEntry* during the lifetime of an API request:
 
 ```java
 @Component
