@@ -434,7 +434,7 @@ const component1 = new module1.Component1();
 const component2 = new module2.Component2();
 ```
 
-Rollup produces new *non-initial* bundles when you use dynamic imports, where *initial* bundles contain references to *non-initial* bundles. By default, a new bundle gets produced for each module, or you can update the rollup *manualChunks* function to explicitly control the bundle to which dynamic modules get written to. The first user action that uses a component in the bundle triggers its download.
+Rollup produces new *non-initial* bundles when you use dynamic imports, where *initial* bundles contain references to *non-initial* bundles. By default, a new bundle gets produced for each module, or you can update the rollup *manualChunks* function to explicitly control the bundle to which dynamic modules are written. The first user action that uses a component in the bundle triggers its download.
 
 ```typescript
 {
