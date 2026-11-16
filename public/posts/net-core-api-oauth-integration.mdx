@@ -231,7 +231,7 @@ There are a number of responsibilities that I would ideally like the JWT library
 | Signature Checks | Cryptographically verifying the JSON Web Signature of received JWTs. |
 | Protocol Claim Checks | Checking that the token has the correct issuer and audience, and that it is valid for use at the current time. |
 
-The *jose.jwt* library does not manage JWKS downloads, caching of JWKS keys, or checking protocol claims. These tasks are not complex but make my API code less elegant. I needed to write additional plumbing classes, including a *JsonWebKeyResolver* and a *JwksCache*.
+The *jose.jwt* library does not manage JWKS downloads, caching of JWKS keys, or checking protocol claims. These tasks are not complex but make my API code less elegant. I needed to write additional infrastructure classes, including a *JsonWebKeyResolver* and a *JwksCache*.
 
 ### Claims Principal
 

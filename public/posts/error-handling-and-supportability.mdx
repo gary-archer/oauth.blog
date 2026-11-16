@@ -244,52 +244,53 @@ Note also that the *root cause of the error* may have been in an upstream API ra
 
 For API 5xx errors, the key difference is that this blog's apps render the extra fields in the API response. This includes an *Error ID* to represent a particular occurrence of the error:
 
-![500 error details](../images/290/500-error-details.jpg?v=20240913)
+![500 error details](../images/290/500-error-details.jpg?v=20261116)
 
 ### API 5xx Error Logs
 
 For 5xx errors, this blog's APIs record error details in request logs in the following format. This includes client and service error details. The service details including a call stack and any other useful information that could explain the cause. Some error fields are denormalized, to support error queries:
 
 ```json
+{
   "type": "request",
-  "id": "efa6217b-7be1-f393-773d-6d8aa9a464b3",
-  "utcTime": "2024-09-03T10:08:39.154Z"
+  "id": "41260d7d-792e-425d-847c-611eaf11b21a",
+  "utcTime": "2026-11-16T18:26:42.402Z",
   "apiName": "FinalApi",
   "operationName": "getCompanyList",
   "hostName": "UBUNTU",
   "method": "GET",
   "path": "/investments/companies",
-  "clientId": "FinalSPA",
-  "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "clientId": "7q5pope8rki7okarj2u8l4in7o",
+  "userId": "06e3c525-33d1-47ec-97be-03d8affc3726",
   "statusCode": 500,
   "errorCode": "exception_simulation",
-  "errorId": 88490,
-  "millisecondsTaken": 1,
-  "correlationId": "b95f6800-b236-863a-1f6f-23e7a12cf474",
-  "sessionId": "832fd8c3-5fc2-e980-2f32-f88ae284f4e1",
+  "errorId": 78675,
+  "millisecondsTaken": 11,
+  "correlationId": "36060b5e-1ec3-4ac4-b1ae-9f43cb6a5f60",
+  "sessionId": "d94e8bfb-4ec2-4ffd-9f86-703e647a1476",
   "errorData": {
     "statusCode": 500,
     "clientError": {
       "code": "exception_simulation",
       "message": "An unexpected exception occurred in the API",
-      "id": 88490,
+      "id": 78675,
       "area": "FinalApi",
-      "utcTime": "2024-09-03T10:08:39.154Z"
+      "utcTime": "2026-11-16T18:26:42.412Z"
     },
     "serviceError": {
       "details": "",
       "stack": [
         "Error: An unexpected exception occurred in the API",
-        "at Function.createServerError (/home/gary/dev/oauth.apisample.nodejs/src/plumbing/errors/errorFactory.ts:16:16)",
-        "at CustomHeaderMiddleware.processHeaders (/home/gary/dev/oauth.apisample.nodejs/src/plumbing/middleware/customHeaderMiddleware.ts:27:36)",
-        "at Layer.handle [as handle_request] (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/layer.js:95:5)",
-        "at trim_prefix (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:328:13)",
-        "at /home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:286:9",
-        "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:365:14)",
-        "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:376:14)",
-        "at Function.process_params (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:421:3)",
-        "at next (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:280:10)",
-        "at ClaimsCachingAuthorizer.authorizeRequestAndGetClaims (/home/gary/dev/oauth.apisample.nodejs/src/plumbing/security/baseAuthorizer.ts:62:13)"
+        "at ErrorFactory.createServerError (/home/gary/dev/oauth.apisample.nodejs/src/middleware/errors/errorFactory.ts:16:16)",
+        "at CustomHeaderMiddleware.execute (/home/gary/dev/oauth.apisample.nodejs/src/middleware/errors/customHeaderMiddleware.ts:27:36)",
+        "at Layer.handleRequest (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/lib/layer.js:152:17)",
+        "at trimPrefix (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:342:13)",
+        "at /home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:297:9",
+        "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:600:14)",
+        "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:610:14)",
+        "at processParams (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:664:3)",
+        "at next (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:291:5)",
+        "at OAuthMiddleware.execute (/home/gary/dev/oauth.apisample.nodejs/src/middleware/oauth/oauthMiddleware.ts:48:9)"
       ]
     }
   }
@@ -309,7 +310,7 @@ GET apilogs*/_search
   {
     "match":
     {
-      "errorId": 76236
+      "errorId": 78675
     }
   }
 }

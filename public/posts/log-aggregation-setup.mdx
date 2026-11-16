@@ -300,8 +300,8 @@ Each log entry is received as a JSON document within a generated index name. You
       "serviceError": {
         "stack": [
           "Error: An unexpected exception occurred in the API",
-          "at ErrorFactory.createServerError (/home/gary/dev/oauth.apisample.nodejs/src/plumbing/errors/errorFactory.ts:16:16)",
-          "at CustomHeaderMiddleware.execute (/home/gary/dev/oauth.apisample.nodejs/src/plumbing/middleware/customHeaderMiddleware.ts:27:36)",
+          "at ErrorFactory.createServerError (/home/gary/dev/oauth.apisample.nodejs/src/middleware/errors/errorFactory.ts:16:16)",
+          "at CustomHeaderMiddleware.execute (/home/gary/dev/oauth.apisample.nodejs/src/middleware/errors/customHeaderMiddleware.ts:27:36)",
           "at Layer.handleRequest (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/lib/layer.js:152:17)",
           "at trimPrefix (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:342:13)",
           "at /home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:297:9",
@@ -309,9 +309,8 @@ Each log entry is received as a JSON document within a generated index name. You
           "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:610:14)",
           "at processParams (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:664:3)",
           "at next (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:291:5)",
-          "at AuthenticationMiddleware.execute (/home/gary/dev/oauth.apisample.nodejs/src/plumbing/middleware/authenticationMiddleware.ts:48:9)"
-        ],
-        "details": ""
+          "at OAuthMiddleware.execute (/home/gary/dev/oauth.apisample.nodejs/src/middleware/oauth/oauthMiddleware.ts:48:9)"
+        ]
       },
       "clientError": {
         "area": "FinalApi",

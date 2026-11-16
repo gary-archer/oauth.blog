@@ -192,13 +192,7 @@ private createApplicationRoutes(routes: RouteMetadata[]): Router {
 
 ### Logging Implementation
 
-I use a number of infrastructure classes to implement API logging, whose end goal is to enable <a href='api-technical-support-analysis.mdx'>useful technical support queries by people</a>.
-
-<div className='smallimage'>
-    <img src='../images/310/logging-classes.jpg?v=20250527' alt='logging classes' />
-</div>
-
-The *LoggerMiddleware* then creates a *LogEntry* to contain technical details about the request:
+I use a number of infrastructure classes to implement API logging, whose end goal is to enable <a href='api-technical-support-analysis.mdx'>useful technical support queries by people</a>. The *LoggerMiddleware* then creates a *LogEntry* to contain technical details about the request:
 
 ```typescript
 public execute(request: Request, response: Response, next: NextFunction): void {
@@ -316,44 +310,44 @@ The art of good error handling is to design good error objects that contain usef
 ```json
 {
   "type": "request",
-  "id": "2b9de255-808b-10f9-cb01-79d76a851b27",
-  "utcTime": "2022-12-10T13:02:46.234Z",
+  "id": "41260d7d-792e-425d-847c-611eaf11b21a",
+  "utcTime": "2026-11-16T18:26:42.402Z",
   "apiName": "FinalApi",
   "operationName": "getCompanyList",
   "hostName": "UBUNTU",
   "method": "GET",
   "path": "/investments/companies",
-  "clientId": "FinalSPA",
-  "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "clientId": "7q5pope8rki7okarj2u8l4in7o",
+  "userId": "06e3c525-33d1-47ec-97be-03d8affc3726",
   "statusCode": 500,
   "errorCode": "exception_simulation",
-  "errorId": 95739,
-  "millisecondsTaken": 10,
-  "correlationId": "cde4cfed-c6d2-bd28-0add-fc19a97c9fb9",
-  "sessionId": "89ab6a9c-12ca-35be-584b-71bb84ee1042",
+  "errorId": 78675,
+  "millisecondsTaken": 11,
+  "correlationId": "36060b5e-1ec3-4ac4-b1ae-9f43cb6a5f60",
+  "sessionId": "d94e8bfb-4ec2-4ffd-9f86-703e647a1476",
   "errorData": {
     "statusCode": 500,
     "clientError": {
       "code": "exception_simulation",
       "message": "An unexpected exception occurred in the API",
-      "id": 95739,
+      "id": 78675,
       "area": "FinalApi",
-      "utcTime": "2022-12-10T13:02:46.237Z"
+      "utcTime": "2026-11-16T18:26:42.412Z"
     },
     "serviceError": {
       "details": "",
       "stack": [
         "Error: An unexpected exception occurred in the API",
-        "at Function.createServerError (/home/gary/dev/oauth.apisample.nodejs/src/plumbing/errors/errorFactory.ts:16:16)",
-        "at CustomHeaderMiddleware.processHeaders (/home/gary/dev/oauth.apisample.nodejs/src/plumbing/middleware/customHeaderMiddleware.ts:27:36)",
-        "at Layer.handle [as handle_request] (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/layer.js:95:5)",
-        "at trim_prefix (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:328:13)",
-        "at /home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:286:9",
-        "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:365:14)",
-        "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:376:14)",
-        "at Function.process_params (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:421:3)",
-        "at next (/home/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:280:10)",
-        "at ClaimsCachingAuthorizer.authorizeRequestAndGetClaims (/home/gary/dev/oauth.apisample.nodejs/src/plumbing/security/baseAuthorizer.ts:62:13)"
+        "at ErrorFactory.createServerError (/home/gary/dev/oauth.apisample.nodejs/src/middleware/errors/errorFactory.ts:16:16)",
+        "at CustomHeaderMiddleware.execute (/home/gary/dev/oauth.apisample.nodejs/src/middleware/errors/customHeaderMiddleware.ts:27:36)",
+        "at Layer.handleRequest (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/lib/layer.js:152:17)",
+        "at trimPrefix (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:342:13)",
+        "at /home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:297:9",
+        "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:600:14)",
+        "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:610:14)",
+        "at processParams (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:664:3)",
+        "at next (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:291:5)",
+        "at OAuthMiddleware.execute (/home/gary/dev/oauth.apisample.nodejs/src/middleware/oauth/oauthMiddleware.ts:48:9)"
       ]
     }
   }

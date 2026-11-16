@@ -14,7 +14,7 @@ DevOps teams need effective filtering to understand systems under load, where th
 
 This blog's final frontend code samples enable you to simulate a user experiencing a problem due to a backend error, by long pressing the *Reload Data* button for a couple of seconds. This results in a frontend error display of the following form:
 
-![error display](../images/400/error-display.jpg?v=20250315)
+![error display](../images/400/error-display.jpg?v=20261116)
 
 You can quickly look up exception details for the exact incident with the following format of query. This matches the *Fairly Unique Identifier* that the frontend displays. You can design this identifier to be easy for users to read, write or say.
 
@@ -25,7 +25,7 @@ GET apilogs/_search
   {
     "match":
     {
-      "errorId": 54308
+      "errorId": 78675
     }
   }
 }
@@ -39,47 +39,48 @@ This is a *Lucene* query whose response is zero or more documents. A DevOps user
     "_id": "17580a1c-1631-f80f-e32e-9e237d47cbab",
     "_score": 1,
     "_source": {
-    "hostName": "finalapi-544cf4b557-ntvrg",
-    "resourceId": "2",
-    "apiName": "FinalApi",
-    "method": "GET",
-    "errorCode": "exception_simulation",
-    "millisecondsTaken": 4,
-    "operationName": "getCompanyTransactions",
-    "sessionId": "720078f3-bd50-e9f1-26d4-2b7c9e606402",
-    "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
-    "errorData": {
+      "hostName": "finalapi-544cf4b557-ntvrg",
+      "resourceId": "2",
+      "apiName": "FinalApi",
+      "method": "GET",
+      "errorCode": "exception_simulation",
+      "millisecondsTaken": 4,
+      "operationName": "getCompanyTransactions",
+      "sessionId": "720078f3-bd50-e9f1-26d4-2b7c9e606402",
+      "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+      "errorData": {
         "serviceError": {
-            "stack": [
+          "details": "",
+          "stack": [
             "Error: An unexpected exception occurred in the API",
-            "at Function.createServerError (/usr/api/dist/plumbing/errors/errorFactory.js:15:16)",
-            "at CustomHeaderMiddleware.processHeaders (/usr/api/dist/plumbing/middleware/customHeaderMiddleware.js:22:51)",
-            "at Layer.handle [as handle_request] (/usr/api/node_modules/express/lib/router/layer.js:95:5)",
-            "at trim_prefix (/usr/api/node_modules/express/lib/router/index.js:328:13)",
-            "at /usr/api/node_modules/express/lib/router/index.js:286:9",
-            "at param (/usr/api/node_modules/express/lib/router/index.js:365:14)",
-            "at param (/usr/api/node_modules/express/lib/router/index.js:376:14)",
-            "at Function.process_params (/usr/api/node_modules/express/lib/router/index.js:421:3)",
-            "at next (/usr/api/node_modules/express/lib/router/index.js:280:10)",
-            "at ClaimsCachingAuthorizer.authorizeRequestAndGetClaims (/usr/api/dist/plumbing/security/baseAuthorizer.js:51:13)"
-            ],
-            "details": ""
+            "at ErrorFactory.createServerError (/home/gary/dev/oauth.apisample.nodejs/src/middleware/errors/errorFactory.ts:16:16)",
+            "at CustomHeaderMiddleware.execute (/home/gary/dev/oauth.apisample.nodejs/src/middleware/errors/customHeaderMiddleware.ts:27:36)",
+            "at Layer.handleRequest (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/lib/layer.js:152:17)",
+            "at trimPrefix (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:342:13)",
+            "at /home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:297:9",
+            "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:600:14)",
+            "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:610:14)",
+            "at processParams (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:664:3)",
+            "at next (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:291:5)",
+            "at OAuthMiddleware.execute (/home/gary/dev/oauth.apisample.nodejs/src/middleware/oauth/oauthMiddleware.ts:48:9)"
+          ]
         },
         "clientError": {
             "area": "FinalApi",
             "code": "exception_simulation",
             "utcTime": "2023-03-26T10:57:28.482Z",
-            "id": 54308,
+            "id": 78675,
             "message": "An unexpected exception occurred in the API"
         },
         "statusCode": 500
+      }
     },
     "path": "/investments/companies/2/transactions",
     "@timestamp": "2023-03-26T10:57:28.482Z",
     "name": "total",
     "utcTime": "2023-03-26T10:57:28.482Z",
     "correlationId": "fa20ca8e-8506-c4f0-9217-1cac1a83a2c8",
-    "errorId": 48649,
+    "errorId": 78675,
     "id": "17580a1c-1631-f80f-e32e-9e237d47cbab",
     "clientId": "FinalSPA",
     "statusCode": 500

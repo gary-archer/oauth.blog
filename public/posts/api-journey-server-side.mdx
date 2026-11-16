@@ -278,45 +278,44 @@ When there is a server error I write a log entry that includes a unique *Error I
 ```json
 {
   "type": "request",
-  "id": "b36701c9-ddf2-d7da-df48-4dfcc918009b",
-  "utcTime": "2022-07-24T10:28:00.435Z",
+  "id": "41260d7d-792e-425d-847c-611eaf11b21a",
+  "utcTime": "2026-11-16T18:26:42.402Z",
   "apiName": "FinalApi",
-  "operationName": "getCompanyTransactions",
+  "operationName": "getCompanyList",
   "hostName": "UBUNTU",
   "method": "GET",
-  "path": "/investments/companies/2/transactions",
-  "resourceId": "2",
-  "clientId": "FinalSPA",
-  "userId": "a6b404b1-98af-41a2-8e7f-e4061dc0bf86",
+  "path": "/investments/companies",
+  "clientId": "7q5pope8rki7okarj2u8l4in7o",
+  "userId": "06e3c525-33d1-47ec-97be-03d8affc3726",
   "statusCode": 500,
   "errorCode": "exception_simulation",
-  "errorId": 79072,
-  "millisecondsTaken": 9,
-  "correlationId": "5f1f1bcb-79c4-00ee-a1fe-be5e4262eb75",
-  "sessionId": "77136323-ec8c-dce2-147a-bc52f34cb7cd",
+  "errorId": 78675,
+  "millisecondsTaken": 11,
+  "correlationId": "36060b5e-1ec3-4ac4-b1ae-9f43cb6a5f60",
+  "sessionId": "d94e8bfb-4ec2-4ffd-9f86-703e647a1476",
   "errorData": {
     "statusCode": 500,
     "clientError": {
       "code": "exception_simulation",
       "message": "An unexpected exception occurred in the API",
-      "id": 79072,
+      "id": 78675,
       "area": "FinalApi",
-      "utcTime": "2022-07-24T10:28:00.438Z"
+      "utcTime": "2026-11-16T18:26:42.412Z"
     },
     "serviceError": {
       "details": "",
       "stack": [
         "Error: An unexpected exception occurred in the API",
-        "at Function.createServerError (/Users/gary/dev/oauth.apisample.nodejs/src/plumbing/errors/errorFactory.ts:16:16)",
-        "at CustomHeaderMiddleware.processHeaders (/Users/gary/dev/oauth.apisample.nodejs/src/plumbing/middleware/customHeaderMiddleware.ts:27:36)",
-        "at Layer.handle [as handle_request] (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/layer.js:95:5)",
-        "at trim_prefix (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:328:13)",
-        "at /Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:286:9",
-        "at param (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:365:14)",
-        "at param (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:376:14)",
-        "at Function.process_params (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:421:3)",
-        "at next (/Users/gary/dev/oauth.apisample.nodejs/node_modules/express/lib/router/index.js:280:10)",
-        "at ClaimsCachingAuthorizer.authorizeRequestAndGetClaims (/Users/gary/dev/oauth.apisample.nodejs/src/plumbing/security/baseAuthorizer.ts:62:13)"
+        "at ErrorFactory.createServerError (/home/gary/dev/oauth.apisample.nodejs/src/middleware/errors/errorFactory.ts:16:16)",
+        "at CustomHeaderMiddleware.execute (/home/gary/dev/oauth.apisample.nodejs/src/middleware/errors/customHeaderMiddleware.ts:27:36)",
+        "at Layer.handleRequest (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/lib/layer.js:152:17)",
+        "at trimPrefix (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:342:13)",
+        "at /home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:297:9",
+        "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:600:14)",
+        "at param (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:610:14)",
+        "at processParams (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:664:3)",
+        "at next (/home/gary/dev/oauth.apisample.nodejs/node_modules/router/index.js:291:5)",
+        "at OAuthMiddleware.execute (/home/gary/dev/oauth.apisample.nodejs/src/middleware/oauth/oauthMiddleware.ts:48:9)"
       ]
     }
   }

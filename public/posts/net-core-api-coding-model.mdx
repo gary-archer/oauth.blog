@@ -202,27 +202,37 @@ The art of good error handling is to design good error objects that contain usef
 ```json
 {
   "type": "request",
-  "id": "0ff96924-1c02-469a-a5de-a1a6b7911ab2",
-  "utcTime": "2022-12-10T13:25:40",
+  "id": "bcdc389d-ccc1-4cdf-99ae-8ab8749860f1",
+  "utcTime": "2026-11-16T18:45:51",
   "apiName": "FinalApi",
-  "operationName": "GetCompanyTransactions",
   "hostName": "UBUNTU",
   "method": "GET",
-  "path": "/investments/companies/4/transactions",
-  "resourceId": "4",
-  "clientId": "FinalSPA",
-  "statusCode": 200,
-  "errorCode": "unauthorized",
-  "millisecondsTaken": 12,
-  "correlationId": "d892c50e-c4fb-2e13-57c5-83389fc69c95",
-  "sessionId": "004d32bc-9755-b50e-6315-5be09f277ebe",
+  "path": "/investments/userinfo",
+  "statusCode": 500,
+  "errorCode": "exception_simulation",
+  "errorId": 24038,
+  "millisecondsTaken": 25,
+  "correlationId": "b2e17b31-9e25-4d35-b91f-897aa56e4abe",
+  "performance": {
+    "name": "total",
+    "millisecondsTaken": 25
+  },
   "errorData": {
-    "statusCode": 401,
-    "body": {
-      "code": "unauthorized",
-      "message": "Missing, invalid or expired access token"
+    "statusCode": 500,
+    "clientError": {
+      "code": "exception_simulation",
+      "message": "An exception was simulated in the API",
+      "id": 24038,
+      "area": "FinalApi",
+      "utcTime": "2026-11-16T18:45:51"
     },
-    "context": "JWT verification failed: Invalid signature."
+    "serviceError": {
+      "details": "",
+      "stack": [
+        "at FinalApi.Middleware.Errors.CustomHeaderMiddleware.Invoke(HttpContext context, LoggingConfiguration configuration) in /home/gary/dev/oauth.apisample.net/src/middleware/errors/CustomHeaderMiddleware.cs:line 35",
+        "at FinalApi.Middleware.Errors.UnhandledExceptionMiddleware.Invoke(HttpContext context) in /home/gary/dev/oauth.apisample.net/src/middleware/errors/UnhandledExceptionMiddleware.cs:line 41"
+      ]
+    }
   }
 }
 ```
