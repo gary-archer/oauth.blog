@@ -11,7 +11,7 @@ A technical blog with a focus on OAuth development:
 
 By default, just read the blog's MDX pages in GitHub.\
 You can also run the blog as a [Next.js Application](TECHNOLOGY.md).\
-To do so, run the following commands and then browse to `http://localhost:3000`:
+To do so, clone the repo, run the following commands, and then browse to `http://localhost:3000`:
 
 ```bash
 npm ci
