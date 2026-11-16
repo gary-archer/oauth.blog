@@ -192,7 +192,7 @@ private createApplicationRoutes(routes: RouteMetadata[]): Router {
 
 ### Logging Implementation
 
-I use a number of plumbing classes to implement API logging, whose end goal is to enable <a href='api-technical-support-analysis.mdx'>useful technical support queries by people</a>.
+I use a number of infrastructure classes to implement API logging, whose end goal is to enable <a href='api-technical-support-analysis.mdx'>useful technical support queries by people</a>.
 
 <div className='smallimage'>
     <img src='../images/310/logging-classes.jpg?v=20250527' alt='logging classes' />
@@ -378,7 +378,7 @@ The API uses some techniques that are a little different to many online Node.js 
 
 ### Where Are We?
 
-I implemented some non-functional requirements in Node.js without any blocking issues, and separated plumbing from other code. In a real API I could then focus on growing the business logic.
+I implemented some non-functional requirements in Node.js without any blocking issues, and separated infrastructure from functional code. In a real API I could then focus on growing the business logic.
 
 ### Next
 

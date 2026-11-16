@@ -148,7 +148,7 @@ export class OAuthFilter {
 
 The algorithm uses a thread-safe memory cache that caches extra claims for future requests with the same access token. The API uses a hash of the access token as the cache key and the extra claims as the cache value. Each cache item has a time to live that does not exceed the expiry time of the access token.
 
-This technique adds complexity to API code, so avoid it when getting started with OAuth. Instead, focus on using claims from the access token payload. Understand though, that it is common for APIs to need to cache some extra authorization-related values not issued to the access token. Some claims-related plumbing code can set up the API's business logic to authorize productively.
+This technique adds complexity to API code, so avoid it when getting started with OAuth. Instead, focus on using claims from the access token payload. Understand though, that it is common for APIs to need to cache some extra authorization-related values not issued to the access token. Some claims-related code can set up the API's business logic to authorize productively.
 
 ### This Blog's Example Claims
 
